@@ -1,0 +1,48 @@
+Circuit: * H:\One Drive Unitn\OneDrive - studenti.unitn.it\FSAE\Schematics\BMS_HV\RelayDetection\ResistiveDetection.asc
+
+Limiting rise time of source v4 to 0.07
+Limiting fall time of source v4 to 0.07
+Direct Newton iteration failed to find .op point.  (Use ".option noopiter" to skip.)
+Starting Gmin stepping
+Gmin = 10
+Gmin = 1.07374
+Gmin = 0.115292
+Gmin = 0.0123794
+Gmin = 0.00132923
+Gmin = 0.000142725
+Gmin = 1.5325e-005
+Gmin = 1.6455e-006
+vernier = 0.5
+Gmin = 3.78697e-007
+vernier = 0.666667
+vernier = 0.888888
+Gmin = 7.94338e-008
+vernier = 1
+Gmin = 9.33136e-009
+Gmin = 1.00195e-009
+Gmin = 1.07583e-010
+Gmin = 1.15517e-011
+Gmin = 1.24035e-012
+Gmin = 1.33182e-013
+Gmin = 0
+Gmin stepping succeeded in finding the operating point.
+
+
+Date: Wed Mar 07 12:50:09 2018
+Total elapsed time: 0.351 seconds.
+
+tnom = 27
+temp = 27
+method = modified trap
+totiter = 5602
+traniter = 4982
+tranpoints = 1824
+accept = 1632
+rejected = 192
+matrix size = 38
+fillins = 29
+solver = Normal
+Thread vector: 22.9/13.9[2] 6.0/5.2[2] 3.5/18.5[1] 2.2/3.2[1]  2592/500
+Matrix Compiler1: 4.41 KB object code size  3.1/2.6/[2.0]
+Matrix Compiler2: off  [2.1]/2.8/8.5
+

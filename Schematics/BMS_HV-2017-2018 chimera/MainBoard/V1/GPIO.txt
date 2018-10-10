@@ -1,0 +1,3 @@
+GPIO Output types
+TS_ON = 3.3 V tollerant PushPull output
+BMS_Fault = 5 V tollerant PushPull output

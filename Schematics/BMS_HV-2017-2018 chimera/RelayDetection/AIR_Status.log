@@ -1,0 +1,22 @@
+Circuit: * H:\One Drive Unitn\OneDrive - studenti.unitn.it\FSAE\Schematics\BMS_HV\RelayDetection\AIR_Status.asc
+
+WARNING: Less than two connections to node LOAD.  This node is used by V2.
+Direct Newton iteration for .op point succeeded.
+
+Date: Sun Apr 15 16:03:01 2018
+Total elapsed time: 0.068 seconds.
+
+tnom = 27
+temp = 27
+method = modified trap
+totiter = 2105
+traniter = 2102
+tranpoints = 1052
+accept = 1052
+rejected = 0
+matrix size = 6
+fillins = 0
+solver = Normal
+Matrix Compiler1: 262 bytes object code size  1.4/1.4/[1.4]
+Matrix Compiler2: 374 bytes object code size  1.4/1.4/[1.4]
+
