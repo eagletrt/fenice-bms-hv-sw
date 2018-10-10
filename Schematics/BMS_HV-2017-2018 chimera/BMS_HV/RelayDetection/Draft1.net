@@ -1,0 +1,13 @@
+* H:\One Drive Unitn\OneDrive - studenti.unitn.it\FSAE\Schematics\BMS_HV\RelayDetection\Draft1.asc
+R1 N002 N004 3300
+R2 N004 0 100000
+V1 N002 0 PULSE(0 3.3 0.1 0 0 0.1 0.2)
+R3 N001 N003 330
+V2 N001 0 12
+Q1 N003 N004 0 0 2N2222
+.model NPN NPN
+.model PNP PNP
+.lib G:\Users\grego\Documents\LTspiceXVII\lib\cmp\standard.bjt
+.tran 1
+.backanno
+.end

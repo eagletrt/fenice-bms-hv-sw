@@ -1,0 +1,3 @@
+(sym_lib_table
+  (lib (name LinearBMS)(type Legacy)(uri ${KIPRJMOD}/Library/LinearBMS.lib)(options "")(descr ""))
+)

@@ -1,0 +1,21 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP HM2101NL
+D  HM2101NL Pulse Transformer with Common Mode Choke
+K transformer, pulse transformer, common mode choke
+F https://www.mouser.com/ds/2/336/HM2101NL-1218605.pdf
+$ENDCMP
+#
+$CMP LTC6811
+D LTC6811-2 Battery Stack Monitoring IC
+K battery, bms, linear
+F http://cds.linear.com/docs/en/datasheet/68111fb.pdf
+$ENDCMP
+#
+$CMP LTC6820
+D LTC6820 IsoSPI Communication Interface IC
+K IsoSPI, linear, isolated communication
+F http://cds.linear.com/docs/en/datasheet/6820fb.pdf
+$ENDCMP
+#
+#End Doc Library

@@ -1,0 +1,28 @@
+LP2989
+	4.7u on Vin
+	47u on Out
+STM32F334
+	4.7u bulk for VDD
+	100n on each VDD
+	1u + 10n on VDDA
+MCP2562
+	100n on VDD
+	100n on VIO
+LTC6820
+	10n on VDD
+	10n on VDDS
+M24M02
+	10n on VDD
+ISOW7841
+	10u + 100n on VCC
+	10u + 100n on VISO
+LTC1865L
+	1uf on VCC
+SN74LVC1G123
+	100n on VCC
+LTC6259
+	100n on V+
+HTFS 200-P
+	47n on V+
+	47n on Vref
+	
