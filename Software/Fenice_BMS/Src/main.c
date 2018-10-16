@@ -417,17 +417,17 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(PreChargeEnd_GPIO_Port, PreChargeEnd_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOC, CS_LTC6820_1_Pin|CS_LTC6820_2_Pin|BMS_FAULT_Pin|TS_ON_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : PA2 */
-  GPIO_InitStruct.Pin = GPIO_PIN_2;
+  /*Configure GPIO pin : PreChargeEnd_Pin */
+  GPIO_InitStruct.Pin = PreChargeEnd_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  HAL_GPIO_Init(PreChargeEnd_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : ShudDownStatus_Pin */
   GPIO_InitStruct.Pin = ShudDownStatus_Pin;
