@@ -1,8 +1,7 @@
 /**
   ******************************************************************************
-  * @file           : main.h
-  * @brief          : Header for main.c file.
-  *                   This file contains the common defines of the application.
+  * @file   fatfs.h
+  * @brief  Header for fatfs applications
   ******************************************************************************
   * This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
@@ -48,51 +47,33 @@
   */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __MAIN_H__
-#define __MAIN_H__
+#ifndef __fatfs_H
+#define __fatfs_H
+#ifdef __cplusplus
+ extern "C" {
+#endif
 
-/* Includes ------------------------------------------------------------------*/
+#include "ff.h"
+#include "ff_gen_drv.h"
+#include "sd_diskio.h" /* defines SD_Driver as external */
 
 /* USER CODE BEGIN Includes */
 
 /* USER CODE END Includes */
 
-/* Private define ------------------------------------------------------------*/
+extern uint8_t retSD; /* Return value for SD */
+extern char SDPath[4]; /* SD logical drive path */
+extern FATFS SDFatFS; /* File system object for SD logical drive */
+extern FIL SDFile; /* File object for SD */
 
-#define CurrentSensor_Pin GPIO_PIN_1
-#define CurrentSensor_GPIO_Port GPIOA
-#define ShudDownStatus_Pin GPIO_PIN_4
-#define ShudDownStatus_GPIO_Port GPIOA
-#define CS_LTC6820_1_Pin GPIO_PIN_4
-#define CS_LTC6820_1_GPIO_Port GPIOC
-#define CS_LTC6820_2_Pin GPIO_PIN_5
-#define CS_LTC6820_2_GPIO_Port GPIOC
-#define BMS_FAULT_Pin GPIO_PIN_6
-#define BMS_FAULT_GPIO_Port GPIOC
-#define TS_ON_Pin GPIO_PIN_7
-#define TS_ON_GPIO_Port GPIOC
+void MX_FATFS_Init(void);
 
-/* ########################## Assert Selection ############################## */
-/**
-  * @brief Uncomment the line below to expanse the "assert_param" macro in the 
-  *        HAL drivers code
-  */
-/* #define USE_FULL_ASSERT    1U */
+/* USER CODE BEGIN Prototypes */
 
-/* USER CODE BEGIN Private defines */
-
-/* USER CODE END Private defines */
-
-#ifdef __cplusplus
- extern "C" {
-#endif
-void _Error_Handler(char *, int);
-
-#define Error_Handler() _Error_Handler(__FILE__, __LINE__)
+/* USER CODE END Prototypes */
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* __MAIN_H__ */
+#endif /*__fatfs_H */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

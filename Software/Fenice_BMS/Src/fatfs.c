@@ -1,8 +1,7 @@
 /**
   ******************************************************************************
-  * @file           : main.h
-  * @brief          : Header for main.c file.
-  *                   This file contains the common defines of the application.
+  * @file   fatfs.c
+  * @brief  Code for fatfs applications
   ******************************************************************************
   * This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
@@ -47,52 +46,41 @@
   ******************************************************************************
   */
 
-/* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __MAIN_H__
-#define __MAIN_H__
+#include "fatfs.h"
 
-/* Includes ------------------------------------------------------------------*/
+uint8_t retSD;    /* Return value for SD */
+char SDPath[4];   /* SD logical drive path */
+FATFS SDFatFS;    /* File system object for SD logical drive */
+FIL SDFile;       /* File object for SD */
 
-/* USER CODE BEGIN Includes */
+/* USER CODE BEGIN Variables */
 
-/* USER CODE END Includes */
+/* USER CODE END Variables */    
 
-/* Private define ------------------------------------------------------------*/
+void MX_FATFS_Init(void) 
+{
+  /*## FatFS: Link the SD driver ###########################*/
+  retSD = FATFS_LinkDriver(&SD_Driver, SDPath);
 
-#define CurrentSensor_Pin GPIO_PIN_1
-#define CurrentSensor_GPIO_Port GPIOA
-#define ShudDownStatus_Pin GPIO_PIN_4
-#define ShudDownStatus_GPIO_Port GPIOA
-#define CS_LTC6820_1_Pin GPIO_PIN_4
-#define CS_LTC6820_1_GPIO_Port GPIOC
-#define CS_LTC6820_2_Pin GPIO_PIN_5
-#define CS_LTC6820_2_GPIO_Port GPIOC
-#define BMS_FAULT_Pin GPIO_PIN_6
-#define BMS_FAULT_GPIO_Port GPIOC
-#define TS_ON_Pin GPIO_PIN_7
-#define TS_ON_GPIO_Port GPIOC
-
-/* ########################## Assert Selection ############################## */
-/**
-  * @brief Uncomment the line below to expanse the "assert_param" macro in the 
-  *        HAL drivers code
-  */
-/* #define USE_FULL_ASSERT    1U */
-
-/* USER CODE BEGIN Private defines */
-
-/* USER CODE END Private defines */
-
-#ifdef __cplusplus
- extern "C" {
-#endif
-void _Error_Handler(char *, int);
-
-#define Error_Handler() _Error_Handler(__FILE__, __LINE__)
-#ifdef __cplusplus
+  /* USER CODE BEGIN Init */
+  /* additional user code for init */     
+  /* USER CODE END Init */
 }
-#endif
 
-#endif /* __MAIN_H__ */
+/**
+  * @brief  Gets Time from RTC 
+  * @param  None
+  * @retval Time in DWORD
+  */
+DWORD get_fattime(void)
+{
+  /* USER CODE BEGIN get_fattime */
+  return 0;
+  /* USER CODE END get_fattime */  
+}
+
+/* USER CODE BEGIN Application */
+     
+/* USER CODE END Application */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
