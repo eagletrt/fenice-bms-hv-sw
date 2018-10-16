@@ -61,6 +61,8 @@
 
 #define CurrentSensor_Pin GPIO_PIN_1
 #define CurrentSensor_GPIO_Port GPIOA
+#define PreChargeEnd_Pin GPIO_PIN_2
+#define PreChargeEnd_GPIO_Port GPIOA
 #define ShudDownStatus_Pin GPIO_PIN_4
 #define ShudDownStatus_GPIO_Port GPIOA
 #define CS_LTC6820_1_Pin GPIO_PIN_4
