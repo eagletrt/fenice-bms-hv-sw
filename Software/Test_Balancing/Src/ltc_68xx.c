@@ -507,22 +507,23 @@ void ltc6804_command_temperatures(uint8_t start, uint8_t parity, SPI_HandleTypeD
  * @param		hspi pointer to a SPI_HandleTypeDef structure that contains
  * 				the configuration information for SPI module.
  */
-void ltc6804_adcv(uint8_t DCP, SPI_HandleTypeDef *hspi){
-
+void ltc6804_adcv(uint8_t DCP, SPI_HandleTypeDef *hspi1){
+//0110 0011
 	uint8_t cmd[4];
 	uint16_t cmd_pec;
-	cmd[0] = (uint8_t)0x03;
-	cmd[1] = (uint8_t)0x60 + DCP * 16;
+	cmd[0] = (uint8_t)0x03;  //0000 0011
+	cmd[1] = (uint8_t)0x60 + DCP * 16; //0110 0000
 	cmd_pec = pec15(2, cmd,crcTable);
 	cmd[2] = (uint8_t)(cmd_pec >> 8);
     cmd[3] = (uint8_t)(cmd_pec);
 
-    wakeup_idle(hspi);
+    wakeup_idle(hspi1);
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_RESET);
 	HAL_SPI_Transmit(hspi1, cmd, 4,100);
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_SET);
 
 }
+/*
 int ltc6894_adstat( LTC6804_StatusGroupSelection chst)
 {
      uint8_t cmd[4];
@@ -675,6 +676,8 @@ void ltc6804_rdstatA(uint8_t ic_n,SPI_HandleTypeDef *hspi, uint16_t cell_voltage
  	return;
 
 }
+*/
+/*
 void ltc6804_rdstatB(uint8_t ic_n, SPI_HandleTypeDef *hspi1, uint16_t aux_codes[][6]){┬
 	{
 	uint8_t GPIO_IN_REG;
@@ -764,7 +767,7 @@ void ltc6804_rdstatB(uint8_t ic_n, SPI_HandleTypeDef *hspi1, uint16_t aux_codes[
 
 	}
 
-
+*/
 /*
 LTC6804_ReadRawData_Reg(LTC6804_ReadRegister_Command rd_cmd, uint8_t n_ic,){
 
@@ -826,38 +829,33 @@ LTC6804_ReadRawData_Reg(LTC6804_ReadRegister_Command rd_cmd, uint8_t n_ic,){
 }
 */
 
-	uint32_t LTC6804_ADAX(LTC6804_ADC_Mode md, LTC6804_GPIOSelection_CH chg)
+	void ltc6804_adax(LTC6804_GPIOSelection_CH chg, SPI_HandleTypeDef *hspi1)
 	{
 	    uint8_t cmd[4];
 	    uint16_t cmd_pec;
-	    uint8_t bit;
 
-	    if ((md <= MD_FILTERED) && (md >= MD_FAST))
-	    {
-	        if (chg <= AUX_CH_VREF2)
-	        {
-	            bit = (md & 0x02) >> 1;
-	            cmd[0] = bit + 0x04;
 
-	            bit = (md & 0x01) << 7;
-	            cmd[1] = bit + 0x60 + chg;
 
-	            cmd_pec = LTC6804_Pec15_Calc(2, cmd);
+
+	            cmd[0] = (uint8_t)0x05;  //0000 0101
+
+
+	          //  cmd[1] = bit + 0x60 + chg;
+	        	cmd[1] = (uint8_t)0x60 +chg; //0110 0000
+	            cmd_pec = pec15(2, cmd,crcTable);
 
 	            cmd[2] = (uint8_t)(cmd_pec >> 8);
 	            cmd[3] = (uint8_t)(cmd_pec);
 
-	            LTC6804_WakeUp();
+	            wakeup_idle(hspi1);
 
-	            LTC6820_CS_Clear(GPIO_PTG7);
+	            //LTC6820_CS_Clear(GPIO_PTG7);
 
-	            LTC6820_SPI_WriteNByteData(4, cmd);
+	            HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_RESET);
+	            	HAL_SPI_Transmit(hspi1, cmd, 4,100);
+	            	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_SET);
 
-	            LTC6820_CS_Set(GPIO_PTG7);
 
-	            return 0;
 	        }
-	    }
 
-	    return -1;
-	}
+
