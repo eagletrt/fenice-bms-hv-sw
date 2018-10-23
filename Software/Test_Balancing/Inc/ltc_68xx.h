@@ -50,7 +50,7 @@ void ltc6804_rdcv_temp(uint8_t ic_n, uint8_t parity, uint16_t cell_temp[108][2],
 void ltc6804_rdcv_voltages(uint8_t ic_n, uint16_t cell_voltages[108][2],	SPI_HandleTypeDef *hspi1);
 void ltc6804_command_temperatures(uint8_t start, uint8_t parity, SPI_HandleTypeDef *hspi1);
 void ltc6804_adcv(uint8_t DCP, SPI_HandleTypeDef *hspi1);
-int ltc6894_adstat(LTC6804_ADC_Mode md, LTC6804_StatusGroupSelection chst);
+//int ltc6894_adstat(LTC6804_ADC_Mode md, LTC6804_StatusGroupSelection chst);
 void ltc6804_rdstatA(uint8_t ic_n,SPI_HandleTypeDef *hspi, uint16_t cell_voltages[108][2]);
 void ltc6804_rdstatB(uint8_t ic_n, SPI_HandleTypeDef *hspi1, uint16_t cell_voltages[108][2]);
 void ltc6804_adax(uint8_t DCP, SPI_HandleTypeDef *hspi1);
