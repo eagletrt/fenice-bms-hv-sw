@@ -13,7 +13,7 @@
 
 //	Include HAL libraries for the SPI functions
 #include "stm32f4xx_hal.h"
-
+#include <stdlib.h>
 /** @defgroup PackState Battery Pack Status
  */
 typedef enum
@@ -34,6 +34,21 @@ typedef enum{
     AUX_CH_GPIO5,
     AUX_CH_VREF2,
 }LTC6804_GPIOSelection_CH;
+
+union COMM_REG{
+  uint8_t bytes[6];
+  struct COMM{
+    uint8_t ICOM0 : 4;
+    uint8_t D0 : 8;
+    uint8_t FCOM0 : 4;
+    uint8_t ICOM1 : 4;
+    uint8_t D1 : 8;
+    uint8_t FCOM1 : 4;
+    uint8_t ICOM2 : 4;
+    uint8_t D2 : 8;
+    uint8_t FCOM2 : 4;
+  } fields;
+};
 uint16_t pec15(uint8_t len,uint8_t data[], uint16_t crcTable[]);
 uint16_t convert_voltage(uint8_t v_data[]);
 uint16_t convert_temp(uint16_t volt);
@@ -54,4 +69,9 @@ void ltc6804_adcv(uint8_t DCP, SPI_HandleTypeDef *hspi1);
 void ltc6804_rdstatA(uint8_t ic_n,SPI_HandleTypeDef *hspi, uint16_t cell_voltages[108][2]);
 void ltc6804_rdstatB(uint8_t ic_n, SPI_HandleTypeDef *hspi1, uint16_t cell_voltages[108][2]);
 void ltc6804_adax(uint8_t DCP, SPI_HandleTypeDef *hspi1);
+void ltc6804_rdaux(uint8_t ic_n, uint16_t aux_codes[][6],SPI_HandleTypeDef *hspi1);
+void LTC6804_wrcomm(uint8_t,uint8_t[][6]);
+void LTC6804_stcomm(uint8_t);
+int8_t LTC6804_rdcomm(uint8_t,uint8_t[][8]);
+
 #endif /*ltc_68xx_H*/
