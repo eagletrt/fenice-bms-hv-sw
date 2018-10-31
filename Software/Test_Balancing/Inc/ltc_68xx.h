@@ -70,8 +70,8 @@ void ltc6804_rdstatA(uint8_t ic_n,SPI_HandleTypeDef *hspi, uint16_t cell_voltage
 void ltc6804_rdstatB(uint8_t ic_n, SPI_HandleTypeDef *hspi1, uint16_t cell_voltages[108][2]);
 void ltc6804_adax(uint8_t DCP, SPI_HandleTypeDef *hspi1);
 void ltc6804_rdaux(uint8_t ic_n, uint16_t aux_codes[][6],SPI_HandleTypeDef *hspi1);
-void LTC6804_wrcomm(uint8_t,uint8_t[][6]);
-void LTC6804_stcomm(uint8_t);
-int8_t LTC6804_rdcomm(uint8_t,uint8_t[][8]);
+void LTC6804_wrcomm(uint8_t total_ic,uint8_t config[][6],SPI_HandleTypeDef *hspi1);
+void LTC6804_stcomm(uint8_t,SPI_HandleTypeDef *hspi1);
+uint8_t LTC6804_rdcomm(uint8_t total_ic,uint8_t config[][8],SPI_HandleTypeDef *hspi1);
 
 #endif /*ltc_68xx_H*/
