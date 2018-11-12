@@ -51,6 +51,9 @@ UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
+uint16_t cell_voltages[108][2];
+uint16_t cell_voltages_vector[108];
+uint8_t TOT_IC =1;
 
 /* USER CODE END PV */
 
@@ -108,6 +111,24 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  // Voltages
+	 	  ltc6804_adcv(0, &hspi1);
+	 	  HAL_Delay(10);
+	 	  for(uint8_t current_ic = 0; current_ic < TOT_IC; current_ic++)
+	 		  ltc6804_rdcv_voltages(current_ic, cell_voltages, &hspi1);
+//
+//	   // Find lowest cell
+//	    uint8_t i;
+//	    uint16_t lowest_v = 42250;
+//	    for (i=0;i<TOT_IC*9;i++)
+//	        if (cell_voltages[i][0] != -1 && cell_voltages[i][0] < lowest_v)
+//	            lowest_v = cell_voltages[i][0];
+//
+//	    // Determine cells for balancing
+//	       for (i=0;i<9*TOT_IC;i++)
+//	           set_balancing(i, cell_voltages[i][0] != -1 && cell_voltages[i][0] > lowest_v + CELL_MARGIN);
+
+
 
   /* USER CODE END WHILE */
 
