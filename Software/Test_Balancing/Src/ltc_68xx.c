@@ -1184,22 +1184,31 @@ uint8_t LTC6804_rdcomm(uint8_t total_ic, //Number of ICs in the system
     b. calculate PEC of received data and compare against calculated PEC
   5. Return PEC Error
 */
-void LTC6804s_wrcomm(SPI_HandleTypeDef *hspi1){
+void LTC6804s_I2CMUX(SPI_HandleTypeDef *hspi1,uint8_t ch){
 		uint8_t total_ic=1;
 		const uint8_t CMD_LEN = 4+8*total_ic;
 		  const uint8_t BYTES_IN_REG = 6;
-		uint8_t *cmd;
+		uint8_t cmd[8];
 		uint8_t config[6] ;
+           // commadn ltc1380
 
-		// COMM commands
-		config[0] = 0x6A;
-		config[1] = 0x08;
-		config[2] = 0x00;
-		config[3] = 0x18;
-		config[4] = 0x0A;
-		config[5] = 0xA9;
+		// COMM commands EEPROM
+//		config[0] = 0x6A;
+//		config[1] = 0x08;
+//		config[2] = 0x00;
+//		config[3] = 0x18;
+//		config[4] = 0x0A;
+//		config[5] = 0xA9;
+		//COMM  LTC1380
 
-		cmd = (uint8_t *)malloc(CMD_LEN*sizeof(uint8_t));
+		config[0] = 0x64;
+		config[1] = 0xC8;
+		config[2] = 0x00+ ch; //0x08-0x0F
+		//config[3] = 0x 8+ch;
+		config[3] = 0x80;   //data ???
+		config[4] = 0x90;
+ //u have to read value (V) from GPIOX
+
 	  //uint16_t COMM_X[16];
 		 uint8_t cmd_index; //command counter
 		 uint16_t cfg_pec;
@@ -1238,7 +1247,7 @@ void LTC6804s_wrcomm(SPI_HandleTypeDef *hspi1){
 
 
 	   		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_SET);
-free(cmd);
+
 }
 
 /*****************************************************//**
@@ -1411,3 +1420,116 @@ uint8_t LTC6804s_rdcomm(SPI_HandleTypeDef *hspi1
     b. calculate PEC of received data and compare against calculated PEC
   5. Return PEC Error
 */
+
+// Starts cell voltage  and GPIO 1&2 conversion
+void ltc6813_adcvax(
+		  uint8_t DCP,SPI_HandleTypeDef *hspi1) //Discharge Permit)
+		  {
+		uint8_t cmd[4];
+		uint16_t cmd_pec;
+		cmd[0] = (uint8_t)0x05;  //0000 0101
+		cmd[1] = (uint8_t)0x6F + DCP * 16; //0110 1111
+		cmd_pec = pec15(2, cmd,crcTable);
+		cmd[2] = (uint8_t)(cmd_pec >> 8);
+	    cmd[3] = (uint8_t)(cmd_pec);
+
+	    wakeup_idle(hspi1);
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_RESET);
+		HAL_SPI_Transmit(hspi1, cmd, 4,100);
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_SET);
+}
+//balancing
+
+void balancing_update(uint16_t cell_voltages[108][2]) {
+
+    // Find lowest cell
+	 uint8_t i;
+	 uint8_t TOT_IC =1;
+	 uint8_t CELL_MARGIN =400;//mv
+		    uint16_t lowest_v = 42250;
+		    for (i=0;i<TOT_IC*9;i++){
+
+		        if (cell_voltages[i][0] != -1 && cell_voltages[i][0] < lowest_v)
+		            lowest_v = cell_voltages[i][0];
+		    }
+
+    // Determine cells for balancing
+    for (i=0;i<9*TOT_IC;i++){
+        set_balancing(i, cell_voltages[i][0] != -1 && cell_voltages[i][0] > lowest_v + CELL_MARGIN);
+    }
+}
+
+void balancing_stop() {
+    uint8_t i;
+    uint8_t TOT_IC =1;
+    for (i=0;i<TOT_IC*9;i++)
+        set_balancing(i, 0);
+}
+
+void set_balancing(uint8_t cell, uint8_t state) {
+
+    uint8_t ltc = cell % 9;
+    cell -= ltc * 9;
+
+    if (cell >= 0 && cell < 8) {
+        if (state)
+            ltc6804_cfg[ltc][4] |= 0b1 << cell;
+        else
+            ltc6804_cfg[ltc][4] &= ~(0b1 << cell);
+    } else if (cell > 7 && cell < 12) {
+        if (state)
+            ltc6804_cfg[ltc][5] |= 0b1 << (cell-8);
+        else
+            ltc6804_cfg[ltc][5] &= ~(0b1 << (cell-8));
+    }
+}
+// da controllare
+void LTC6804_wrcfg(uint8_t total_ic, uint8_t ltc6804_cfg[3][6])
+{
+  const uint8_t BYTES_IN_REG = 6;
+  const uint8_t CMD_LEN = 4+(8*total_ic);
+  uint8_t cmd[4];
+  uint16_t temp_pec;
+  uint8_t cmd_index; //command counter
+
+
+  //1
+  cmd[0] = 0x00;
+  cmd[1] = 0x01;
+  cmd[2] = 0x3d;
+  cmd[3] = 0x6e;
+
+  //2
+  cmd_index = 4;
+  for (uint8_t current_ic = 0; current_ic < total_ic ; current_ic++)       // executes for each LTC6804 in stack,
+  {
+    for (uint8_t current_byte = 0; current_byte < BYTES_IN_REG; current_byte++) // executes for each byte in the CFGR register
+    {
+      // i is the byte counter
+
+      cmd[cmd_index] = ltc6804_cfg[current_ic][current_byte];    //adding the config data to the array to be sent
+      cmd_index = cmd_index + 1;
+    }
+    //3
+    temp_pec = (uint16_t)pec15(BYTES_IN_REG,cmd, &ltc6804_cfg[current_ic][0]);// calculating the PEC for each board
+    cmd[cmd_index] = (uint8_t)(temp_pec >> 8);
+    cmd[cmd_index + 1] = (uint8_t)temp_pec;
+    cmd_index = cmd_index + 2;
+  }
+
+  //4
+  //wakeup_idle();                                //This will guarantee that the LTC6804 isoSPI port is awake.This command can be removed.
+  //5
+  for (int current_ic = 0; current_ic<total_ic; current_ic++)
+  {
+    cmd[0] = 0x80 + (current_ic<<3); //Setting address
+    temp_pec = pec15_calc(2, cmd);
+    cmd[2] = (uint8_t)(temp_pec >> 8);
+    cmd[3] = (uint8_t)(temp_pec);
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_RESET);
+    spi_write_array(4,cmd);
+    spi_write_array(8,&cmd[4+(8*current_ic)]);
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_SET);
+  }
+
+}

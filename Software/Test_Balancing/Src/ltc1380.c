@@ -30,7 +30,7 @@ void LTC1380_Set_Channel(int8_t  board_num, int8_t mux_num, int8_t channel_num)
 
     // Send command to control the mux
    // LTC1380_CONFIG_I2C_WRITE(board_num, &command, sizeof(command), LTC1380_BAUD_RATE);
-    LTC6804s_wrcomm(SPI_HandleTypeDef *hspi1);
+   // LTC6804s_wrcomm(SPI_HandleTypeDef *hspi1);
     // Wait for the channel to connect
     delay_us(LTC1380_TON);
 

@@ -49,6 +49,11 @@ union COMM_REG{
     uint8_t FCOM2 : 4;
   } fields;
 };
+uint8_t ltc6804_cfg[3][6] = {
+    {0xFC,0x00,0x00,0x00,0x00,0x10},
+    {0xFC,0x00,0x00,0x00,0x00,0x10},
+    {0xFC,0x00,0x00,0x00,0x00,0x10}
+};
 uint16_t pec15(uint8_t len,uint8_t data[], uint16_t crcTable[]);
 uint16_t convert_voltage(uint8_t v_data[]);
 uint16_t convert_temp(uint16_t volt);
