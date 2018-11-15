@@ -1440,7 +1440,7 @@ void ltc6813_adcvax(
 }
 //balancing
 
-void balancing_update(uint16_t cell_voltages[108][2]) {
+uint16_t balancing_update(uint16_t cell_voltages[108][2]) {
 
     // Find lowest cell
 	 uint8_t i;
@@ -1452,7 +1452,7 @@ void balancing_update(uint16_t cell_voltages[108][2]) {
 		        if (cell_voltages[i][0] != -1 && cell_voltages[i][0] < lowest_v)
 		            lowest_v = cell_voltages[i][0];
 		    }
-
+		    return i;
     // Determine cells for balancing
     for (i=0;i<9*TOT_IC;i++){
         set_balancing(i, cell_voltages[i][0] != -1 && cell_voltages[i][0] > lowest_v + CELL_MARGIN);
@@ -1483,6 +1483,7 @@ void set_balancing(uint8_t cell, uint8_t state) {
             ltc6804_cfg[ltc][5] &= ~(0b1 << (cell-8));
     }
 }
+
 // da controllare
 void LTC6804_wrcfg(uint8_t total_ic, uint8_t ltc6804_cfg[3][6])
 {
@@ -1533,3 +1534,50 @@ void LTC6804_wrcfg(uint8_t total_ic, uint8_t ltc6804_cfg[3][6])
   }
 
 }
+void ltc6804_DischargeCell_Enable( uint8_t parity, SPI_HandleTypeDef *hspi1){
+
+	uint8_t cmd[4];
+	uint8_t cfng[8];
+	uint16_t cmd_pec;
+	cmd[0] = 0x00; //WRCFG
+	cmd[1] = 0x01;
+	cmd_pec = pec15(2, cmd,crcTable);
+	cmd[2] = (uint8_t)(cmd_pec >> 8);
+    cmd[3] = (uint8_t)(cmd_pec);
+	cfng[0] = 0x00;
+	cfng[1] = 0x00;
+	cfng[2] = 0x00;
+	cfng[3] = 0x00;
+
+//		if (parity == 0){
+//
+//			cfng[4] = 0x4A;
+//			cfng[5] = 0x01;
+//
+//		}
+//		else{
+//
+//			cfng[4] = 0x95;
+//			cfng[5] = 0x02;
+//
+//		}
+//
+//	}
+//	else{
+//
+//		cfng[4] = 0x00;
+//		cfng[5] = 0x00;
+		//cfng[]
+
+	cmd_pec = pec15(6, cfng, crcTable);
+	cfng[6] = (uint8_t)(cmd_pec >> 8);
+	cfng[7] = (uint8_t)(cmd_pec);
+
+    wakeup_idle(hspi1);
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_RESET);
+	HAL_SPI_Transmit(hspi1, cmd, 4,10);
+	HAL_SPI_Transmit(hspi1, cfng, 8,10);
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_SET);
+
+}
+
