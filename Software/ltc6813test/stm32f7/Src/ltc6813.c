@@ -74,7 +74,7 @@ void ltc6813_rdcv_voltages(uint8_t ic_n, uint16_t cell_voltages[18][2], SPI_Hand
 	uint8_t cmd[4];
 	uint16_t cmd_pec;
 	uint8_t data[8];
-	cmd[0] = (uint8_t)0x80 ;
+	cmd[0] = (uint8_t)0x80;
 	wakeup_idle(hspi1);
 
 	// ---- Celle 1, 2, 3 rdcv A
@@ -84,8 +84,10 @@ void ltc6813_rdcv_voltages(uint8_t ic_n, uint16_t cell_voltages[18][2], SPI_Hand
 	cmd[2] = (uint8_t)(cmd_pec >> 8);
 	cmd[3] = (uint8_t)(cmd_pec);
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+
 	HAL_SPI_Transmit(hspi1, cmd, 4, 100);
-	HAL_SPI_Receive(hspi1, data, 8, 100);
+	HAL_SPI_Receive(hspi1, data, 8, 100);  //data 48
+
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
 	if(pec15(6, data, crcTable) == (uint16_t) (data[6]*256 + data[7])){
 
@@ -484,72 +486,72 @@ void ltc6813_clraux(SPI_HandleTypeDef *hspi1){
 
 //for using GPIO 4-5 as I2C(SDA, SCL)
 //
-//void LTC6804s_I2CMUX(SPI_HandleTypeDef *hspi1,uint8_t ch){
-//		uint8_t total_ic=1;
-//		const uint8_t CMD_LEN = 4+8*total_ic;
-//		  const uint8_t BYTES_IN_REG = 6;
-//		uint8_t cmd[8];
-//		uint8_t config[6] ;
-//           // commadn ltc1380
-//
-//		// COMM commands EEPROM
-////		config[0] = 0x6A;
-////		config[1] = 0x08;
-////		config[2] = 0x00;
-////		config[3] = 0x18;
-////		config[4] = 0x0A;
-////		config[5] = 0xA9;
-//		//COMM  LTC1380
-//
-//		config[0] = 0x64;
-//		config[1] = 0xC8;
-//		config[2] = 0x00+ ch; //0x08-0x0F
-//		//config[3] = 0x 8+ch;
-//		config[3] = 0x80;   //data ???
-//		config[4] = 0x90;
-// //u have to read value (V) from GPIOX
-//
-//	  //uint16_t COMM_X[16];
-//		 uint8_t cmd_index; //command counter
-//		 uint16_t cfg_pec;
-//	  //1   wrcomm commands
-//	    cmd[0] = 0x07;
-//	    cmd[1] = 0x21;
-//
-//	    cmd[2] = 0x24;
-//	    cmd[3] = 0xB2;
-//
-//
-//	    //2
-//	    cmd_index =4;
-//
-//
-//	    for (uint8_t current_byte = 0; current_byte < BYTES_IN_REG; current_byte++) // executes for each of the 6 bytes in the CFGR register
-//	    {
-//	      // current_byte is the byte counter
-//
-//	      cmd[cmd_index] = config[current_byte];            //adding the config data to the array to be sent
-//	      cmd_index = cmd_index + 1;
-//	    }
-//	    //3
-//	    cfg_pec = (uint16_t)pec15(BYTES_IN_REG, config,crcTable);   // calculating the PEC for each ICs configuration register data
-//	       cmd[cmd_index] = (uint8_t)(cfg_pec >> 8);
-//	       cmd[cmd_index + 1] = (uint8_t)cfg_pec;
-//	       cmd_index = cmd_index + 2;
-//	    wakeup_idle(hspi1);                                //This will guarantee that the LTC6804 isoSPI port is awake.This command can be removed.
-//	     //5
-//
-//	   	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_RESET);
-//	   //		HAL_SPI_Transmit(hspi1, cmd, 4, 100);
-//	   //		HAL_SPI_Receive(hspi1, data, 8, 100);
-//	   	HAL_SPI_Transmit(hspi1, cmd, 8, 100);
-//
-//
-//
-//	   		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_SET);
-//
-//}
-//
+void LTC6804s_I2CMUX(SPI_HandleTypeDef *hspi1,uint8_t ch){
+		uint8_t total_ic=1;
+		const uint8_t CMD_LEN = 4+8*total_ic;
+		  const uint8_t BYTES_IN_REG = 6;
+		uint8_t cmd[8];
+		uint8_t config[6] ;
+           // commadn ltc1380
+
+		// COMM commands EEPROM
+//		config[0] = 0x6A;
+//		config[1] = 0x08;
+//		config[2] = 0x00;
+//		config[3] = 0x18;
+//		config[4] = 0x0A;
+//		config[5] = 0xA9;
+		//COMM  LTC1380
+
+		config[0] = 0x64;
+		config[1] = 0xC8;
+		config[2] = 0x00+ ch; //0x08-0x0F
+		//config[3] = 0x 8+ch;
+		config[3] = 0x80;   //data ???
+		config[4] = 0x90;
+ //u have to read value (V) from GPIOX
+
+	  //uint16_t COMM_X[16];
+		 uint8_t cmd_index; //command counter
+		 uint16_t cfg_pec;
+	  //1   wrcomm commands
+	    cmd[0] = 0x07;
+	    cmd[1] = 0x21;
+
+	    cmd[2] = 0x24;
+	    cmd[3] = 0xB2;
+
+
+	    //2
+	    cmd_index =4;
+
+
+	    for (uint8_t current_byte = 0; current_byte < BYTES_IN_REG; current_byte++) // executes for each of the 6 bytes in the CFGR register
+	    {
+	      // current_byte is the byte counter
+
+	      cmd[cmd_index] = config[current_byte];            //adding the config data to the array to be sent
+	      cmd_index = cmd_index + 1;
+	    }
+	    //3
+	    cfg_pec = (uint16_t)pec15(BYTES_IN_REG, config,crcTable);   // calculating the PEC for each ICs configuration register data
+	       cmd[cmd_index] = (uint8_t)(cfg_pec >> 8);
+	       cmd[cmd_index + 1] = (uint8_t)cfg_pec;
+	       cmd_index = cmd_index + 2;
+	    wakeup_idle(hspi1);                                //This will guarantee that the LTC6804 isoSPI port is awake.This command can be removed.
+	     //5
+
+	   	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_RESET);
+	   //		HAL_SPI_Transmit(hspi1, cmd, 4, 100);
+	   //		HAL_SPI_Receive(hspi1, data, 8, 100);
+	   	HAL_SPI_Transmit(hspi1, cmd, 8, 100);
+
+
+
+	   		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_SET);
+
+}
+
 //// Starts cell voltage  and GPIO 1&2 conversion
 //void ltc6813_adcvax(
 //		  uint8_t DCP,SPI_HandleTypeDef *hspi1) //Discharge Permit)
@@ -569,97 +571,99 @@ void ltc6813_clraux(SPI_HandleTypeDef *hspi1){
 //}
 ////balancing
 //
-//uint16_t balancing_update(uint16_t cell_voltages[108][2]) {
-//
-//    // Find lowest cell
-//	 uint8_t i;
-//	 uint8_t TOT_IC =1;
-//	 uint8_t CELL_MARGIN =400;//mv
-//		    uint16_t lowest_v = 42250;
-//		    for (i=0;i<TOT_IC*9;i++){
-//
-//		        if (cell_voltages[i][0] != -1 && cell_voltages[i][0] < lowest_v)
-//		            lowest_v = cell_voltages[i][0];
-//		    }
-//		    return i;
-//    // Determine cells for balancing
-//    for (i=0;i<9*TOT_IC;i++){
-//        set_balancing(i, cell_voltages[i][0] != -1 && cell_voltages[i][0] > lowest_v + CELL_MARGIN);
+uint16_t balancing_update(uint16_t cell_voltages[108][2]) {
+
+    // Find lowest cell
+	 uint8_t i;
+	 uint8_t TOT_IC =1;
+	 uint8_t CELL_MARGIN =400;//mv
+		    uint16_t lowest_v = 42250;
+		    for (i=0;i<TOT_IC*9;i++){
++
+		        if (cell_voltages[i][0] != -1 && cell_voltages[i][0] < lowest_v)
+		            lowest_v = cell_voltages[i][0];
+		    }
+		    return i;
+    // Determine cells for balancing
+    for (i=0;i<9*TOT_IC;i++){
+        set_balancing(i, cell_voltages[i][0] != -1 && cell_voltages[i][0] > lowest_v + CELL_MARGIN);
+    }
+}
+
+void balancing_stop() {
+    uint8_t i;
+    uint8_t TOT_IC =1;
+    for (i=0;i<TOT_IC*9;i++)
+        set_balancing(i, 0);
+}
+
+void set_balancing(uint8_t cell, uint8_t state) {
+  //1
+    uint8_t ltc = cell % 9;   //1
+    cell -= ltc * 9;//1-9
+
+//    if (cell >= 0 && cell < 8) {
+//        if (state)
+//            ltc6804_cfg[ltc][4] |= 0b1 << cell;
+//        else
+//            ltc6804_cfg[ltc][4] &= ~(0b1 << cell);
+//    } else if (cell > 7 && cell < 12) {
+//        if (state)
+//            ltc6804_cfg[ltc][5] |= 0b1 << (cell-8);
+//        else
+//            ltc6804_cfg[ltc][5] &= ~(0b1 << (cell-8));
 //    }
-//}
+}
+
+void ltc6813_DischargeCell_Enable(SPI_HandleTypeDef *hspi1){
+
+	uint8_t cmd[4];
+	uint8_t cfng[8];
+	uint16_t cmd_pec;
+	cmd[0] = 0x00; //WRCFG
+	cmd[1] = 0x01;
+	cmd_pec = pec15(2, cmd,crcTable);
+	cmd[2] = (uint8_t)(cmd_pec >> 8);
+    cmd[3] = (uint8_t)(cmd_pec);
+	cfng[0] = 0x00;
+	cfng[1] = 0x00;
+	cfng[2] = 0x00;
+	cfng[3] = 0x00;
+	cfng[4] = 0x80;//DCC1
+
+
+//		if (parity == 0){
 //
-//void balancing_stop() {
-//    uint8_t i;
-//    uint8_t TOT_IC =1;
-//    for (i=0;i<TOT_IC*9;i++)
-//        set_balancing(i, 0);
-//}
+//			cfng[4] = 0x4A;
+//			cfng[5] = 0x01;
 //
-//void set_balancing(uint8_t cell, uint8_t state) {
-//  //1
-//    uint8_t ltc = cell % 9;   //1
-//    cell -= ltc * 9;//1-9
+//		}
+//		else{
 //
-////    if (cell >= 0 && cell < 8) {
-////        if (state)
-////            ltc6804_cfg[ltc][4] |= 0b1 << cell;
-////        else
-////            ltc6804_cfg[ltc][4] &= ~(0b1 << cell);
-////    } else if (cell > 7 && cell < 12) {
-////        if (state)
-////            ltc6804_cfg[ltc][5] |= 0b1 << (cell-8);
-////        else
-////            ltc6804_cfg[ltc][5] &= ~(0b1 << (cell-8));
-////    }
-//}
+//			cfng[4] = 0x95;
+//			cfng[5] = 0x02;
 //
-//void ltc6804_DischargeCell_Enable( uint8_t parity, SPI_HandleTypeDef *hspi1){
+//		}
 //
-//	uint8_t cmd[4];
-//	uint8_t cfng[8];
-//	uint16_t cmd_pec;
-//	cmd[0] = 0x00; //WRCFG
-//	cmd[1] = 0x01;
-//	cmd_pec = pec15(2, cmd,crcTable);
-//	cmd[2] = (uint8_t)(cmd_pec >> 8);
-//    cmd[3] = (uint8_t)(cmd_pec);
-//	cfng[0] = 0x00;
-//	cfng[1] = 0x00;
-//	cfng[2] = 0x00;
-//	cfng[3] = 0x00;
+//	}
+//	else{
 //
-////		if (parity == 0){
-////
-////			cfng[4] = 0x4A;
-////			cfng[5] = 0x01;
-////
-////		}
-////		else{
-////
-////			cfng[4] = 0x95;
-////			cfng[5] = 0x02;
-////
-////		}
-////
-////	}
-////	else{
-////
-////		cfng[4] = 0x00;
-////		cfng[5] = 0x00;
-//		//cfng[]
-//
-//	cmd_pec = pec15(6, cfng, crcTable);
-//	cfng[6] = (uint8_t)(cmd_pec >> 8);
-//	cfng[7] = (uint8_t)(cmd_pec);
-//
-//    wakeup_idle(hspi1);
-//	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_RESET);
-//	HAL_SPI_Transmit(hspi1, cmd, 4,10);
-//	HAL_SPI_Transmit(hspi1, cfng, 8,10);
-//	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_SET);
-//
-//}
-//
-//
-//
-//
+//		cfng[4] = 0x00;
+//		cfng[5] = 0x00;
+		//cfng[]
+
+	cmd_pec = pec15(6, cfng, crcTable);
+	cfng[6] = (uint8_t)(cmd_pec >> 8);
+	cfng[7] = (uint8_t)(cmd_pec);
+
+    wakeup_idle(hspi1);
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_RESET);
+	HAL_SPI_Transmit(hspi1, cmd, 4,10);
+	HAL_SPI_Transmit(hspi1, cfng, 8,10);
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_SET);
+
+}
+
+
+
+

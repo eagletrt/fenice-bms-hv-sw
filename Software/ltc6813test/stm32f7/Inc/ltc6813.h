@@ -20,5 +20,5 @@ void ltc6813_adstat( SPI_HandleTypeDef *hspi1);
 void ltc6804_rdstat(SPI_HandleTypeDef *hspi1,uint16_t stat_voltages[18][2] );
 void ltc6813_clrcell(SPI_HandleTypeDef *hspi1);
 void ltc6813_clraux(SPI_HandleTypeDef *hspi1);
-
+void ltc6813_DischargeCell_Enable(SPI_HandleTypeDef *hspi1);
 #endif /* LTC6813_H_ */
