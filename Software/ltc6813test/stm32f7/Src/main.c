@@ -74,7 +74,7 @@ float cell_voltages[18];
 float gpio_voltages[9];
 uint16_t  cell_v[18][2];
 uint16_t gpio_v[9][2];
-uint8_t dcc[18] =  {
+uint16_t dcc_b[18] =  {
 
 {0x01},//DCC1  0x01  cfg4a
 {0x02},//DCC2  0x02
@@ -85,7 +85,7 @@ uint8_t dcc[18] =  {
 {0x40},//DCC7  0x40-
 {0x80},//DCC8  0x80-
 
-{0x01},//DCC9  0x01    cfg4b
+{0x01},//DCC9  0x01    cfg5A
 {0x02},//DCC10  0x02
 {0x04},//DCC11  0x04
 {0x08},//DCC12  0x08-
@@ -102,6 +102,29 @@ uint8_t dcc[18] =  {
 
 
 };
+
+uint16_t dcto_b[16] = {
+		{0x00},//disabled
+		{0x01},//0,5 min
+		{0x02},//1
+		{0x03},//2
+		{0x04},//3-
+		{0x05},//4
+		{0x06},//5
+		{0x07},//10
+		{0x08},//15
+
+		{0x09},//20
+		{0x0a},//30
+		{0x0b},//40
+		{0x0c},//60
+
+		{0x0d},//75
+		{0x0e},//90
+		{0x0f}//120
+
+};
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
