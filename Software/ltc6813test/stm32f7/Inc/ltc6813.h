@@ -9,6 +9,8 @@
 #define LTC6813_H_
 #include "stm32f7xx_hal.h"
 
+extern uint8_t dcc[18];
+
 void ltc6813_adcv(uint8_t DCP, SPI_HandleTypeDef *hspi1);
 void wakeup_idle(SPI_HandleTypeDef *hspi1);
 void ltc6813_rdcv_voltages(uint8_t ic_n, uint16_t cell_voltages[18][2], SPI_HandleTypeDef *hspi1);
@@ -20,5 +22,5 @@ void ltc6813_adstat( SPI_HandleTypeDef *hspi1);
 void ltc6804_rdstat(SPI_HandleTypeDef *hspi1,uint16_t stat_voltages[18][2] );
 void ltc6813_clrcell(SPI_HandleTypeDef *hspi1);
 void ltc6813_clraux(SPI_HandleTypeDef *hspi1);
-void ltc6813_DischargeCell_Enable(SPI_HandleTypeDef *hspi1);
+void ltc6813_DischargeCell_Enable(SPI_HandleTypeDef *hspi1,int dcc,uint8_t dcc_b[dcc]);
 #endif /* LTC6813_H_ */

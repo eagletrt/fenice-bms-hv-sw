@@ -44,6 +44,25 @@ uint16_t pec15(uint8_t len,uint8_t data[],uint16_t crcTable[] ){
     return (remainder*2);//The CRC15 has a 0 in the LSB so the final value must be multiplied by 2
 
 }
+//DCC1  0x01
+	//DCC2  0x02
+//A		//DCC3  0x04-
+	//DCC4  0x08-
+	//DCC5  0x10-
+	//DCC6  0x20-
+	//DCC7  0x40-
+	//DCC8  0x80-
+
+//A         //DCC9 0x01
+		//DCC10  0x02
+		//DCC11  0x04-
+		//DCC12  0x08-
+
+	//B	//DCC13  0x10-
+		//DCC14  0x20-
+		//DCC15  0x40-
+		//DCC16  0x80-
+
 
 void ltc6813_adcv(uint8_t DCP, SPI_HandleTypeDef *hspi1){
 		uint8_t cmd[4];
@@ -579,7 +598,7 @@ uint16_t balancing_update(uint16_t cell_voltages[108][2]) {
 	 uint8_t CELL_MARGIN =400;//mv
 		    uint16_t lowest_v = 42250;
 		    for (i=0;i<TOT_IC*9;i++){
-+
+
 		        if (cell_voltages[i][0] != -1 && cell_voltages[i][0] < lowest_v)
 		            lowest_v = cell_voltages[i][0];
 		    }
@@ -615,7 +634,8 @@ void set_balancing(uint8_t cell, uint8_t state) {
 //    }
 }
 
-void ltc6813_DischargeCell_Enable(SPI_HandleTypeDef *hspi1){
+
+void ltc6813_DischargeCell_Enable(SPI_HandleTypeDef *hspi1,int dcc,uint8_t dcc_b[dcc]){
 
 	uint8_t cmd[4];
 	uint8_t cfng[8];
@@ -626,31 +646,41 @@ void ltc6813_DischargeCell_Enable(SPI_HandleTypeDef *hspi1){
 	cmd[2] = (uint8_t)(cmd_pec >> 8);
     cmd[3] = (uint8_t)(cmd_pec);
 	cfng[0] = 0x00;
-	cfng[1] = 0x00;
+
 	cfng[2] = 0x00;
 	cfng[3] = 0x00;
-	cfng[4] = 0x80;//DCC1
 
+	if(dcc<8){
+	cfng[4] = dcc_b[dcc];//DCC1  0x01-
+	cfng[5] = 0x00;
+	cfng[1] =0x00;
 
-//		if (parity == 0){
-//
-//			cfng[4] = 0x4A;
-//			cfng[5] = 0x01;
-//
-//		}
-//		else{
-//
-//			cfng[4] = 0x95;
-//			cfng[5] = 0x02;
-//
-//		}
-//
-//	}
-//	else{
-//
-//		cfng[4] = 0x00;
-//		cfng[5] = 0x00;
-		//cfng[]
+	}
+	if(dcc>=8 && dcc<11){
+		cfng[4] = dcc_b[dcc];//DCC1  0x01-
+		cfng[5] = 0x00;
+		cfng[1] =0x00;
+//wrcfb
+	}
+	if(dcc>=11 && dcc<15){
+		cfng[4] = 0x00;
+		cfng[5] =  dcc_b[dcc];
+		cfng[1] =0x00;
+		//wrcfb
+	}
+	if(dcc>=17){
+		cfng[1] = dcc_b[dcc];
+		//wrcfb  TODO
+	}
+	//DCC1  0x01
+	//DCC2  0x02
+	//DCC3  0x04-
+	//DCC1  0x08-
+	//DCC1  0x10-
+	//DCC1  0x20-
+	//DCC1  0x40-
+	//DCC1  0x80-
+
 
 	cmd_pec = pec15(6, cfng, crcTable);
 	cfng[6] = (uint8_t)(cmd_pec >> 8);
@@ -664,6 +694,33 @@ void ltc6813_DischargeCell_Enable(SPI_HandleTypeDef *hspi1){
 
 }
 
-
-
-
+////Write the LTC681x CFGRA
+//void LTC681x_wrcfg(uint8_t total_ic, //The number of ICs being written to
+//                   cell_asic ic[]
+//                  )
+//{
+//  uint8_t cmd[2] = {0x00 , 0x01} ;
+//  uint8_t write_buffer[256];
+//  uint8_t write_count = 0;
+//  uint8_t c_ic = 0;
+//  for (uint8_t current_ic = 0; current_ic<total_ic; current_ic++)
+//  {
+//    if (ic->isospi_reverse == true)
+//    {
+//      c_ic = current_ic;
+//    }
+//    else
+//    {
+//      c_ic = total_ic - current_ic - 1;
+//    }
+//
+//    for (uint8_t data = 0; data<6; data++)
+//    {
+//      write_buffer[write_count] = ic[c_ic].config.tx_data[data];
+//      write_count++;
+//    }
+//  }
+//  write_68(total_ic, cmd, write_buffer);
+//}
+//
+//
