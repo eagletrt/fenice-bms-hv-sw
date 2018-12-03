@@ -590,7 +590,7 @@ void LTC6804s_I2CMUX(SPI_HandleTypeDef *hspi1,uint8_t ch){
 //}
 ////balancing
 //
-uint16_t balancing_update(uint16_t cell_voltages[108][2]) {
+uint8_t balancing_update(uint16_t cell_voltages[108][2]) {
 
     // Find lowest cell
 	 uint8_t i;
@@ -635,62 +635,159 @@ void set_balancing(uint8_t cell, uint8_t state) {
 }
 
 
-void ltc6813_DischargeCell_Enable(SPI_HandleTypeDef *hspi1,int dcc,uint8_t dcc_b[dcc]){
+void ltc6813_DischargeCell_Enable(SPI_HandleTypeDef *hspi1,int ndcc,uint16_t dcc_b[18], int dcto,uint16_t dcto_b[16]){
 
 	uint8_t cmd[4];
-	uint8_t cfng[8];
+	uint8_t cfgr[8];
 	uint16_t cmd_pec;
 	cmd[0] = 0x00; //WRCFG
-	cmd[1] = 0x01;
+	//cmd[1] = 0x01;
 	cmd_pec = pec15(2, cmd,crcTable);
 	cmd[2] = (uint8_t)(cmd_pec >> 8);
     cmd[3] = (uint8_t)(cmd_pec);
-	cfng[0] = 0x00;
 
-	cfng[2] = 0x00;
-	cfng[3] = 0x00;
+    cfgr[0]= 0x00;
+	cfgr[1] = 0x00;
+	cfgr[2] = 0x00;
+	cfgr[3] = 0x00;
+	cfgr[4] = 0x00;
+    cfgr[5] = 0x00;
+
 
 	if(dcc<8){
-	cfng[4] = dcc_b[dcc];//DCC1  0x01-
-	cfng[5] = 0x00;
-	cfng[1] =0x00;
+	cmd[1] = 0x01;//WRCFGA for dcto +dcc
+	cfgr[4] = dcc_b[ndcc];//DCC1  0x01-
+	cfgr[5] = dcto_b[dcto] + 0x00;
+	cfgr[1] =0x00;
+	cfgr[0] =0x00;
+
+	cmd_pec = pec15(6, cfgr, crcTable);
+		cfgr[6] = (uint8_t)(cmd_pec >> 8);
+		cfgr[7] = (uint8_t)(cmd_pec);
+
+	    wakeup_idle(hspi1);
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_RESET);
+		HAL_SPI_Transmit(hspi1, cmd, 4,10);
+		HAL_SPI_Transmit(hspi1, cfgr, 8,10);
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_SET);
+
+		cmd[1] = 0x04;//WRCFGB for dtmen       every 30 sec perform cell voltage conversion-> posso fare rdcv ogni 30 sec per monitorare
+		cfgr[4] = 0x00;
+		cfgr[5] = 0x00;
+		cfgr[1] =0x08 +0x00;//dtmen
+		cfgr[0] =0x00;
+
+		cmd_pec = pec15(6, cfgr, crcTable);
+		cfgr[6] = (uint8_t)(cmd_pec >> 8);
+		cfgr[7] = (uint8_t)(cmd_pec);
+
+		wakeup_idle(hspi1);
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_RESET);
+		HAL_SPI_Transmit(hspi1, cmd, 4,10);
+		HAL_SPI_Transmit(hspi1, cfgr, 8,10);
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_SET);
 
 	}
-	if(dcc>=8 && dcc<11){
-		cfng[4] = dcc_b[dcc];//DCC1  0x01-
-		cfng[5] = 0x00;
-		cfng[1] =0x00;
-//wrcfb
+	if(dcc>=8 && dcc<12){
+		cmd[1] = 0x01;//WRCFGA for dcto+dcc
+		cfgr[5] = dcto_b[dcto]  +  dcc_b[ndcc];//DCC1  0x01-
+		cfgr[4] = 0x00;
+		cfgr[1] =0x00;
+
+		   cmd_pec = pec15(6, cfgr, crcTable);
+			cfgr[6] = (uint8_t)(cmd_pec >> 8);
+			cfgr[7] = (uint8_t)(cmd_pec);
+
+		    wakeup_idle(hspi1);
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_RESET);
+			HAL_SPI_Transmit(hspi1, cmd, 4,10);
+			HAL_SPI_Transmit(hspi1, cfgr, 8,10);
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_SET);
+
+			cmd[1] = 0x04;//WRCFGB for dtmen
+			cfgr[4] = 0x00;
+			cfgr[5] = 0x00;
+			cfgr[1] =0x08 +0x00;//dtmen
+			cfgr[0] =0x00;
+
+			cmd_pec = pec15(6, cfgr, crcTable);
+			cfgr[6] = (uint8_t)(cmd_pec >> 8);
+			cfgr[7] = (uint8_t)(cmd_pec);
+
+			wakeup_idle(hspi1);
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_RESET);
+			HAL_SPI_Transmit(hspi1, cmd, 4,10);
+			HAL_SPI_Transmit(hspi1, cfgr, 8,10);
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_SET);
+
 	}
-	if(dcc>=11 && dcc<15){
-		cfng[4] = 0x00;
-		cfng[5] =  dcc_b[dcc];
-		cfng[1] =0x00;
-		//wrcfb
-	}
-	if(dcc>=17){
-		cfng[1] = dcc_b[dcc];
-		//wrcfb  TODO
-	}
-	//DCC1  0x01
-	//DCC2  0x02
-	//DCC3  0x04-
-	//DCC1  0x08-
-	//DCC1  0x10-
-	//DCC1  0x20-
-	//DCC1  0x40-
-	//DCC1  0x80-
+	if(dcc>=12 && dcc<16){
+		cmd[1]= 0x01;//WRCFGA for dcto
+		cfgr[5]= dcto_b[dcto]  + 0x00;
+
+		cmd_pec = pec15(6, cfgr, crcTable);
+					cfgr[6] = (uint8_t)(cmd_pec >> 8);
+					cfgr[7] = (uint8_t)(cmd_pec);
+
+				    wakeup_idle(hspi1);
+					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_RESET);
+					HAL_SPI_Transmit(hspi1, cmd, 4,10);
+					HAL_SPI_Transmit(hspi1, cfgr, 8,10);
+					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_SET);
+
+		cmd[1] = 0x04;//WRCFGB for dcc +dtmen
+		cfgr[4] = 0x00;
+		cfgr[0] =  dcc_b[ndcc];
+		cfgr[1] =0x08 +0x00; //dtmen
+		cfgr[5] =0x00;
 
 
-	cmd_pec = pec15(6, cfng, crcTable);
-	cfng[6] = (uint8_t)(cmd_pec >> 8);
-	cfng[7] = (uint8_t)(cmd_pec);
+		cmd_pec = pec15(6, cfgr, crcTable);
+			cfgr[6] = (uint8_t)(cmd_pec >> 8);
+			cfgr[7] = (uint8_t)(cmd_pec);
 
-    wakeup_idle(hspi1);
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_RESET);
-	HAL_SPI_Transmit(hspi1, cmd, 4,10);
-	HAL_SPI_Transmit(hspi1, cfng, 8,10);
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_SET);
+		    wakeup_idle(hspi1);
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_RESET);
+			HAL_SPI_Transmit(hspi1, cmd, 4,10);
+			HAL_SPI_Transmit(hspi1, cfgr, 8,10);
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_SET);
+
+	}
+	if(dcc>=16){
+
+ cmd[1]= 0x01;//WRCFGA for dcto
+ cfgr[5]= dcto_b[dcto]  + 0x00;
+
+ cmd_pec = pec15(6, cfgr, crcTable);
+			cfgr[6] = (uint8_t)(cmd_pec >> 8);
+			cfgr[7] = (uint8_t)(cmd_pec);
+
+			wakeup_idle(hspi1);
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_RESET);
+			HAL_SPI_Transmit(hspi1, cmd, 4,10);
+			HAL_SPI_Transmit(hspi1, cfgr, 8,10);
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_SET);
+
+		cmd[1] = 0x04;//WRCFGB  dcc+dtmen
+		cfgr[1] = 0x08+ dcc_b[ndcc];
+		cfgr[4] = 0x00;
+		cfgr[5] = 0x00;
+		cfgr[0] =0x00;
+
+		 cmd_pec = pec15(6, cfgr, crcTable);
+					cfgr[6] = (uint8_t)(cmd_pec >> 8);
+					cfgr[7] = (uint8_t)(cmd_pec);
+
+					wakeup_idle(hspi1);
+					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_RESET);
+					HAL_SPI_Transmit(hspi1, cmd, 4,10);
+					HAL_SPI_Transmit(hspi1, cfgr, 8,10);
+					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_SET);
+
+
+	}
+
+
 
 }
 
