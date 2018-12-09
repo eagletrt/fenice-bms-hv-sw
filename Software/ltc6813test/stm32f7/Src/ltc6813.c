@@ -269,7 +269,7 @@ void ltc6813_rdcv_voltages(uint8_t ic_n, uint16_t cell_voltages[18][2], SPI_Hand
 
 }
 
-//gpio conversion
+//gpio conversion analoga ad adcv
 void ltc6813_adax(uint8_t chg, SPI_HandleTypeDef *hspi1)
 {
     uint8_t cmd[4];
@@ -299,7 +299,7 @@ void ltc6813_adax(uint8_t chg, SPI_HandleTypeDef *hspi1)
 
 
         }
-
+//analogo a rdcv
 void ltc6813_rdaux(uint8_t ic_n, uint16_t gpio_voltages[9][2],SPI_HandleTypeDef *hspi1){
 
 
