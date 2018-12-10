@@ -69,7 +69,7 @@ void ltc6813_adcv(uint8_t DCP, SPI_HandleTypeDef *hspi1){
 		uint16_t cmd_pec;
 		cmd[0] = (uint8_t)0x03;
 		cmd[1] = (uint8_t)0x60 + DCP * 16;
-		//cmd_pec = pec15(2, cmd,crcTable);
+		cmd_pec = pec15(2, cmd,crcTable);
 		cmd[2] = (uint8_t)(cmd_pec >> 8);
 	    cmd[3] = (uint8_t)(cmd_pec);
 
@@ -89,11 +89,13 @@ void wakeup_idle(SPI_HandleTypeDef *hspi1){
 }
 
 void ltc6813_rdcv_voltages(uint8_t ic_n, uint16_t cell_voltages[18][2], SPI_HandleTypeDef *hspi1){
+	//address com format non più possible
+	//TODO Implementare broadcast address command
 
 	uint8_t cmd[4];
 	uint16_t cmd_pec;
 	uint8_t data[8];
-	cmd[0] = (uint8_t)0x80;
+	cmd[0] = (uint8_t)0x00;
 	wakeup_idle(hspi1);
 
 	// ---- Celle 1, 2, 3 rdcv A
@@ -105,25 +107,25 @@ void ltc6813_rdcv_voltages(uint8_t ic_n, uint16_t cell_voltages[18][2], SPI_Hand
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
 
 	HAL_SPI_Transmit(hspi1, cmd, 4, 100);
-	HAL_SPI_Receive(hspi1, data, 8, 100);  //data 48
+	HAL_SPI_Receive(hspi1, data, 8, 100);
 
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
 	if(pec15(6, data, crcTable) == (uint16_t) (data[6]*256 + data[7])){
 
-		cell_voltages[ic_n*9][0] = convert_voltage(data);
-		cell_voltages[ic_n*9+1][0] = convert_voltage(&data[2]);
-		cell_voltages[ic_n*9+2][0] = convert_voltage(&data[4]);
+		cell_voltages[ic_n*18][0] = convert_voltage(data);
+		cell_voltages[ic_n*18+1][0] = convert_voltage(&data[2]);
+		cell_voltages[ic_n*18+2][0] = convert_voltage(&data[4]);
 
-		cell_voltages[ic_n*9][1] = 0;
-		cell_voltages[ic_n*9+1][1] = 0;
-		cell_voltages[ic_n*9+2][1] = 0;
+		cell_voltages[ic_n*18][1] = 0;
+		cell_voltages[ic_n*18+1][1] = 0;
+		cell_voltages[ic_n*18+2][1] = 0;
 
 	}
 	else{
 
-		cell_voltages[ic_n*9][1]++;
-		cell_voltages[ic_n*9+1][1]++;
-		cell_voltages[ic_n*9+2][1]++;
+		cell_voltages[ic_n*18][1]++;
+		cell_voltages[ic_n*18+1][1]++;
+		cell_voltages[ic_n*18+2][1]++;
 
 	}
 
@@ -284,7 +286,7 @@ void ltc6813_adax(uint8_t chg, SPI_HandleTypeDef *hspi1)
 
     		cmd[0] = (uint8_t)0x05;  //0000 0101
             //  cmd[1] = bit + 0x60 + chg; 01100000
-            cmd[1]= 0x60;
+            cmd[1]= 0x60+ chg;
             cmd_pec = pec15(2, cmd,crcTable);
 
             cmd[2] = (uint8_t)(cmd_pec >> 8);
@@ -590,48 +592,58 @@ void LTC6804s_I2CMUX(SPI_HandleTypeDef *hspi1,uint8_t ch){
 //}
 ////balancing
 //
-uint8_t balancing_update(uint16_t cell_voltages[108][2]) {
+T_cell highest_cell(uint16_t cell_voltages[18][2]) {
 
     // Find lowest cell
 	 uint8_t i;
-	 uint8_t TOT_IC =1;
-	 uint8_t CELL_MARGIN =400;//mv
-		    uint16_t lowest_v = 42250;
-		    for (i=0;i<TOT_IC*9;i++){
+	 T_cell highest;
+	 uint8_t TOT_IC =18;
 
-		        if (cell_voltages[i][0] != -1 && cell_voltages[i][0] < lowest_v)
-		            lowest_v = cell_voltages[i][0];
-		    }
-		    return i;
-    // Determine cells for balancing
-    for (i=0;i<9*TOT_IC;i++){
-        set_balancing(i, cell_voltages[i][0] != -1 && cell_voltages[i][0] > lowest_v + CELL_MARGIN);
-    }
+
+
+		     highest.v = 25000;
+
+for(i=0;i<TOT_IC;i++){
+	  if (cell_voltages[i][0] > highest.v){
+		  highest.v = cell_voltages[i][0];
+		  highest.i=i;
+		  		        }
+
+}
+	return 	 highest;
+
+}
+T_cell lowest_cell(uint16_t cell_voltages[18][2]) {
+
+    // Find lowest cell
+	 uint8_t i;
+	 T_cell lowest;
+	 uint8_t TOT_IC =18;
+
+
+
+	 lowest.v = 42500;
+
+for(i=0;i<TOT_IC;i++){
+	  if (cell_voltages[i][0] > lowest.v){
+		  lowest.v = cell_voltages[i][0];
+		  lowest.i=i;
+		  		        }
+
+}
+	return 	 lowest;
+
 }
 
-void balancing_stop() {
-    uint8_t i;
-    uint8_t TOT_IC =1;
-    for (i=0;i<TOT_IC*9;i++)
-        set_balancing(i, 0);
-}
+void set_balancing(uint16_t cell_voltages[18][2],SPI_HandleTypeDef *hspi1,uint16_t dcc_b[18], int dcto, uint16_t dcto_b[16]){
 
-void set_balancing(uint8_t cell, uint8_t state) {
-  //1
-    uint8_t ltc = cell % 9;   //1
-    cell -= ltc * 9;//1-9
+	T_cell highest= highest_cell(cell_voltages);
+	T_cell lowest= lowest_cell(cell_voltages);
+	uint8_t CELL_MARGIN = 400;//mv
+	if( highest.v>lowest.v + CELL_MARGIN){
 
-//    if (cell >= 0 && cell < 8) {
-//        if (state)
-//            ltc6804_cfg[ltc][4] |= 0b1 << cell;
-//        else
-//            ltc6804_cfg[ltc][4] &= ~(0b1 << cell);
-//    } else if (cell > 7 && cell < 12) {
-//        if (state)
-//            ltc6804_cfg[ltc][5] |= 0b1 << (cell-8);
-//        else
-//            ltc6804_cfg[ltc][5] &= ~(0b1 << (cell-8));
-//    }
+		ltc6813_DischargeCell_Enable(hspi1, highest.i,dcc_b[highest.i],dcto,dcto_b[dcto]);
+	}
 }
 
 
@@ -656,7 +668,7 @@ void ltc6813_DischargeCell_Enable(SPI_HandleTypeDef *hspi1,int ndcc,uint16_t dcc
 
 	if(dcc<8){
 	cmd[1] = 0x01;//WRCFGA for dcto +dcc
-	cfgr[4] = dcc_b[ndcc];//DCC1  0x01-
+	cfgr[4] = dcc_b[ndcc-1];//DCC1  0x01-
 	cfgr[5] = dcto_b[dcto] + 0x00;
 	cfgr[1] =0x00;
 	cfgr[0] =0x00;

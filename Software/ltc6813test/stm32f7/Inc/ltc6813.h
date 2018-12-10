@@ -10,7 +10,11 @@
 #include "stm32f7xx_hal.h"
 
 extern uint8_t dcc[18];
+typedef struct cell{
 
+	uint8_t i;
+	uint16_t v;
+}T_cell;
 void ltc6813_adcv(uint8_t DCP, SPI_HandleTypeDef *hspi1);
 void wakeup_idle(SPI_HandleTypeDef *hspi1);
 void ltc6813_rdcv_voltages(uint8_t ic_n, uint16_t cell_voltages[18][2], SPI_HandleTypeDef *hspi1);
@@ -23,4 +27,7 @@ void ltc6804_rdstat(SPI_HandleTypeDef *hspi1,uint16_t stat_voltages[18][2] );
 void ltc6813_clrcell(SPI_HandleTypeDef *hspi1);
 void ltc6813_clraux(SPI_HandleTypeDef *hspi1);
 void ltc6813_DischargeCell_Enable(SPI_HandleTypeDef *hspi1,int ndcc,uint16_t dcc_b[18], int dcto,uint16_t dcto_b[16]);
+void set_balancing(uint16_t cell_voltages[18][2],SPI_HandleTypeDef *hspi1,uint16_t dcc_b[18], int dcto, uint16_t dcto_b[16]);
+T_cell lowest_cell(uint16_t cell_voltages[18][2]);
+T_cell highest_cell(uint16_t cell_voltages[18][2]);
 #endif /* LTC6813_H_ */
