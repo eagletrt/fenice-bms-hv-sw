@@ -95,6 +95,7 @@ void ltc6813_rdcv_voltages(uint8_t ic_n, uint16_t cell_voltages[18][2], SPI_Hand
 	uint8_t cmd[4];
 	uint16_t cmd_pec;
 	uint8_t data[8];
+	//uint8_t data[8*ic_n];
 	cmd[0] = (uint8_t)0x00;
 	wakeup_idle(hspi1);
 
@@ -106,9 +107,27 @@ void ltc6813_rdcv_voltages(uint8_t ic_n, uint16_t cell_voltages[18][2], SPI_Hand
 	cmd[3] = (uint8_t)(cmd_pec);
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
 
+
+
 	HAL_SPI_Transmit(hspi1, cmd, 4, 100);
 	HAL_SPI_Receive(hspi1, data, 8, 100);
+//HAL_SPI_Receive(hspi1, data,8*ic_n , 100);  TODO   data8 checkpec16(data8) data8 checkpec16(data8) dat8 pec16
+//data0-5 volt, data6-7 pec
+//for(int j=0;i<ic_n;j++){
+//	if(pec15(6, data, crcTable) == (uint16_t) (data[6]*256 + data[7])){
+//
+//			cell_voltages[ic_n*18][0] = convert_voltage(data);
+//			cell_voltages[ic_n*18+1][0] = convert_voltage(&data[2]);
+//			cell_voltages[ic_n*18+2][0] = convert_voltage(&data[4]);
+//
+//			cell_voltages[ic_n*18][1] = 0;
+//			cell_voltages[ic_n*18+1][1] = 0;
+//			cell_voltages[ic_n*18+2][1] = 0;
+//
+//		}
 
+
+//}
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
 	if(pec15(6, data, crcTable) == (uint16_t) (data[6]*256 + data[7])){
 
