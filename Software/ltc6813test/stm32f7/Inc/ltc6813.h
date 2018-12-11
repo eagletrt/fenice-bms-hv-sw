@@ -10,6 +10,7 @@
 #include "stm32f7xx_hal.h"
 
 extern uint8_t dcc[18];
+
 typedef struct cell{
 
 	uint8_t i;

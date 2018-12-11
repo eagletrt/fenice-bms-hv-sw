@@ -30,7 +30,10 @@ uint16_t crcTable[256] ={0x0,0xc599, 0xceab, 0xb32, 0xd8cf, 0x1d56, 0x1664, 0xd3
     0x2d02, 0xa76f, 0x62f6, 0x69c4, 0xac5d, 0x7fa0, 0xba39, 0xb10b, 0x7492, 0x5368, 0x96f1, 0x9dc3,
     0x585a, 0x8ba7, 0x4e3e, 0x450c, 0x8095
     };
+uint8_t rdcv_cmd[6] ={
+		0x04, 0x06, 0x08,0x0A,0x09,0x0B
 
+};
 uint16_t pec15(uint8_t len,uint8_t data[],uint16_t crcTable[] ){
 
     uint16_t remainder,address;
@@ -88,19 +91,28 @@ void wakeup_idle(SPI_HandleTypeDef *hspi1){
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
 }
 
-void ltc6813_rdcv_voltages(uint8_t ic_n, uint16_t cell_voltages[18][2], SPI_HandleTypeDef *hspi1){
+void ltc6813_rdcv_voltages(uint8_t TOT_IC, uint16_t cell_voltages[36][2], SPI_HandleTypeDef *hspi1){
 	//address com format non più possible
 	//TODO Implementare broadcast address command
 
 	uint8_t cmd[4];
 	uint16_t cmd_pec;
-	uint8_t data[8];
+	uint8_t data[8*TOT_IC];
 	//uint8_t data[8*ic_n];
 	cmd[0] = (uint8_t)0x00;
 	wakeup_idle(hspi1);
+	uint8_t reg;//rdcv A B C D E F
 
-	// ---- Celle 1, 2, 3 rdcv A
-	cmd[1] = (uint8_t)0x04;
+	uint8_t N_CELL_IN_STACK=18;
+	uint8_t CELL_IN_REG=3;// num of cells returned by rdcv
+	uint8_t DATA_SIZE=8;
+
+
+	for(reg=0;reg<6;reg++){
+
+
+
+	cmd[1] = rdcv_cmd[reg];
 	//cmd[1] = (uint8_t)0x10;
 	cmd_pec = pec15(2, cmd, crcTable);
 	cmd[2] = (uint8_t)(cmd_pec >> 8);
@@ -110,185 +122,36 @@ void ltc6813_rdcv_voltages(uint8_t ic_n, uint16_t cell_voltages[18][2], SPI_Hand
 
 
 	HAL_SPI_Transmit(hspi1, cmd, 4, 100);
-	HAL_SPI_Receive(hspi1, data, 8, 100);
-//HAL_SPI_Receive(hspi1, data,8*ic_n , 100);  TODO   data8 checkpec16(data8) data8 checkpec16(data8) dat8 pec16
+
+HAL_SPI_Receive(hspi1, data,DATA_SIZE*TOT_IC , 100);  //TODO   data8 checkpec16(data8) data8 checkpec16(data8) dat8 pec16
+HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
 //data0-5 volt, data6-7 pec
-//for(int j=0;i<ic_n;j++){
-//	if(pec15(6, data, crcTable) == (uint16_t) (data[6]*256 + data[7])){
-//
-//			cell_voltages[ic_n*18][0] = convert_voltage(data);
-//			cell_voltages[ic_n*18+1][0] = convert_voltage(&data[2]);
-//			cell_voltages[ic_n*18+2][0] = convert_voltage(&data[4]);
-//
-//			cell_voltages[ic_n*18][1] = 0;
-//			cell_voltages[ic_n*18+1][1] = 0;
-//			cell_voltages[ic_n*18+2][1] = 0;
-//
-//		}
+for(int ic_n=0;ic_n<TOT_IC;ic_n++){
+	uint8_t shift8= ic_n*DATA_SIZE;
 
+	if(pec15(6, data+shift8, crcTable) == (uint16_t) (data[6+shift8]*256 + data[7+shift8])){
 
-//}
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
-	if(pec15(6, data, crcTable) == (uint16_t) (data[6]*256 + data[7])){
+			cell_voltages[reg*CELL_IN_REG+ic_n*N_CELL_IN_STACK][0] = convert_voltage(&data[shift8]);
+			cell_voltages[reg*CELL_IN_REG+ic_n*N_CELL_IN_STACK+1][0] = convert_voltage(&data[2+shift8]);
+			cell_voltages[reg*CELL_IN_REG+ic_n*N_CELL_IN_STACK+2][0] = convert_voltage(&data[4+shift8]);
 
-		cell_voltages[ic_n*18][0] = convert_voltage(data);
-		cell_voltages[ic_n*18+1][0] = convert_voltage(&data[2]);
-		cell_voltages[ic_n*18+2][0] = convert_voltage(&data[4]);
+			cell_voltages[ic_n*18][1] = 0;
+			cell_voltages[ic_n*18+1][1] = 0;
+			cell_voltages[ic_n*18+2][1] = 0;
 
-		cell_voltages[ic_n*18][1] = 0;
-		cell_voltages[ic_n*18+1][1] = 0;
-		cell_voltages[ic_n*18+2][1] = 0;
+		}else{
 
-	}
-	else{
-
-		cell_voltages[ic_n*18][1]++;
-		cell_voltages[ic_n*18+1][1]++;
-		cell_voltages[ic_n*18+2][1]++;
-
-	}
-
-	// ---- Celle 4, 5, 6
-	cmd[1] = 0x06;      //rdcv B
-	cmd_pec = pec15(2, cmd,crcTable);
-	cmd[2] = (uint8_t)(cmd_pec >> 8);
-	cmd[3] = (uint8_t)(cmd_pec);
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
-	HAL_SPI_Transmit(hspi1, cmd, 4, 100);
-	HAL_SPI_Receive(hspi1, data, 8, 100);
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
-	if(pec15(6, data, crcTable) == (uint16_t) (data[6]*256 + data[7])){
-
-		cell_voltages[ic_n*9+3][0] = convert_voltage(data);
-		cell_voltages[ic_n*9+4][0] = convert_voltage(&data[2]);
-		cell_voltages[ic_n*9+5][0] = convert_voltage(&data[4]);
-
-		cell_voltages[ic_n*9+3][1] = 0;
-		cell_voltages[ic_n*9+4][1] = 0;
-
-
-	}
-	else{
-
-		cell_voltages[ic_n*9+3][1]++;
-		cell_voltages[ic_n*9+4][1]++;
-
-	}
-
-	// ---- Celle 7,8,9 rdcv C
-	cmd[1] = 0x08;
-	cmd_pec = pec15(2, cmd,crcTable);
-	cmd[2] = (uint8_t)(cmd_pec >> 8);
-	cmd[3] = (uint8_t)(cmd_pec);
-	//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4 GPIO_PIN_RESET);
-	HAL_SPI_Transmit(hspi1, cmd, 4, 100);
-	HAL_SPI_Receive(hspi1, data, 8, 100);
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
-	if(pec15(6, data, crcTable) == (uint16_t) (data[6]*256 + data[7])){
-
-		cell_voltages[ic_n*9+6][0] = convert_voltage(data);
-		cell_voltages[ic_n*9+7][0] = convert_voltage(&data[2]);
-		cell_voltages[ic_n*9+8][0] = convert_voltage(&data[4]);
-
-		cell_voltages[ic_n*9+5][1] = 0;
-		cell_voltages[ic_n*9+6][1] = 0;
-		cell_voltages[ic_n*9+7][1] = 0;
-
-
-	}
-	else{
-
-		cell_voltages[ic_n*9+5][1]++;
-		cell_voltages[ic_n*9+6][1]++;
-		cell_voltages[ic_n*9+7][1]++;
-
-	}
-
-	// ---- Celle 10,11,12 rdcv D
-	cmd[1] = 0x0A;
-	cmd_pec = pec15(2, cmd,crcTable);
-	cmd[2] = (uint8_t)(cmd_pec >> 8);
-	cmd[3] = (uint8_t)(cmd_pec);
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
-	HAL_SPI_Transmit(hspi1, cmd, 4, 100);
-	HAL_SPI_Receive(hspi1, data, 8, 100);
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
-	if(pec15(6, data, crcTable) == (uint16_t) (data[6]*256 + data[7])){
-
-		cell_voltages[ic_n*9+9][0] = convert_voltage(data);
-		cell_voltages[ic_n*9+10][0] = convert_voltage(data[2]);
-		cell_voltages[ic_n*9+11][0] = convert_voltage(data[4]);
-
-		cell_voltages[ic_n*9+8][1] = 0;
-
-	}
-	else
-		{
-		cell_voltages[ic_n*9+8][1]++;
-		}
-
-	// ---- Celle 13,14,15 rdcv E
-		cmd[1] = (uint8_t)0x09;
-		//cmd[1] = (uint8_t)0x10;
-		cmd_pec = pec15(2, cmd, crcTable);
-		cmd[2] = (uint8_t)(cmd_pec >> 8);
-		cmd[3] = (uint8_t)(cmd_pec);
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
-		HAL_SPI_Transmit(hspi1, cmd, 4, 100);
-		HAL_SPI_Receive(hspi1, data, 8, 100);
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
-		if(pec15(6, data, crcTable) == (uint16_t) (data[6]*256 + data[7])){
-
-			cell_voltages[ic_n*9+12][0] = convert_voltage(data);
-			cell_voltages[ic_n*9+13][0] = convert_voltage(&data[2]);
-			cell_voltages[ic_n*9+14][0] = convert_voltage(&data[4]);
-
-			cell_voltages[ic_n*9+11][1] = 0;
-			cell_voltages[ic_n*9+12][1] = 0;
-			cell_voltages[ic_n*9+13][1] = 0;
-
-		}
-		else{
-
-			cell_voltages[ic_n*9+11][1]++;
-			cell_voltages[ic_n*9+12][1]++;
-			cell_voltages[ic_n*9+13][1]++;
-
-		}
-
-
-		// ---- Celle 16,17,18 rdcv F
-				cmd[1] = (uint8_t)0x0C;
-				//cmd[1] = (uint8_t)0x10;
-				cmd_pec = pec15(2, cmd, crcTable);
-				cmd[2] = (uint8_t)(cmd_pec >> 8);
-				cmd[3] = (uint8_t)(cmd_pec);
-				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
-				HAL_SPI_Transmit(hspi1, cmd, 4, 100);
-				HAL_SPI_Receive(hspi1, data, 8, 100);
-				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
-				if(pec15(6, data, crcTable) == (uint16_t) (data[6]*256 + data[7])){
-
-					cell_voltages[ic_n*9+15][0] = convert_voltage(data);
-					cell_voltages[ic_n*9+16][0] = convert_voltage(&data[2]);
-					cell_voltages[ic_n*9+17][0] = convert_voltage(&data[4]);
-
-					cell_voltages[ic_n*9+14][1] = 0;
-					cell_voltages[ic_n*9+15][1] = 0;
-					cell_voltages[ic_n*9+16][1] = 0;
+					cell_voltages[ic_n*18][1]++;
+					cell_voltages[ic_n*18+1][1]++;
+					cell_voltages[ic_n*18+2][1]++;
 
 				}
-				else{
-
-					cell_voltages[ic_n*9+14][1]++;
-					cell_voltages[ic_n*9+15][1]++;
-					cell_voltages[ic_n*9+16][1]++;
-
-				}
+	}
 
 
-
+	}
 }
+
 
 //gpio conversion analoga ad adcv
 void ltc6813_adax(uint8_t chg, SPI_HandleTypeDef *hspi1)
