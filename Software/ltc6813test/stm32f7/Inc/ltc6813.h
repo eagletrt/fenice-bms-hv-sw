@@ -18,9 +18,9 @@ typedef struct cell{
 }T_cell;
 void ltc6813_adcv(uint8_t DCP, SPI_HandleTypeDef *hspi1);
 void wakeup_idle(SPI_HandleTypeDef *hspi1);
-void ltc6813_rdcv_voltages(uint8_t ic_n, uint16_t cell_voltages[18][2], SPI_HandleTypeDef *hspi1);
+void ltc6813_rdcv_voltages(uint8_t TOT_IC, uint16_t cell_voltages[36][2], SPI_HandleTypeDef *hspi1);
 void ltc6813_adax(uint8_t chg, SPI_HandleTypeDef *hspi1);
-void ltc6813_rdaux(uint8_t ic_n, uint16_t gpio_voltages[9][2],SPI_HandleTypeDef *hspi1);
+void ltc6813_rdaux(uint8_t TOT_IC, uint16_t gpio_voltages[9][2],SPI_HandleTypeDef *hspi1);
 uint16_t pec15(uint8_t len,uint8_t data[],uint16_t crcTable[] );
 uint16_t convert_voltage(uint8_t v_data[]);
 void ltc6813_adstat( SPI_HandleTypeDef *hspi1);

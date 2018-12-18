@@ -70,10 +70,10 @@ UART_HandleTypeDef huart2;
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 uint8_t cell_data[18];
-float cell_voltages[18];
-float gpio_voltages[9];
-uint16_t  cell_v[18][2];
-uint16_t gpio_v[9][2];
+float cell_voltages[36];
+float gpio_voltages[18];
+uint16_t  cell_v[36][2];
+uint16_t gpio_v[18][2];
 uint16_t dcc_b[18] =  {
 
 {0x01},//DCC1  0x01  cfg4a
@@ -184,28 +184,49 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
-	//  ltc6804_adcv(0, &hspi1);
+	  ltc6813_adcv(0, &hspi1);
 	  	// ltc6804_adstat( &hspi1);
-//	  			  HAL_Delay(10);
-//	  			   for(uint8_t current_ic = 0; current_ic < 12; current_ic++){
-//	  	ltc6804_rdcv_voltages(current_ic, cell_v,  hspi1);
+	  			  HAL_Delay(10);
+			   for(uint8_t current_ic = 0; current_ic < 18; current_ic++){
+				  ltc6813_rdcv_voltages(2, cell_v,  &hspi1);
 //	  			 // void ltc6804_rdstat(SPI_HandleTypeDef hspi1,uint16_t cell_voltages[12][2] );
 //	  					//HAL_Delay(500);
-//	  			 	//  array_voltages(voltages, cell_data);
-//
-//
-//
-//	  			 	 	char num[2];
-//	  			 	 	sprintf(num, "\r\n");
-//	  			 	 	HAL_UART_Transmit(&huart2, &num, strlen(num), 100);
-//	  			 	 	 for(int i = 0; i < 12; i++){
-//	  			 	 		 char v[32];
-//	  			 	 		 sprintf(v, "%d - ",cell_v[i][0]);
-//	  			 	 		 HAL_UART_Transmit(&huart2, &v, strlen(v), 100);
-//	  			 	 		HAL_Delay(100);
-//	   	 		 cell_voltages[0*12+i] = cell_v[i][0]*0.0001f;
-//	  		 	  	 }
+
+	  			 	 	char num[2];
+	  			 	 	sprintf(num, "\r\n");
+	  			 	 	HAL_UART_Transmit(&huart2, &num, strlen(num), 100);
+	  			 	 	 for(int i = 0; i < 18; i++){//check
+	  			 	 		 char v[32];
+	  			 	 		 sprintf(v, "%d - ",cell_v[i][0]);
+	  			 	 		 HAL_UART_Transmit(&huart2, &v, strlen(v), 100);
+	  			 	 		HAL_Delay(100);
+	   	 		 cell_voltages[0*18+i] = cell_v[i][0]*0.0001f;
+	  		 	  	 }
   }
+
+			   //gpio
+			   ltc6813_adax(0, &hspi1);
+
+			   	  			  HAL_Delay(10);
+			   			   for(uint8_t current_ic = 0; current_ic < 9; current_ic++){
+			   				 ltc6813_rdaux(2, gpio_v,&hspi1);
+			   //	  			 // void ltc6804_rdstat(SPI_HandleTypeDef hspi1,uint16_t cell_voltages[12][2] );
+			   //	  					//HAL_Delay(500);
+
+			   	  			 	 	char num1[2];
+			   	  			 	 	sprintf(num1, "\r\n");
+			   	  			 	 	HAL_UART_Transmit(&huart2, &num1, strlen(num1), 100);
+			   	  			 	 	 for(int i = 0; i < 9; i++){//check
+			   	  			 	 		 char v[32];
+			   	  			 	 		 sprintf(v, "%d - ",gpio_v[i][0]);
+			   	  			 	 		 HAL_UART_Transmit(&huart2, &v, strlen(v), 100);
+			   	  			 	 		HAL_Delay(100);
+			   	  			 	 	gpio_voltages[0*9+i] = gpio_v[i][0]*0.0001f;
+			   	  		 	  	 }
+			     }
+
+  }
+
   /* USER CODE END 3 */
 }
 
