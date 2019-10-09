@@ -82,7 +82,7 @@ void ltc6813_check_voltage(ER_UINT16_T *volts, WARNING_T *warning,
 						   ERROR_T *error);
 void ltc6813_check_temperature(ER_UINT16_T *temp, ERROR_T *error);
 uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *spi, LTC6813_T *ltc,
-							  ER_UINT16_T volts[], WARNING_T *warning,
+							  ER_UINT16_T *volts, WARNING_T *warning,
 							  ERROR_T *error);
 void ltc6813_configure_temperature(SPI_HandleTypeDef *hspi, bool enable,
 								   bool even);

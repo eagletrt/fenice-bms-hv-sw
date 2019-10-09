@@ -68,12 +68,13 @@ void pack_init(PACK_T *pack) {
  */
 uint8_t pack_update_voltages(SPI_HandleTypeDef *spi, PACK_T *pack,
 							 WARNING_T *warning, ERROR_T *error) {
-	uint8_t ltc_i, cell;
+	uint8_t ltc_i;
 
 	_ltc6813_adcv(spi, 0);
 
 	// for (ltc_i = 0; ltc_i < LTC6813_COUNT || !error; ltc_i++) {
-	cell = ltc6813_read_voltages(spi, &ltc[0], pack->voltages, warning, error);
+	uint8_t cell =
+		ltc6813_read_voltages(spi, &ltc[0], pack->voltages, warning, error);
 	ER_CHK(error);
 	//}
 

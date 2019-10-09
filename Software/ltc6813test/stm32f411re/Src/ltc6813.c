@@ -29,17 +29,18 @@
  * @param		error	The error return value
  */
 uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *spi, LTC6813_T *ltc,
-							  ER_UINT16_T volts[], WARNING_T *warning,
+							  ER_UINT16_T *volts, WARNING_T *warning,
 							  ERROR_T *error) {
 	uint8_t cmd[4];
+	uint16_t cmd_pec;
 	uint8_t data[8];
 
 	cmd[0] = 0;  // Broadcast
 
-	uint8_t count = 0;  // cells[] index
+	uint8_t count = 0;  // volts[] index
 	for (uint8_t reg = 0; reg < LTC6813_REG_COUNT; reg++) {
-		cmd[1] = rdcv_cmd[reg];
-		uint16_t cmd_pec = _pec15(2, cmd);
+		cmd[1] = (uint8_t)rdcv_cmd[reg];
+		cmd_pec = _pec15(2, cmd);
 		cmd[2] = (uint8_t)(cmd_pec >> 8);
 		cmd[3] = (uint8_t)(cmd_pec);
 
@@ -48,7 +49,8 @@ uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *spi, LTC6813_T *ltc,
 		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
 		HAL_SPI_Transmit(spi, cmd, 4, 100);
 
-		HAL_SPI_Receive(spi, data, 8 * LTC6813_COUNT, 100);
+		// TODO: Change 8*1 into 8 * LTC6813_COUNT
+		HAL_SPI_Receive(spi, data, 8 * 1, 100);
 		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
 
 #if LTC6813_EMU > 0
@@ -83,6 +85,7 @@ uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *spi, LTC6813_T *ltc,
 		*error = error_check_fatal(&ltc->error, HAL_GetTick());
 		ER_CHK(error);
 	}
+
 End:;
 	return count;
 }
