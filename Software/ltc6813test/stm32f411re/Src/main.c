@@ -45,6 +45,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 SPI_HandleTypeDef hspi1;
+
 USART_HandleTypeDef husart2;
 
 /* USER CODE BEGIN PV */
