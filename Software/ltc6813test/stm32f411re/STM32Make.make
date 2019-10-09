@@ -13,7 +13,7 @@
 ######################################
 # target
 ######################################
-TARGET = LTC6803_comtest
+TARGET = LTC6813_comtest
 
 
 ######################################
@@ -115,6 +115,8 @@ AS_DEFS =
 
 # C defines
 C_DEFS =  \
+-DUSE_HAL_DRIVER \
+-DSTM32F411xE \
 -DUSE_HAL_DRIVER \
 -DSTM32F411xE
 
