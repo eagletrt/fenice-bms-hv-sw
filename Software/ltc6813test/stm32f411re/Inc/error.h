@@ -64,13 +64,13 @@ typedef enum {
  * 					critical. Can be a count based limit, a time based one
  * or both. 0 values are ignored
  */
-typedef struct {
+typedef struct ERROR_LIMITS_T {
 	uint16_t count;
 	uint32_t timeout;
 } ERROR_LIMITS_T;
 
 /** @brief	Defines an error instance */
-typedef struct {
+typedef struct ERROR_STATUS_T {
 	ERROR_T type;		 /*!< Defines the type of error */
 	bool active;		 /*!< True if the error is currently happening */
 	bool fatal;			 /*!< True if the error is fatal */
@@ -81,7 +81,7 @@ typedef struct {
 /** @brief	tuple of value-error_status. Used to store values that can trigger
  * 					an error
  */
-typedef struct {
+typedef struct ER_UINT16_T {
 	uint16_t value;
 	ERROR_STATUS_T error;
 } ER_UINT16_T;
@@ -89,7 +89,7 @@ typedef struct {
 /** @brief	tuple of value-error_status. Used to store values that can trigger
  * 					an error
  */
-typedef struct {
+typedef struct ER_INT16_T {
 	int16_t value;
 	ERROR_STATUS_T error;
 } ER_INT16_T;
@@ -97,7 +97,7 @@ typedef struct {
 /** @brief	tuple of value-error_status. Used to store values that can trigger
  * 					an error
  */
-typedef struct {
+typedef struct ER_INT32_T {
 	int32_t value;
 	ERROR_STATUS_T error;
 } ER_INT32_T;
