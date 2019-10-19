@@ -29,16 +29,18 @@
  * @param		error	The error return value
  */
 uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *spi, LTC6813_T *ltc,
-							  ER_UINT16_T *volts, WARNING_T *warning,
-							  ERROR_T *error) {
+															ER_UINT16_T *volts, WARNING_T *warning,
+															ERROR_T *error)
+{
 	uint8_t cmd[4];
 	uint16_t cmd_pec;
 	uint8_t data[8];
 
-	cmd[0] = 0;  // Broadcast
+	cmd[0] = 0; // Broadcast
 
-	uint8_t count = 0;  // volts[] index
-	for (uint8_t reg = 0; reg < LTC6813_REG_COUNT; reg++) {
+	uint8_t count = 0; // volts[] index
+	for (uint8_t reg = 0; reg < LTC6813_REG_COUNT; reg++)
+	{
 		cmd[1] = (uint8_t)rdcv_cmd[reg];
 		cmd_pec = _pec15(2, cmd);
 		cmd[2] = (uint8_t)(cmd_pec >> 8);
@@ -46,18 +48,17 @@ uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *spi, LTC6813_T *ltc,
 
 		_wakeup_idle(spi, false);
 
-		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_RESET);
 		HAL_SPI_Transmit(spi, cmd, 4, 100);
-
-		// TODO: Change 8*1 into 8 * LTC6813_COUNT
-		HAL_SPI_Receive(spi, data, 8 * 1, 100);
-		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
+		HAL_SPI_Receive(spi, data, 8 * LTC6813_COUNT, 100);
+		HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_SET);
 
 #if LTC6813_EMU > 0
 		// Writes 3.6v to each cell
 
 		uint8_t emu_i;
-		for (emu_i = 0; emu_i < LTC6813_REG_CELL_COUNT * 2; emu_i++) {
+		for (emu_i = 0; emu_i < LTC6813_REG_CELL_COUNT * 2; emu_i++)
+		{
 			// 36000
 			data[emu_i] = 0b10100000;
 			data[++emu_i] = 0b10001100;
@@ -67,18 +68,22 @@ uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *spi, LTC6813_T *ltc,
 		data[7] = (uint8_t)emu_pec;
 #endif
 
-		if (_pec15(6, data) == (uint16_t)(data[6] * 256 + data[7])) {
+		if (_pec15(6, data) == (uint16_t)(data[6] * 256 + data[7]))
+		{
 			error_unset(ERROR_LTC_PEC_ERROR, &ltc->error);
 
 			// For every cell in the register
-			for (uint8_t cell = 0; cell < LTC6813_REG_CELL_COUNT; cell++) {
+			for (uint8_t cell = 0; cell < LTC6813_REG_CELL_COUNT; cell++)
+			{
 				volts[count].value = _convert_voltage(&data[2 * cell]);
 
 				ltc6813_check_voltage(&volts[count], warning, error);
 				ER_CHK(error);
 				count++;
 			}
-		} else {
+		}
+		else
+		{
 			error_set(ERROR_LTC_PEC_ERROR, &ltc->error, HAL_GetTick());
 		}
 
@@ -104,7 +109,8 @@ End:;
  * @param		spi		The spi configuration structure
  * @param		dcp		false to read voltages; true to read temperatures
  */
-void _ltc6813_adcv(SPI_HandleTypeDef *spi, bool dcp) {
+void _ltc6813_adcv(SPI_HandleTypeDef *spi, bool dcp)
+{
 	uint8_t cmd[4];
 	uint16_t cmd_pec;
 	cmd[0] = (uint8_t)0b00000011;
@@ -114,10 +120,10 @@ void _ltc6813_adcv(SPI_HandleTypeDef *spi, bool dcp) {
 	cmd[3] = (uint8_t)(cmd_pec);
 
 	_wakeup_idle(spi, false);
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_RESET);
 	HAL_SPI_Transmit(spi, cmd, 4, 100);
 	HAL_Delay(1);
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_SET);
 }
 
 /**
@@ -150,7 +156,9 @@ void _ltc6813_adcv(SPI_HandleTypeDef *spi, bool dcp) {
  * @param		even			Indicates whether we're reading odd or even
  *cells
  */
-void _ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool start_bal, bool even) {
+// TODO: Remove this function
+void _ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool start_bal, bool even)
+{
 	uint8_t wrcfg[4];
 	uint8_t cfgr[8];
 
@@ -167,18 +175,24 @@ void _ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool start_bal, bool even) {
 	cfgr[2] = 0x00;
 	cfgr[3] = 0x00;
 
-	if (start_bal) {
-		if (even) {
+	if (start_bal)
+	{
+		if (even)
+		{
 			// Command to balance cells (in order) 8,5,3,1 and 10
 			cfgr[4] = 0b10010101;
 			cfgr[5] = 0b00000010;
-		} else {
+		}
+		else
+		{
 			// Command to balance cells (in order) 7,4,2 and 9
 			cfgr[4] = 0b01001010;
 			// First 4 bits are for DCT0 and should remain 0
 			cfgr[5] = 0b00000001;
 		}
-	} else {
+	}
+	else
+	{
 		cfgr[4] = 0x00;
 		cfgr[5] = 0x00;
 	}
@@ -188,20 +202,21 @@ void _ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool start_bal, bool even) {
 
 	_wakeup_idle(hspi, true);
 
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_RESET);
 	HAL_SPI_Transmit(hspi, wrcfg, 4, 100);
 	HAL_Delay(1);
 	HAL_SPI_Transmit(hspi, cfgr, 8, 100);
 	HAL_Delay(1);
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_SET);
 
 	// TODO: remove this
 	_ltc6813_adcv(hspi, start_bal);
 }
 
 void ltc6813_configure_temperature(SPI_HandleTypeDef *hspi, bool enable,
-								   bool even) {
-	_ltc6813_wrcfg(hspi, enable, even);  // switch between even and odd
+																	 bool even)
+{
+	_ltc6813_wrcfg(hspi, enable, even); // switch between even and odd
 	_ltc6813_adcv(hspi, enable);
 }
 
@@ -221,8 +236,9 @@ void ltc6813_configure_temperature(SPI_HandleTypeDef *hspi, bool enable,
  * @param		error		The error return value
  */
 uint8_t ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, LTC6813_T *ltc,
-								  bool even, ER_UINT16_T *temps,
-								  ERROR_T *error) {
+																	bool even, ER_UINT16_T *temps,
+																	ERROR_T *error)
+{
 	uint8_t cmd[4];
 	uint16_t cmd_pec;
 	uint8_t data[8];
@@ -231,7 +247,8 @@ uint8_t ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, LTC6813_T *ltc,
 
 	uint8_t reg;
 	uint8_t count = 0;
-	for (reg = 0; reg < LTC6813_REG_COUNT; reg++) {
+	for (reg = 0; reg < LTC6813_REG_COUNT; reg++)
+	{
 		cmd[1] = (uint8_t)rdcv_cmd[reg];
 		cmd_pec = _pec15(2, cmd);
 		cmd[2] = (uint8_t)(cmd_pec >> 8);
@@ -239,19 +256,20 @@ uint8_t ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, LTC6813_T *ltc,
 
 		_wakeup_idle(hspi, false);
 
-		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_RESET);
 		HAL_Delay(1);
 		HAL_SPI_Transmit(hspi, cmd, 4, 100);
 
 		HAL_SPI_Receive(hspi, data, 8, 100);
 		HAL_Delay(1);
-		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_SET);
 
 #if LTC6813_EMU > 0
 		// Writes 0.9292v (18°C) to each sensor
 
 		uint8_t emu_i;
-		for (emu_i = 0; emu_i < LTC6813_REG_CELL_COUNT * 2; emu_i++) {
+		for (emu_i = 0; emu_i < LTC6813_REG_CELL_COUNT * 2; emu_i++)
+		{
 			// 9292
 			data[emu_i] = 0b00100100;
 			data[++emu_i] = 0b01001100;
@@ -263,22 +281,27 @@ uint8_t ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, LTC6813_T *ltc,
 
 		bool pec = (_pec15(6, data) == (uint16_t)(data[6] * 256 + data[7]));
 
-		if (pec) {
+		if (pec)
+		{
 			error_unset(ERROR_LTC_PEC_ERROR, &ltc->error);
 
-			uint8_t cell = 0;  // Counts the cell inside the register
-			for (cell = 0; cell < LTC6813_REG_CELL_COUNT; cell++) {
+			uint8_t cell = 0; // Counts the cell inside the register
+			for (cell = 0; cell < LTC6813_REG_CELL_COUNT; cell++)
+			{
 				uint8_t reg_cell = reg * LTC6813_REG_CELL_COUNT;
 
 				// If the cell is present
-				if (ltc->cell_distribution[reg_cell + cell]) {
+				if (ltc->cell_distribution[reg_cell + cell])
+				{
 					bool is_even = count % 2 == 0;
 					// If the cell we're reading respects the even condition
-					if (is_even == even) {
+					if (is_even == even)
+					{
 						uint16_t temp =
-							_convert_temp(_convert_voltage(&data[2 * cell]));
+								_convert_temp(_convert_voltage(&data[2 * cell]));
 
-						if (temp > 0) {
+						if (temp > 0)
+						{
 							temps[count].value = temp;
 
 							ltc6813_check_temperature(&temps[count], error);
@@ -288,17 +311,100 @@ uint8_t ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, LTC6813_T *ltc,
 					count++;
 				}
 			}
-		} else {
+		}
+		else
+		{
 			error_set(ERROR_LTC_PEC_ERROR, &ltc->error, HAL_GetTick());
 		}
 	}
 
 	*error = error_check_fatal(&ltc->error, HAL_GetTick());
-	ER_CHK(error);  // In case of error, set the error and goto label End
+	ER_CHK(error); // In case of error, set the error and goto label End
 
 End:;
 
 	return count;
+}
+
+void ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool is_a, uint8_t cfgr[LTC6813_COUNT][8])
+{
+	uint8_t cmd[4] = {0};
+
+	if (is_a)
+	{
+		// WRCFGA
+		cmd[1] = 1;
+	}
+	else
+	{
+		// WRCFGB
+		cmd[1] = 0b00100100;
+	}
+
+	uint16_t cmd_pec = _pec15(2, cmd);
+	cmd[2] = (uint8_t)(cmd_pec >> 8);
+	cmd[3] = (uint8_t)(cmd_pec);
+
+	HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_RESET);
+	HAL_SPI_Transmit(hspi, cmd, 4, 100);
+	HAL_Delay(1);
+
+	for (uint8_t i = 0; i < LTC6813_COUNT; i++)
+	{
+		HAL_SPI_Transmit(hspi, cfgr[i], 8, 100);
+	}
+
+	HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_SET);
+}
+
+void _set_dcc(uint8_t indexes[LTC6813_CELL_COUNT], uint8_t cfgar[8], uint8_t cfgbr[8])
+{
+	for (uint8_t i = 0; i < PACK_MODULE_COUNT; i++)
+	{
+		if (indexes[i] < 8)
+		{
+			cfgar[4] += dcc[i];
+		}
+		else if (indexes[i] >= 8 && indexes[i] < 12)
+		{
+			cfgar[5] += dcc[i];
+		}
+		else if (indexes[i] >= 12 && indexes[i] < 16)
+		{
+			cfgbr[0] += dcc[i];
+		}
+		else if (indexes[i] >= 16 && indexes[i] < 18)
+		{
+			cfgbr[1] += dcc[i];
+		}
+
+		uint16_t pec = _pec15(6, cfgar);
+		cfgar[6] = (uint8_t)(pec >> 8);
+		cfgar[7] = (uint8_t)(pec);
+
+		pec = _pec15(6, cfgbr);
+		cfgbr[6] = (uint8_t)(pec >> 8);
+		cfgbr[7] = (uint8_t)(pec);
+	}
+}
+
+void ltc6813_set_balancing(SPI_HandleTypeDef *hspi, uint8_t indexes[PACK_MODULE_COUNT], int dcto)
+{
+	uint8_t cfgar[LTC6813_COUNT][8] = {0};
+	uint8_t cfgbr[LTC6813_COUNT][8] = {0};
+
+	for (uint8_t i = 0; i < LTC6813_COUNT; i++)
+	{
+		cfgar[i][5] += dcto;			 // Set timer
+		cfgbr[i][1] += 0b00001000; // set DTMEN
+
+		// For each LTC we set the correct cfgr
+		_set_dcc(&indexes[i], cfgar[i], cfgbr[i]);
+	}
+	_wakeup_idle(hspi, true);
+
+	ltc6813_wrcfg(hspi, true, cfgar);
+	ltc6813_wrcfg(hspi, false, cfgbr);
 }
 
 /**
@@ -308,20 +414,28 @@ End:;
  * @param		error		The error return code
  */
 void ltc6813_check_voltage(ER_UINT16_T *volts, WARNING_T *warning,
-						   ERROR_T *error) {
-	if (volts->value < CELL_WARN_VOLTAGE) {
+													 ERROR_T *error)
+{
+	if (volts->value < CELL_WARN_VOLTAGE)
+	{
 		*warning = WARN_CELL_LOW_VOLTAGE;
 	}
 
-	if (volts->value < CELL_MIN_VOLTAGE) {
+	if (volts->value < CELL_MIN_VOLTAGE)
+	{
 		error_set(ERROR_CELL_UNDER_VOLTAGE, &volts->error, HAL_GetTick());
-	} else {
+	}
+	else
+	{
 		error_unset(ERROR_CELL_UNDER_VOLTAGE, &volts->error);
 	}
 
-	if (volts->value > CELL_MAX_VOLTAGE) {
+	if (volts->value > CELL_MAX_VOLTAGE)
+	{
 		error_set(ERROR_CELL_OVER_VOLTAGE, &volts->error, HAL_GetTick());
-	} else {
+	}
+	else
+	{
 		error_unset(ERROR_CELL_OVER_VOLTAGE, &volts->error);
 	}
 
@@ -337,10 +451,14 @@ End:;
  * @param		temp		The temperature
  * @param		error		The error return code
  */
-void ltc6813_check_temperature(ER_UINT16_T *temp, ERROR_T *error) {
-	if (temp->value >= CELL_MAX_TEMPERATURE) {
+void ltc6813_check_temperature(ER_UINT16_T *temp, ERROR_T *error)
+{
+	if (temp->value >= CELL_MAX_TEMPERATURE)
+	{
 		error_set(ERROR_CELL_OVER_TEMPERATURE, &temp->error, HAL_GetTick());
-	} else {
+	}
+	else
+	{
 		error_unset(ERROR_CELL_OVER_TEMPERATURE, &temp->error);
 	}
 
@@ -355,14 +473,16 @@ End:;
  *
  * @param		hspi	The SPI configuration structure
  */
-void _wakeup_idle(SPI_HandleTypeDef *hspi, bool apply_delay) {
+void _wakeup_idle(SPI_HandleTypeDef *hspi, bool apply_delay)
+{
 	uint8_t data = 0xFF;
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_RESET);
 	HAL_SPI_Transmit(hspi, &data, 1, 1);
-	if (apply_delay) {
+	if (apply_delay)
+	{
 		HAL_Delay(1);
 	}
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_SET);
 }
 
 /**
@@ -371,10 +491,12 @@ void _wakeup_idle(SPI_HandleTypeDef *hspi, bool apply_delay) {
  * @param		len		Length of the data array
  * @param		data	Array of data
  */
-uint16_t _pec15(uint8_t len, uint8_t data[]) {
+uint16_t _pec15(uint8_t len, uint8_t data[])
+{
 	uint16_t remainder, address;
-	remainder = 16;  // PEC seed
-	for (int i = 0; i < len; i++) {
+	remainder = 16; // PEC seed
+	for (int i = 0; i < len; i++)
+	{
 		// calculate PEC table address
 		address = ((remainder >> 7) ^ data[i]) & 0xff;
 		remainder = (remainder << 8) ^ crcTable[address];
@@ -391,7 +513,8 @@ uint16_t _pec15(uint8_t len, uint8_t data[]) {
  *
  * @retval	Voltage [mV]
  */
-uint16_t _convert_voltage(uint8_t v_data[]) {
+uint16_t _convert_voltage(uint8_t v_data[])
+{
 	return v_data[0] + (v_data[1] << 8);
 }
 
@@ -403,10 +526,11 @@ uint16_t _convert_voltage(uint8_t v_data[]) {
  *
  * @retval	Temperature [C° * 100]
  */
-uint16_t _convert_temp(uint16_t volt) {
+uint16_t _convert_temp(uint16_t volt)
+{
 	float voltf = volt * 0.0001;
 	float temp;
 	temp = -225.7 * voltf * voltf * voltf + 1310.6 * voltf * voltf -
-		   2594.8 * voltf + 1767.8;
+				 2594.8 * voltf + 1767.8;
 	return (uint16_t)(temp * 100);
 }

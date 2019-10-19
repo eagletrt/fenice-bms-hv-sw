@@ -24,7 +24,8 @@
 #define __MAIN_H
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /* Includes ------------------------------------------------------------------*/
@@ -34,82 +35,73 @@ extern "C" {
 /* USER CODE BEGIN Includes */
 #include "error.h"
 #include "pack.h"
-/* USER CODE END Includes */
+	/* USER CODE END Includes */
 
-/* Exported types ------------------------------------------------------------*/
-/* USER CODE BEGIN ET */
-typedef struct {
-	PACK_T pack;
+	/* Exported types ------------------------------------------------------------*/
+	/* USER CODE BEGIN ET */
+	typedef struct
+	{
+		PACK_T pack;
 
-	ERROR_STATUS_T can_error;
+		ERROR_STATUS_T can_error;
 
-	ERROR_T error;
-	uint8_t error_index;
+		ERROR_T error;
+		uint8_t error_index;
 
-} state_global_data_t;
+	} state_global_data_t;
 
-typedef enum {
-	BMS_INIT,
-	BMS_IDLE,
-	BMS_PRECHARGE,
-	BMS_ON,
-	BMS_CHARGE,
-	BMS_HALT,
-	BMS_NUM_STATES
-} BMS_STATE_T;
+	typedef enum
+	{
+		BMS_INIT,
+		BMS_IDLE,
+		BMS_PRECHARGE,
+		BMS_ON,
+		BMS_CHARGE,
+		BMS_HALT,
+		BMS_NUM_STATES
+	} BMS_STATE_T;
 
-typedef BMS_STATE_T state_func_t(state_global_data_t *data);
-typedef void transition_func_t(state_global_data_t *data);
-/* USER CODE END ET */
+	typedef BMS_STATE_T state_func_t(state_global_data_t *data);
+	typedef void transition_func_t(state_global_data_t *data);
+	/* USER CODE END ET */
 
-/* Exported constants --------------------------------------------------------*/
-/* USER CODE BEGIN EC */
+	/* Exported constants --------------------------------------------------------*/
+	/* USER CODE BEGIN EC */
 
-/* USER CODE END EC */
+	/* USER CODE END EC */
 
-/* Exported macro ------------------------------------------------------------*/
-/* USER CODE BEGIN EM */
+	/* Exported macro ------------------------------------------------------------*/
+	/* USER CODE BEGIN EM */
 
-/* USER CODE END EM */
+	/* USER CODE END EM */
 
-/* Exported functions prototypes ---------------------------------------------*/
-void Error_Handler(void);
+	/* Exported functions prototypes ---------------------------------------------*/
+	void Error_Handler(void);
 
-/* USER CODE BEGIN EFP */
-BMS_STATE_T do_state_init(state_global_data_t *data);
-BMS_STATE_T do_state_idle(state_global_data_t *data);
-BMS_STATE_T do_state_precharge(state_global_data_t *data);
-BMS_STATE_T do_state_on(state_global_data_t *data);
-BMS_STATE_T do_state_charge(state_global_data_t *data);
-BMS_STATE_T do_state_halt(state_global_data_t *data);
+	/* USER CODE BEGIN EFP */
+	BMS_STATE_T do_state_init(state_global_data_t *data);
+	BMS_STATE_T do_state_idle(state_global_data_t *data);
+	BMS_STATE_T do_state_precharge(state_global_data_t *data);
+	BMS_STATE_T do_state_on(state_global_data_t *data);
+	BMS_STATE_T do_state_charge(state_global_data_t *data);
+	BMS_STATE_T do_state_halt(state_global_data_t *data);
 
-void to_idle(state_global_data_t *data);
-void to_precharge(state_global_data_t *data);
-void to_on(state_global_data_t *data);
-void to_charge(state_global_data_t *data);
-void to_halt(state_global_data_t *data);
+	void to_idle(state_global_data_t *data);
+	void to_precharge(state_global_data_t *data);
+	void to_on(state_global_data_t *data);
+	void to_charge(state_global_data_t *data);
+	void to_halt(state_global_data_t *data);
 
-void check_timers(state_global_data_t *data);
-void read_volts(state_global_data_t *data);
-void read_temps(state_global_data_t *data);
-/* USER CODE END EFP */
+	void check_timers(state_global_data_t *data);
+	void read_volts(state_global_data_t *data);
+	void read_temps(state_global_data_t *data);
+	/* USER CODE END EFP */
 
-/* Private defines -----------------------------------------------------------*/
-#define B1_Pin GPIO_PIN_13
-#define B1_GPIO_Port GPIOC
-#define USART_TX_Pin GPIO_PIN_2
-#define USART_TX_GPIO_Port GPIOA
-#define USART_RX_Pin GPIO_PIN_3
-#define USART_RX_GPIO_Port GPIOA
-#define TMS_Pin GPIO_PIN_13
-#define TMS_GPIO_Port GPIOA
-#define TCK_Pin GPIO_PIN_14
-#define TCK_GPIO_Port GPIOA
-#define SPI1_CS_Pin GPIO_PIN_6
-#define SPI1_CS_GPIO_Port GPIOB
-/* USER CODE BEGIN Private defines */
+	/* Private defines -----------------------------------------------------------*/
 
-/* USER CODE END Private defines */
+	/* USER CODE BEGIN Private defines */
+
+	/* USER CODE END Private defines */
 
 #ifdef __cplusplus
 }
