@@ -183,14 +183,16 @@ End:;
 void pack_update_voltage_stats(PACK_T *pack) {
 	uint32_t tot_voltage = pack->voltages[0].value;
 	uint16_t max_voltage = pack->voltages[0].value;
-	uint16_t min_voltage = pack->voltages[0].value;
+	uint16_t min_voltage = 65535;
 
 	uint8_t i;
 	for (i = 1; i < PACK_MODULE_COUNT; i++) {
 		tot_voltage += (uint32_t)pack->voltages[i].value;
 
-		max_voltage = fmax(max_voltage, pack->voltages[i].value);
-		min_voltage = fmin(min_voltage, pack->voltages[i].value);
+		if (!pack->voltages[i].error.active) {
+			max_voltage = fmax(max_voltage, pack->voltages[i].value);
+			min_voltage = fmin(min_voltage, pack->voltages[i].value);
+		}
 	}
 
 	pack->total_voltage = tot_voltage;
