@@ -99,7 +99,12 @@ BMS_STATE_T do_state_init(state_global_data_t *data) {
 	return BMS_IDLE;
 }
 
-void to_idle(state_global_data_t *data) {}
+void to_idle(state_global_data_t *data) {
+	uint8_t indexes[PACK_MODULE_COUNT] = {255};
+	indexes[0] = 0;
+
+	ltc6813_set_balancing(&hspi1, indexes, 1);
+}
 
 BMS_STATE_T do_state_idle(state_global_data_t *data) { return BMS_IDLE; }
 
