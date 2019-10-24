@@ -24,8 +24,7 @@
 #define __MAIN_H
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
@@ -34,74 +33,69 @@ extern "C"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "error.h"
+#include "fsm.h"
 #include "pack.h"
-	/* USER CODE END Includes */
+#include "stm32f4xx_ll_usart.h"
+/* USER CODE END Includes */
 
-	/* Exported types ------------------------------------------------------------*/
-	/* USER CODE BEGIN ET */
-	typedef struct
-	{
-		PACK_T pack;
+/* Exported types ------------------------------------------------------------*/
+/* USER CODE BEGIN ET */
 
-		ERROR_STATUS_T can_error;
+/* USER CODE END ET */
 
-		ERROR_T error;
-		uint8_t error_index;
+/* Exported constants --------------------------------------------------------*/
+/* USER CODE BEGIN EC */
 
-	} state_global_data_t;
+/* USER CODE END EC */
 
-	typedef enum
-	{
-		BMS_INIT,
-		BMS_IDLE,
-		BMS_PRECHARGE,
-		BMS_ON,
-		BMS_CHARGE,
-		BMS_HALT,
-		BMS_NUM_STATES
-	} BMS_STATE_T;
+/* Exported macro ------------------------------------------------------------*/
+/* USER CODE BEGIN EM */
 
-	typedef BMS_STATE_T state_func_t(state_global_data_t *data);
-	typedef void transition_func_t(state_global_data_t *data);
-	/* USER CODE END ET */
+/* USER CODE END EM */
 
-	/* Exported constants --------------------------------------------------------*/
-	/* USER CODE BEGIN EC */
+/* Exported functions prototypes ---------------------------------------------*/
+void Error_Handler(void);
 
-	/* USER CODE END EC */
+/* USER CODE BEGIN EFP */
+BMS_STATE_T do_state_init(state_global_data_t *data);
+BMS_STATE_T do_state_idle(state_global_data_t *data);
+BMS_STATE_T do_state_precharge(state_global_data_t *data);
+BMS_STATE_T do_state_on(state_global_data_t *data);
+BMS_STATE_T do_state_charge(state_global_data_t *data);
+BMS_STATE_T do_state_halt(state_global_data_t *data);
 
-	/* Exported macro ------------------------------------------------------------*/
-	/* USER CODE BEGIN EM */
+void to_idle(state_global_data_t *data);
+void to_precharge(state_global_data_t *data);
+void to_on(state_global_data_t *data);
+void to_charge(state_global_data_t *data);
+void to_halt(state_global_data_t *data);
 
-	/* USER CODE END EM */
+void check_timers(state_global_data_t *data);
+void read_volts(state_global_data_t *data);
+void read_temps(state_global_data_t *data);
 
-	/* Exported functions prototypes ---------------------------------------------*/
-	void Error_Handler(void);
+void UART_CharReception_Callback(void);
+void UART_TXEmpty_Callback(void);
+void UART_CharTransmitComplete_Callback(void);
+void UART_Error_Callback(void);
+/* USER CODE END EFP */
 
-	/* USER CODE BEGIN EFP */
-	BMS_STATE_T do_state_init(state_global_data_t *data);
-	BMS_STATE_T do_state_idle(state_global_data_t *data);
-	BMS_STATE_T do_state_precharge(state_global_data_t *data);
-	BMS_STATE_T do_state_on(state_global_data_t *data);
-	BMS_STATE_T do_state_charge(state_global_data_t *data);
-	BMS_STATE_T do_state_halt(state_global_data_t *data);
+/* Private defines -----------------------------------------------------------*/
+#define B1_Pin GPIO_PIN_13
+#define B1_GPIO_Port GPIOC
+#define USART_TX_Pin GPIO_PIN_2
+#define USART_TX_GPIO_Port GPIOA
+#define USART_RX_Pin GPIO_PIN_3
+#define USART_RX_GPIO_Port GPIOA
+#define TMS_Pin GPIO_PIN_13
+#define TMS_GPIO_Port GPIOA
+#define TCK_Pin GPIO_PIN_14
+#define TCK_GPIO_Port GPIOA
+#define SPI1_CS_Pin GPIO_PIN_6
+#define SPI1_CS_GPIO_Port GPIOB
+/* USER CODE BEGIN Private defines */
 
-	void to_idle(state_global_data_t *data);
-	void to_precharge(state_global_data_t *data);
-	void to_on(state_global_data_t *data);
-	void to_charge(state_global_data_t *data);
-	void to_halt(state_global_data_t *data);
-
-	void check_timers(state_global_data_t *data);
-	void read_volts(state_global_data_t *data);
-	void read_temps(state_global_data_t *data);
-	/* USER CODE END EFP */
-
-	/* Private defines -----------------------------------------------------------*/
-
-	/* USER CODE BEGIN Private defines */
-
-	/* USER CODE END Private defines */
+/* USER CODE END Private defines */
 
 #ifdef __cplusplus
 }

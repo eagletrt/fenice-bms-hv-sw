@@ -81,7 +81,7 @@ uint8_t pack_update_voltages(SPI_HandleTypeDef *spi, PACK_T *pack,
 End:;
 	pack_update_voltage_stats(pack);
 
-	if (error == ERROR_LTC_PEC_ERROR) {
+	if (*error == ERROR_LTC_PEC_ERROR) {
 		return ltc_i;
 	}
 	return cell;
@@ -197,7 +197,7 @@ void pack_update_voltage_stats(PACK_T *pack) {
 
 	pack->total_voltage = tot_voltage;
 	pack->max_voltage = max_voltage;
-	pack->min_voltage = min_voltage;
+	pack->min_voltage = fmin(min_voltage, max_voltage);
 }
 
 /**
@@ -209,7 +209,7 @@ void pack_update_voltage_stats(PACK_T *pack) {
 void pack_update_temperature_stats(PACK_T *pack) {
 	uint32_t avg_temperature = 0;
 	uint16_t max_temperature = 0;
-	uint16_t min_temperature = 0xFFFF;
+	uint16_t min_temperature = UINT16_MAX;
 
 	uint8_t temp_count = 0;
 	for (int i = 0; i < PACK_MODULE_COUNT; i++) {
