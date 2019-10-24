@@ -2,7 +2,8 @@
 #include <stdio.h>
 #include <string.h>
 
-const char *cli_commands[N_COMMANDS] = {"volts", "temps", "status", "?"};
+const char *cli_commands[N_COMMANDS] = {"volts", "temps", "status", "taba",
+										"?"};
 
 char *_cli_volts(state_global_data_t *data, BMS_STATE_T state) {
 	char tmp[BUF_SIZE];
@@ -38,6 +39,27 @@ char *_cli_status(state_global_data_t *data, BMS_STATE_T state) {
 	return out;
 }
 
+char *_cli_taba(state_global_data_t *data, BMS_STATE_T state) {
+	return " #######    #    ######     #    ######     #    ####### ####### "
+		   "######  \n"
+		   "    #      # #   #     #   # #   #     #   # #      #    #       # "
+		   "    # \n"
+		   "    #     #   #  #     #  #   #  #     #  #   #     #    #       # "
+		   "    # \n"
+		   "    #    #     # ######  #     # ######  #     #    #    #####   # "
+		   "    # \n"
+		   "    #    ####### #     # ####### #   #   #######    #    #       # "
+		   "    # \n"
+		   "    #    #     # #     # #     # #    #  #     #    #    #       # "
+		   "    # \n"
+		   "    #    #     # ######  #     # #     # #     #    #    ####### "
+		   "######  \n"
+		   "                                                                   "
+		   "      \n"
+
+		;
+}
+
 char *_cli_help(state_global_data_t *data, BMS_STATE_T state) {
 	char tmp[BUF_SIZE] = "Command list:\n";
 	for (uint8_t i = 0; i < N_COMMANDS; i++) {
@@ -54,11 +76,21 @@ void cli_init(cli_t *cli, UART_HandleTypeDef *uart) {
 	cli->states[0] = &_cli_volts;
 	cli->states[1] = &_cli_temps;
 	cli->states[2] = &_cli_status;
-	cli->states[3] = &_cli_help;
+	cli->states[3] = &_cli_taba;
+	cli->states[4] = &_cli_help;
 
 	LL_USART_EnableIT_RXNE(cli->uart->Instance);
 	LL_USART_EnableIT_ERROR(cli->uart->Instance);
 	LL_USART_EnableIT_TXE(cli->uart->Instance);
+
+	char init[BUF_SIZE];
+	sprintf(init,
+			"\n\n********* Fenice BMS *********\n"
+			" Build: %s @ %s\n\n type ? for commands\n\n"
+			"> ",
+			__DATE__, __TIME__);
+
+	HAL_UART_Transmit(cli->uart, (uint8_t *)init, strlen(init), 100);
 }
 
 void cli_loop(cli_t *cli, state_global_data_t *data, BMS_STATE_T state) {
@@ -73,19 +105,6 @@ void cli_loop(cli_t *cli, state_global_data_t *data, BMS_STATE_T state) {
 				tmp = cli->states[i](data, state);
 			}
 		}
-
-		// if (strcmp(cli->rx.buffer, "?") == 0) {
-		// 	tmp = "Command list:\n- ?\n";
-		// } else if (strcmp(cli->rx.buffer, "volts") == 0) {
-		// 	char t[BUF_SIZE];
-		// 	sprintf(t, "Total: %.2f V\tMax: %.2f V\tMin: %.2f V\n",
-		// 			(float)data->pack.total_voltage / 10000,
-		// 			(float)data->pack.max_voltage / 10000,
-		// 			(float)data->pack.min_voltage / 10000);
-		// 	tmp = t;
-		// } else {
-		// 	tmp = "?\n";
-		// }
 
 		for (uint8_t i = 0; i < BUF_SIZE; i++) {
 			cli->rx.buffer[i] = '\0';

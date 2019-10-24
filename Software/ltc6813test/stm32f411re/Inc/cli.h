@@ -6,7 +6,7 @@
 #include "stm32f4xx_ll_usart.h"
 
 #define BUF_SIZE 255
-#define N_COMMANDS 4
+#define N_COMMANDS 5
 
 typedef char *cli_state_func_t(state_global_data_t *data, BMS_STATE_T state);
 
