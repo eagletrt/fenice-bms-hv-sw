@@ -38,6 +38,7 @@
 	}
 
 typedef enum {
+	ERROR_OK,
 	ERROR_LTC_PEC_ERROR,
 
 	ERROR_CELL_UNDER_VOLTAGE,
@@ -47,8 +48,7 @@ typedef enum {
 	ERROR_OVER_CURRENT,
 	ERROR_CAN,
 
-	ERROR_NUM_ERRORS,
-	ERROR_OK
+	ERROR_NUM_ERRORS
 } ERROR_T;
 
 typedef enum {
@@ -59,6 +59,8 @@ typedef enum {
 	WARN_NUM_WARNINGS,
 	WARN_OK
 } WARNING_T;
+
+extern const char *error_names[ERROR_NUM_ERRORS];
 
 /** @brief	Defines the acceptable thresholds over which an error becomes
  * 					critical. Can be a count based limit, a time based one
