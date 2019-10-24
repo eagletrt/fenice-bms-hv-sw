@@ -1,17 +1,34 @@
 {
-  "configurations": [{
-    "showDevDebugOutput": true,
-    "cwd": "${workspaceRoot}",
-    "executable": "./build/LTC6813_comtest.elf",
-    "name": "Debug STM32",
-    "request": "launch",
-    "type": "cortex-debug",
-    "servertype": "openocd",
-    "preLaunchTask": "Build STM",
-    "device": "stlink",
-    "configFiles": [
-      "interface/stlink-v2-1.cfg",
-      "target/stm32f4x.cfg.cfg"
-    ]
-  }]
+  "configurations": [
+    {
+      "showDevDebugOutput": true,
+      "cwd": "${workspaceRoot}",
+      "executable": "./build/LTC6813_comtest.elf",
+      "name": "Debug STM32",
+      "request": "launch",
+      "type": "cortex-debug",
+      "servertype": "openocd",
+      "preLaunchTask": "Build STM",
+      "device": "stlink",
+      "configFiles": [
+        "interface/stlink-v2-1.cfg",
+        "target/stm32f4x.cfg"
+      ]
+    },
+    {
+      "showDevDebugOutput": true,
+      "cwd": "${workspaceRoot}",
+      "executable": "./build/LTC6813_comtest.elf",
+      "name": "Debug STM32",
+      "request": "launch",
+      "type": "cortex-debug",
+      "servertype": "openocd",
+      "preLaunchTask": "Build STM",
+      "device": "stlink",
+      "configFiles": [
+        "interface/stlink-v2-1.cfg",
+        "target/stm32f4x.cfg.cfg"
+      ]
+    }
+  ]
 }
