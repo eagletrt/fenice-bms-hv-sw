@@ -1,5 +1,6 @@
 #include "cli.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 const char *cli_commands[N_COMMANDS] = {"volts", "temps", "status", "taba",
@@ -30,10 +31,21 @@ char *_cli_temps(state_global_data_t *data, BMS_STATE_T state) {
 }
 
 char *_cli_status(state_global_data_t *data, BMS_STATE_T state) {
-	char tmp[BUF_SIZE];
-	sprintf(tmp, "State: %s\nError: %s\nError index: %i\n",
-			bms_state_names[state], error_names[data->error],
-			data->error_index);
+	char *values[3][3] = {{"BMS state", (char *)bms_state_names[state]},
+						  {"Global error", (char *)error_names[data->error]},
+						  {"Global error index", NULL}};
+
+	char val[4];
+	itoa(data->error_index, val, 10);
+	values[2][1] = val;
+
+	char tmp[BUF_SIZE] = "\0";
+
+	for (uint8_t i = 0; i < 3; i++) {
+		sprintf(tmp + strlen(tmp), "%s%s%s\n", values[i][0],
+				"........................" + strlen(values[i][0]),
+				values[i][1]);
+	}
 
 	char *out = tmp;
 	return out;
