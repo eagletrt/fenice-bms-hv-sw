@@ -9,7 +9,7 @@ const char *cli_commands[N_COMMANDS] = {"volts", "temps", "status", "taba",
 char *_cli_volts(state_global_data_t *data, BMS_STATE_T state) {
 	char tmp[BUF_SIZE];
 
-	sprintf(tmp, "Total.....%.2f V\nMax.......%.2f V\nMin.......%.2f V\n",
+	sprintf(tmp, "Total.....%.3f V\nMax.......%.3f V\nMin.......%.3f V\n",
 			(float)data->pack.total_voltage / 10000,
 			(float)data->pack.max_voltage / 10000,
 			(float)data->pack.min_voltage / 10000);
@@ -128,7 +128,7 @@ void cli_clean(char *string, char *cmd) {
 
 void cli_loop(cli_t *cli, state_global_data_t *data, BMS_STATE_T state) {
 	if (cli->rx.complete) {
-		char cmd[BUF_SIZE];
+		char cmd[BUF_SIZE] = {'\0'};
 		cli_clean(cli->rx.buffer, cmd);
 
 		cli->rx.complete = false;
