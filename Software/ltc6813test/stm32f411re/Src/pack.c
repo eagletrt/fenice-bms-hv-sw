@@ -183,7 +183,7 @@ End:;
 void pack_update_voltage_stats(PACK_T *pack) {
 	uint32_t tot_voltage = pack->voltages[0].value;
 	uint16_t max_voltage = pack->voltages[0].value;
-	uint16_t min_voltage = 65535;
+	uint16_t min_voltage = UINT16_MAX;
 
 	uint8_t i;
 	for (i = 1; i < PACK_MODULE_COUNT; i++) {
@@ -226,7 +226,8 @@ void pack_update_temperature_stats(PACK_T *pack) {
 
 	pack->avg_temperature = (uint16_t)(avg_temperature / temp_count);
 	pack->max_temperature = max_temperature;
-	pack->min_temperature = min_temperature;
+	pack->min_temperature = fmin(min_temperature, max_temperature);
+	;
 }
 
 uint8_t pack_check_errors(PACK_T *pack, ERROR_T *error) {
