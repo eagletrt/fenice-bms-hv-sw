@@ -118,28 +118,37 @@ static const uint16_t dcto[16] = {
 };
 
 uint16_t _pec15(uint8_t len, uint8_t data[]);
+
 uint16_t _convert_voltage(uint8_t v_data[]);
+
 uint16_t _convert_temp(uint16_t volt);
+
 void _set_dcc(uint8_t indexes[LTC6813_CELL_COUNT], uint8_t cfgar[8],
 			  uint8_t cfgbr[8]);
+
 void _wakeup_idle(SPI_HandleTypeDef *hspi, bool apply_delay);
 
 void _ltc6813_adcv(SPI_HandleTypeDef *hspi, bool DCP);
+
 void _ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool start, bool parity);
 
-void ltc6813_check_voltage(ER_UINT16_T *volts, WARNING_T *warning,
-						   ERROR_T *error);
-void ltc6813_check_temperature(ER_UINT16_T *temp, ERROR_T *error);
+void ltc6813_check_voltage(uint16_t volt, ERROR_STATUS_T *volt_error,
+						   WARNING_T *warning, ERROR_T *error);
+
+void ltc6813_check_temperature(uint16_t temp, ERROR_STATUS_T *temp_error,
+							   ERROR_T *error);
+
 uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *spi, LTC6813_T *ltc,
-							  ER_UINT16_T *volts, WARNING_T *warning,
-							  ERROR_T *error);
-void ltc6813_configure_temperature(SPI_HandleTypeDef *hspi, bool enable,
-								   bool even);
+							  uint16_t volts[], ERROR_STATUS_T volts_error[],
+							  WARNING_T *warning, ERROR_T *error);
+
 uint8_t ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, LTC6813_T *ltc,
-								  bool even, ER_UINT16_T temps[],
-								  ERROR_T *error);
+								  uint16_t temps[],
+								  ERROR_STATUS_T temps_error[], ERROR_T *error);
+
 void ltc6813_set_balancing(SPI_HandleTypeDef *hspi,
 						   uint8_t indexes[PACK_MODULE_COUNT], int dcto);
+
 void ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool is_a,
 				   uint8_t cfgr[LTC6813_COUNT][8]);
 

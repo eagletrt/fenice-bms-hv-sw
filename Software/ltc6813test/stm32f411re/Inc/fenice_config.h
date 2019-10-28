@@ -26,24 +26,26 @@
 
 #define CHARGING 0
 
-enum
-{
-	LTC6813_COUNT = 1,					/*!< Number of daisy chained LTCs */
-	LTC6813_CELL_COUNT = 18,		/*!< Number of cells a single IC controls. Refer to
-							   cell_distribution for configuration */
-	LTC6813_REG_COUNT = 6,			/* Number of registers for a single IC. A, B, C, D */
-	LTC6813_REG_CELL_COUNT = 3, /* Max number of cells handled by a register.
-								   Refer to cell distribution */
+#define LTC6813_COUNT 1 /*!< Number of daisy chained LTCs */
+#define LTC6813_CELL_COUNT 18
+/*!< Number of cells a single IC controls. Refer to cell_distribution for
+ * configuration */
 
-	PACK_MODULE_COUNT =
-			LTC6813_COUNT * LTC6813_CELL_COUNT, // Total number of cells in series
+#define LTC6813_REG_COUNT 6
+/* Number of registers for a single IC. A, B, C, D */
+#define LTC6813_REG_CELL_COUNT 3
+/* Max number of cells handled by a register.
+							   Refer to cell distribution */
 
-	PACK_MAX_CURRENT = 200,
+// Total number of cells in series
+#define PACK_MODULE_COUNT LTC6813_COUNT* LTC6813_CELL_COUNT
+#define PACK_MAX_CURRENT 200
 
-	CELL_WARN_VOLTAGE = 28000,
-	CELL_MIN_VOLTAGE = 25000,
-	CELL_MAX_VOLTAGE = 42250,
-	CELL_MAX_TEMPERATURE = 6000,
-};
+#define CELL_WARN_VOLTAGE 28000
+#define CELL_MIN_VOLTAGE 25000
+#define CELL_MAX_VOLTAGE 42250
+#define CELL_MAX_TEMPERATURE 6000
+
+#define PACK_MAX_VOLTAGE_THRESHOLD 500
 
 #endif /* CHIMERA_CONFIG_H_ */

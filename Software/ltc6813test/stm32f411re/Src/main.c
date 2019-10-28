@@ -51,18 +51,16 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 state_func_t *const state_table[BMS_NUM_STATES] = {
-	do_state_init, do_state_idle,   do_state_precharge,
-	do_state_on,   do_state_charge, do_state_halt};
+	do_state_idle, do_state_precharge, do_state_on, do_state_charge,
+	do_state_halt};
 
 transition_func_t *const transition_table[BMS_NUM_STATES][BMS_NUM_STATES] = {
-	{NULL, to_idle, NULL, NULL, NULL, to_halt},		   // from init
-	{NULL, NULL, to_precharge, NULL, NULL, to_halt},   // from idle
-	{NULL, to_idle, NULL, to_on, to_charge, to_halt},  // from precharge
-	{NULL, to_idle, NULL, NULL, NULL, to_halt},		   // from on
-	{NULL, NULL, NULL, NULL, NULL, to_halt}};		   // from halt
+	{NULL, to_precharge, NULL, NULL, to_halt},   // from idle
+	{to_idle, NULL, to_on, to_charge, to_halt},  // from precharge
+	{to_idle, NULL, NULL, NULL, to_halt},		 // from on
+	{NULL, NULL, NULL, NULL, to_halt}};			 // from halt
 
-const char *bms_state_names[BMS_NUM_STATES] = {[BMS_INIT] = "init",
-											   [BMS_IDLE] = "idle",
+const char *bms_state_names[BMS_NUM_STATES] = {[BMS_IDLE] = "idle",
 											   [BMS_PRECHARGE] = "pre-charge",
 											   [BMS_ON] = "on",
 											   [BMS_CHARGE] = "charge",
@@ -77,7 +75,7 @@ const char *error_names[ERROR_NUM_ERRORS] = {
 	[ERROR_CAN] = "CAN",
 	[ERROR_OK] = "ok"};
 
-BMS_STATE_T state = BMS_INIT;
+BMS_STATE_T state = BMS_IDLE;
 state_global_data_t data;
 
 cli_t cli;
@@ -100,48 +98,117 @@ static void MX_USART2_UART_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-BMS_STATE_T do_state_init(state_global_data_t *data) {
-	error_init(&data->can_error);
 
-	data->error = ERROR_OK;
+void to_idle(state_global_data_t *data) {
+	// bms_set_ts_off(&data->bms);
+	// HAL_CAN_ConfigFilter(&hcan, &CAN_FILTER_NORMAL);
+	// can_send(&hcan, CAN_ID_BMS, CAN_MSG_TS_OFF, 8);
+}
 
-	pack_init(&(data->pack));
-
-#if CHARGING > 0
-	HAL_Delay(10000);
-	data->bms.precharge_bypass = true;
-	return BMS_PRECHARGE;
-#endif
+BMS_STATE_T do_state_idle(state_global_data_t *data) {
+	// if (data->can_rx.StdId == CAN_ID_ECU) {
+	// 	if (data->can_rx.Data[0] == CAN_IN_TS_ON) {
+	// 		// TS On
+	// 		if (data->can_rx.Data[1] == 0x01) {
+	// 			// Charge command
+	// 			data->bms.precharge_bypass = true;
+	// 		}
+	// 		return BMS_PRECHARGE;
+	// 	}
+	// }
 	return BMS_IDLE;
 }
 
-void to_idle(state_global_data_t *data) {
-	uint8_t indexes[PACK_MODULE_COUNT] = {255};
-	indexes[0] = 0;
-
-	// ltc6813_set_balancing(&hspi1, indexes, 2);
-}
-
-BMS_STATE_T do_state_idle(state_global_data_t *data) { return BMS_IDLE; }
-
 void to_precharge(state_global_data_t *data) {
 	// Precharge
-	timer_precharge = HAL_GetTick();
+	// bms_precharge_start(&data->bms);
+	// timer_precharge = HAL_GetTick();
+
+	// HAL_CAN_ConfigFilter(&hcan, &CAN_FILTER_PRECHARGE);
+	// can_send(&hcan, CAN_ID_OUT_INVERTER_L, CAN_MSG_BUS_VOLTAGE, 8);
 }
 
-BMS_STATE_T do_state_precharge(state_global_data_t *data) { return BMS_ON; }
+BMS_STATE_T do_state_precharge(
+	state_global_data_t *data) {  // Check for incoming voltage
+	// if (data->can_rx.StdId == CAN_ID_IN_INVERTER_L) {
+	// 	if (data->can_rx.Data[0] == CAN_IN_BUS_VOLTAGE) {
+	// 		uint16_t bus_voltage = 0;
+
+	// 		bus_voltage = data->can_rx.Data[2] << 8;
+	// 		bus_voltage += data->can_rx.Data[1];
+	// 		bus_voltage /= 31.99;
+
+	// 		if (bus_voltage >= data->pack.total_voltage / 10000 * 0.95) {
+	// 			bms_precharge_end(&data->bms);
+	// 			return BMS_ON;
+	// 		}
+	// 	}
+	// }
+
+	// switch (bms_precharge_check(&(data)->bms)) {
+	// 	case PRECHARGE_SUCCESS:
+	// 		// Used when bypassing precharge
+
+	// 		return BMS_CHARGE;
+	// 		break;
+
+	// 	case PRECHARGE_FAILURE:
+	// 		// Precharge timed out
+
+	// 		can_send_warning(&hcan, WARN_PRECHARGE_FAIL, 0);
+
+	// 		return BMS_IDLE;
+	// 		break;
+
+	// 	case PRECHARGE_WAITING:
+	// 		// If precharge is still running, send the bus voltage request
+
+	// 		if (HAL_GetTick() - timer_precharge >= 20) {
+	// 			timer_precharge = HAL_GetTick();
+
+	// 			can_send(&hcan, CAN_ID_OUT_INVERTER_L, CAN_MSG_BUS_VOLTAGE, 8);
+	// 		}
+	// 		break;
+	// }
+	return BMS_PRECHARGE;
+}
 
 void to_charge(state_global_data_t *data) {
 	// send ready to charge message (TBD)
 }
 
-BMS_STATE_T do_state_charge(state_global_data_t *data) { return BMS_CHARGE; }
+BMS_STATE_T do_state_charge(state_global_data_t *data) {
+	// if (data->can_rx.StdId == CAN_ID_ECU) {
+	// 	if (data->can_rx.Data[0] == CAN_IN_TS_OFF) {
+	// 		return BMS_IDLE;
+	// 	}
+	// }
 
-void to_on(state_global_data_t *data) {}
+	return BMS_CHARGE;
+}
 
-BMS_STATE_T do_state_on(state_global_data_t *data) { return BMS_ON; }
+void to_on(state_global_data_t *data) {
+	// bms_precharge_end(&data->bms);
+	// HAL_CAN_ConfigFilter(&hcan, &CAN_FILTER_NORMAL);
+	// can_send(&hcan, CAN_ID_BMS, CAN_MSG_TS_ON, 8);
+}
 
-void to_halt(state_global_data_t *data) {}
+BMS_STATE_T do_state_on(state_global_data_t *data) {
+	// if (data->can_rx.StdId == CAN_ID_ECU) {
+	// 	if (data->can_rx.Data[0] == CAN_IN_TS_OFF) {
+	// 		return BMS_IDLE;
+	// 	}
+	// }
+
+	return BMS_ON;
+}
+
+void to_halt(state_global_data_t *data) {
+	// bms_set_ts_off(&data->bms);
+	// bms_set_fault(&data->bms);
+
+	// can_send_error(&hcan, data->error, data->error_index, &data->pack);
+}
 
 BMS_STATE_T do_state_halt(state_global_data_t *data) { return BMS_HALT; }
 
@@ -216,14 +283,6 @@ void read_temps(state_global_data_t *data) {
 		pack_update_temperatures(&hspi1, &data->pack, &data->error);
 	ER_CHK(&data->error);
 
-	// Check for not healthy cells
-	// uint8_t volts[PACK_MODULE_COUNT];
-	// uint8_t num_cells = pack_check_voltage_drops(&data->pack, volts);
-
-	// uint8_t i;
-	// for (i = 0; i < num_cells; i++) {
-	// }
-
 End:;
 }
 /* USER CODE END 0 */
@@ -261,6 +320,29 @@ int main(void) {
 	MX_USART2_UART_Init();
 	/* USER CODE BEGIN 2 */
 	cli_init(&cli, &huart2);
+
+	error_init(&data.can_error);
+	data.error = ERROR_OK;
+
+	// data->bms.pin_fault.gpio = BMS_FAULT_GPIO_Port;
+	// data->bms.pin_ts_on.gpio = TS_ON_GPIO_Port;
+	// data->bms.pin_chip_select.gpio = CS_6820_GPIO_Port;
+	// data->bms.pin_precharge_end.gpio = PreChargeEnd_GPIO_Port;
+
+	// data->bms.pin_fault.id = BMS_FAULT_Pin;
+	// data->bms.pin_ts_on.id = TS_ON_Pin;
+	// data->bms.pin_chip_select.id = CS_6820_Pin;
+	// data->bms.pin_precharge_end.id = PreChargeEnd_Pin;
+
+	// bms_write_pin(&(data->bms.pin_fault), GPIO_PIN_SET);
+	// bms_write_pin(&(data->bms.pin_ts_on), GPIO_PIN_RESET);
+	// bms_write_pin(&(data->bms.pin_chip_select), GPIO_PIN_SET);
+	// bms_write_pin(&(data->bms.pin_precharge_end), GPIO_PIN_RESET);
+
+	// can_init(&hcan);
+
+	pack_init(&(data.pack));
+
 	/* USER CODE END 2 */
 
 	/* Infinite loop */
