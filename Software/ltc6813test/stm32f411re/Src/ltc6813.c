@@ -46,10 +46,8 @@ uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *spi, LTC6813_T ltc[],
 
 		_wakeup_idle(spi, false);
 
-		HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_RESET);
 		HAL_SPI_Transmit(spi, cmd, 4, 100);
 		HAL_SPI_Receive(spi, data, 8 * LTC6813_COUNT, 100);
-		HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_SET);
 
 #if LTC6813_EMU > 0
 		// Writes 3.6v to each cell
@@ -114,10 +112,8 @@ void _ltc6813_adcv(SPI_HandleTypeDef *spi, bool dcp) {
 	cmd[3] = (uint8_t)(cmd_pec);
 
 	_wakeup_idle(spi, false);
-	HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_RESET);
 	HAL_SPI_Transmit(spi, cmd, 4, 100);
 	HAL_Delay(1);
-	HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_SET);
 }
 
 /**
@@ -189,12 +185,10 @@ void _ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool start_bal, bool even) {
 
 	_wakeup_idle(hspi, true);
 
-	HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_RESET);
 	HAL_SPI_Transmit(hspi, wrcfg, 4, 100);
 	HAL_Delay(1);
 	HAL_SPI_Transmit(hspi, cfgr, 8, 100);
 	HAL_Delay(1);
-	HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_SET);
 
 	// TODO: remove this
 	_ltc6813_adcv(hspi, start_bal);
@@ -234,13 +228,8 @@ uint8_t ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, LTC6813_T *ltc,
 
 		_wakeup_idle(hspi, false);
 
-		HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_RESET);
-		HAL_Delay(1);
 		HAL_SPI_Transmit(hspi, cmd, 4, 100);
-
 		HAL_SPI_Receive(hspi, data, 8, 100);
-		HAL_Delay(1);
-		HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_SET);
 
 #if LTC6813_EMU > 0
 		// Writes 0.9292v (18°C) to each sensor
@@ -302,15 +291,12 @@ void ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool is_a,
 	cmd[2] = (uint8_t)(cmd_pec >> 8);
 	cmd[3] = (uint8_t)(cmd_pec);
 
-	HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_RESET);
 	HAL_SPI_Transmit(hspi, cmd, 4, 100);
 	HAL_Delay(1);
 
 	for (uint8_t i = 0; i < LTC6813_COUNT; i++) {
 		HAL_SPI_Transmit(hspi, cfgr[i], 8, 100);
 	}
-
-	HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_SET);
 }
 
 void _set_dcc(uint8_t indexes[LTC6813_CELL_COUNT], uint8_t cfgar[8],
@@ -412,12 +398,10 @@ End:;
  */
 void _wakeup_idle(SPI_HandleTypeDef *hspi, bool apply_delay) {
 	uint8_t data = 0xFF;
-	HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_RESET);
 	HAL_SPI_Transmit(hspi, &data, 1, 1);
 	if (apply_delay) {
 		HAL_Delay(1);
 	}
-	HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_SET);
 }
 
 /**
