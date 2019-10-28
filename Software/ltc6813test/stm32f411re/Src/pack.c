@@ -11,6 +11,7 @@
 #include <stdbool.h>
 #include <stm32f4xx_hal.h>
 #include <string.h>
+#include "bal.h"
 
 #define CURRENT_ARRAY_LENGTH 512
 
@@ -210,6 +211,15 @@ void pack_update_temperature_stats(PACK_T *pack) {
 	pack->max_temperature = max_temperature;
 	pack->min_temperature = fmin(min_temperature, max_temperature);
 	;
+}
+
+void pack_balance_cells(SPI_HandleTypeDef *spi, PACK_T *pack, ERROR_T error) {
+	bal_conf config = {.threshold = PACK_MAX_VOLTAGE_THRESHOLD, .slot_time = 2};
+
+	uint8_t *indexes;
+	bal_compute_indexes(config, pack->voltages, indexes);
+
+	ltc6813_set_balancing(spi, indexes, config.slot_time);
 }
 
 uint8_t pack_check_errors(PACK_T *pack, ERROR_T *error) {
