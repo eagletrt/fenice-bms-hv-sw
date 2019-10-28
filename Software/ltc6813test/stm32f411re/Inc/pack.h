@@ -16,9 +16,11 @@
 
 /** @brief Battery pack basic info */
 typedef struct {
-	ER_UINT16_T
-	voltages[PACK_MODULE_COUNT];				 /*!< [mV * 10] Cell voltages */
-	ER_UINT16_T temperatures[PACK_MODULE_COUNT]; /*!< [°C * 100] */
+	uint16_t voltages[PACK_MODULE_COUNT]; /*!< [mV * 10] Cell voltages */
+	ERROR_STATUS_T voltage_errors[PACK_MODULE_COUNT];
+
+	uint16_t temperatures[PACK_MODULE_COUNT]; /*!< [°C * 100] */
+	ERROR_STATUS_T temperature_errors[PACK_MODULE_COUNT];
 
 	uint32_t total_voltage; /*!< [mV * 10] Total pack voltage */
 	uint16_t max_voltage;   /*!< [mV * 10] Maximum cell voltage */

@@ -9,7 +9,7 @@
 #include "ltc6813.h"
 
 // Set to 1 to emulate the LTC daisy chain
-#define LTC6813_EMU 0
+#define LTC6813_EMU 1
 
 /**
  * @brief		Polls all the registers of the LTC6813 and updates the cell
@@ -28,9 +28,9 @@
  * @param		volts	The array of voltages
  * @param		error	The error return value
  */
-uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *spi, LTC6813_T *ltc,
-							  ER_UINT16_T *volts, WARNING_T *warning,
-							  ERROR_T *error) {
+uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *spi, LTC6813_T ltc[],
+							  uint16_t volts[], ERROR_STATUS_T volts_error[],
+							  WARNING_T *warning, ERROR_T *error) {
 	uint8_t cmd[4];
 	uint16_t cmd_pec;
 	uint8_t data[8];
@@ -70,9 +70,10 @@ uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *spi, LTC6813_T *ltc,
 
 			// For every cell in the register
 			for (uint8_t cell = 0; cell < LTC6813_REG_CELL_COUNT; cell++) {
-				volts[count].value = _convert_voltage(&data[2 * cell]);
+				volts[count] = _convert_voltage(&data[2 * cell]);
 
-				ltc6813_check_voltage(&volts[count], warning, error);
+				ltc6813_check_voltage(volts[count], &volts_error[count],
+									  warning, error);
 				ER_CHK(error);
 				count++;
 			}
@@ -102,6 +103,7 @@ End:;
  * @param		spi		The spi configuration structure
  * @param		dcp		false to read voltages; true to read temperatures
  */
+// TODO: remove this function
 void _ltc6813_adcv(SPI_HandleTypeDef *spi, bool dcp) {
 	uint8_t cmd[4];
 	uint16_t cmd_pec;
@@ -148,7 +150,7 @@ void _ltc6813_adcv(SPI_HandleTypeDef *spi, bool dcp) {
  * @param		even			Indicates whether we're reading odd or even
  *cells
  */
-// TODO: Remove this function
+// TODO: remove this function
 void _ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool start_bal, bool even) {
 	uint8_t wrcfg[4];
 	uint8_t cfgr[8];
@@ -198,12 +200,6 @@ void _ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool start_bal, bool even) {
 	_ltc6813_adcv(hspi, start_bal);
 }
 
-void ltc6813_configure_temperature(SPI_HandleTypeDef *hspi, bool enable,
-								   bool even) {
-	_ltc6813_wrcfg(hspi, enable, even);  // switch between even and odd
-	_ltc6813_adcv(hspi, enable);
-}
-
 /**
  * @brief		This function is used to fetch the temperatures.
  * @details	The workings of this function are very similar to read_voltages,
@@ -220,7 +216,8 @@ void ltc6813_configure_temperature(SPI_HandleTypeDef *hspi, bool enable,
  * @param		error		The error return value
  */
 uint8_t ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, LTC6813_T *ltc,
-								  bool even, ER_UINT16_T *temps,
+								  uint16_t temps[],
+								  ERROR_STATUS_T temps_error[],
 								  ERROR_T *error) {
 	uint8_t cmd[4];
 	uint16_t cmd_pec;
@@ -228,9 +225,8 @@ uint8_t ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, LTC6813_T *ltc,
 
 	cmd[0] = (uint8_t)0x80 + ltc->address;
 
-	uint8_t reg;
 	uint8_t count = 0;
-	for (reg = 0; reg < LTC6813_REG_COUNT; reg++) {
+	for (uint8_t reg = 0; reg < LTC6813_REG_COUNT; reg++) {
 		cmd[1] = (uint8_t)rdcv_cmd[reg];
 		cmd_pec = _pec15(2, cmd);
 		cmd[2] = (uint8_t)(cmd_pec >> 8);
@@ -249,8 +245,7 @@ uint8_t ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, LTC6813_T *ltc,
 #if LTC6813_EMU > 0
 		// Writes 0.9292v (18°C) to each sensor
 
-		uint8_t emu_i;
-		for (emu_i = 0; emu_i < LTC6813_REG_CELL_COUNT * 2; emu_i++) {
+		for (uint8_t emu_i = 0; emu_i < LTC6813_REG_CELL_COUNT * 2; emu_i++) {
 			// 9292
 			data[emu_i] = 0b00100100;
 			data[++emu_i] = 0b01001100;
@@ -260,32 +255,23 @@ uint8_t ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, LTC6813_T *ltc,
 		data[7] = (uint8_t)emu_pec;
 #endif
 
-		bool pec = (_pec15(6, data) == (uint16_t)(data[6] * 256 + data[7]));
-
-		if (pec) {
+		if (_pec15(6, data) == (uint16_t)(data[6] * 256 + data[7])) {
 			error_unset(ERROR_LTC_PEC_ERROR, &ltc->error);
 
-			uint8_t cell = 0;  // Counts the cell inside the register
-			for (cell = 0; cell < LTC6813_REG_CELL_COUNT; cell++) {
-				uint8_t reg_cell = reg * LTC6813_REG_CELL_COUNT;
+			// Counts the cell inside the register
+			for (uint8_t cell = 0; cell < LTC6813_REG_CELL_COUNT; cell++) {
+				uint16_t temp =
+					_convert_temp(_convert_voltage(&data[2 * cell]));
 
-				// If the cell is present
-				if (ltc->cell_distribution[reg_cell + cell]) {
-					bool is_even = count % 2 == 0;
-					// If the cell we're reading respects the even condition
-					if (is_even == even) {
-						uint16_t temp =
-							_convert_temp(_convert_voltage(&data[2 * cell]));
+				if (temp > 0) {
+					temps[count] = temp;
 
-						if (temp > 0) {
-							temps[count].value = temp;
-
-							ltc6813_check_temperature(&temps[count], error);
-							ER_CHK(error);
-						}
-					}
-					count++;
+					ltc6813_check_temperature(temps[count], &temps_error[count],
+											  error);
+					ER_CHK(error);
 				}
+
+				count++;
 			}
 		} else {
 			error_set(ERROR_LTC_PEC_ERROR, &ltc->error, HAL_GetTick());
@@ -375,25 +361,25 @@ void ltc6813_set_balancing(SPI_HandleTypeDef *hspi,
  * @param		volts		The voltage
  * @param		error		The error return code
  */
-void ltc6813_check_voltage(ER_UINT16_T *volts, WARNING_T *warning,
-						   ERROR_T *error) {
-	if (volts->value < CELL_WARN_VOLTAGE) {
+void ltc6813_check_voltage(uint16_t volts, ERROR_STATUS_T *volt_error,
+						   WARNING_T *warning, ERROR_T *error) {
+	if (volts < CELL_WARN_VOLTAGE) {
 		*warning = WARN_CELL_LOW_VOLTAGE;
 	}
 
-	if (volts->value < CELL_MIN_VOLTAGE) {
-		error_set(ERROR_CELL_UNDER_VOLTAGE, &volts->error, HAL_GetTick());
+	if (volts < CELL_MIN_VOLTAGE) {
+		error_set(ERROR_CELL_UNDER_VOLTAGE, volt_error, HAL_GetTick());
 	} else {
-		error_unset(ERROR_CELL_UNDER_VOLTAGE, &volts->error);
+		error_unset(ERROR_CELL_UNDER_VOLTAGE, volt_error);
 	}
 
-	if (volts->value > CELL_MAX_VOLTAGE) {
-		error_set(ERROR_CELL_OVER_VOLTAGE, &volts->error, HAL_GetTick());
+	if (volts > CELL_MAX_VOLTAGE) {
+		error_set(ERROR_CELL_OVER_VOLTAGE, volt_error, HAL_GetTick());
 	} else {
-		error_unset(ERROR_CELL_OVER_VOLTAGE, &volts->error);
+		error_unset(ERROR_CELL_OVER_VOLTAGE, volt_error);
 	}
 
-	*error = error_check_fatal(&volts->error, HAL_GetTick());
+	*error = error_check_fatal(volt_error, HAL_GetTick());
 	ER_CHK(error);
 
 End:;
@@ -405,14 +391,15 @@ End:;
  * @param		temp		The temperature
  * @param		error		The error return code
  */
-void ltc6813_check_temperature(ER_UINT16_T *temp, ERROR_T *error) {
-	if (temp->value >= CELL_MAX_TEMPERATURE) {
-		error_set(ERROR_CELL_OVER_TEMPERATURE, &temp->error, HAL_GetTick());
+void ltc6813_check_temperature(uint16_t temps, ERROR_STATUS_T *temp_error,
+							   ERROR_T *error) {
+	if (temps >= CELL_MAX_TEMPERATURE) {
+		error_set(ERROR_CELL_OVER_TEMPERATURE, temp_error, HAL_GetTick());
 	} else {
-		error_unset(ERROR_CELL_OVER_TEMPERATURE, &temp->error);
+		error_unset(ERROR_CELL_OVER_TEMPERATURE, temp_error);
 	}
 
-	*error = error_check_fatal(&temp->error, HAL_GetTick());
+	*error = error_check_fatal(temp_error, HAL_GetTick());
 	ER_CHK(error);
 
 End:;

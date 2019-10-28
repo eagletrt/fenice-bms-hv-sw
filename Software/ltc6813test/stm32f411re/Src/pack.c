@@ -13,7 +13,6 @@
 #include <string.h>
 
 #define CURRENT_ARRAY_LENGTH 512
-#define PACK_DROP_DELTA 2000  // 0.2V
 
 uint32_t adc_current[CURRENT_ARRAY_LENGTH];
 
@@ -45,13 +44,13 @@ void pack_init(PACK_T *pack) {
 	}
 
 	for (i = 0; i < PACK_MODULE_COUNT; i++) {
-		pack->voltages[i].value = 0;
-		error_init(&(pack->voltages[i].error));
+		pack->voltages[i] = 0;
+		error_init(&pack->voltage_errors[i]);
 
 		// Split this cycle if temperatures has a different size than voltage
 
-		pack->temperatures[i].value = 0;
-		error_init(&pack->temperatures[i].error);
+		pack->temperatures[i] = 0;
+		error_init(&pack->temperature_errors[i]);
 	}
 }
 
@@ -68,15 +67,15 @@ void pack_init(PACK_T *pack) {
  */
 uint8_t pack_update_voltages(SPI_HandleTypeDef *spi, PACK_T *pack,
 							 WARNING_T *warning, ERROR_T *error) {
-	uint8_t ltc_i;
-
 	_ltc6813_adcv(spi, 0);
 
-	// for (ltc_i = 0; ltc_i < LTC6813_COUNT || !error; ltc_i++) {
-	uint8_t cell =
-		ltc6813_read_voltages(spi, &ltc[0], pack->voltages, warning, error);
-	ER_CHK(error);
-	//}
+	uint8_t cell;
+	uint8_t ltc_i;
+	for (ltc_i = 0; ltc_i < LTC6813_COUNT; ltc_i++) {
+		cell = ltc6813_read_voltages(spi, &ltc[ltc_i], pack->voltages,
+									 pack->voltage_errors, warning, error);
+		ER_CHK(error);
+	}
 
 End:;
 	pack_update_voltage_stats(pack);
@@ -108,37 +107,22 @@ End:;
  */
 uint8_t pack_update_temperatures(SPI_HandleTypeDef *spi, PACK_T *pack,
 								 ERROR_T *error) {
-	static uint8_t ltc_index = 0;
-	static bool even = 0;
-	uint8_t cell_index = 0;
-
-	ltc6813_configure_temperature(spi, true, even);
-
-	// Read 2 LTCs at a time. Roll back to 0 if limit exceeded
-	uint8_t tmp = (ltc_index + 2) % LTC6813_COUNT;
-	while (ltc_index != tmp) {
-		cell_index = ltc6813_read_temperatures(
-			spi, &ltc[ltc_index], even,
-			&pack->temperatures[ltc_index * LTC6813_CELL_COUNT], error);
-
+	uint8_t cell;
+	uint8_t ltc_i;
+	for (ltc_i = 0; ltc_i < LTC6813_COUNT; ltc_i++) {
+		cell = ltc6813_read_temperatures(spi, &ltc[ltc_i], pack->temperatures,
+										 pack->temperature_errors, error);
 		ER_CHK(error);
-
-		ltc_index = (ltc_index + 1) % LTC6813_COUNT;
-		if (ltc_index == 0) {
-			even = !even;
-		}
 	}
-
-	ltc6813_configure_temperature(spi, false, even);
 
 	pack_update_temperature_stats(pack);
 
 End:;
 
 	if (*error == ERROR_LTC_PEC_ERROR) {
-		return ltc_index;
+		return ltc_i;
 	}
-	return cell_index;
+	return cell;
 }
 
 /**
@@ -181,17 +165,17 @@ End:;
  * @param		pack	The struct to save the data to
  */
 void pack_update_voltage_stats(PACK_T *pack) {
-	uint32_t tot_voltage = pack->voltages[0].value;
-	uint16_t max_voltage = pack->voltages[0].value;
+	uint32_t tot_voltage = pack->voltages[0];
+	uint16_t max_voltage = pack->voltages[0];
 	uint16_t min_voltage = UINT16_MAX;
 
 	uint8_t i;
 	for (i = 1; i < PACK_MODULE_COUNT; i++) {
-		tot_voltage += (uint32_t)pack->voltages[i].value;
+		tot_voltage += (uint32_t)pack->voltages[i];
 
-		if (!pack->voltages[i].error.active) {
-			max_voltage = fmax(max_voltage, pack->voltages[i].value);
-			min_voltage = fmin(min_voltage, pack->voltages[i].value);
+		if (!pack->voltage_errors[i].active) {
+			max_voltage = fmax(max_voltage, pack->voltages[i]);
+			min_voltage = fmin(min_voltage, pack->voltages[i]);
 		}
 	}
 
@@ -213,13 +197,11 @@ void pack_update_temperature_stats(PACK_T *pack) {
 
 	uint8_t temp_count = 0;
 	for (int i = 0; i < PACK_MODULE_COUNT; i++) {
-		if (pack->temperatures[i].value > 0) {
-			avg_temperature += (uint32_t)pack->temperatures[i].value;
+		if (pack->temperatures[i] > 0) {
+			avg_temperature += (uint32_t)pack->temperatures[i];
 
-			max_temperature =
-				fmax(max_temperature, pack->temperatures[i].value);
-			min_temperature =
-				fmin(min_temperature, pack->temperatures[i].value);
+			max_temperature = fmax(max_temperature, pack->temperatures[i]);
+			min_temperature = fmin(min_temperature, pack->temperatures[i]);
 			temp_count++;
 		}
 	}
@@ -236,65 +218,14 @@ uint8_t pack_check_errors(PACK_T *pack, ERROR_T *error) {
 
 	uint8_t i;
 	for (i = 0; i < PACK_MODULE_COUNT; i++) {
-		ltc6813_check_voltage(&pack->voltages[i], &warning, error);
+		ltc6813_check_voltage(pack->voltages[i], &pack->voltage_errors[i],
+							  &warning, error);
 		ER_CHK(error);
-		ltc6813_check_temperature(&pack->temperatures[i], error);
+		ltc6813_check_temperature(pack->temperatures[i],
+								  &pack->temperature_errors[i], error);
 		ER_CHK(error);
 	}
 
 End:
 	return i;
-}
-
-/**
- * @brief		Checks if there are cells that have a higher than average
- * 					voltage drop under load
- *
- * @details	When called during an idle period (current draw under a certain
- * 					amount), this function stores the total voltage as a
- * 					reference "idle voltage". When under load, this function
- * 					compares the total voltage to the idling voltage and if
- * 					it sees a drop, checks for every cell whether the drop in
- * 					voltage is higher than average.
- *
- * @param		pack		The PACK_T to check
- * @param		cells		The array of indexes that are found to be
- * dropping too much
- * @returns	The number of cells that triggered the warning
- */
-uint8_t pack_check_voltage_drops(PACK_T *pack,
-								 uint8_t cells[PACK_MODULE_COUNT]) {
-	static uint16_t idle_voltage = 0;
-	static uint16_t idle_volts[PACK_MODULE_COUNT] = {0};
-
-	size_t cell_index = 0;
-
-	if (pack->current.value >= -10 && pack->current.value < 100)  // < 10A
-	{  // Pack idle state
-		idle_voltage = pack->total_voltage;
-
-		uint8_t i;
-		for (i = 0; i < PACK_MODULE_COUNT; i++) {
-			idle_volts[i] = pack->voltages[i].value;
-		}
-	}
-
-	if (pack->current.value > 300 && idle_voltage > 0)  // > 30A
-	{													// Pack load state
-		if (pack->total_voltage <
-			idle_voltage - PACK_MODULE_COUNT * PACK_DROP_DELTA) {
-			uint8_t i;
-			for (i = 0; i < PACK_MODULE_COUNT; i++) {
-				if (pack->voltages[i].value <
-					idle_volts[i] - (PACK_DROP_DELTA +
-									 1000U)) {  // If the cell dropped >0.1V
-												// more than the average
-
-					cells[cell_index++] = i;
-				}
-			}
-		}
-	}
-
-	return cell_index;
 }
