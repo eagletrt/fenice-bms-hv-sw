@@ -53,6 +53,7 @@ Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_spi.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c \
+Src/bal.c \
 Src/cli.c \
 Src/error.c \
 Src/ltc6813.c \
@@ -217,7 +218,7 @@ erase: $(BUILD_DIR)/$(TARGET).elf
 # clean up
 #######################################
 clean:
-	-rm - fR $(BUILD_DIR)
+	-rm -fR $(BUILD_DIR)
 	
 #######################################
 # dependencies
