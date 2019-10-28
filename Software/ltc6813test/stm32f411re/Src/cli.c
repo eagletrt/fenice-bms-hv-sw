@@ -128,7 +128,7 @@ void cli_init(cli_t *cli, UART_HandleTypeDef *uart) {
 	HAL_UART_Transmit(cli->uart, (uint8_t *)init, strlen(init), 100);
 }
 
-void cli_clean(char *cmd) {
+uint8_t cli_clean(char *cmd) {
 	uint8_t cursor = 0;
 
 	for (uint8_t i = 0; i < BUF_SIZE; i++) {
@@ -140,18 +140,19 @@ void cli_clean(char *cmd) {
 			}
 		} else if (cmd[i] == '\033') {
 			cmd[cursor] = '\0';
-			return;
+			return cursor;
 		} else {
 			// Add to buffer
 			cmd[cursor] = cmd[i];
 
 			if (cmd[i] == '\0') {
 				// Exit if done
-				return;
+				return cursor;
 			}
 			cursor++;
 		}
 	}
+	return cursor;
 }
 
 void cli_handle_escape(cli_t *cli) {
@@ -202,9 +203,9 @@ void cli_loop(cli_t *cli, state_global_data_t *data, BMS_STATE_T state) {
 			return;
 		}
 
-		cli_clean(cli->rx.buffer);
+		cli->rx.index = cli_clean(cli->rx.buffer);
 
-		if (strlen(cli->rx.buffer) > 0) {  // Add to history
+		if (cli->rx.index > 0) {  // Add to history
 
 			cli->history.list = realloc(
 				cli->history.list, (cli->history.index + 1) * sizeof(buffer_t));
