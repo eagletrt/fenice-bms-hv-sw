@@ -4,68 +4,53 @@
 #include <stdlib.h>
 #include <string.h>
 
-const char *cli_commands[N_COMMANDS] = {"volts", "temps", "status", "taba",
-										"?"};
+const char *cli_commands[N_COMMANDS] = {
+	"volts", "volts all", "temps", "temps all", "status", "taba", "?"};
 
 void _cli_volts(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 				char *out) {
-	char *args = &cmd[strlen("volts")];
+	sprintf(out, "total.....%.2f V\r\nmax.......%.3f V\r\nmin.......%.3f V\r\n",
+			(float)data->pack.total_voltage / 10000,
+			(float)data->pack.max_voltage / 10000,
+			(float)data->pack.min_voltage / 10000);
+}
 
-	if (strcmp(args, "\0") == 0) {
-		sprintf(out,
-				"total.....%.2f V\r\nmax.......%.3f V\r\nmin.......%.3f V\r\n",
-				(float)data->pack.total_voltage / 10000,
-				(float)data->pack.max_voltage / 10000,
-				(float)data->pack.min_voltage / 10000);
+void _cli_volts_all(char *cmd, state_global_data_t *data, BMS_STATE_T state,
+					char *out) {
+	out[0] = '\0';
 
-	} else if (strcmp(args, " all") == 0) {
-		out[0] = '\0';
-
-		for (uint8_t i = 0; i < 108; i++) {
-			sprintf(out + strlen(out), "| %-3u %.3f V ", i,
-					(float)data->pack.voltages[i % PACK_MODULE_COUNT].value /
-						10000);
-			if ((i + 1) % 9 == 0) {
-				sprintf(out + strlen(out), "|\r\n");
-			}
+	for (uint8_t i = 0; i < PACK_MODULE_COUNT; i++) {
+		sprintf(out + strlen(out), "| %-3u %.3f V ", i,
+				(float)data->pack.voltages[i].value / 10000);
+		if ((i + 1) % 9 == 0) {
+			sprintf(out + strlen(out), "|\r\n");
 		}
-
-	} else {
-		sprintf(out, "?\r\n");
 	}
 }
 
 void _cli_temps(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 				char *out) {
-	char *args = &cmd[strlen("temps")];
-
-	if (strcmp(args, "\0") == 0) {
-		sprintf(out,
-				"average.....%.1f C\r\nmax.........%.1f "
-				"C\r\nmin.........%.1f C\r\n",
-				(float)data->pack.avg_temperature / 100,
-				(float)data->pack.max_temperature / 100,
-				(float)data->pack.min_temperature / 100);
-	}
-
-	else if (strcmp(args, " all") == 0) {
-		out[0] = '\0';
-
-		for (uint8_t i = 0; i < 108; i++) {
-			sprintf(out + strlen(out), "| %-3u %.1f C ", i,
-					(float)data->pack.temperatures[i % PACK_MODULE_COUNT - 1]
-							.value /
-						10000);
-
-			if ((i + 1) % 9 == 0) {
-				sprintf(out + strlen(out), "\r\n");
-			}
-		}
-	} else {
-		sprintf(out, "?\r\n");
-	}
+	sprintf(out,
+			"average.....%.1f C\r\nmax.........%.1f "
+			"C\r\nmin.........%.1f C\r\n",
+			(float)data->pack.avg_temperature / 100,
+			(float)data->pack.max_temperature / 100,
+			(float)data->pack.min_temperature / 100);
 }
 
+void _cli_temps_all(char *cmd, state_global_data_t *data, BMS_STATE_T state,
+					char *out) {
+	out[0] = '\0';
+
+	for (uint8_t i = 0; i < PACK_MODULE_COUNT; i++) {
+		sprintf(out + strlen(out), "| %-3u %.1f C ", i,
+				(float)data->pack.temperatures[i].value / 10000);
+
+		if ((i + 1) % 9 == 0) {
+			sprintf(out + strlen(out), "\r\n");
+		}
+	}
+}
 void _cli_status(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 				 char *out) {
 	char val[4] = {'\0'};
@@ -116,15 +101,21 @@ void _cli_help(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 
 void cli_init(cli_t *cli, UART_HandleTypeDef *uart) {
 	cli->uart = uart;
-	cli->rx.complete = false;
+	cli->complete = false;
 	cli->rx.index = 0;
+	cli->rx.buffer = (char *)malloc(BUF_SIZE);
+
 	cli->escaping = 255;
 
+	cli->history.list = (buffer_t *)malloc(sizeof(buffer_t));
+
 	cli->states[0] = &_cli_volts;
-	cli->states[1] = &_cli_temps;
-	cli->states[2] = &_cli_status;
-	cli->states[3] = &_cli_taba;
-	cli->states[4] = &_cli_help;
+	cli->states[1] = &_cli_volts_all;
+	cli->states[2] = &_cli_temps;
+	cli->states[3] = &_cli_temps_all;
+	cli->states[4] = &_cli_status;
+	cli->states[5] = &_cli_taba;
+	cli->states[6] = &_cli_help;
 
 	LL_USART_EnableIT_RXNE(cli->uart->Instance);
 	LL_USART_EnableIT_ERROR(cli->uart->Instance);
@@ -188,7 +179,9 @@ void cli_handle_escape(cli_t *cli) {
 		buffer_t *hist = &cli->history.list[h_i];
 		cli->history.showing = h_i;
 
-		strcpy(cli->rx.buffer, hist->buffer);
+		// strcpy(cli->rx.buffer, hist->buffer);
+
+		memcpy(cli->rx.buffer, hist->buffer, sizeof(char) * BUF_SIZE);
 
 		char eraser[BUF_SIZE];
 		sprintf(eraser, "%-*c\r", cli->rx.index + PS1_SIZE, '\r');
@@ -204,8 +197,8 @@ void cli_handle_escape(cli_t *cli) {
 }
 
 void cli_loop(cli_t *cli, state_global_data_t *data, BMS_STATE_T state) {
-	if (cli->rx.complete) {
-		cli->rx.complete = false;
+	if (cli->complete) {
+		cli->complete = false;
 
 		if (cli->escaping < 255) {
 			cli_handle_escape(cli);
@@ -214,10 +207,24 @@ void cli_loop(cli_t *cli, state_global_data_t *data, BMS_STATE_T state) {
 
 		cli_clean(cli->rx.buffer);
 
-		if (strlen(cli->rx.buffer) > 0) {
-			strcpy(cli->history.list[cli->history.index].buffer,
-				   cli->rx.buffer);
+		if (strlen(cli->rx.buffer) > 0) {  // Add to history
+
+			cli->history.list = realloc(
+				cli->history.list, (cli->history.index + 1) * sizeof(buffer_t));
+
+			cli->history.list[cli->history.index].buffer =
+				(char *)malloc(sizeof(char) * BUF_SIZE);
+
+			// strcpy(cli->history.list[cli->history.index].buffer,
+			// cli->rx.buffer);
+
+			// cli->history.list[cli->history.index].index = cli->rx.index;
+
+			memcpy(cli->history.list[cli->history.index].buffer, cli->rx.buffer,
+				   sizeof(char) * BUF_SIZE);
+
 			cli->history.list[cli->history.index].index = cli->rx.index;
+
 			cli->history.index++;
 			cli->history.showing = cli->history.index;
 		}
@@ -227,8 +234,7 @@ void cli_loop(cli_t *cli, state_global_data_t *data, BMS_STATE_T state) {
 		char buf[2000] = "?\r\n";
 
 		for (uint8_t i = 0; i < N_COMMANDS; i++) {
-			if (strncmp(cli->rx.buffer, cli_commands[i],
-						strlen(cli_commands[i])) == 0) {
+			if (strcmp(cli->rx.buffer, cli_commands[i]) == 0) {
 				cli->states[i](cli->rx.buffer, data, state, buf);
 			}
 		}
@@ -250,8 +256,7 @@ void cli_char_receive(cli_t *cli) {
 	if (rx_char == '\033') {  // Arrow
 		cli->escaping = cli->rx.index;
 	} else if (rx_char == '\r' || rx_char == '\n') {
-		cli->rx.complete = true;
-
+		cli->complete = true;
 		cli->rx.buffer[cli->rx.index] = '\0';
 
 		HAL_UART_Transmit(cli->uart, (uint8_t *)"\r\n", 2, 200);
@@ -263,7 +268,7 @@ void cli_char_receive(cli_t *cli) {
 	cli->rx.buffer[cli->rx.index] = rx_char;
 
 	if (cli->escaping < 255 && cli->rx.index > cli->escaping + 1) {
-		cli->rx.complete = true;
+		cli->complete = true;
 		return;
 	}
 
@@ -274,6 +279,6 @@ void cli_char_receive(cli_t *cli) {
 	}
 
 	if (cli->rx.index == BUF_SIZE) {
-		cli->rx.complete = true;
+		cli->complete = true;
 	}
 }

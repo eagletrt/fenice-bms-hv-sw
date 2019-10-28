@@ -6,19 +6,19 @@
 #include "stm32f4xx_ll_usart.h"
 
 #define BUF_SIZE 255
-#define N_COMMANDS 5
+#define HISTORY_LENGTH 100
+#define N_COMMANDS 7
 #define PS1_SIZE 2
 typedef void cli_state_func_t(char *cmd, state_global_data_t *data,
 							  BMS_STATE_T state, char *out);
 
 typedef struct buffer_t {
-	char buffer[BUF_SIZE];
 	uint8_t index;
-	bool complete;
+	char *buffer;
 } buffer_t;
 
 typedef struct history_t {
-	buffer_t list[BUF_SIZE];
+	buffer_t *list;
 	uint8_t index;
 	uint8_t showing;
 
@@ -28,6 +28,7 @@ typedef struct cli_t {
 	UART_HandleTypeDef *uart;
 
 	buffer_t rx;
+	bool complete;
 	uint8_t escaping;
 
 	history_t history;
