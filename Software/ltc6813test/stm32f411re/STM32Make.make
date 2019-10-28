@@ -69,7 +69,7 @@ CPP_SOURCES = \
 
 # ASM sources
 ASM_SOURCES =  \
-startup_stm32f411xe.s
+startup_stm32f446xx.s
 
 
 
@@ -118,7 +118,7 @@ AS_DEFS =
 # C defines
 C_DEFS =  \
 -DUSE_HAL_DRIVER \
--DSTM32F411xE
+-DSTM32F446xx
 
 
 
@@ -156,7 +156,7 @@ CXXFLAGS += -feliminate-unused-debug-types
 # LDFLAGS
 #######################################
 # link script
-LDSCRIPT = STM32F411RETx_FLASH.ld
+LDSCRIPT = STM32F446RETx_FLASH.ld
 
 # libraries
 LIBS = -lc -lm -lnosys 
@@ -218,7 +218,7 @@ erase: $(BUILD_DIR)/$(TARGET).elf
 # clean up
 #######################################
 clean:
-	-rm -fR $(BUILD_DIR)
+	-rm - fR $(BUILD_DIR)
 	
 #######################################
 # dependencies
