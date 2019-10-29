@@ -3,16 +3,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "bal.h"
 
-const char *cli_commands[N_COMMANDS] = {
-	"volts", "volts all", "temps", "temps all", "status", "taba", "?"};
+const char *cli_commands[N_COMMANDS] = {"volts",	 "volts all", "temps",
+										"temps all", "status",	"balance",
+										"taba",		 "?"};
 
 void _cli_volts(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 				char *out) {
-	sprintf(out, "total.....%.2f V\r\nmax.......%.3f V\r\nmin.......%.3f V\r\n",
+	sprintf(out,
+			"total.....%.2f V\r\nmax.......%.3f V\r\nmin.......%.3f V"
+			"\r\ndelta.....%.3f V\r\n",
 			(float)data->pack.total_voltage / 10000,
 			(float)data->pack.max_voltage / 10000,
-			(float)data->pack.min_voltage / 10000);
+			(float)data->pack.min_voltage / 10000,
+			(float)(data->pack.max_voltage - data->pack.min_voltage) / 10000);
 }
 
 void _cli_volts_all(char *cmd, state_global_data_t *data, BMS_STATE_T state,
@@ -53,18 +58,31 @@ void _cli_temps_all(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 }
 void _cli_status(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 				 char *out) {
-	char val[4] = {'\0'};
-	itoa(data->error_index, val, 10);
+#define n_items 4
 
-	char *values[3][3] = {{"BMS state", (char *)bms_state_names[state]},
-						  {"global error", (char *)error_names[data->error]},
-						  {"global error index", val}};
+	char error_i[4] = {'\0'};
+	itoa(data->error_index, error_i, 10);
+
+	char *bal = data->balancing ? "true" : "false";
+
+	char *values[n_items][3] = {
+		{"BMS state", (char *)bms_state_names[state]},
+		{"global error", (char *)error_names[data->error]},
+		{"global error index", error_i},
+		{"balancing", bal}};
 
 	out[0] = '\0';
-	for (uint8_t i = 0; i < 3; i++) {
+	for (uint8_t i = 0; i < n_items; i++) {
 		sprintf(out + strlen(out), "%s%s%s\r\n", values[i][0],
 				"......................." + strlen(values[i][0]), values[i][1]);
 	}
+}
+
+void _cli_balance(char *cmd, state_global_data_t *data, BMS_STATE_T state,
+				  char *out) {
+	data->balancing = !data->balancing;
+
+	sprintf(out, "setting balancing to %u\r\n", data->balancing);
 }
 
 void _cli_taba(char *cmd, state_global_data_t *data, BMS_STATE_T state,
@@ -111,7 +129,7 @@ void cli_init(cli_t *cli, UART_HandleTypeDef *uart) {
 
 	cli_state_func_t *temp[N_COMMANDS] = {
 		&_cli_volts,  &_cli_volts_all, &_cli_temps, &_cli_temps_all,
-		&_cli_status, &_cli_taba,	  &_cli_help};
+		&_cli_status, &_cli_balance,   &_cli_taba,  &_cli_help};
 	memcpy(cli->states, temp, sizeof(cli->states));
 
 	LL_USART_EnableIT_RXNE(cli->uart->Instance);
@@ -153,6 +171,10 @@ uint8_t cli_clean(char *cmd) {
 		}
 	}
 	return cursor;
+}
+
+void cli_print(char *text, size_t length) {
+	HAL_UART_Transmit(cli.uart, (uint8_t *)text, length, 500);
 }
 
 void cli_handle_escape(cli_t *cli) {
@@ -237,9 +259,6 @@ void cli_loop(cli_t *cli, state_global_data_t *data, BMS_STATE_T state) {
 			}
 		}
 
-		/*for (uint8_t i = 0; i < BUF_SIZE; i++) {
-			cli->rx.buffer[i] = '\0';
-		}*/
 		cli->rx.buffer[0] = '\0';
 
 		HAL_UART_Transmit(cli->uart, (uint8_t *)buf, strlen(buf), 200);

@@ -7,7 +7,7 @@
 
 #define BUF_SIZE 255
 #define HISTORY_LENGTH 100
-#define N_COMMANDS 7
+#define N_COMMANDS 8
 #define PS1_SIZE 2
 typedef void cli_state_func_t(char *cmd, state_global_data_t *data,
 							  BMS_STATE_T state, char *out);
@@ -37,8 +37,10 @@ typedef struct cli_t {
 } cli_t;
 
 static const char ps1[PS1_SIZE] = "> ";
+extern cli_t cli;
 
 void cli_init(cli_t *cli, UART_HandleTypeDef *uart);
+void cli_print(char *text, size_t length);
 void cli_loop(cli_t *cli, state_global_data_t *data, BMS_STATE_T state);
 void cli_char_receive(cli_t *cli);
 #endif

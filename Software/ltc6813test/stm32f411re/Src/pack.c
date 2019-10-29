@@ -9,9 +9,11 @@
 #include "pack.h"
 #include <math.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <stm32f4xx_hal.h>
 #include <string.h>
 #include "bal.h"
+#include "cli.h"
 
 #define CURRENT_ARRAY_LENGTH 512
 
@@ -171,7 +173,7 @@ void pack_update_voltage_stats(PACK_T *pack) {
 	uint16_t min_voltage = UINT16_MAX;
 
 	uint8_t i;
-	for (i = 1; i < PACK_MODULE_COUNT; i++) {
+	for (i = 0; i < PACK_MODULE_COUNT; i++) {
 		tot_voltage += (uint32_t)pack->voltages[i];
 
 		if (!pack->voltage_errors[i].active) {
@@ -213,13 +215,29 @@ void pack_update_temperature_stats(PACK_T *pack) {
 	;
 }
 
-void pack_balance_cells(SPI_HandleTypeDef *spi, PACK_T *pack, ERROR_T error) {
-	bal_conf config = {.threshold = PACK_MAX_VOLTAGE_THRESHOLD, .slot_time = 2};
+bool pack_balance_cells(SPI_HandleTypeDef *spi, PACK_T *pack, ERROR_T *error) {
+	bal_conf config = {.threshold = BAL_MAX_VOLTAGE_THRESHOLD, .slot_time = 3};
 
-	uint8_t *indexes;
-	bal_compute_indexes(config, pack->voltages, indexes);
+	uint8_t indexes[PACK_MODULE_COUNT];
+	size_t len = bal_compute_indexes(pack->voltages, indexes, config.threshold);
 
-	ltc6813_set_balancing(spi, indexes, config.slot_time);
+	if (len > 0) {
+		char out[BUF_SIZE];
+		sprintf(out, "\r\nBalancing cells\r\n");
+
+		for (uint8_t i = 0; i < len; i++) {
+			if (indexes[i] < NULL_INDEX) {
+				sprintf(out + strlen(out), "%d, ", indexes[i]);
+			}
+		}
+		sprintf(out + strlen(out), "\r\n");
+		cli_print(out, strlen(out));
+
+		ltc6813_set_balancing(spi, indexes, config.slot_time);
+		return true;
+	}
+	cli_print("\r\nnothing to balance\r\n", 22);
+	return false;
 }
 
 uint8_t pack_check_errors(PACK_T *pack, ERROR_T *error) {

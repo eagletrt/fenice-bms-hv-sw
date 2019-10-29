@@ -313,17 +313,16 @@ void ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool is_a,
 	HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_SET);
 }
 
-void _set_dcc(uint8_t indexes[LTC6813_CELL_COUNT], uint8_t cfgar[8],
-			  uint8_t cfgbr[8]) {
+void _set_dcc(uint8_t indexes[], uint8_t cfgar[8], uint8_t cfgbr[8]) {
 	for (uint8_t i = 0; i < PACK_MODULE_COUNT; i++) {
 		if (indexes[i] < 8) {
-			cfgar[4] += dcc[i];
+			cfgar[4] += dcc[indexes[i]];
 		} else if (indexes[i] >= 8 && indexes[i] < 12) {
-			cfgar[5] += dcc[i];
+			cfgar[5] += dcc[indexes[i]];
 		} else if (indexes[i] >= 12 && indexes[i] < 16) {
-			cfgbr[0] += dcc[i];
+			cfgbr[0] += dcc[indexes[i]];
 		} else if (indexes[i] >= 16 && indexes[i] < 18) {
-			cfgbr[1] += dcc[i];
+			cfgbr[1] += dcc[indexes[i]];
 		}
 
 		uint16_t pec = _pec15(6, cfgar);
@@ -336,8 +335,8 @@ void _set_dcc(uint8_t indexes[LTC6813_CELL_COUNT], uint8_t cfgar[8],
 	}
 }
 
-void ltc6813_set_balancing(SPI_HandleTypeDef *hspi,
-						   uint8_t indexes[PACK_MODULE_COUNT], int dcto) {
+void ltc6813_set_balancing(SPI_HandleTypeDef *hspi, uint8_t *indexes,
+						   int dcto) {
 	uint8_t cfgar[LTC6813_COUNT][8] = {0};
 	uint8_t cfgbr[LTC6813_COUNT][8] = {0};
 
@@ -347,7 +346,7 @@ void ltc6813_set_balancing(SPI_HandleTypeDef *hspi,
 		cfgar[i][5] += dcto << 4;   // Set timer
 
 		// For each LTC we set the correct cfgr
-		_set_dcc(&indexes[i], cfgar[i], cfgbr[i]);
+		_set_dcc(indexes, cfgar[i], cfgbr[i]);
 	}
 	_wakeup_idle(hspi, true);
 

@@ -12,6 +12,8 @@ typedef struct {
 	ERROR_T error;
 	uint8_t error_index;
 
+	bool balancing;
+
 } state_global_data_t;
 
 typedef enum {
