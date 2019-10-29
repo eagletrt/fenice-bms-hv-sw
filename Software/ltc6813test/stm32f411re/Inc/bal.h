@@ -12,7 +12,8 @@ typedef struct bal_conf {
 	uint8_t slot_time;
 } bal_conf;
 
-uint8_t bal_compute_indexes(bal_conf config, uint16_t volts[PACK_MODULE_COUNT],
-							uint8_t indexes[]);
+uint8_t bal_compute_indexes(uint16_t volts[PACK_MODULE_COUNT],
+							uint8_t indexes[PACK_MODULE_COUNT],
+							uint16_t threshold);
 
 #endif

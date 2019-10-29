@@ -123,8 +123,7 @@ uint16_t _convert_voltage(uint8_t v_data[]);
 
 uint16_t _convert_temp(uint16_t volt);
 
-void _set_dcc(uint8_t indexes[LTC6813_CELL_COUNT], uint8_t cfgar[8],
-			  uint8_t cfgbr[8]);
+void _set_dcc(uint8_t indexes[], uint8_t cfgar[8], uint8_t cfgbr[8]);
 
 void _wakeup_idle(SPI_HandleTypeDef *hspi, bool apply_delay);
 
@@ -146,8 +145,7 @@ uint8_t ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, LTC6813_T *ltc,
 								  uint16_t temps[],
 								  ERROR_STATUS_T temps_error[], ERROR_T *error);
 
-void ltc6813_set_balancing(SPI_HandleTypeDef *hspi,
-						   uint8_t indexes[PACK_MODULE_COUNT], int dcto);
+void ltc6813_set_balancing(SPI_HandleTypeDef *hspi, uint8_t *indexes, int dcto);
 
 void ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool is_a,
 				   uint8_t cfgr[LTC6813_COUNT][8]);

@@ -39,8 +39,9 @@ void _bubble_sort(uint8_t indexes[], uint16_t values[PACK_MODULE_COUNT],
 	}
 }
 
-uint8_t bal_compute_indexes(bal_conf config, uint16_t volts[PACK_MODULE_COUNT],
-							uint8_t indexes[PACK_MODULE_COUNT]) {
+uint8_t bal_compute_indexes(uint16_t volts[PACK_MODULE_COUNT],
+							uint8_t indexes[PACK_MODULE_COUNT],
+							uint16_t threshold) {
 	static bool even = true;  // Whether to return even or odd cells
 
 	uint8_t indexes_left = PACK_MODULE_COUNT;  // cells to check
@@ -49,7 +50,9 @@ uint8_t bal_compute_indexes(bal_conf config, uint16_t volts[PACK_MODULE_COUNT],
 	// mark indexes that represent values that are less than
 	// (minval + tresh)
 	for (uint8_t i = 0; i < PACK_MODULE_COUNT; i++) {
-		if (volts[i] < volts[min_index] + config.threshold) {
+		indexes[i] = i;
+
+		if (volts[i] < volts[min_index] + threshold) {
 			indexes_left--;
 			indexes[i] = NULL_INDEX;
 		}

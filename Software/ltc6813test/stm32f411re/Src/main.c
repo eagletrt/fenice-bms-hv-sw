@@ -85,6 +85,7 @@ DMA_HandleTypeDef hdma_adc1;
 uint32_t timer_precharge = 0;
 uint32_t timer_volts = 0;
 uint32_t timer_temps = 0;
+uint32_t timer_bal = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -116,6 +117,7 @@ BMS_STATE_T do_state_idle(state_global_data_t *data) {
 	// 		return BMS_PRECHARGE;
 	// 	}
 	// }
+
 	return BMS_IDLE;
 }
 
@@ -248,6 +250,14 @@ void check_timers(state_global_data_t *data) {
 
 		read_volts(data);
 		ER_CHK(&data->error);
+	}
+
+	if (data->balancing && tick - timer_bal >= BAL_CYCLE_LENGTH + 5000) {
+		timer_bal = tick;
+		if (!pack_balance_cells(&hspi1, &data->pack, &data->error)) {
+			data->balancing = false;
+			cli_print("turning balancing off\r\n", 23);
+		}
 	}
 
 End:;
