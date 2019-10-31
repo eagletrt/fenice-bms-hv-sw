@@ -70,7 +70,7 @@ void pack_init(PACK_T *pack) {
  */
 uint8_t pack_update_voltages(SPI_HandleTypeDef *spi, PACK_T *pack,
 							 WARNING_T *warning, ERROR_T *error) {
-	_ltc6813_adcv(spi, 0);
+	//	_ltc6813_adcv(spi, 0);
 
 	uint8_t cell;
 	uint8_t ltc_i;
