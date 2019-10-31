@@ -7,7 +7,7 @@
 
 const char *cli_commands[N_COMMANDS] = {"volts",	 "volts all", "temps",
 										"temps all", "status",	"balance",
-										"taba",		 "?"};
+										"\ta",		 "?"};
 
 void _cli_volts(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 				char *out) {
@@ -177,125 +177,123 @@ void cli_print(char *text, size_t length) {
 	HAL_UART_Transmit(cli.uart, (uint8_t *)text, length, 500);
 }
 
-void cli_handle_escape(cli_t *cli) {
-	if (cli->rx.buffer[cli->rx.index - 1] == '[') {
-		cli->escaping = 255;
+void cli_handle_escape() {
+	if (cli.rx.buffer[cli.rx.index - 1] == '[') {
+		cli.escaping = 255;
 		uint8_t h_i;  // To be displayed history index
 
-		if (cli->rx.buffer[cli->rx.index] == 'A' &&
-			cli->history.showing > 0) {  // UP
+		if (cli.rx.buffer[cli.rx.index] == 'A' &&
+			cli.history.showing > 0) {  // UP
 
-			h_i = cli->history.showing - 1;
+			h_i = cli.history.showing - 1;
+		} else if (cli.rx.buffer[cli.rx.index] == 'B' &&
+				   cli.history.showing < cli.history.index) {  // DOWN
 
-		} else if (cli->rx.buffer[cli->rx.index] == 'B' &&
-				   cli->history.showing < cli->history.index) {  // DOWN
-
-			h_i = cli->history.showing + 1;
-
+			h_i = cli.history.showing + 1;
 		} else {
 			return;
 		}
 
-		buffer_t *hist = &cli->history.list[h_i];
-		cli->history.showing = h_i;
+		buffer_t *hist = &cli.history.list[h_i];
+		cli.history.showing = h_i;
 
 		// strcpy(cli->rx.buffer, hist->buffer);
 
-		memcpy(cli->rx.buffer, hist->buffer, sizeof(char) * BUF_SIZE);
+		memcpy(cli.rx.buffer, hist->buffer, sizeof(char) * BUF_SIZE);
 
 		char eraser[BUF_SIZE];
-		sprintf(eraser, "%-*c\r", cli->rx.index + PS1_SIZE, '\r');
+		sprintf(eraser, "%-*c\r", cli.rx.index + PS1_SIZE, '\r');
 
 		strcat(eraser, ps1);
 		strcat(eraser, hist->buffer);
 
-		HAL_UART_Transmit(cli->uart, (uint8_t *)eraser, strlen(eraser), 500);
+		HAL_UART_Transmit(cli.uart, (uint8_t *)eraser, strlen(eraser), 500);
 
-		cli->rx.index = hist->index;
+		cli.rx.index = hist->index;
 	}
 	return;
 }
 
-void cli_loop(cli_t *cli, state_global_data_t *data, BMS_STATE_T state) {
-	if (cli->complete) {
-		cli->complete = false;
+void cli_loop(state_global_data_t *data, BMS_STATE_T state) {
+	if (cli.complete) {
+		cli.complete = false;
 
-		if (cli->escaping < 255) {
+		if (cli.escaping < 255) {
 			cli_handle_escape(cli);
 			return;
 		}
 
-		cli->rx.index = cli_clean(cli->rx.buffer);
+		cli.rx.index = cli_clean(cli.rx.buffer);
 
-		if (cli->rx.index > 0) {  // Add to history
+		if (cli.rx.index > 0) {  // Add to history
 
-			cli->history.list = realloc(
-				cli->history.list, (cli->history.index + 1) * sizeof(buffer_t));
+			cli.history.list = realloc(
+				cli.history.list, (cli.history.index + 1) * sizeof(buffer_t));
 
-			cli->history.list[cli->history.index].buffer =
+			cli.history.list[cli.history.index].buffer =
 				(char *)malloc(sizeof(char) * BUF_SIZE);
 
-			// strcpy(cli->history.list[cli->history.index].buffer,
-			// cli->rx.buffer);
+			// strcpy(cli.history.list[cli.history.index].buffer,
+			// cli.rx.buffer);
 
-			// cli->history.list[cli->history.index].index = cli->rx.index;
+			// cli.history.list[cli.history.index].index = cli.rx.index;
 
-			memcpy(cli->history.list[cli->history.index].buffer, cli->rx.buffer,
+			memcpy(cli.history.list[cli.history.index].buffer, cli.rx.buffer,
 				   sizeof(char) * BUF_SIZE);
 
-			cli->history.list[cli->history.index].index = cli->rx.index;
+			cli.history.list[cli.history.index].index = cli.rx.index;
 
-			cli->history.index++;
-			cli->history.showing = cli->history.index;
+			cli.history.index++;
+			cli.history.showing = cli.history.index;
 		}
 
-		cli->rx.index = 0;
+		cli.rx.index = 0;
 
 		char buf[2000] = "?\r\n";
 
 		for (uint8_t i = 0; i < N_COMMANDS; i++) {
-			if (strcmp(cli->rx.buffer, cli_commands[i]) == 0) {
-				cli->states[i](cli->rx.buffer, data, state, buf);
+			if (strcmp(cli.rx.buffer, cli_commands[i]) == 0) {
+				cli.states[i](cli.rx.buffer, data, state, buf);
 			}
 		}
 
-		cli->rx.buffer[0] = '\0';
+		cli.rx.buffer[0] = '\0';
 
-		HAL_UART_Transmit(cli->uart, (uint8_t *)buf, strlen(buf), 200);
-		HAL_UART_Transmit(cli->uart, (uint8_t *)ps1, PS1_SIZE, 100);
+		HAL_UART_Transmit(cli.uart, (uint8_t *)buf, strlen(buf), 200);
+		HAL_UART_Transmit(cli.uart, (uint8_t *)ps1, PS1_SIZE, 100);
 	}
 }
 
 // Interrupt callback
-void cli_char_receive(cli_t *cli) {
+void cli_char_receive() {
 	uint8_t rx_char = LL_USART_ReceiveData8(USART2);
 
 	if (rx_char == '\033') {  // Arrow
-		cli->escaping = cli->rx.index;
+		cli.escaping = cli.rx.index;
 	} else if (rx_char == '\r' || rx_char == '\n') {
-		cli->complete = true;
-		cli->rx.buffer[cli->rx.index] = '\0';
+		cli.complete = true;
+		cli.rx.buffer[cli.rx.index] = '\0';
 
-		HAL_UART_Transmit(cli->uart, (uint8_t *)"\r\n", 2, 200);
+		HAL_UART_Transmit(cli.uart, (uint8_t *)"\r\n", 2, 200);
 
 		return;
 	}
 
 	// Add to buffer
-	cli->rx.buffer[cli->rx.index] = rx_char;
+	cli.rx.buffer[cli.rx.index] = rx_char;
 
-	if (cli->escaping < 255 && cli->rx.index > cli->escaping + 1) {
-		cli->complete = true;
+	if (cli.escaping < 255 && cli.rx.index > cli.escaping + 1) {
+		cli.complete = true;
 		return;
 	}
 
-	cli->rx.index++;
+	cli.rx.index++;
 
-	if (cli->escaping == 255) {
-		HAL_UART_Transmit(cli->uart, &rx_char, 1, 50);
+	if (cli.escaping == 255) {
+		HAL_UART_Transmit(cli.uart, &rx_char, 1, 50);
 	}
 
-	if (cli->rx.index == BUF_SIZE) {
-		cli->complete = true;
+	if (cli.rx.index == BUF_SIZE) {
+		cli.complete = true;
 	}
 }

@@ -372,7 +372,7 @@ int main(void) {
 		ER_CHK(&data.error);
 
 	End:
-		cli_loop(&cli, &data, state);
+		cli_loop(&data, state);
 
 		state = run_state(state, &data);
 	}
@@ -568,7 +568,7 @@ void UART_CharReception_Callback(void) {
 	 * register
 	 */
 
-	cli_char_receive(&cli);
+	cli_char_receive();
 }
 
 /**
