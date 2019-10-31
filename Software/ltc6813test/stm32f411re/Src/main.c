@@ -51,16 +51,18 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 state_func_t *const state_table[BMS_NUM_STATES] = {
-	do_state_idle, do_state_precharge, do_state_on, do_state_charge,
-	do_state_halt};
+	do_state_init, do_state_idle,   do_state_precharge,
+	do_state_on,   do_state_charge, do_state_halt};
 
 transition_func_t *const transition_table[BMS_NUM_STATES][BMS_NUM_STATES] = {
-	{NULL, to_precharge, NULL, NULL, to_halt},   // from idle
-	{to_idle, NULL, to_on, to_charge, to_halt},  // from precharge
-	{to_idle, NULL, NULL, NULL, to_halt},		 // from on
-	{NULL, NULL, NULL, NULL, to_halt}};			 // from halt
+	{NULL, to_idle, to_precharge, NULL, NULL, to_halt},  // from init
+	{NULL, NULL, to_precharge, NULL, NULL, to_halt},	 // from idle
+	{NULL, to_idle, NULL, to_on, to_charge, to_halt},	// from precharge
+	{NULL, to_idle, NULL, NULL, NULL, to_halt},			 // from on
+	{NULL, NULL, NULL, NULL, NULL, to_halt}};			 // from halt
 
-const char *bms_state_names[BMS_NUM_STATES] = {[BMS_IDLE] = "idle",
+const char *bms_state_names[BMS_NUM_STATES] = {[BMS_IDLE] = "init",
+											   [BMS_IDLE] = "idle",
 											   [BMS_PRECHARGE] = "pre-charge",
 											   [BMS_ON] = "on",
 											   [BMS_CHARGE] = "charge",
@@ -75,7 +77,7 @@ const char *error_names[ERROR_NUM_ERRORS] = {
 	[ERROR_CAN] = "CAN",
 	[ERROR_OK] = "ok"};
 
-BMS_STATE_T state = BMS_IDLE;
+BMS_STATE_T state = BMS_INIT;
 state_global_data_t data;
 
 cli_t cli;
@@ -99,6 +101,15 @@ static void MX_USART2_UART_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+BMS_STATE_T do_state_init(state_global_data_t *data) {
+	error_init(&data->can_error);
+
+	data->error = ERROR_OK;
+
+	pack_init(&(data->pack));
+	return BMS_IDLE;
+}
 
 void to_idle(state_global_data_t *data) {
 	// bms_set_ts_off(&data->bms);
@@ -334,25 +345,6 @@ int main(void) {
 	error_init(&data.can_error);
 	data.error = ERROR_OK;
 
-	// data->bms.pin_fault.gpio = BMS_FAULT_GPIO_Port;
-	// data->bms.pin_ts_on.gpio = TS_ON_GPIO_Port;
-	// data->bms.pin_chip_select.gpio = CS_6820_GPIO_Port;
-	// data->bms.pin_precharge_end.gpio = PreChargeEnd_GPIO_Port;
-
-	// data->bms.pin_fault.id = BMS_FAULT_Pin;
-	// data->bms.pin_ts_on.id = TS_ON_Pin;
-	// data->bms.pin_chip_select.id = CS_6820_Pin;
-	// data->bms.pin_precharge_end.id = PreChargeEnd_Pin;
-
-	// bms_write_pin(&(data->bms.pin_fault), GPIO_PIN_SET);
-	// bms_write_pin(&(data->bms.pin_ts_on), GPIO_PIN_RESET);
-	// bms_write_pin(&(data->bms.pin_chip_select), GPIO_PIN_SET);
-	// bms_write_pin(&(data->bms.pin_precharge_end), GPIO_PIN_RESET);
-
-	// can_init(&hcan);
-
-	pack_init(&(data.pack));
-
 	/* USER CODE END 2 */
 
 	/* Infinite loop */
@@ -361,6 +353,7 @@ int main(void) {
 		/* USER CODE END WHILE */
 
 		/* USER CODE BEGIN 3 */
+		state = run_state(state, &data);
 
 		data.error = error_check_fatal(&data.can_error, HAL_GetTick());
 		ER_CHK(&data.error);
@@ -373,8 +366,6 @@ int main(void) {
 
 	End:
 		cli_loop(&data, state);
-
-		state = run_state(state, &data);
 	}
 	return 0;
 	/* USER CODE END 3 */

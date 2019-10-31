@@ -17,6 +17,7 @@ typedef struct {
 } state_global_data_t;
 
 typedef enum {
+	BMS_INIT,
 	BMS_IDLE,
 	BMS_PRECHARGE,
 	BMS_ON,
