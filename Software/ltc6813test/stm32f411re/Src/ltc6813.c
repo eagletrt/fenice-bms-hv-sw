@@ -104,7 +104,7 @@ End:;
  * @param		dcp		false to read voltages; true to read temperatures
  */
 // TODO: remove this function
-void _ltc6813_adcv(SPI_HandleTypeDef *spi, bool dcp) {
+/*void _ltc6813_adcv(SPI_HandleTypeDef *spi, bool dcp) {
 	uint8_t cmd[4];
 	uint16_t cmd_pec;
 	cmd[0] = (uint8_t)0b00000011;
@@ -118,7 +118,7 @@ void _ltc6813_adcv(SPI_HandleTypeDef *spi, bool dcp) {
 	HAL_SPI_Transmit(spi, cmd, 4, 100);
 	HAL_Delay(1);
 	HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_SET);
-}
+}*/
 
 /**
  * @brief		Enable or disable the temperature measurement through balancing
@@ -151,7 +151,7 @@ void _ltc6813_adcv(SPI_HandleTypeDef *spi, bool dcp) {
  *cells
  */
 // TODO: remove this function
-void _ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool start_bal, bool even) {
+/*void _ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool start_bal, bool even) {
 	uint8_t wrcfg[4];
 	uint8_t cfgr[8];
 
@@ -198,7 +198,7 @@ void _ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool start_bal, bool even) {
 
 	// TODO: remove this
 	_ltc6813_adcv(hspi, start_bal);
-}
+}*/
 
 /**
  * @brief		This function is used to fetch the temperatures.
