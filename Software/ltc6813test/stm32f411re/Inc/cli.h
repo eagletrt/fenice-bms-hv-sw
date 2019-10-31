@@ -41,6 +41,6 @@ extern cli_t cli;
 
 void cli_init(cli_t *cli, UART_HandleTypeDef *uart);
 void cli_print(char *text, size_t length);
-void cli_loop(cli_t *cli, state_global_data_t *data, BMS_STATE_T state);
-void cli_char_receive(cli_t *cli);
+void cli_loop(state_global_data_t *data, BMS_STATE_T state);
+void cli_char_receive();
 #endif

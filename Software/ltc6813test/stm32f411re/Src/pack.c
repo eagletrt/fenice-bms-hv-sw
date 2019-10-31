@@ -227,7 +227,7 @@ bool pack_balance_cells(SPI_HandleTypeDef *spi, PACK_T *pack, ERROR_T *error) {
 
 		for (uint8_t i = 0; i < len; i++) {
 			if (indexes[i] < NULL_INDEX) {
-				sprintf(out + strlen(out), "%d, ", indexes[i]);
+				sprintf(out + strlen(out), "%d ", indexes[i]);
 			}
 		}
 		sprintf(out + strlen(out), "\r\n");
