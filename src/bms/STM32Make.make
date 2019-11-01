@@ -13,7 +13,7 @@
 ######################################
 # target
 ######################################
-TARGET = LTC6813_comtest
+TARGET = fenice-bms
 
 
 ######################################
@@ -37,6 +37,7 @@ BUILD_DIR = build
 # C sources
 C_SOURCES =  \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_can.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma_ex.c \

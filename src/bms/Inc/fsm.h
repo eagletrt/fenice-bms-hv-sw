@@ -1,6 +1,7 @@
 #ifndef FSM_H
 #define FSM_H
 
+#include "bal.h"
 #include "error.h"
 #include "pack.h"
 
@@ -12,7 +13,7 @@ typedef struct {
 	ERROR_T error;
 	uint8_t error_index;
 
-	bool balancing;
+	bal_conf_t balancing;
 
 } state_global_data_t;
 

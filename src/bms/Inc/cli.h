@@ -29,6 +29,7 @@ typedef struct cli_t {
 
 	buffer_t rx;
 	bool complete;
+	bool echo;
 	uint8_t escaping;
 
 	history_t history;

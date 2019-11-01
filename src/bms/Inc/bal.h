@@ -7,10 +7,11 @@
 
 #define NULL_INDEX 255
 
-typedef struct bal_conf {
+typedef struct bal_conf_t {
+	bool enable;
 	uint16_t threshold;
 	uint8_t slot_time;
-} bal_conf;
+} bal_conf_t;
 
 uint8_t bal_compute_indexes(uint16_t volts[PACK_MODULE_COUNT],
 							uint8_t indexes[PACK_MODULE_COUNT],
