@@ -1,5 +1,4 @@
 #include "cli.h"
-#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,7 +6,7 @@
 
 const char *cli_commands[N_COMMANDS] = {"volts",	 "volts all", "temps",
 										"temps all", "status",	"balance",
-										"\ta",		 "?"};
+										"?",		 "\ta"};
 
 void _cli_volts(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 				char *out) {
@@ -58,31 +57,45 @@ void _cli_temps_all(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 }
 void _cli_status(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 				 char *out) {
-#define n_items 4
+#define n_items 5
 
 	char error_i[4] = {'\0'};
 	itoa(data->error_index, error_i, 10);
 
-	char *bal = data->balancing ? "true" : "false";
+	char *bal = data->balancing.enable ? "true" : "false";
+
+	char thresh[5] = {'\0'};
+	itoa((float)data->balancing.threshold / 10, thresh, 10);
 
 	char *values[n_items][3] = {
 		{"BMS state", (char *)bms_state_names[state]},
 		{"global error", (char *)error_names[data->error]},
 		{"global error index", error_i},
-		{"balancing", bal}};
+		{"balancing", bal},
+		{"balancing threshold", thresh}};
 
 	out[0] = '\0';
 	for (uint8_t i = 0; i < n_items; i++) {
 		sprintf(out + strlen(out), "%s%s%s\r\n", values[i][0],
-				"......................." + strlen(values[i][0]), values[i][1]);
+				"........................" + strlen(values[i][0]),
+				values[i][1]);
 	}
 }
 
 void _cli_balance(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 				  char *out) {
-	data->balancing = !data->balancing;
+	uint8_t cmd_len = strlen("balance");
 
-	sprintf(out, "setting balancing to %u\r\n", data->balancing);
+	if (strcmp(cmd + cmd_len, " tog") == 0) {
+		data->balancing.enable = !data->balancing.enable;
+
+		sprintf(out, "setting balancing to %u\r\n", data->balancing.enable);
+	} else if (strncmp(cmd + cmd_len, " thr", 4) == 0) {
+		data->balancing.threshold = atoi(cmd + cmd_len + 5) * 10;
+
+		sprintf(out, "setting balancing threshold to %u mV\r\n",
+				data->balancing.threshold / 10);
+	}
 }
 
 void _cli_taba(char *cmd, state_global_data_t *data, BMS_STATE_T state,
@@ -112,7 +125,7 @@ void _cli_taba(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 void _cli_help(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 			   char *out) {
 	sprintf(out, "command list:\r\n");
-	for (uint8_t i = 0; i < N_COMMANDS; i++) {
+	for (uint8_t i = 0; i < N_COMMANDS - 1; i++) {
 		sprintf(out + strlen(out), "- %s\r\n", cli_commands[i]);
 	}
 }
@@ -120,6 +133,7 @@ void _cli_help(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 void cli_init(cli_t *cli, UART_HandleTypeDef *uart) {
 	cli->uart = uart;
 	cli->complete = false;
+	cli->echo = true;
 	cli->rx.index = 0;
 	cli->rx.buffer = (char *)malloc(BUF_SIZE);
 
@@ -129,7 +143,7 @@ void cli_init(cli_t *cli, UART_HandleTypeDef *uart) {
 
 	cli_state_func_t *temp[N_COMMANDS] = {
 		&_cli_volts,  &_cli_volts_all, &_cli_temps, &_cli_temps_all,
-		&_cli_status, &_cli_balance,   &_cli_taba,  &_cli_help};
+		&_cli_status, &_cli_balance,   &_cli_help,  &_cli_taba};
 	memcpy(cli->states, temp, sizeof(cli->states));
 
 	LL_USART_EnableIT_RXNE(cli->uart->Instance);
@@ -205,7 +219,7 @@ void cli_handle_escape() {
 		sprintf(eraser, "%-*c\r", cli.rx.index + PS1_SIZE, '\r');
 
 		strcat(eraser, ps1);
-		strcat(eraser, hist->buffer);
+		strcat(eraser, cli.rx.buffer);
 
 		HAL_UART_Transmit(cli.uart, (uint8_t *)eraser, strlen(eraser), 500);
 
@@ -252,7 +266,8 @@ void cli_loop(state_global_data_t *data, BMS_STATE_T state) {
 		char buf[2000] = "?\r\n";
 
 		for (uint8_t i = 0; i < N_COMMANDS; i++) {
-			if (strcmp(cli.rx.buffer, cli_commands[i]) == 0) {
+			if (strncmp(cli.rx.buffer, cli_commands[i],
+						strlen(cli_commands[i])) == 0) {
 				cli.states[i](cli.rx.buffer, data, state, buf);
 			}
 		}
@@ -289,7 +304,7 @@ void cli_char_receive() {
 
 	cli.rx.index++;
 
-	if (cli.escaping == 255) {
+	if (cli.escaping == 255 && cli.echo) {
 		HAL_UART_Transmit(cli.uart, &rx_char, 1, 50);
 	}
 

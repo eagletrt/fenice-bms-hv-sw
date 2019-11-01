@@ -215,11 +215,10 @@ void pack_update_temperature_stats(PACK_T *pack) {
 	;
 }
 
-bool pack_balance_cells(SPI_HandleTypeDef *spi, PACK_T *pack, ERROR_T *error) {
-	bal_conf config = {.threshold = BAL_MAX_VOLTAGE_THRESHOLD, .slot_time = 3};
-
+bool pack_balance_cells(SPI_HandleTypeDef *spi, PACK_T *pack, bal_conf_t *conf,
+						ERROR_T *error) {
 	uint8_t indexes[PACK_MODULE_COUNT];
-	size_t len = bal_compute_indexes(pack->voltages, indexes, config.threshold);
+	size_t len = bal_compute_indexes(pack->voltages, indexes, conf->threshold);
 
 	if (len > 0) {
 		char out[BUF_SIZE];
@@ -233,7 +232,7 @@ bool pack_balance_cells(SPI_HandleTypeDef *spi, PACK_T *pack, ERROR_T *error) {
 		sprintf(out + strlen(out), "\r\n");
 		cli_print(out, strlen(out));
 
-		ltc6813_set_balancing(spi, indexes, config.slot_time);
+		ltc6813_set_balancing(spi, indexes, conf->slot_time);
 		return true;
 	}
 	cli_print("\r\nnothing to balance\r\n", 22);

@@ -10,6 +10,7 @@
 #define PACK_H_
 
 #include <inttypes.h>
+#include "bal.h"
 #include "error.h"
 #include "fenice_config.h"
 #include "ltc6813.h"
@@ -42,7 +43,8 @@ uint8_t pack_update_temperatures(SPI_HandleTypeDef *spi, PACK_T *pack,
 void pack_update_current(ER_INT16_T *current, ERROR_T *error);
 void pack_update_voltage_stats(PACK_T *pack);
 void pack_update_temperature_stats(PACK_T *pack);
-bool pack_balance_cells(SPI_HandleTypeDef *spi, PACK_T *pack, ERROR_T *error);
+bool pack_balance_cells(SPI_HandleTypeDef *spi, PACK_T *pack, bal_conf_t *conf,
+						ERROR_T *error);
 uint8_t pack_check_errors(PACK_T *pack, ERROR_T *error);
 uint8_t pack_check_voltage_drops(PACK_T *pack,
 								 uint8_t cells[PACK_MODULE_COUNT]);
