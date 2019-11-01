@@ -1,9 +1,0 @@
-EESchema-DOCLIB  Version 2.0
-#
-$CMP LTC6811
-D LTC6811-2 Battery Stack Monitoring IC
-K battery, bms, linear
-F http://cds.linear.com/docs/en/datasheet/68111fb.pdf
-$ENDCMP
-#
-#End Doc Library

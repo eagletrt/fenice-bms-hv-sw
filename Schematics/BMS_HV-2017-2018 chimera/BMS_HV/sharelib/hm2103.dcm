@@ -1,8 +1,0 @@
-EESchema-DOCLIB  Version 2.0
-#
-$CMP HM2103
-D HM2103 Pulse Transformer with center tap
-F https://productfinder.pulseeng.com/doc_type/WEB301/doc_num/HM2103NL/doc_part/HM2103NL.pdf
-$ENDCMP
-#
-#End Doc Library
