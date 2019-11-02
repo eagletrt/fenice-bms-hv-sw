@@ -219,7 +219,7 @@ erase: $(BUILD_DIR)/$(TARGET).elf
 # clean up
 #######################################
 clean:
-	-rm - fR $(BUILD_DIR)
+	-rm -fR $(BUILD_DIR)
 	
 #######################################
 # dependencies
