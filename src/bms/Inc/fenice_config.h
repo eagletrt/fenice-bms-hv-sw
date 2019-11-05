@@ -10,9 +10,8 @@
 #define FENICE_CONFIG_H_
 #include <stdbool.h>
 
-// Pin definitions
-#define SPI1_CS_Pin GPIO_PIN_4
-#define SPI1_CS_GPIO_Port GPIOA
+#define CS_LTC_Pin GPIO_PIN_4
+#define CS_LTC_GPIO_Port GPIOA
 
 #define LTC6813_COUNT 1 /*!< Number of daisy chained LTCs */
 #define LTC6813_CELL_COUNT 18

@@ -81,8 +81,34 @@ void UART_Error_Callback(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define SPI1_CS_Pin GPIO_PIN_4
-#define SPI1_CS_GPIO_Port GPIOA
+#define CS_LTC_Pin GPIO_PIN_4
+#define CS_LTC_GPIO_Port GPIOA
+#define CS_ADC_Pin GPIO_PIN_12
+#define CS_ADC_GPIO_Port GPIOB
+#define SHUTDOWN_STATUS_Pin GPIO_PIN_13
+#define SHUTDOWN_STATUS_GPIO_Port GPIOB
+#define PCHARGE_END_Pin GPIO_PIN_14
+#define PCHARGE_END_GPIO_Port GPIOB
+#define TS_ON_Pin GPIO_PIN_15
+#define TS_ON_GPIO_Port GPIOB
+#define BMS_FAULT_Pin GPIO_PIN_6
+#define BMS_FAULT_GPIO_Port GPIOC
+#define SD_INSERT_Pin GPIO_PIN_8
+#define SD_INSERT_GPIO_Port GPIOC
+#define CHARGE_Pin GPIO_PIN_9
+#define CHARGE_GPIO_Port GPIOC
+#define LED_1_Pin GPIO_PIN_8
+#define LED_1_GPIO_Port GPIOA
+#define LED_2_Pin GPIO_PIN_9
+#define LED_2_GPIO_Port GPIOA
+#define LED_3_Pin GPIO_PIN_10
+#define LED_3_GPIO_Port GPIOA
+#define CURRENT_LOW_Pin GPIO_PIN_11
+#define CURRENT_LOW_GPIO_Port GPIOC
+#define CURRENT_HIGH_Pin GPIO_PIN_12
+#define CURRENT_HIGH_GPIO_Port GPIOC
+#define WC_EEPROM_Pin GPIO_PIN_5
+#define WC_EEPROM_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
