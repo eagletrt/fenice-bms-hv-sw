@@ -104,7 +104,7 @@ End:;
  * @param		dcp		false to read voltages; true to read temperatures
  */
 // TODO: remove this function
-/*void _ltc6813_adcv(SPI_HandleTypeDef *spi, bool dcp) {
+void _ltc6813_adcv(SPI_HandleTypeDef *spi, bool dcp) {
 	uint8_t cmd[4];
 	uint16_t cmd_pec;
 	cmd[0] = (uint8_t)0b00000011;
@@ -118,14 +118,15 @@ End:;
 	HAL_SPI_Transmit(spi, cmd, 4, 100);
 	HAL_Delay(1);
 	HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_SET);
-}*/
+}
 
 /**
- * @brief		Enable or disable the temperature measurement through balancing
+ * @brief		Enable or disable the temperature measurement through
+ *balancing
  * @details	Since it's not possible to read the temperatures from adiacent
- * 					cells at the same time, We split the measurement into two
- *					times, read odd cells, and then even ones. To write
- *					configuration you have to send 2 consecutive commands:
+ * 					cells at the same time, We split the measurement into
+ *two times, read odd cells, and then even ones. To write configuration you
+ *have to send 2 consecutive commands:
  *
  *					WRCFG:
  * 					1     CMD0    8     CMD1      16      32
@@ -143,7 +144,8 @@ End:;
  *					|- - - - - - -|- - - - - - - -|- ... -|
  *					1 0 0 1 0 1 0 1 0 0 0 0 0 0 1 0  PEC	<- For odd cells
  *					              or
- *					0 1 0 0 1 0 1 0 0 0 0 0 0 0 0 1  PEC	<- For even cells
+ *					0 1 0 0 1 0 1 0 0 0 0 0 0 0 0 1  PEC	<- For even
+ *cells
  *
  * @param		hspi			The SPI configuration structure
  * @param		start_bal	whether to start temperature measurement
@@ -151,7 +153,7 @@ End:;
  *cells
  */
 // TODO: remove this function
-/*void _ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool start_bal, bool even) {
+void _ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool start_bal, bool even) {
 	uint8_t wrcfg[4];
 	uint8_t cfgr[8];
 
@@ -198,7 +200,7 @@ End:;
 
 	// TODO: remove this
 	_ltc6813_adcv(hspi, start_bal);
-}*/
+}
 
 /**
  * @brief		This function is used to fetch the temperatures.
