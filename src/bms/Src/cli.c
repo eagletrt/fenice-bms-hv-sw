@@ -4,9 +4,8 @@
 #include <string.h>
 #include "bal.h"
 
-const char *cli_commands[N_COMMANDS] = {"volts",	 "volts all", "temps",
-										"temps all", "status",	"balance",
-										"?",		 "\ta"};
+const char *cli_commands[N_COMMANDS] = {
+	"volts", "volts all", "temps", "temps all", "status", "bal", "?", "\ta"};
 
 void _cli_volts(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 				char *out) {
@@ -84,7 +83,7 @@ void _cli_status(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 
 void _cli_balance(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 				  char *out) {
-	uint8_t cmd_len = strlen("balance");
+	uint8_t cmd_len = strlen("bal");
 
 	if (strcmp(cmd + cmd_len, " tog") == 0) {
 		data->balancing.enable = !data->balancing.enable;
