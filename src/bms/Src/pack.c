@@ -224,7 +224,7 @@ bool pack_balance_cells(SPI_HandleTypeDef *spi, PACK_T *pack, bal_conf_t *conf,
 		char out[BUF_SIZE];
 		sprintf(out, "\r\nBalancing cells\r\n");
 
-		for (uint8_t i = 0; i < len; i++) {
+		for (uint8_t i = 0; i < PACK_MODULE_COUNT; i++) {
 			if (indexes[i] < NULL_INDEX) {
 				sprintf(out + strlen(out), "%d ", indexes[i]);
 			}
@@ -254,5 +254,5 @@ uint8_t pack_check_errors(PACK_T *pack, ERROR_T *error) {
 	}
 
 End:
-	return i;
+	return i == PACK_MODULE_COUNT ? 255 : i;
 }

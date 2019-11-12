@@ -1,5 +1,6 @@
 {
   "configurations": [
+
     {
       "showDevDebugOutput": true,
       "cwd": "${workspaceRoot}",
@@ -8,10 +9,10 @@
       "request": "launch",
       "type": "cortex-debug",
       "servertype": "openocd",
-      "preLaunchTask": "Build STM",
+      //"preLaunchTask": "Build STM",
       "device": "stlink",
       "configFiles": [
-        "interface/stlink-v2-1.cfg",
+        "interface/stlink-v2.cfg",
         "target/stm32f4x.cfg"
       ]
     }

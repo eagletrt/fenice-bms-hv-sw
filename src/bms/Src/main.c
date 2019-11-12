@@ -297,7 +297,7 @@ void read_volts(state_global_data_t *data) {
 	}
 
 	// Current
-	pack_update_current(&data->pack.current, &data->error);
+	// pack_update_current(&data->pack.current, &data->error);
 	ER_CHK(&data->error);
 
 	// Update total values
@@ -354,7 +354,7 @@ int main(void) {
 	error_init(&data.can_error);
 	data.error = ERROR_OK;
 
-	data.balancing.threshold = 100;
+	data.balancing.threshold = BAL_MAX_VOLTAGE_THRESHOLD;
 	data.balancing.slot_time = 2;
 
 	/* USER CODE END 2 */
@@ -367,10 +367,10 @@ int main(void) {
 		/* USER CODE BEGIN 3 */
 		state = run_state(state, &data);
 
-		data.error = error_check_fatal(&data.can_error, HAL_GetTick());
+		check_timers(&data);
 		ER_CHK(&data.error);
 
-		check_timers(&data);
+		data.error = error_check_fatal(&data.can_error, HAL_GetTick());
 		ER_CHK(&data.error);
 
 		data.error_index = pack_check_errors(&data.pack, &data.error);

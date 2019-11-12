@@ -47,7 +47,9 @@ uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *spi, LTC6813_T ltc[],
 		_wakeup_idle(spi, false);
 
 		HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_RESET);
-		HAL_SPI_Transmit(spi, cmd, 4, 100);
+		if (HAL_SPI_Transmit(spi, cmd, 4, 100) != HAL_OK) {
+			// goto End;
+		}
 		HAL_SPI_Receive(spi, data, 8 * LTC6813_COUNT, 100);
 		HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_SET);
 

@@ -1,6 +1,5 @@
 {
-  "tasks": [
-    {
+  "tasks": [{
       "label": "Build STM",
       "type": "process",
       "command": "${command:stm32-for-vscode.build}",
