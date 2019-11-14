@@ -1,0 +1,5 @@
+{
+    "sketch": "temperature.ino",
+    "board": "arduino:avr:uno",
+    "serial": "/dev/ttyACM1"
+}

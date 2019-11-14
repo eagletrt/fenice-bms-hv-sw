@@ -1,0 +1,16 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "/home/bonnee/.arduino15/packages/arduino/tools/**",
+                "/home/bonnee/.arduino15/packages/arduino/hardware/avr/1.8.1/**"
+            ],
+            "forcedInclude": [
+                "/home/bonnee/.arduino15/packages/arduino/hardware/avr/1.8.1/cores/arduino/Arduino.h"
+            ],
+            "compilerPath": "/usr/bin/clang"
+        }
+    ],
+    "version": 4
+}
