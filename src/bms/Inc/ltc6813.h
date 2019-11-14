@@ -117,6 +117,16 @@ static const uint16_t dcto[16] = {
 	0x0f   // 120
 };
 
+typedef enum {
+	I2C_START = 0b01100000,
+	I2C_STOP = 0b00010000,
+	I2C_BLANK = 0b00000000,
+	I2C_NO_TRANSMIT = 0b01110000,
+	I2C_MASTER_ACK = 0b00000000,
+	I2C_MASTER_NACK = 0b00001000,
+	I2C_MASTER_NACK_STOP = 0b00001001
+} ltc6813_i2c_ctrl;
+
 uint16_t _pec15(uint8_t len, uint8_t data[]);
 
 uint16_t _convert_voltage(uint8_t v_data[]);
@@ -140,6 +150,9 @@ void ltc6813_check_temperature(uint16_t temp, ERROR_STATUS_T *temp_error,
 uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *spi, LTC6813_T *ltc,
 							  uint16_t volts[], ERROR_STATUS_T volts_error[],
 							  WARNING_T *warning, ERROR_T *error);
+
+void ltc6813_wrcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t data[3]);
+void ltc6813_stcomm_i2c(SPI_HandleTypeDef *hspi);
 
 uint8_t ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, LTC6813_T *ltc,
 								  uint16_t temps[],

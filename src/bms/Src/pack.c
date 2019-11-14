@@ -110,22 +110,12 @@ End:;
  */
 uint8_t pack_update_temperatures(SPI_HandleTypeDef *spi, PACK_T *pack,
 								 ERROR_T *error) {
-	uint8_t cell;
-	uint8_t ltc_i;
-	for (ltc_i = 0; ltc_i < LTC6813_COUNT; ltc_i++) {
-		cell = ltc6813_read_temperatures(spi, &ltc[ltc_i], pack->temperatures,
-										 pack->temperature_errors, error);
-		ER_CHK(error);
-	}
+	uint8_t data[3] = {69, 2, 3};
 
-	pack_update_temperature_stats(pack);
-
-End:;
-
-	if (*error == ERROR_LTC_PEC_ERROR) {
-		return ltc_i;
-	}
-	return cell;
+	_wakeup_idle(spi, 0);
+	ltc6813_wrcomm_i2c(spi, data);
+	ltc6813_stcomm_i2c(spi);
+	return 0;
 }
 
 /**
