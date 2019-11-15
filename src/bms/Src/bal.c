@@ -1,3 +1,13 @@
+/**
+ * @file		bal.c
+ * @brief		This file contains the balancing functions
+ *
+ * @date		Oct 28, 2019
+ *
+ * @author		Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @author		Simone Ruffini [simone.ruffini@studenti.unitn.it]
+ */
+
 #include <bal.h>
 #include <stdio.h>
 

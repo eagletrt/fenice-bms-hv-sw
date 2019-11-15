@@ -1,3 +1,12 @@
+/**
+ * @file		fsm.h
+ * @brief		This file contains the primitives to setup a FSM
+ *
+ * @date		Oct 24, 2019
+ *
+ * @author		Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ */
+
 #ifndef FSM_H
 #define FSM_H
 
