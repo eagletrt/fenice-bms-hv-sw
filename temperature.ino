@@ -4,7 +4,7 @@ void setup() {
 	pinMode(LED_BUILTIN, OUTPUT);
 	Serial.begin(115200);
 	Wire.begin(69);
-	Wire.setClock(400000);
+	//Wire.setClock(1000000);
 	Wire.onReceive(receiveEvent);
 
 	Serial.println("Ready");
