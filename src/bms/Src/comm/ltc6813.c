@@ -6,7 +6,7 @@
  * @author	Matteo Bonora [matteo.bonora@studenti.unitn.it]
  */
 
-#include "ltc6813.h"
+#include "comm/ltc6813.h"
 
 // Set to 1 to emulate the LTC daisy chain
 #define LTC6813_EMU 0
@@ -365,14 +365,14 @@ void ltc6813_wrcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t data[1]) {
 	cmd[3] = (uint8_t)(cmd_pec);
 
 	uint8_t comm[8];
-	comm[0] = I2C_START & (data[0] >> 4);
-	comm[1] = (data[0] << 4) & I2C_MASTER_ACK;
+	comm[0] = I2C_START | (data[0] >> 4);
+	comm[1] = (data[0] << 4) | I2C_MASTER_ACK;
 
-	comm[2] = I2C_BLANK & (data[1] >> 4);
-	comm[3] = (data[1] << 4) & I2C_MASTER_ACK;
+	comm[2] = I2C_BLANK | (data[1] >> 4);
+	comm[3] = (data[1] << 4) | I2C_MASTER_ACK;
 
-	comm[4] = I2C_STOP & (data[2] >> 4);
-	comm[5] = (data[2] << 4) & I2C_MASTER_ACK;
+	comm[4] = I2C_STOP | (data[2] >> 4);
+	comm[5] = (data[2] << 4) | I2C_MASTER_ACK;
 
 	uint16_t pec = _pec15(6, comm);
 	comm[6] = (uint8_t)(pec >> 8);
@@ -387,19 +387,38 @@ void ltc6813_wrcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t data[1]) {
 	HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_SET);
 }
 
-void ltc6813_stcomm_i2c(SPI_HandleTypeDef *hspi) {
-	uint8_t cmd[4] = {0};  // WRCOMM
-
-	cmd[0] = 0b00000111;
-	cmd[1] = 0b00100011;
+void ltc6813_rdcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t data[8]) {
+	uint8_t cmd[4] = {0b00000111, 0b00100010};  // RDCOMM
 
 	uint16_t cmd_pec = _pec15(2, cmd);
 	cmd[2] = (uint8_t)(cmd_pec >> 8);
 	cmd[3] = (uint8_t)(cmd_pec);
 
 	HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_RESET);
+	HAL_Delay(1);
 	HAL_SPI_Transmit(hspi, cmd, 4, 100);
-	HAL_SPI_Receive(hspi, NULL, 3 * 8 * 3, 200);
+	HAL_SPI_Receive(hspi, data, 8, 200);
+	HAL_Delay(1);
+	HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_SET);
+
+	if (_pec15(6, data) == (uint16_t)(data[6] * 256 + data[7])) {
+	}
+}
+
+void ltc6813_stcomm_i2c(SPI_HandleTypeDef *hspi) {
+	uint8_t cmd[4] = {0b00000111, 0b00100011};  // WRCOMM
+
+	uint16_t cmd_pec = _pec15(2, cmd);
+	cmd[2] = (uint8_t)(cmd_pec >> 8);
+	cmd[3] = (uint8_t)(cmd_pec);
+
+	HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_RESET);
+	HAL_Delay(1);
+	HAL_SPI_Transmit(hspi, cmd, 4, 100);
+	for (uint8_t i = 0; i < 2 * 3; i++) {
+		HAL_SPI_Receive(hspi, NULL, 1, 200);
+	}
+	HAL_Delay(1);
 	HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_SET);
 }
 

@@ -1,3 +1,12 @@
+/**
+ * @file		bal.h
+ * @brief		This file contains the balancing functions
+ *
+ * @date		Oct 28, 2019
+ *
+ * @author		Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @author		Simone Ruffini [simone.ruffini@studenti.unitn.it]
+ */
 
 #ifndef BAL_H
 #define BAL_H

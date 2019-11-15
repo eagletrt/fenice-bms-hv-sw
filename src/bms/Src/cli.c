@@ -1,3 +1,13 @@
+/**
+ * @file		cli.c
+ * @brief		This file contains the functions to create the cli
+ *
+ * @date		Oct 24, 2019
+ *
+ * @author		Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @author		Simone Ruffini [simone.ruffini@studenti.unitn.it]
+ */
+
 #include "cli.h"
 #include <stdio.h>
 #include <stdlib.h>

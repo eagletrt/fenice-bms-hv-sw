@@ -11,9 +11,9 @@
 
 #include <inttypes.h>
 #include "bal.h"
+#include "comm/ltc6813.h"
 #include "error.h"
 #include "fenice_config.h"
-#include "ltc6813.h"
 
 /** @brief Battery pack basic info */
 typedef struct {

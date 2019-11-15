@@ -58,8 +58,9 @@ Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c \
 Src/bal.c \
 Src/cli.c \
+Src/comm/ltc1865l.c \
+Src/comm/ltc6813.c \
 Src/error.c \
-Src/ltc6813.c \
 Src/main.c \
 Src/pack.c \
 Src/stm32f4xx_hal_msp.c \
@@ -135,7 +136,8 @@ C_INCLUDES =  \
 -IDrivers/CMSIS/Include \
 -IDrivers/STM32F4xx_HAL_Driver/Inc \
 -IDrivers/STM32F4xx_HAL_Driver/Inc/Legacy \
--IInc
+-IInc \
+-IInc/comm
 
 
 
