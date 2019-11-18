@@ -12,6 +12,7 @@
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stm32f4xx_hal.h>
+#include "comm/ltc6813_utils.h"
 #include "error.h"
 #include "fenice_config.h"
 
@@ -117,7 +118,9 @@ static const uint16_t dcto[16] = {
 	0x0f   // 120
 };
 
-typedef enum {
+enum ltc6813_i2c_ctrl {
+	I2C_READ = 1,
+	I2C_WRITE = 0,
 	I2C_START = 0b01100000,
 	I2C_STOP = 0b00010000,
 	I2C_BLANK = 0b00000000,
@@ -125,7 +128,7 @@ typedef enum {
 	I2C_MASTER_ACK = 0b00000000,
 	I2C_MASTER_NACK = 0b00001000,
 	I2C_MASTER_NACK_STOP = 0b00001001
-} ltc6813_i2c_ctrl;
+};
 
 uint16_t _pec15(uint8_t len, uint8_t data[]);
 
@@ -133,31 +136,22 @@ uint16_t _convert_voltage(uint8_t v_data[]);
 
 uint16_t _convert_temp(uint16_t volt);
 
-void _set_dcc(uint8_t indexes[], uint8_t cfgar[8], uint8_t cfgbr[8]);
-
 void _wakeup_idle(SPI_HandleTypeDef *hspi, bool apply_delay);
 
 void _ltc6813_adcv(SPI_HandleTypeDef *hspi, bool DCP);
-
 void _ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool start, bool parity);
-
-void ltc6813_check_voltage(uint16_t volt, ERROR_STATUS_T *volt_error,
-						   WARNING_T *warning, ERROR_T *error);
-
-void ltc6813_check_temperature(uint16_t temp, ERROR_STATUS_T *temp_error,
-							   ERROR_T *error);
 
 uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *spi, LTC6813_T *ltc,
 							  uint16_t volts[], ERROR_STATUS_T volts_error[],
 							  WARNING_T *warning, ERROR_T *error);
-
-void ltc6813_wrcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t data[3]);
-void ltc6813_stcomm_i2c(SPI_HandleTypeDef *hspi);
-void ltc6813_rdcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t data[8]);
-
 uint8_t ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, LTC6813_T *ltc,
 								  uint16_t temps[],
 								  ERROR_STATUS_T temps_error[], ERROR_T *error);
+
+void ltc6813_wrcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t address, bool read,
+						uint8_t data);
+void ltc6813_stcomm_i2c(SPI_HandleTypeDef *hspi);
+void ltc6813_rdcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t data[8]);
 
 void ltc6813_set_balancing(SPI_HandleTypeDef *hspi, uint8_t *indexes, int dcto);
 void ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool is_a,

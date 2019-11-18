@@ -316,28 +316,6 @@ void ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool is_a,
 	HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_SET);
 }
 
-void _set_dcc(uint8_t indexes[], uint8_t cfgar[8], uint8_t cfgbr[8]) {
-	for (uint8_t i = 0; i < PACK_MODULE_COUNT; i++) {
-		if (indexes[i] < 8) {
-			cfgar[4] += dcc[indexes[i]];
-		} else if (indexes[i] >= 8 && indexes[i] < 12) {
-			cfgar[5] += dcc[indexes[i]];
-		} else if (indexes[i] >= 12 && indexes[i] < 16) {
-			cfgbr[0] += dcc[indexes[i]];
-		} else if (indexes[i] >= 16 && indexes[i] < 18) {
-			cfgbr[1] += dcc[indexes[i]];
-		}
-
-		uint16_t pec = _pec15(6, cfgar);
-		cfgar[6] = (uint8_t)(pec >> 8);
-		cfgar[7] = (uint8_t)(pec);
-
-		pec = _pec15(6, cfgbr);
-		cfgbr[6] = (uint8_t)(pec >> 8);
-		cfgbr[7] = (uint8_t)(pec);
-	}
-}
-
 void ltc6813_set_balancing(SPI_HandleTypeDef *hspi, uint8_t *indexes,
 						   int dcto) {
 	uint8_t cfgar[LTC6813_COUNT][8] = {0};
@@ -349,7 +327,7 @@ void ltc6813_set_balancing(SPI_HandleTypeDef *hspi, uint8_t *indexes,
 		cfgar[i][5] += dcto << 4;   // Set timer
 
 		// For each LTC we set the correct cfgr
-		_set_dcc(indexes, cfgar[i], cfgbr[i]);
+		ltc6813_set_dcc(indexes, cfgar[i], cfgbr[i]);
 	}
 	_wakeup_idle(hspi, true);
 
@@ -357,22 +335,26 @@ void ltc6813_set_balancing(SPI_HandleTypeDef *hspi, uint8_t *indexes,
 	ltc6813_wrcfg(hspi, false, cfgbr);
 }
 
-void ltc6813_wrcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t data[1]) {
+void ltc6813_wrcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t address, bool read,
+						uint8_t data) {
 	uint8_t cmd[4] = {0b00000111, 0b00100001};  // WRCOMM
 
 	uint16_t cmd_pec = _pec15(2, cmd);
 	cmd[2] = (uint8_t)(cmd_pec >> 8);
 	cmd[3] = (uint8_t)(cmd_pec);
 
-	uint8_t comm[8];
-	comm[0] = I2C_START | (data[0] >> 4);
-	comm[1] = (data[0] << 4) | I2C_MASTER_ACK;
+	uint8_t comm[8] = {0};
 
-	comm[2] = I2C_BLANK | (data[1] >> 4);
-	comm[3] = (data[1] << 4) | I2C_MASTER_ACK;
+	// Shift left to make space for the R/W bit
+	comm[0] = I2C_START | ((address >> 4) << 1) | read;
 
-	comm[4] = I2C_STOP | (data[2] >> 4);
-	comm[5] = (data[2] << 4) | I2C_MASTER_ACK;
+	comm[1] = (address << 4) | I2C_MASTER_ACK;
+
+	comm[2] = I2C_BLANK | (data >> 4);
+	comm[3] = (data << 4) | I2C_MASTER_ACK;
+
+	comm[4] = I2C_STOP | (0 >> 4);
+	comm[5] = (0 << 4) | I2C_MASTER_ACK;
 
 	uint16_t pec = _pec15(6, comm);
 	comm[6] = (uint8_t)(pec >> 8);
@@ -415,61 +397,11 @@ void ltc6813_stcomm_i2c(SPI_HandleTypeDef *hspi) {
 	HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_RESET);
 	HAL_Delay(1);
 	HAL_SPI_Transmit(hspi, cmd, 4, 100);
-	for (uint8_t i = 0; i < 2 * 3; i++) {
-		HAL_SPI_Receive(hspi, NULL, 1, 200);
+	for (uint8_t i = 0; i < 3; i++) {
+		HAL_SPI_Transmit(hspi, (uint8_t *)0xFF, 1, 20);
 	}
 	HAL_Delay(1);
 	HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_SET);
-}
-
-/**
- * @brief		Checks that voltage is between its thresholds.
- *
- * @param		volts		The voltage
- * @param		error		The error return code
- */
-void ltc6813_check_voltage(uint16_t volts, ERROR_STATUS_T *volt_error,
-						   WARNING_T *warning, ERROR_T *error) {
-	if (volts < CELL_WARN_VOLTAGE) {
-		*warning = WARN_CELL_LOW_VOLTAGE;
-	}
-
-	if (volts < CELL_MIN_VOLTAGE) {
-		error_set(ERROR_CELL_UNDER_VOLTAGE, volt_error, HAL_GetTick());
-	} else {
-		error_unset(ERROR_CELL_UNDER_VOLTAGE, volt_error);
-	}
-
-	if (volts > CELL_MAX_VOLTAGE) {
-		error_set(ERROR_CELL_OVER_VOLTAGE, volt_error, HAL_GetTick());
-	} else {
-		error_unset(ERROR_CELL_OVER_VOLTAGE, volt_error);
-	}
-
-	*error = error_check_fatal(volt_error, HAL_GetTick());
-	ER_CHK(error);
-
-End:;
-}
-
-/**
- * @brief		Checks that temperature is between its thresholds.
- *
- * @param		temp		The temperature
- * @param		error		The error return code
- */
-void ltc6813_check_temperature(uint16_t temps, ERROR_STATUS_T *temp_error,
-							   ERROR_T *error) {
-	if (temps >= CELL_MAX_TEMPERATURE) {
-		error_set(ERROR_CELL_OVER_TEMPERATURE, temp_error, HAL_GetTick());
-	} else {
-		error_unset(ERROR_CELL_OVER_TEMPERATURE, temp_error);
-	}
-
-	*error = error_check_fatal(temp_error, HAL_GetTick());
-	ER_CHK(error);
-
-End:;
 }
 
 /**

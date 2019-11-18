@@ -110,10 +110,10 @@ End:;
  */
 uint8_t pack_update_temperatures(SPI_HandleTypeDef *spi, PACK_T *pack,
 								 ERROR_T *error) {
-	uint8_t data[3] = {69, 2, 3};
+	uint8_t data = 2;
 
 	_wakeup_idle(spi, 0);
-	ltc6813_wrcomm_i2c(spi, data);
+	ltc6813_wrcomm_i2c(spi, 69, I2C_WRITE, data);
 	HAL_Delay(1);
 	ltc6813_stcomm_i2c(spi);
 
@@ -122,9 +122,9 @@ uint8_t pack_update_temperatures(SPI_HandleTypeDef *spi, PACK_T *pack,
 	uint8_t recv[8];
 	ltc6813_rdcomm_i2c(spi, recv);
 	uint8_t icom0 = recv[0] >> 4;
-	uint8_t d0 = (recv[0] << 4)|(recv[1]>>4);
+	uint8_t d0 = (recv[0] << 4) | (recv[1] >> 4);
 	uint8_t fcom0 = recv[1] & 0x0F;
-	uint8_t d1 = (recv[2] << 4)|(recv[3]>>4);
+	uint8_t d1 = (recv[2] << 4) | (recv[3] >> 4);
 
 	char kek[250];
 	sprintf(kek, "icom0: %d, d0: %d, fcom0: %d, d1: %d\r\n", icom0, d0, fcom0,
