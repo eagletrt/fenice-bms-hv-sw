@@ -138,6 +138,7 @@ C_INCLUDES =  \
 -IDrivers/STM32F4xx_HAL_Driver/Inc \
 -IDrivers/STM32F4xx_HAL_Driver/Inc/Legacy \
 -IInc \
+-IInc/can-id \
 -IInc/comm
 
 
