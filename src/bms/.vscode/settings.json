@@ -5,5 +5,12 @@
 	"cortex-debug.openocdPath": "openocd",
 	"stm32-for-vscode.makePath": "make",
 	"stm32-for-vscode.armToolchainPath": "",
-	"cortex-debug.armToolchainPath": ""
+	"cortex-debug.armToolchainPath": "",
+	"files.associations": {
+		"ltc6813_utils.h": "c",
+		"error.h": "c",
+		"ltc6813.h": "c",
+		"stm32f4xx_hal.h": "c",
+		"fenice_config.h": "c"
+	}
 }

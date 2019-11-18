@@ -60,6 +60,7 @@ Src/bal.c \
 Src/cli.c \
 Src/comm/ltc1865l.c \
 Src/comm/ltc6813.c \
+Src/comm/ltc6813_utils.c \
 Src/error.c \
 Src/main.c \
 Src/pack.c \

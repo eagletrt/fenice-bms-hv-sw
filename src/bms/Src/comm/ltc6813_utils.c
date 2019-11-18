@@ -8,6 +8,25 @@
  */
 
 #include "comm/ltc6813_utils.h"
+#include <stm32f4xx_hal.h>
+
+/**
+ * @brief		This function is used to calculate the PEC value
+ *
+ * @param		len		Length of the data array
+ * @param		data	Array of data
+ */
+uint16_t _pec15(uint8_t len, uint8_t data[]) {
+	uint16_t remainder, address;
+	remainder = 16;  // PEC seed
+	for (int i = 0; i < len; i++) {
+		// calculate PEC table address
+		address = ((remainder >> 7) ^ data[i]) & 0xff;
+		remainder = (remainder << 8) ^ crcTable[address];
+	}
+	// The CRC15 has a 0 in the LSB so the final value must be multiplied by 2
+	return (remainder * 2);
+}
 
 /**
  * @brief		Checks that voltage is between its thresholds.
