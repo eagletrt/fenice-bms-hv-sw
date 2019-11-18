@@ -1,6 +1,5 @@
 {
     "sketch": "temperature.ino",
-    "board": "arduino:avr:mega",
-    "port": "/dev/ttyACM0",
-    "configuration": "cpu=atmega2560"
+    "board": "arduino:avr:uno",
+    "port": "/dev/ttyUSB0"
 }
