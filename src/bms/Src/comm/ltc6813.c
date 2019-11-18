@@ -345,10 +345,8 @@ void ltc6813_wrcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t address, bool read,
 
 	uint8_t comm[8] = {0};
 
-	// Shift left to make space for the R/W bit
-	comm[0] = I2C_START | ((address >> 4) << 1) | read;
-
-	comm[1] = (address << 4) | I2C_MASTER_ACK;
+	comm[0] = I2C_START | (address >> 3);
+	comm[1] = (address << 5) | (read << 4) | I2C_MASTER_ACK;
 
 	comm[2] = I2C_BLANK | (data >> 4);
 	comm[3] = (data << 4) | I2C_MASTER_ACK;
@@ -397,8 +395,10 @@ void ltc6813_stcomm_i2c(SPI_HandleTypeDef *hspi) {
 	HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_RESET);
 	HAL_Delay(1);
 	HAL_SPI_Transmit(hspi, cmd, 4, 100);
-	for (uint8_t i = 0; i < 3; i++) {
-		HAL_SPI_Transmit(hspi, (uint8_t *)0xFF, 1, 20);
+	for (uint8_t i = 0; i < 2; i++) {
+		for (uint8_t z = 0; z < 3; z++) {
+			HAL_SPI_Transmit(hspi, (uint8_t *)0xFF, 1, 20);
+		}
 	}
 	HAL_Delay(1);
 	HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_SET);
@@ -417,24 +417,6 @@ void _wakeup_idle(SPI_HandleTypeDef *hspi, bool apply_delay) {
 		HAL_Delay(1);
 	}
 	HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_SET);
-}
-
-/**
- * @brief		This function is used to calculate the PEC value
- *
- * @param		len		Length of the data array
- * @param		data	Array of data
- */
-uint16_t _pec15(uint8_t len, uint8_t data[]) {
-	uint16_t remainder, address;
-	remainder = 16;  // PEC seed
-	for (int i = 0; i < len; i++) {
-		// calculate PEC table address
-		address = ((remainder >> 7) ^ data[i]) & 0xff;
-		remainder = (remainder << 8) ^ crcTable[address];
-	}
-	// The CRC15 has a 0 in the LSB so the final value must be multiplied by 2
-	return (remainder * 2);
 }
 
 /**
