@@ -1,3 +1,0 @@
-[submodule "src/bms/Inc/can-id"]
-	path = src/bms/Inc/can-id
-	url = https://github.com/eagletrt/can-bus-id-generation.git
