@@ -172,7 +172,7 @@ End:;
  * @param		pack	The struct to save the data to
  */
 void pack_update_voltage_stats(PACK_T *pack) {
-	uint32_t tot_voltage = pack->voltages[0];
+	uint32_t tot_voltage = 0;
 	uint16_t max_voltage = pack->voltages[0];
 	uint16_t min_voltage = UINT16_MAX;
 
