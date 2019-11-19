@@ -24,7 +24,7 @@ void _ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool start, bool parity);
 void ltc6813_wrcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t address, bool read,
 						uint8_t data);
 void ltc6813_stcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t length);
-void ltc6813_rdcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t data[8]);
+bool ltc6813_rdcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t data[8]);
 
 void ltc6813_set_balancing(SPI_HandleTypeDef *hspi, uint8_t *indexes, int dcto);
 void ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool is_a,

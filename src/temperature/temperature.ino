@@ -9,11 +9,24 @@ void setup() {
 	Wire.begin(I2C_ADDR);
 	Wire.setClock(I2C_CLOCK);
 	Wire.onReceive(receiveEvent);
+	Wire.onRequest(request);
 
 	Serial.println("Ready");
 }
 
 void loop() {}
+
+void request() {
+	digitalWrite(LED_BUILTIN, HIGH);
+
+	Serial.println("Data requested");
+
+	uint8_t data[3] = {5, 5, 1};
+
+	Wire.write((char *)data);
+
+	digitalWrite(LED_BUILTIN, LOW);
+}
 
 void receiveEvent(int howMany) {
 	digitalWrite(LED_BUILTIN, HIGH);
