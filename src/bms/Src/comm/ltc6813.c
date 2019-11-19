@@ -3,93 +3,13 @@
  * @brief		This file contains the functions to communicate with the LTCs
  *
  * @date		Oct 08, 2019
- * @author	Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @author		Matteo Bonora [matteo.bonora@studenti.unitn.it]
  */
 
 #include "comm/ltc6813.h"
 
 // Set to 1 to emulate the LTC daisy chain
 #define LTC6813_EMU 0
-
-/**
- * @brief		Polls all the registers of the LTC6813 and updates the cell
- * array
- * @details	It executes multiple rdcv requests to the LTCs and saves the values
- * 					in the voltage variable of the CELL_Ts.
- *
- * 					1     CMD0    8     CMD1      16      32
- * 					|- - - - - - -|- - - - - - - -|- ... -|
- * 					1 0 0 0 0 0 0 0 0 0 0 0 X X X X  PEC
- * 					 Address |             |  Reg  |
- * 					  (BRD)
- *
- * @param		spi		The SPI configuration structure
- * @param		ltc		The array of LTC6813 configurations
- * @param		volts	The array of voltages
- * @param		error	The error return value
- */
-uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *spi, LTC6813_T ltc[],
-							  uint16_t volts[], ERROR_STATUS_T volts_error[],
-							  WARNING_T *warning, ERROR_T *error) {
-	uint8_t cmd[4];
-	uint16_t cmd_pec;
-	uint8_t data[8];
-
-	cmd[0] = 0;  // Broadcast
-
-	uint8_t count = 0;  // volts[] index
-	for (uint8_t reg = 0; reg < LTC6813_REG_COUNT; reg++) {
-		cmd[1] = (uint8_t)rdcv_cmd[reg];
-		cmd_pec = _pec15(2, cmd);
-		cmd[2] = (uint8_t)(cmd_pec >> 8);
-		cmd[3] = (uint8_t)(cmd_pec);
-
-		_wakeup_idle(spi, false);
-
-		HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_RESET);
-		if (HAL_SPI_Transmit(spi, cmd, 4, 100) != HAL_OK) {
-			// goto End;
-		}
-		HAL_SPI_Receive(spi, data, 8 * LTC6813_COUNT, 100);
-		HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_SET);
-
-#if LTC6813_EMU > 0
-		// Writes 3.6v to each cell
-
-		uint8_t emu_i;
-		for (emu_i = 0; emu_i < LTC6813_REG_CELL_COUNT * 2; emu_i++) {
-			// 36000
-			data[emu_i] = 0b10100000;
-			data[++emu_i] = 0b10001100;
-		}
-		uint16_t emu_pec = _pec15(6, data);
-		data[6] = (uint8_t)(emu_pec >> 8);
-		data[7] = (uint8_t)emu_pec;
-#endif
-
-		if (_pec15(6, data) == (uint16_t)(data[6] * 256 + data[7])) {
-			error_unset(ERROR_LTC_PEC_ERROR, &ltc->error);
-
-			// For every cell in the register
-			for (uint8_t cell = 0; cell < LTC6813_REG_CELL_COUNT; cell++) {
-				volts[count] = _convert_voltage(&data[2 * cell]);
-
-				ltc6813_check_voltage(volts[count], &volts_error[count],
-									  warning, error);
-				ER_CHK(error);
-				count++;
-			}
-		} else {
-			error_set(ERROR_LTC_PEC_ERROR, &ltc->error, HAL_GetTick());
-		}
-
-		*error = error_check_fatal(&ltc->error, HAL_GetTick());
-		ER_CHK(error);
-	}
-
-End:;
-	return count;
-}
 
 /**
  * @brief		Starts the LTC6813 ADC voltage conversion
@@ -110,11 +30,11 @@ void _ltc6813_adcv(SPI_HandleTypeDef *spi, bool dcp) {
 	uint16_t cmd_pec;
 	cmd[0] = (uint8_t)0b00000011;
 	cmd[1] = (uint8_t)0b01100000 + dcp * 0b00010000;
-	cmd_pec = _pec15(2, cmd);
+	cmd_pec = ltc6813_pec15(2, cmd);
 	cmd[2] = (uint8_t)(cmd_pec >> 8);
 	cmd[3] = (uint8_t)(cmd_pec);
 
-	_wakeup_idle(spi, false);
+	ltc6813_wakeup_idle(spi, false);
 	HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_RESET);
 	HAL_SPI_Transmit(spi, cmd, 4, 100);
 	HAL_Delay(1);
@@ -162,7 +82,7 @@ void _ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool start_bal, bool even) {
 
 	wrcfg[0] = 0x00;
 	wrcfg[1] = 0x01;
-	cmd_pec = _pec15(2, wrcfg);
+	cmd_pec = ltc6813_pec15(2, wrcfg);
 	wrcfg[2] = (uint8_t)(cmd_pec >> 8);
 	wrcfg[3] = (uint8_t)(cmd_pec);
 
@@ -186,11 +106,11 @@ void _ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool start_bal, bool even) {
 		cfgr[4] = 0x00;
 		cfgr[5] = 0x00;
 	}
-	cmd_pec = _pec15(6, cfgr);
+	cmd_pec = ltc6813_pec15(6, cfgr);
 	cfgr[6] = (uint8_t)(cmd_pec >> 8);
 	cfgr[7] = (uint8_t)(cmd_pec);
 
-	_wakeup_idle(hspi, true);
+	ltc6813_wakeup_idle(hspi, true);
 
 	HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_RESET);
 	HAL_SPI_Transmit(hspi, wrcfg, 4, 100);
@@ -201,92 +121,6 @@ void _ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool start_bal, bool even) {
 
 	// TODO: remove this
 	_ltc6813_adcv(hspi, start_bal);
-}
-
-/**
- * @brief		This function is used to fetch the temperatures.
- * @details	The workings of this function are very similar to read_voltages,
- * 					the main difference to it is the presence of the even
- * 					parameter. Refer to the ltc6813_read_voltages comment for
- * 					the actual messages.
- *
- * @param		hspi		The SPI configuration structure
- * @param		even		indicates which set of cells is currently being
- * 									balanced: false for odd and true for even
- * cells
- * @param		ltc			The array of LTC6813 configurations
- * @param		temps		The array of temperatures
- * @param		error		The error return value
- */
-uint8_t ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, LTC6813_T *ltc,
-								  uint16_t temps[],
-								  ERROR_STATUS_T temps_error[],
-								  ERROR_T *error) {
-	uint8_t cmd[4];
-	uint16_t cmd_pec;
-	uint8_t data[8];
-
-	cmd[0] = (uint8_t)0x80 + ltc->address;
-
-	uint8_t count = 0;
-	for (uint8_t reg = 0; reg < LTC6813_REG_COUNT; reg++) {
-		cmd[1] = (uint8_t)rdcv_cmd[reg];
-		cmd_pec = _pec15(2, cmd);
-		cmd[2] = (uint8_t)(cmd_pec >> 8);
-		cmd[3] = (uint8_t)(cmd_pec);
-
-		_wakeup_idle(hspi, false);
-
-		HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_RESET);
-		HAL_Delay(1);
-		HAL_SPI_Transmit(hspi, cmd, 4, 100);
-
-		HAL_SPI_Receive(hspi, data, 8, 100);
-		HAL_Delay(1);
-		HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_SET);
-
-#if LTC6813_EMU > 0
-		// Writes 0.9292v (18°C) to each sensor
-
-		for (uint8_t emu_i = 0; emu_i < LTC6813_REG_CELL_COUNT * 2; emu_i++) {
-			// 9292
-			data[emu_i] = 0b00100100;
-			data[++emu_i] = 0b01001100;
-		}
-		uint16_t emu_pec = _pec15(6, data);
-		data[6] = (uint8_t)(emu_pec >> 8);
-		data[7] = (uint8_t)emu_pec;
-#endif
-
-		if (_pec15(6, data) == (uint16_t)(data[6] * 256 + data[7])) {
-			error_unset(ERROR_LTC_PEC_ERROR, &ltc->error);
-
-			// Counts the cell inside the register
-			for (uint8_t cell = 0; cell < LTC6813_REG_CELL_COUNT; cell++) {
-				uint16_t temp =
-					_convert_temp(_convert_voltage(&data[2 * cell]));
-
-				if (temp > 0) {
-					temps[count] = temp;
-
-					ltc6813_check_temperature(temps[count], &temps_error[count],
-											  error);
-					ER_CHK(error);
-				}
-
-				count++;
-			}
-		} else {
-			error_set(ERROR_LTC_PEC_ERROR, &ltc->error, HAL_GetTick());
-		}
-	}
-
-	*error = error_check_fatal(&ltc->error, HAL_GetTick());
-	ER_CHK(error);  // In case of error, set the error and goto label End
-
-End:;
-
-	return count;
 }
 
 void ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool is_a,
@@ -301,7 +135,7 @@ void ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool is_a,
 		cmd[1] = 0b00100100;
 	}
 
-	uint16_t cmd_pec = _pec15(2, cmd);
+	uint16_t cmd_pec = ltc6813_pec15(2, cmd);
 	cmd[2] = (uint8_t)(cmd_pec >> 8);
 	cmd[3] = (uint8_t)(cmd_pec);
 
@@ -329,7 +163,7 @@ void ltc6813_set_balancing(SPI_HandleTypeDef *hspi, uint8_t *indexes,
 		// For each LTC we set the correct cfgr
 		ltc6813_set_dcc(indexes, cfgar[i], cfgbr[i]);
 	}
-	_wakeup_idle(hspi, true);
+	ltc6813_wakeup_idle(hspi, true);
 
 	ltc6813_wrcfg(hspi, true, cfgar);
 	ltc6813_wrcfg(hspi, false, cfgbr);
@@ -339,7 +173,7 @@ void ltc6813_wrcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t address, bool read,
 						uint8_t data) {
 	uint8_t cmd[4] = {0b00000111, 0b00100001};  // WRCOMM
 
-	uint16_t cmd_pec = _pec15(2, cmd);
+	uint16_t cmd_pec = ltc6813_pec15(2, cmd);
 	cmd[2] = (uint8_t)(cmd_pec >> 8);
 	cmd[3] = (uint8_t)(cmd_pec);
 
@@ -354,7 +188,7 @@ void ltc6813_wrcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t address, bool read,
 	comm[4] = I2C_STOP | (0 >> 4);
 	comm[5] = (0 << 4) | I2C_MASTER_ACK;
 
-	uint16_t pec = _pec15(6, comm);
+	uint16_t pec = ltc6813_pec15(6, comm);
 	comm[6] = (uint8_t)(pec >> 8);
 	comm[7] = (uint8_t)(pec);
 
@@ -370,7 +204,7 @@ void ltc6813_wrcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t address, bool read,
 void ltc6813_rdcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t data[8]) {
 	uint8_t cmd[4] = {0b00000111, 0b00100010};  // RDCOMM
 
-	uint16_t cmd_pec = _pec15(2, cmd);
+	uint16_t cmd_pec = ltc6813_pec15(2, cmd);
 	cmd[2] = (uint8_t)(cmd_pec >> 8);
 	cmd[3] = (uint8_t)(cmd_pec);
 
@@ -381,24 +215,22 @@ void ltc6813_rdcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t data[8]) {
 	HAL_Delay(1);
 	HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_SET);
 
-	if (_pec15(6, data) == (uint16_t)(data[6] * 256 + data[7])) {
+	if (ltc6813_pec15(6, data) == (uint16_t)(data[6] * 256 + data[7])) {
 	}
 }
 
-void ltc6813_stcomm_i2c(SPI_HandleTypeDef *hspi) {
+void ltc6813_stcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t length) {
 	uint8_t cmd[4] = {0b00000111, 0b00100011};  // WRCOMM
 
-	uint16_t cmd_pec = _pec15(2, cmd);
+	uint16_t cmd_pec = ltc6813_pec15(2, cmd);
 	cmd[2] = (uint8_t)(cmd_pec >> 8);
 	cmd[3] = (uint8_t)(cmd_pec);
 
 	HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_RESET);
 	HAL_Delay(1);
 	HAL_SPI_Transmit(hspi, cmd, 4, 100);
-	for (uint8_t i = 0; i < 2; i++) {
-		for (uint8_t z = 0; z < 3; z++) {
-			HAL_SPI_Transmit(hspi, (uint8_t *)0xFF, 1, 20);
-		}
+	for (uint8_t i = 0; i < 3 * length; i++) {
+		HAL_SPI_Transmit(hspi, (uint8_t *)0xFF, 1, 20);
 	}
 	HAL_Delay(1);
 	HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_SET);
@@ -409,7 +241,7 @@ void ltc6813_stcomm_i2c(SPI_HandleTypeDef *hspi) {
  *
  * @param		hspi	The SPI configuration structure
  */
-void _wakeup_idle(SPI_HandleTypeDef *hspi, bool apply_delay) {
+void ltc6813_wakeup_idle(SPI_HandleTypeDef *hspi, bool apply_delay) {
 	uint8_t data = 0xFF;
 	HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_RESET);
 	HAL_SPI_Transmit(hspi, &data, 1, 1);
@@ -417,32 +249,4 @@ void _wakeup_idle(SPI_HandleTypeDef *hspi, bool apply_delay) {
 		HAL_Delay(1);
 	}
 	HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_SET);
-}
-
-/**
- * @brief	This function is used to convert the 2 byte raw data from the
- * 				LTC68xx to a 16 bit unsigned integer
- *
- * @param 	v_data	Raw data bytes
- *
- * @retval	Voltage [mV]
- */
-uint16_t _convert_voltage(uint8_t v_data[]) {
-	return v_data[0] + (v_data[1] << 8);
-}
-
-/**
- * @brief		This function converts a voltage data from the zener sensor
- * 					to a temperature
- *
- * @param		volt	Voltage [mV]
- *
- * @retval	Temperature [C° * 100]
- */
-uint16_t _convert_temp(uint16_t volt) {
-	float voltf = volt * 0.0001;
-	float temp;
-	temp = -225.7 * voltf * voltf * voltf + 1310.6 * voltf * voltf -
-		   2594.8 * voltf + 1767.8;
-	return (uint16_t)(temp * 100);
 }

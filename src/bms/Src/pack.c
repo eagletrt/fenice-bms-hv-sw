@@ -110,10 +110,10 @@ End:;
  */
 uint8_t pack_update_temperatures(SPI_HandleTypeDef *spi, PACK_T *pack,
 								 ERROR_T *error) {
-	_wakeup_idle(spi, 0);
+	ltc6813_wakeup_idle(spi, 0);
 	ltc6813_wrcomm_i2c(spi, 69, I2C_WRITE, 0x41);
 	HAL_Delay(1);
-	ltc6813_stcomm_i2c(spi);
+	ltc6813_stcomm_i2c(spi, 2);
 
 	HAL_Delay(1);
 	/*_wakeup_idle(spi, 0);
