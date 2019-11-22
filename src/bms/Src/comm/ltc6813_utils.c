@@ -292,3 +292,10 @@ uint16_t ltc6813_convert_temp(uint16_t volt) {
 		   2594.8 * voltf + 1767.8;
 	return (uint16_t)(temp * 100);
 }
+
+/**
+ * @brief		This function sets the GPIO configuration for the ltc
+ *
+ * @param		mask	first byte of CFGAR
+ *
+ */

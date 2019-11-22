@@ -11,6 +11,8 @@
 // Set to 1 to emulate the LTC daisy chain
 #define LTC6813_EMU 0
 
+uint8_t GPIO_CONFIG;
+
 /**
  * @brief		Starts the LTC6813 ADC voltage conversion
  * @details	According to the datasheet, this command should take 2,335µs.
@@ -144,6 +146,10 @@ void ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool is_a,
 	HAL_Delay(1);
 
 	for (uint8_t i = 0; i < LTC6813_COUNT; i++) {
+		// set the configuration for the #i ltc on the chain
+		// GPIO configs are equal for all ltcs
+		cfgr[i][GPIO_CFGAR_POS] =
+			GPIO_CONFIG + ((!GPIO_CFGAR_MASK) | cfgr[i][GPIO_CFGAR_POS]);
 		HAL_SPI_Transmit(hspi, cfgr[i], 8, 100);
 	}
 
@@ -169,8 +175,8 @@ void ltc6813_set_balancing(SPI_HandleTypeDef *hspi, uint8_t *indexes,
 	ltc6813_wrcfg(hspi, false, cfgbr);
 }
 
-void ltc6813_wrcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t address, bool read,
-						uint8_t data) {
+void ltc6813_wrcomm_i2c_w(SPI_HandleTypeDef *hspi, uint8_t address,
+						  uint8_t data) {
 	uint8_t cmd[4] = {0b00000111, 0b00100001};  // WRCOMM
 
 	uint16_t cmd_pec = ltc6813_pec15(2, cmd);
@@ -180,30 +186,54 @@ void ltc6813_wrcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t address, bool read,
 	uint8_t comm[8] = {0};
 
 	comm[0] = I2C_START | (address >> 3);
-	comm[1] = (address << 5) | (read << 4) | I2C_MASTER_ACK;
+	comm[1] = (address << 5) | (0 << 4) | I2C_MASTER_ACK;
 
 	comm[2] = I2C_BLANK | (data >> 4);
 	comm[3] = (data << 4) | I2C_MASTER_ACK;
 
 	comm[4] = I2C_STOP | (0 >> 4);
-	comm[5] = (0 << 4);
-
-	if (read) {
-		comm[5] |= I2C_MASTER_NACK_STOP;
-	} else {
-		comm[5] |= I2C_MASTER_ACK;
-	}
+	comm[5] = (0 << 4) | I2C_MASTER_ACK;
 
 	uint16_t pec = ltc6813_pec15(6, comm);
 	comm[6] = (uint8_t)(pec >> 8);
 	comm[7] = (uint8_t)(pec);
 
 	HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_RESET);
-	HAL_SPI_Transmit(hspi, cmd, 4, 100);
 	HAL_Delay(1);
-
+	HAL_SPI_Transmit(hspi, cmd, 4, 100);
 	HAL_SPI_Transmit(hspi, comm, 8, 100);
+	HAL_Delay(1);
+	HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_SET);
+}
 
+void ltc6813_wrcomm_i2c_r(SPI_HandleTypeDef *hspi, uint8_t address) {
+	uint8_t cmd[4] = {0b00000111, 0b00100001};  // WRCOMM
+
+	uint16_t cmd_pec = ltc6813_pec15(2, cmd);
+	cmd[2] = (uint8_t)(cmd_pec >> 8);
+	cmd[3] = (uint8_t)(cmd_pec);
+
+	uint8_t comm[8] = {0};
+
+	comm[0] = I2C_START | (address >> 3);
+	comm[1] = (address << 5) | (1 << 4) | I2C_MASTER_ACK;
+
+	comm[2] = I2C_BLANK | (0 >> 4);
+	comm[3] = (uint8_t)(0 << 4) | I2C_MASTER_NACK;
+
+	comm[4] = I2C_STOP | (0 >> 4);
+	comm[5] = (uint8_t)(0 << 4) | I2C_MASTER_NACK_STOP;
+
+	uint16_t pec = ltc6813_pec15(6, comm);
+	comm[6] = (uint8_t)(pec >> 8);
+	comm[7] = (uint8_t)(pec);
+
+	ltc6813_wakeup_idle(hspi, 0);
+	HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_RESET);
+	HAL_Delay(1);
+	HAL_SPI_Transmit(hspi, cmd, 4, 100);
+	HAL_SPI_Transmit(hspi, comm, 8, 100);
+	HAL_Delay(1);
 	HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_SET);
 }
 
@@ -228,7 +258,7 @@ bool ltc6813_rdcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t data[8]) {
 }
 
 void ltc6813_stcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t length) {
-	uint8_t cmd[4] = {0b00000111, 0b00100011};  // WRCOMM
+	uint8_t cmd[4] = {0b00000111, 0b00100011};  // STCOMM
 
 	uint16_t cmd_pec = ltc6813_pec15(2, cmd);
 	cmd[2] = (uint8_t)(cmd_pec >> 8);

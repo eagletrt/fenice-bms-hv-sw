@@ -55,6 +55,9 @@ void pack_init(PACK_T *pack) {
 		pack->temperatures[i] = 0;
 		error_init(&pack->temperature_errors[i]);
 	}
+
+	// LTC6813 GPIO configuration
+	GPIO_CONFIG = GPIO_I2C_MODE;
 }
 
 /**
@@ -110,44 +113,41 @@ End:;
  */
 uint8_t pack_update_temperatures(SPI_HandleTypeDef *spi, PACK_T *pack,
 								 ERROR_T *error) {
-	ltc6813_wakeup_idle(spi, 0);
-
-	ltc6813_wrcomm_i2c(spi, 69, I2C_WRITE, 0x41);
-	HAL_Delay(1);
-
 	uint8_t send[8] = {0};
-	char kek[250] = {0};
+	/*ltc6813_wrcomm_i2c_w(spi, 69, 0x41);
+
 	if (!ltc6813_rdcomm_i2c(spi, send)) {
-		cli_print("DIOCAN\r\n", 8);
+		cli_print("pecw\r\n", 8);
 	}
-	HAL_Delay(1);
-
-	ltc6813_stcomm_i2c(spi, 2);
-	HAL_Delay(1);
+	ltc6813_stcomm_i2c(spi, 3);*/
+	// HAL_Delay(1);
 	///// read
-	ltc6813_wrcomm_i2c(spi, 69, I2C_READ, 0);
-	HAL_Delay(1);
-	ltc6813_stcomm_i2c(spi, 3);
-	HAL_Delay(1);
 	uint8_t recv[8] = {0};
+	ltc6813_wrcomm_i2c_r(spi, 69);
+	ltc6813_stcomm_i2c(spi, 4);
+
+	// HAL_Delay(1);
+
 	if (!ltc6813_rdcomm_i2c(spi, recv)) {
-		cli_print("DIOCAN\r\n", 8);
+		cli_print("pecr\r\n", 8);
 	}
 
-	/*uint8_t icom0 = recv[0] >> 4;
+	// uint8_t icom0 = recv[0] >> 4;
 	uint8_t d0 = (recv[0] << 4) | (recv[1] >> 4);
-	uint8_t fcom0 = recv[1] & 0x0F;
-	uint8_t d1 = (recv[2] << 4) | (recv[3] >> 4);*/
+	// uint8_t fcom0 = recv[1] & 0x0F;
+	uint8_t d1 = (recv[2] << 4) | (recv[3] >> 4);
+	uint8_t d2 = (recv[4] << 4) | (recv[5] >> 4);
 
 	/*sprintf(kek, "\r\nicom0: %d\td0: %d\tfcom0: %d\td1: %d\r\n", icom0, d0,
 		fcom0, d1);*/
 
+	char kek[250] = {0};
 	sprintf(
 		kek,
 		"SEND\tRECV\r\n%x\t%x\r\n%x\t%x\r\n%x\t%x\r\n%x\t%x\r\n%x\t%x\r\n%x\t%x"
-		"\r\n\n",
-		recv[0], send[0], recv[1], send[1], recv[2], send[2], recv[3], send[3],
-		recv[4], send[4], recv[5], send[5]);
+		"\r\n%x\t%x\t%x\r\n\n",
+		send[0], recv[0], send[1], recv[1], send[2], recv[2], send[3], recv[3],
+		send[4], recv[4], send[5], recv[5], d0, d1, d2);
 
 	cli_print(kek, strlen(kek));
 
