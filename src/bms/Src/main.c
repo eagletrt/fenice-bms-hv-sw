@@ -11,6 +11,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "fatfs.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -336,6 +337,7 @@ int main(void)
   MX_USART2_UART_Init();
   MX_CAN1_Init();
   MX_I2C1_Init();
+  MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
 	cli_init(&cli, &huart2);
 

@@ -7,7 +7,9 @@
         "Drivers/CMSIS/Include",
         "Drivers/STM32F4xx_HAL_Driver/Inc",
         "Drivers/STM32F4xx_HAL_Driver/Inc/Legacy",
-        "Inc"
+        "Inc",
+        "Inc/comm",
+        "Middlewares/Third_Party/FatFs/src"
       ],
       "defines": [
         "STM32F446xx",

@@ -56,17 +56,23 @@ Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_spi.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c \
+Middlewares/Third_Party/FatFs/src/diskio.c \
+Middlewares/Third_Party/FatFs/src/ff.c \
+Middlewares/Third_Party/FatFs/src/ff_gen_drv.c \
+Middlewares/Third_Party/FatFs/src/option/syscall.c \
 Src/bal.c \
 Src/cli.c \
 Src/comm/ltc1865l.c \
 Src/comm/ltc6813.c \
 Src/comm/ltc6813_utils.c \
 Src/error.c \
+Src/fatfs.c \
 Src/main.c \
 Src/pack.c \
 Src/stm32f4xx_hal_msp.c \
 Src/stm32f4xx_it.c \
-Src/system_stm32f4xx.c
+Src/system_stm32f4xx.c \
+Src/user_diskio.c
 
 
 CPP_SOURCES = \
@@ -138,7 +144,8 @@ C_INCLUDES =  \
 -IDrivers/STM32F4xx_HAL_Driver/Inc \
 -IDrivers/STM32F4xx_HAL_Driver/Inc/Legacy \
 -IInc \
--IInc/comm
+-IInc/comm \
+-IMiddlewares/Third_Party/FatFs/src
 
 
 
