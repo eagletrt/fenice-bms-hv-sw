@@ -189,10 +189,10 @@ void ltc6813_wrcomm_i2c_w(SPI_HandleTypeDef *hspi, uint8_t address,
 	comm[1] = (address << 5) | (0 << 4) | I2C_MASTER_ACK;
 
 	comm[2] = I2C_BLANK | (data >> 4);
-	comm[3] = (data << 4) | I2C_MASTER_ACK;
+	comm[3] = (data << 4) | I2C_MASTER_NACK;
 
 	comm[4] = I2C_STOP | (0 >> 4);
-	comm[5] = (0 << 4) | I2C_MASTER_ACK;
+	comm[5] = (0 << 4) | I2C_MASTER_NACK;
 
 	uint16_t pec = ltc6813_pec15(6, comm);
 	comm[6] = (uint8_t)(pec >> 8);

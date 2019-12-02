@@ -7,25 +7,25 @@
  */
 
 #include <error.h>
-
+#include <stdlib.h>
 /**
  * Reaction times by the rules:
  * 	- 500ms for voltage and current
  * 	- 1s for temperatures
  */
-#define LTC6804_PEC_TIMEOUT_COUNT 0  // 5000
+#define LTC6813_PEC_TIMEOUT_COUNT 0  // 5000
 #define CELL_UNDER_VOLTAGE_TIMEOUT_MS 500
 #define CELL_OVER_VOLTAGE_TIMEOUT_MS 500
 #define CELL_UNDER_TEMPERATURE_TIMEOUT_MS 1000
 #define CELL_OVER_TEMPERATURE_TIMEOUT_MS 1000
 #define OVER_CURRENT_TIMEOUT_MS 500  // 400
-#define CAN_TIMEOUT_COUNT 250
+#define CAN_TIMEOUT_MS 1000
 
 /** @brief	Defines the timeout in count or time for each error type */
 ERROR_LIMITS_T timeout[ERROR_NUM_ERRORS] = {
-	{LTC6804_PEC_TIMEOUT_COUNT, 0},	{0, CELL_UNDER_VOLTAGE_TIMEOUT_MS},
+	{LTC6813_PEC_TIMEOUT_COUNT, 0},	{0, CELL_UNDER_VOLTAGE_TIMEOUT_MS},
 	{0, CELL_OVER_VOLTAGE_TIMEOUT_MS}, {0, CELL_OVER_TEMPERATURE_TIMEOUT_MS},
-	{0, OVER_CURRENT_TIMEOUT_MS},	  {CAN_TIMEOUT_COUNT, 0}};
+	{0, OVER_CURRENT_TIMEOUT_MS},	  {0, CAN_TIMEOUT_MS}};
 
 /**
  * @brief	Initializes an error structure
@@ -40,6 +40,34 @@ void error_init(ERROR_STATUS_T *error) {
 	error->time_stamp = 0;
 }
 
+void er_node_init(er_node_t *node, void *ref, error_t type,
+				  uint32_t timestamp) {
+	error_init(&node->status);
+	error_set(type, &node->status, timestamp);
+	node->ref = ref;
+	node->next = NULL;
+}
+
+bool error_add(er_node_t *head, void *ref, error_t type, uint32_t timestamp) {
+	er_node_t *current = head;
+	// TODO: Check first element empty
+
+	while (current->next != NULL) {
+		current = current->next;
+	}
+
+	current->next = malloc(sizeof(er_node_t));
+	if (current->next == NULL) {
+		return false;
+	}
+
+	er_node_init(current->next, ref, type, timestamp);
+
+	return true;
+}
+
+void error_remove(void) {}
+
 /**
  * @brief	Activates an error.
  *
@@ -47,7 +75,7 @@ void error_init(ERROR_STATUS_T *error) {
  * @param	er		The error structure to activate
  * @param	now		The current time
  */
-void error_set(ERROR_T type, ERROR_STATUS_T *er, uint32_t now) {
+void error_set(error_t type, ERROR_STATUS_T *er, uint32_t now) {
 	// If the error is already enabled
 	if (er->active) {
 		// and it's the same error type
@@ -68,7 +96,7 @@ void error_set(ERROR_T type, ERROR_STATUS_T *er, uint32_t now) {
  * @param		type	The type of error to deactivate
  * @param		er		The error structure to deactivate
  */
-void error_unset(ERROR_T type, ERROR_STATUS_T *er) {
+void error_unset(error_t type, ERROR_STATUS_T *er) {
 	// Disable only if the types are the same. We don't want to disable
 	// different errors
 	if (er->type == type) {
@@ -88,7 +116,7 @@ void error_unset(ERROR_T type, ERROR_STATUS_T *er) {
  *
  * @retval	The error return value.
  */
-ERROR_T error_check_fatal(ERROR_STATUS_T *error, uint32_t now) {
+error_t error_check_fatal(ERROR_STATUS_T *error, uint32_t now) {
 	if (error->active) {
 		if (_error_check_count(error) || _error_check_timeout(error, now)) {
 			error->fatal = true;

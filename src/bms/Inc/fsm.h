@@ -19,7 +19,7 @@ typedef struct {
 
 	ERROR_STATUS_T can_error;
 
-	ERROR_T error;
+	error_t error;
 	uint8_t error_index;
 
 	bal_conf_t balancing;
