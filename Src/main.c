@@ -35,6 +35,9 @@
 /* USER CODE BEGIN PD */
 #define TXBUFFERSIZE 3
 #define RXBUFFERSIZE TXBUFFERSIZE
+
+#define MASTER_REQ_READ 0x12
+#define MASTER_REQ_WRITE 0x34
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -48,8 +51,7 @@ I2C_HandleTypeDef hi2c1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-uint8_t aRxBuffer[RXBUFFERSIZE];
-uint8_t aTxBuffer[] = {0x05, 0x03, 0x01};
+uint8_t flag = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -57,15 +59,12 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_USART2_UART_Init(void);
-void HAL_I2C_Slave_rx_callback(I2C_HandleTypeDef *I2cHandle);
+static void MX_NVIC_Init(void);
 /* USER CODE BEGIN PFP */
-
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-// uint8_t aReceiveBuffer[0xF] = {0};
-// uint8_t ubReceiveIndex = 0;
 /* USER CODE END 0 */
 
 /**
@@ -99,33 +98,26 @@ int main(void) {
 	MX_GPIO_Init();
 	MX_I2C1_Init();
 	MX_USART2_UART_Init();
+
+	/* Initialize interrupts */
+	MX_NVIC_Init();
 	/* USER CODE BEGIN 2 */
 	/* USER CODE END 2 */
 
 	/* Infinite loop */
 	/* USER CODE BEGIN WHILE */
-	HAL_I2C_EnableListen_IT(&hi2c1);
+
+	/* USER CODE END WHILE */
+
+	/* USER CODE BEGIN 3 */
+	uint8_t data[1];
+	HAL_I2C_Slave_Receive_IT(&hi2c1, data, 1);
 	while (1) {
-		/* USER CODE END WHILE */
-
-		/* USER CODE BEGIN 3 */
-		if (HAL_I2C_Slave_Receive_IT(&hi2c1, (uint8_t *)aRxBuffer,
-									 RXBUFFERSIZE) != HAL_OK) {
-			/* Transfer error in reception process */
-			Error_Handler();
-		}
-
-		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-		while (HAL_I2C_GetState(&hi2c1) != HAL_I2C_STATE_READY) {
-		}
-		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-
-		if (HAL_I2C_Slave_Transmit_IT(&hi2c1, aTxBuffer, 3) != HAL_OK) {
-			/* Transfer error in transmission process */
-			Error_Handler();
-		}
-
-		while (HAL_I2C_GetState(&hi2c1) != HAL_I2C_STATE_READY) {
+		if (flag == 1) {
+			flag = 0;
+			HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+			HAL_UART_Transmit(&huart2, data, RXBUFFERSIZE, 100);
+			HAL_I2C_Slave_Receive_IT(&hi2c1, data, 1);
 		}
 	}
 	/* USER CODE END 3 */
@@ -171,6 +163,19 @@ void SystemClock_Config(void) {
 }
 
 /**
+ * @brief NVIC Configuration.
+ * @retval None
+ */
+static void MX_NVIC_Init(void) {
+	/* I2C1_ER_IRQn interrupt configuration */
+	HAL_NVIC_SetPriority(I2C1_ER_IRQn, 0, 0);
+	HAL_NVIC_EnableIRQ(I2C1_ER_IRQn);
+	/* I2C1_EV_IRQn interrupt configuration */
+	HAL_NVIC_SetPriority(I2C1_EV_IRQn, 0, 0);
+	HAL_NVIC_EnableIRQ(I2C1_EV_IRQn);
+}
+
+/**
  * @brief I2C1 Initialization Function
  * @param None
  * @retval None
@@ -184,14 +189,14 @@ static void MX_I2C1_Init(void) {
 
 	/* USER CODE END I2C1_Init 1 */
 	hi2c1.Instance = I2C1;
-	hi2c1.Init.ClockSpeed = 351562;
+	hi2c1.Init.ClockSpeed = 250000;
 	hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_16_9;
 	hi2c1.Init.OwnAddress1 = 138;
 	hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
 	hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
 	hi2c1.Init.OwnAddress2 = 0;
 	hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
-	hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_ENABLE;
+	hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
 	if (HAL_I2C_Init(&hi2c1) != HAL_OK) {
 		Error_Handler();
 	}
@@ -260,36 +265,7 @@ static void MX_GPIO_Init(void) {
 }
 
 /* USER CODE BEGIN 4 */
-void HAL_I2C_SlaveTxCpltCallback(I2C_HandleTypeDef *I2cHandle) {
-	/* Turn LED4 on: Transfer in transmission process is correct */
-	HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-	// HAL_Delay(50);
-}
-
-// void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *I2cHandle) {
-void HAL_I2C_Slave_rx_callback(I2C_HandleTypeDef *I2cHandle) {
-	/* Turn LED6 on: Transfer in reception process is correct */
-	HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-	// HAL_Delay(50);
-}
-
-/**
- * @brief  I2C error callbacks
- * @param  I2cHandle: I2C handle
- * @note   This example shows a simple way to report transfer error, and you can
- *         add your own implementation.
- * @retval None
- */
-void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *I2cHandle) {
-	/* Turn LED5 on: Transfer error in reception/transmission process */
-	HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-	// HAL_Delay(50);
-}
-
-void HAL_I2C_AddrCallback(I2C_HandleTypeDef *I2cHandle, uint8_t direction,
-						  uint16_t matchcode) {
-	HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-}
+void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c) { flag = 1; }
 /* USER CODE END 4 */
 
 /**
@@ -298,7 +274,8 @@ void HAL_I2C_AddrCallback(I2C_HandleTypeDef *I2cHandle, uint8_t direction,
  */
 void Error_Handler(void) {
 	/* USER CODE BEGIN Error_Handler_Debug */
-	/* User can add his own implementation to report the HAL error return state
+	/* User can add his own implementation to report the HAL error return
+	 * state
 	 */
 
 	/* USER CODE END Error_Handler_Debug */
