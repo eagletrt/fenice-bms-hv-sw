@@ -28,7 +28,7 @@
  */
 uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *spi, LTC6813_T ltc[],
 							  uint16_t volts[], ERROR_STATUS_T volts_error[],
-							  WARNING_T *warning, ERROR_T *error) {
+							  warning_t *warning, error_t *error) {
 	uint8_t cmd[4];
 	uint16_t cmd_pec;
 	uint8_t data[8];
@@ -107,7 +107,7 @@ End:;
 uint8_t ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, LTC6813_T *ltc,
 								  uint16_t temps[],
 								  ERROR_STATUS_T temps_error[],
-								  ERROR_T *error) {
+								  error_t *error) {
 	uint8_t cmd[4];
 	uint16_t cmd_pec;
 	uint8_t data[8];
@@ -182,7 +182,7 @@ End:;
  * @param		error		The error return code
  */
 void ltc6813_check_voltage(uint16_t volts, ERROR_STATUS_T *volt_error,
-						   WARNING_T *warning, ERROR_T *error) {
+						   warning_t *warning, error_t *error) {
 	if (volts < CELL_WARN_VOLTAGE) {
 		*warning = WARN_CELL_LOW_VOLTAGE;
 	}
@@ -212,7 +212,7 @@ End:;
  * @param		error		The error return code
  */
 void ltc6813_check_temperature(uint16_t temps, ERROR_STATUS_T *temp_error,
-							   ERROR_T *error) {
+							   error_t *error) {
 	if (temps >= CELL_MAX_TEMPERATURE) {
 		error_set(ERROR_CELL_OVER_TEMPERATURE, temp_error, HAL_GetTick());
 	} else {

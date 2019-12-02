@@ -131,14 +131,14 @@ enum ltc6813_i2c_ctrl {
 
 uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *spi, LTC6813_T *ltc,
 							  uint16_t volts[], ERROR_STATUS_T volts_error[],
-							  WARNING_T *warning, ERROR_T *error);
+							  warning_t *warning, error_t *error);
 uint8_t ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, LTC6813_T *ltc,
 								  uint16_t temps[],
-								  ERROR_STATUS_T temps_error[], ERROR_T *error);
+								  ERROR_STATUS_T temps_error[], error_t *error);
 void ltc6813_check_voltage(uint16_t volt, ERROR_STATUS_T *volt_error,
-						   WARNING_T *warning, ERROR_T *error);
+						   warning_t *warning, error_t *error);
 void ltc6813_check_temperature(uint16_t temp, ERROR_STATUS_T *temp_error,
-							   ERROR_T *error);
+							   error_t *error);
 
 void ltc6813_set_dcc(uint8_t indexes[], uint8_t cfgar[8], uint8_t cfgbr[8]);
 uint16_t ltc6813_pec15(uint8_t len, uint8_t data[]);

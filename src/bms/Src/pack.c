@@ -72,7 +72,7 @@ void pack_init(PACK_T *pack) {
  * @returns	The index of the last updated cell
  */
 uint8_t pack_update_voltages(SPI_HandleTypeDef *spi, PACK_T *pack,
-							 WARNING_T *warning, ERROR_T *error) {
+							 warning_t *warning, error_t *error) {
 	_ltc6813_adcv(spi, 0);
 
 	uint8_t cell;
@@ -112,7 +112,7 @@ End:;
  * @returns	The index of the last updated cell
  */
 uint8_t pack_update_temperatures(SPI_HandleTypeDef *spi, PACK_T *pack,
-								 ERROR_T *error) {
+								 error_t *error) {
 	uint8_t send[8] = {0};
 	ltc6813_wrcomm_i2c_w(spi, 69, 0x41);
 
@@ -160,7 +160,7 @@ uint8_t pack_update_temperatures(SPI_HandleTypeDef *spi, PACK_T *pack,
  * @param		current	The current value to update
  * @param		error		The error return value
  */
-void pack_update_current(ER_INT16_T *current, ERROR_T *error) {
+void pack_update_current(ER_INT16_T *current, error_t *error) {
 	int32_t tmp = 0;
 	uint16_t i;
 	for (i = 0; i < CURRENT_ARRAY_LENGTH; i++) {
@@ -176,6 +176,7 @@ void pack_update_current(ER_INT16_T *current, ERROR_T *error) {
 	current->value += 100;
 
 	if (current->value > PACK_MAX_CURRENT) {
+		// error_add()
 		error_set(ERROR_OVER_CURRENT, &current->error, HAL_GetTick());
 	} else {
 		error_unset(ERROR_OVER_CURRENT, &current->error);
@@ -238,11 +239,10 @@ void pack_update_temperature_stats(PACK_T *pack) {
 	pack->avg_temperature = (uint16_t)(avg_temperature / temp_count);
 	pack->max_temperature = max_temperature;
 	pack->min_temperature = fmin(min_temperature, max_temperature);
-	;
 }
 
 bool pack_balance_cells(SPI_HandleTypeDef *spi, PACK_T *pack, bal_conf_t *conf,
-						ERROR_T *error) {
+						error_t *error) {
 	uint8_t indexes[PACK_MODULE_COUNT];
 	size_t len = bal_compute_indexes(pack->voltages, indexes, conf->threshold);
 
@@ -265,9 +265,9 @@ bool pack_balance_cells(SPI_HandleTypeDef *spi, PACK_T *pack, bal_conf_t *conf,
 	return false;
 }
 
-uint8_t pack_check_errors(PACK_T *pack, ERROR_T *error) {
+uint8_t pack_check_errors(PACK_T *pack, error_t *error) {
 	*error = ERROR_OK;
-	WARNING_T warning;
+	warning_t warning;
 
 	uint8_t i;
 	for (i = 0; i < PACK_MODULE_COUNT; i++) {

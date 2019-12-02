@@ -37,7 +37,7 @@
 		/*3*/ goto End;    \
 	}
 
-typedef enum {
+typedef enum error {
 	ERROR_OK,
 	ERROR_LTC_PEC_ERROR,
 
@@ -49,7 +49,7 @@ typedef enum {
 	ERROR_CAN,
 
 	ERROR_NUM_ERRORS
-} ERROR_T;
+} error_t;
 
 typedef enum {
 	WARN_CELL_LOW_VOLTAGE,
@@ -58,7 +58,7 @@ typedef enum {
 
 	WARN_NUM_WARNINGS,
 	WARN_OK
-} WARNING_T;
+} warning_t;
 
 extern const char *error_names[ERROR_NUM_ERRORS];
 
@@ -72,8 +72,8 @@ typedef struct ERROR_LIMITS_T {
 } ERROR_LIMITS_T;
 
 /** @brief	Defines an error instance */
-typedef struct ERROR_STATUS_T {
-	ERROR_T type;		 /*!< Defines the type of error */
+typedef struct ERROR_STATUS {
+	error_t type;		 /*!< Defines the type of error */
 	bool active;		 /*!< True if the error is currently happening */
 	bool fatal;			 /*!< True if the error is fatal */
 	uint16_t count;		 /*!< How many times the error has occurred */
@@ -83,33 +83,26 @@ typedef struct ERROR_STATUS_T {
 /** @brief	tuple of value-error_status. Used to store values that can trigger
  * 					an error
  */
-typedef struct ER_UINT16_T {
-	uint16_t value;
-	ERROR_STATUS_T error;
-} ER_UINT16_T;
-
-/** @brief	tuple of value-error_status. Used to store values that can trigger
- * 					an error
- */
-typedef struct ER_INT16_T {
+typedef struct ER_INT16 {
 	int16_t value;
 	ERROR_STATUS_T error;
 } ER_INT16_T;
 
-/** @brief	tuple of value-error_status. Used to store values that can trigger
- * 					an error
- */
-typedef struct ER_INT32_T {
-	int32_t value;
-	ERROR_STATUS_T error;
-} ER_INT32_T;
+typedef struct er_node {
+	void *ref;
+	ERROR_STATUS_T status;
+	struct er_node *next;
+} er_node_t;
 
 bool _error_check_count(ERROR_STATUS_T *error);
 bool _error_check_timeout(ERROR_STATUS_T *error, uint32_t time);
 
 void error_init(ERROR_STATUS_T *error);
-void error_set(ERROR_T type, ERROR_STATUS_T *error, uint32_t time_stamp);
-void error_unset(ERROR_T type, ERROR_STATUS_T *error);
-ERROR_T error_check_fatal(ERROR_STATUS_T *error, uint32_t now);
+
+bool error_add(er_node_t *head, void *ref, error_t type, uint32_t time_stamp);
+
+void error_set(error_t type, ERROR_STATUS_T *error, uint32_t time_stamp);
+void error_unset(error_t type, ERROR_STATUS_T *error);
+error_t error_check_fatal(ERROR_STATUS_T *error, uint32_t now);
 
 #endif /* ERROR_H_ */
