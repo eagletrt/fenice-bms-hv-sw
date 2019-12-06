@@ -51,6 +51,9 @@ I2C_HandleTypeDef hi2c1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
+uint8_t data[255];
+uint8_t offset = 0;
+uint8_t first = 0;
 uint8_t flag = 0;
 /* USER CODE END PV */
 
@@ -110,14 +113,17 @@ int main(void) {
 	/* USER CODE END WHILE */
 
 	/* USER CODE BEGIN 3 */
-	uint8_t data[1];
-	HAL_I2C_Slave_Receive_IT(&hi2c1, data, 1);
+
+	// HAL_I2C_Slave_Receive_IT(&hi2c1, data, 1);
+	// HAL_I2C_Slave_Seq_Receive_IT(&hi2c1, data, 1, I2C_FIRST_FRAME);
+	HAL_I2C_EnableListen_IT(&hi2c1);
 	while (1) {
 		if (flag == 1) {
 			flag = 0;
 			HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+
 			HAL_UART_Transmit(&huart2, data, RXBUFFERSIZE, 100);
-			HAL_I2C_Slave_Receive_IT(&hi2c1, data, 1);
+			// HAL_I2C_Slave_Seq_Receive_IT(&hi2c1, data, 1, I2C_FIRST_FRAME);
 		}
 	}
 	/* USER CODE END 3 */
@@ -189,14 +195,14 @@ static void MX_I2C1_Init(void) {
 
 	/* USER CODE END I2C1_Init 1 */
 	hi2c1.Instance = I2C1;
-	hi2c1.Init.ClockSpeed = 250000;
+	hi2c1.Init.ClockSpeed = 351563;
 	hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_16_9;
 	hi2c1.Init.OwnAddress1 = 138;
 	hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
 	hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
 	hi2c1.Init.OwnAddress2 = 0;
 	hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
-	hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+	hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_ENABLE;
 	if (HAL_I2C_Init(&hi2c1) != HAL_OK) {
 		Error_Handler();
 	}
@@ -265,7 +271,49 @@ static void MX_GPIO_Init(void) {
 }
 
 /* USER CODE BEGIN 4 */
-void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c) { flag = 1; }
+void HAL_I2C_ListenCpltCallback(I2C_HandleTypeDef *hi2c) {
+	first = 1;
+	flag = 1;
+	HAL_I2C_EnableListen_IT(hi2c);  // slave is ready again
+}
+
+void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection,
+						  uint16_t AddrMatchCode) {
+	if (TransferDirection == I2C_DIRECTION_TRANSMIT) {
+		if (first) {
+			HAL_I2C_Slave_Seq_Receive_IT(hi2c, &offset, 1, I2C_NEXT_FRAME);
+		} else {
+			HAL_I2C_Slave_Seq_Receive_IT(hi2c, &data[offset], 1,
+										 I2C_NEXT_FRAME);
+		}
+	} else {
+		uint8_t tx[3] = {0xA, 0xB, 0xC};
+		HAL_I2C_Slave_Seq_Transmit_IT(hi2c, tx, 3, I2C_LAST_FRAME);
+
+		HAL_UART_Transmit(&huart2, (uint8_t *)"tx\r\n", 4, 10);
+	}
+}
+
+void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c) {
+	if (first) {
+		first = 0;
+	} else {
+		offset++;
+	}
+	HAL_I2C_Slave_Seq_Receive_IT(hi2c, data, 1, I2C_NEXT_FRAME);
+}
+
+void HAL_I2C_SlaveTxCpltCallback(I2C_HandleTypeDef *hi2c) {}
+
+void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c) {
+	if (HAL_I2C_GetError(hi2c) == HAL_I2C_ERROR_AF) {
+		offset--;  // transaction terminated by master
+	} else {
+	}
+
+	HAL_UART_Transmit(&huart2, (uint8_t *)"ERROR", 5, 10);
+}
+
 /* USER CODE END 4 */
 
 /**
