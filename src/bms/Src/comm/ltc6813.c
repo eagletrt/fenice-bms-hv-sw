@@ -37,10 +37,10 @@ void _ltc6813_adcv(SPI_HandleTypeDef *spi, bool dcp) {
 	cmd[3] = (uint8_t)(cmd_pec);
 
 	ltc6813_wakeup_idle(spi, false);
-	HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_RESET);
+	// HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_RESET);
 	HAL_SPI_Transmit(spi, cmd, 4, 100);
-	HAL_Delay(1);
-	HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_SET);
+	// HAL_Delay(1);
+	// HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_SET);
 }
 
 /**
@@ -114,12 +114,12 @@ void _ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool start_bal, bool even) {
 
 	ltc6813_wakeup_idle(hspi, true);
 
-	HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_RESET);
+	// HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_RESET);
 	HAL_SPI_Transmit(hspi, wrcfg, 4, 100);
-	HAL_Delay(1);
+	// HAL_Delay(1);
 	HAL_SPI_Transmit(hspi, cfgr, 8, 100);
-	HAL_Delay(1);
-	HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_SET);
+	// HAL_Delay(1);
+	// HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_SET);
 
 	// TODO: remove this
 	_ltc6813_adcv(hspi, start_bal);
@@ -141,9 +141,9 @@ void ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool is_a,
 	cmd[2] = (uint8_t)(cmd_pec >> 8);
 	cmd[3] = (uint8_t)(cmd_pec);
 
-	HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_RESET);
+	// HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_RESET);
 	HAL_SPI_Transmit(hspi, cmd, 4, 100);
-	HAL_Delay(1);
+	// HAL_Delay(1);
 
 	for (uint8_t i = 0; i < LTC6813_COUNT; i++) {
 		// set the configuration for the #i ltc on the chain
@@ -153,7 +153,7 @@ void ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool is_a,
 		HAL_SPI_Transmit(hspi, cfgr[i], 8, 100);
 	}
 
-	HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_SET);
+	// HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_SET);
 }
 
 void ltc6813_set_balancing(SPI_HandleTypeDef *hspi, uint8_t *indexes,
@@ -176,7 +176,7 @@ void ltc6813_set_balancing(SPI_HandleTypeDef *hspi, uint8_t *indexes,
 }
 
 void ltc6813_wrcomm_i2c_w(SPI_HandleTypeDef *hspi, uint8_t address,
-						  uint8_t data) {
+						  uint8_t *data) {
 	uint8_t cmd[4] = {0b00000111, 0b00100001};  // WRCOMM
 
 	uint16_t cmd_pec = ltc6813_pec15(2, cmd);
@@ -188,21 +188,24 @@ void ltc6813_wrcomm_i2c_w(SPI_HandleTypeDef *hspi, uint8_t address,
 	comm[0] = I2C_START | (address >> 3);
 	comm[1] = (address << 5) | (0 << 4) | I2C_MASTER_ACK;
 
-	comm[2] = I2C_BLANK | (data >> 4);
-	comm[3] = (data << 4) | I2C_MASTER_NACK;
+	comm[2] = I2C_BLANK | (data[0] >> 4);
+	comm[3] = (data[0] << 4) | I2C_MASTER_ACK;
 
-	comm[4] = I2C_STOP | (0 >> 4);
-	comm[5] = (0 << 4) | I2C_MASTER_NACK;
+	comm[4] = I2C_START | (address >> 3);
+	comm[5] = (address << 5) | (1 << 4) | I2C_MASTER_ACK;
 
 	uint16_t pec = ltc6813_pec15(6, comm);
 	comm[6] = (uint8_t)(pec >> 8);
 	comm[7] = (uint8_t)(pec);
 
 	HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_RESET);
-	HAL_Delay(1);
+	while (hspi->State != HAL_SPI_STATE_READY)
+		;
 	HAL_SPI_Transmit(hspi, cmd, 4, 100);
 	HAL_SPI_Transmit(hspi, comm, 8, 100);
-	HAL_Delay(1);
+	while (hspi->State == HAL_SPI_STATE_BUSY)
+		;
+
 	HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_SET);
 }
 
@@ -215,26 +218,29 @@ void ltc6813_wrcomm_i2c_r(SPI_HandleTypeDef *hspi, uint8_t address) {
 
 	uint8_t comm[8] = {0};
 
-	comm[0] = I2C_START | (address >> 3);
-	comm[1] = (address << 5) | (1 << 4) | I2C_MASTER_ACK;
+	comm[0] = I2C_BLANK | (0xF >> 4);
+	comm[1] = (0xF << 4) | I2C_MASTER_ACK;
 
-	comm[2] = I2C_BLANK | (0 >> 4);
-	comm[3] = (uint8_t)(0 << 4) | I2C_MASTER_NACK;
+	comm[2] = I2C_BLANK | (0xF >> 4);
+	comm[3] = (uint8_t)(0xF << 4) | I2C_MASTER_ACK;
 
-	comm[4] = I2C_STOP | (0 >> 4);
-	comm[5] = (uint8_t)(0 << 4) | I2C_MASTER_NACK_STOP;
+	comm[4] = I2C_BLANK | (0xF >> 4);
+	comm[5] = (uint8_t)(0xF << 4) | I2C_MASTER_NACK_STOP;
 
 	uint16_t pec = ltc6813_pec15(6, comm);
 	comm[6] = (uint8_t)(pec >> 8);
 	comm[7] = (uint8_t)(pec);
 
-	ltc6813_wakeup_idle(hspi, 0);
 	HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_RESET);
-	HAL_Delay(1);
+	while (hspi->State != HAL_SPI_STATE_READY)
+		;
 	HAL_SPI_Transmit(hspi, cmd, 4, 100);
 	HAL_SPI_Transmit(hspi, comm, 8, 100);
-	HAL_Delay(1);
+	while (hspi->State == HAL_SPI_STATE_BUSY)
+		;
 	HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_SET);
+	// HAL_Delay(1);
+	// HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_SET);
 }
 
 bool ltc6813_rdcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t data[8]) {
@@ -245,10 +251,13 @@ bool ltc6813_rdcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t data[8]) {
 	cmd[3] = (uint8_t)(cmd_pec);
 
 	HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_RESET);
-	HAL_Delay(1);
+	while (hspi->State != HAL_SPI_STATE_READY)
+		;
 	HAL_SPI_Transmit(hspi, cmd, 4, 100);
 	HAL_SPI_Receive(hspi, data, 8, 100);
-	HAL_Delay(1);
+
+	while (hspi->State == HAL_SPI_STATE_BUSY)
+		;
 	HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_SET);
 
 	if (ltc6813_pec15(6, data) == (uint16_t)(data[6] * 256 + data[7])) {
@@ -265,13 +274,18 @@ void ltc6813_stcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t length) {
 	cmd[3] = (uint8_t)(cmd_pec);
 
 	HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_RESET);
-	HAL_Delay(1);
+	while (hspi->State != HAL_SPI_STATE_READY)
+		;
 	HAL_SPI_Transmit(hspi, cmd, 4, 100);
 	for (uint8_t i = 0; i < 3 * length; i++) {
 		HAL_SPI_Transmit(hspi, (uint8_t *)0xFF, 1, 20);
 	}
-	HAL_Delay(1);
+	while (hspi->State == HAL_SPI_STATE_BUSY)
+		;
+
 	HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_SET);
+	/*HAL_Delay(1);
+	HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_SET);*/
 }
 
 /**
