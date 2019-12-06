@@ -71,8 +71,8 @@ void UART_Error_Callback(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define CS_LTC_Pin GPIO_PIN_4
-#define CS_LTC_GPIO_Port GPIOA
+#define LTC_CS_Pin GPIO_PIN_4
+#define LTC_CS_GPIO_Port GPIOA
 #define CS_ADC_Pin GPIO_PIN_12
 #define CS_ADC_GPIO_Port GPIOB
 #define SHUTDOWN_STATUS_Pin GPIO_PIN_13

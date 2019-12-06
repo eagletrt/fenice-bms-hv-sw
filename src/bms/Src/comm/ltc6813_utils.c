@@ -44,12 +44,12 @@ uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *spi, LTC6813_T ltc[],
 
 		ltc6813_wakeup_idle(spi, false);
 
-		HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_RESET);
+		// HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_RESET);
 		if (HAL_SPI_Transmit(spi, cmd, 4, 100) != HAL_OK) {
 			// goto End;
 		}
 		HAL_SPI_Receive(spi, data, 8 * LTC6813_COUNT, 100);
-		HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_SET);
+		// HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_SET);
 
 #if LTC6813_EMU > 0
 		// Writes 3.6v to each cell
@@ -123,13 +123,13 @@ uint8_t ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, LTC6813_T *ltc,
 
 		ltc6813_wakeup_idle(hspi, false);
 
-		HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_RESET);
-		HAL_Delay(1);
+		// HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_RESET);
+		// HAL_Delay(1);
 		HAL_SPI_Transmit(hspi, cmd, 4, 100);
 
 		HAL_SPI_Receive(hspi, data, 8, 100);
-		HAL_Delay(1);
-		HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_SET);
+		// HAL_Delay(1);
+		// HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_SET);
 
 #if LTC6813_EMU > 0
 		// Writes 0.9292v (18°C) to each sensor

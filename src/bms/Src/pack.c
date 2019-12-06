@@ -114,23 +114,21 @@ End:;
 uint8_t pack_update_temperatures(SPI_HandleTypeDef *spi, PACK_T *pack,
 								 error_t *error) {
 	uint8_t send[8] = {0};
-	ltc6813_wrcomm_i2c_w(spi, 69, 0x41);
 
-	if (!ltc6813_rdcomm_i2c(spi, send)) {
-		cli_print("pecw\r\n", 8);
-	}
-	ltc6813_stcomm_i2c(spi, 3);
-	// HAL_Delay(1);
-	///// read
+	uint8_t tx[8] = {0x41, 0x42};
 	uint8_t recv[8] = {0};
-	/*ltc6813_wrcomm_i2c_r(spi, 69);
+
+	ltc6813_wakeup_idle(spi, false);
+	ltc6813_wrcomm_i2c_w(spi, 69, tx);
 	ltc6813_stcomm_i2c(spi, 4);
 
-	// HAL_Delay(1);
+	///// read
+	ltc6813_wrcomm_i2c_r(spi, 69);
+	ltc6813_stcomm_i2c(spi, 3);
 
 	if (!ltc6813_rdcomm_i2c(spi, recv)) {
 		cli_print("pecr\r\n", 8);
-	}*/
+	}
 
 	// uint8_t icom0 = recv[0] >> 4;
 	uint8_t d0 = (recv[0] << 4) | (recv[1] >> 4);

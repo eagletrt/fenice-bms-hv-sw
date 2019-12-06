@@ -12,6 +12,9 @@
 		"ltc6813.h": "c",
 		"stm32f4xx_hal.h": "c",
 		"fenice_config.h": "c",
-		"pack.h": "c"
+		"pack.h": "c",
+		"array": "c",
+		"string": "c",
+		"string_view": "c"
 	}
 }
