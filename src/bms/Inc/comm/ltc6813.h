@@ -18,7 +18,7 @@
 #include <stdbool.h>
 #include <stm32f4xx_hal.h>
 #include "comm/ltc6813_utils.h"
-#include "error.h"
+#include "error/error.h"
 #include "fenice_config.h"
 
 extern uint8_t GPIO_CONFIG;  // GPIO CONFIG

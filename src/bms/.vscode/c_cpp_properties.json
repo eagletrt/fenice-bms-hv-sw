@@ -9,6 +9,7 @@
         "Drivers/STM32F4xx_HAL_Driver/Inc/Legacy",
         "Inc",
         "Inc/comm",
+        "Inc/error",
         "Middlewares/Third_Party/FatFs/src"
       ],
       "defines": [
