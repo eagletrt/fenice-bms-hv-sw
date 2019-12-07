@@ -271,22 +271,13 @@ End:;
  */
 void read_volts(state_global_data_t *data) {
 	// Voltages
-	warning_t warning = WARN_OK;
 
-	data->error_index =
-		pack_update_voltages(&hspi1, &data->pack, &warning, &data->error);
-	ER_CHK(&data->error);
-
-	if (warning != WARN_OK) {
-	}
+	pack_update_voltages(&hspi1, &data->pack);
 
 	// Current
-	// pack_update_current(&data->pack.current, &data->error);
-	ER_CHK(&data->error);
+	pack_update_current(&data->pack.current);
 
 	// Update total values
-
-End:;
 }
 
 void read_temps(state_global_data_t *data) {
@@ -352,17 +343,8 @@ int main(void) {
 
 		/* USER CODE BEGIN 3 */
 		state = run_state(state, &data);
-
 		check_timers(&data);
-		ER_CHK(&data.error);
 
-		data.error = error_check_fatal(&data.can_error, HAL_GetTick());
-		ER_CHK(&data.error);
-
-		data.error_index = pack_check_errors(&data.pack, &data.error);
-		ER_CHK(&data.error);
-
-	End:
 		cli_loop(&data, state);
 	}
 	return 0;

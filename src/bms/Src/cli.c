@@ -35,7 +35,7 @@ void _cli_volts_all(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 					char *out) {
 	out[0] = '\0';
 
-	for (uint8_t i = 0; i < PACK_MODULE_COUNT; i++) {
+	for (uint8_t i = 0; i < PACK_CELL_COUNT; i++) {
 		if (i % LTC6813_CELL_COUNT == 0) {
 			sprintf(out + strlen(out), "%-3d", i % LTC6813_CELL_COUNT);
 		} else if (i % 9 == 0 && i > 0) {

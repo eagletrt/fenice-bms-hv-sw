@@ -6,8 +6,8 @@
  * @author		Matteo Bonora [matteo.bonora@studenti.unitn.it]
  */
 
-#ifndef LTC6813_H_
-#define LTC6813_H_
+#ifndef LTC6813_H
+#define LTC6813_H
 
 #define GPIO_CFGAR_MASK 0b11111000
 #define GPIO_I2C_MODE 0b11000000
@@ -19,16 +19,8 @@
 #include <stm32f4xx_hal.h>
 
 #include "../../../fenice_config.h"
-#include "error.h"
-
-/** @brief Basic definition of a LTC6813 */
-// TODO: Remove this. Only maintain the error
-typedef struct {
-	uint8_t address;  //!< The isoSPI bus address
-	const bool
-		*cell_distribution;	 //!< distribution of cells across the registers
-	ERROR_STATUS_T error;	 //!< Error status for the LTC
-} LTC6813_T;
+#include "comm/ltc6813_utils.h"
+#include "error/error.h"
 
 /** @brief Table used to calculate the pec for messaging */
 static const uint16_t crcTable[256] = {

@@ -22,20 +22,16 @@
  * 					  (BRD)
  *
  * @param		spi		The SPI configuration structure
- * @param		ltc		The array of LTC6813 configurations
  * @param		volts	The array of voltages
- * @param		error	The error return value
  */
-uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *spi, LTC6813_T ltc[],
-							  uint16_t volts[], ERROR_STATUS_T volts_error[],
-							  warning_t *warning, error_t *error) {
+uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *spi, uint16_t volts[]) {
 	uint8_t cmd[4];
 	uint16_t cmd_pec;
 	uint8_t data[8];
 
 	cmd[0] = 0;	 // Broadcast
 
-	uint8_t count = 0;	// volts[] index
+	uint8_t count = 0;	// counts the cells
 	for (uint8_t reg = 0; reg < LTC6813_REG_COUNT; reg++) {
 		cmd[1] = (uint8_t)rdcv_cmd[reg];
 		cmd_pec = ltc6813_pec15(2, cmd);
@@ -66,27 +62,27 @@ uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *spi, LTC6813_T ltc[],
 		data[7] = (uint8_t)emu_pec;
 #endif
 
-		if (ltc6813_pec15(6, data) == (uint16_t)(data[6] * 256 + data[7])) {
-			error_unset(ERROR_LTC_PEC_ERROR, &ltc->error);
+		for (uint8_t ltc = 0; ltc < LTC6813_COUNT; ltc++) {
+			if (ltc6813_pec15(6, data) == (uint16_t)(data[6] * 256 + data[7])) {
+				error_unset(ERROR_LTC_PEC_ERROR, NULL, ltc);
 
-			// For every cell in the register
-			for (uint8_t cell = 0; cell < LTC6813_REG_CELL_COUNT; cell++) {
-				volts[count] = ltc6813_convert_voltage(&data[2 * cell]);
+				// For every cell in the register
+				for (uint8_t cell = 0; cell < LTC6813_REG_CELL_COUNT; cell++) {
+					// offset by register (3 slots) + offset by ltc (18 slots) + cell
+					uint8_t index = (reg * LTC6813_REG_CELL_COUNT) + (ltc * LTC6813_CELL_COUNT) + cell;
 
-				ltc6813_check_voltage(volts[count], &volts_error[count],
-									  warning, error);
-				ER_CHK(error);
-				count++;
+					// (size of value) * count
+					volts[index] = ltc6813_convert_voltage(&data[2 * count]);
+
+					ltc6813_check_voltage(volts, count);
+					count++;
+				}
+			} else {
+				error_set(ERROR_LTC_PEC_ERROR, NULL, ltc, HAL_GetTick());
 			}
-		} else {
-			error_set(ERROR_LTC_PEC_ERROR, &ltc->error, HAL_GetTick());
 		}
-
-		*error = error_check_fatal(&ltc->error, HAL_GetTick());
-		ER_CHK(error);
 	}
 
-End:;
 	return count;
 }
 
@@ -143,11 +139,11 @@ void ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, uint8_t max[2],
 
 	ltc6813_wakeup_idle(hspi, false);
 
-	ltc6813_temp_set_register(hspi, 69, 0xFF);
+	ltc6813_temp_set_register(hspi, LTC6813_TEMP_ADDRESS, 0xFF);
 	ltc6813_stcomm_i2c(hspi, 3);
 
 	///// read
-	ltc6813_temp_get(hspi, 69);
+	ltc6813_temp_get(hspi, LTC6813_TEMP_ADDRESS);
 	ltc6813_stcomm_i2c(hspi, 3);
 
 	ltc6813_rdcomm_i2c(hspi, recv);
@@ -170,11 +166,11 @@ void ltc6813_read_all_temps(SPI_HandleTypeDef *hspi, uint8_t *temps) {
 		uint8_t recv[8] = {0};
 		ltc6813_wakeup_idle(hspi, false);
 
-		ltc6813_temp_set_register(hspi, 69, i);
+		ltc6813_temp_set_register(hspi, LTC6813_TEMP_ADDRESS, i);
 		ltc6813_stcomm_i2c(hspi, 3);
 
 		///// read
-		ltc6813_temp_get(hspi, 69);
+		ltc6813_temp_get(hspi, LTC6813_TEMP_ADDRESS);
 		ltc6813_stcomm_i2c(hspi, 3);
 
 		ltc6813_rdcomm_i2c(hspi, recv);
@@ -196,28 +192,18 @@ void ltc6813_read_all_temps(SPI_HandleTypeDef *hspi, uint8_t *temps) {
  * @param		volts		The voltage
  * @param		error		The error return code
  */
-void ltc6813_check_voltage(uint16_t volts, ERROR_STATUS_T *volt_error,
-						   warning_t *warning, error_t *error) {
-	if (volts < CELL_WARN_VOLTAGE) {
-		*warning = WARN_CELL_LOW_VOLTAGE;
-	}
-
-	if (volts < CELL_MIN_VOLTAGE) {
-		error_set(ERROR_CELL_UNDER_VOLTAGE, volt_error, HAL_GetTick());
+void ltc6813_check_voltage(uint16_t *volts, uint8_t index) {
+	if (volts[index] < CELL_MIN_VOLTAGE) {
+		error_set(ERROR_CELL_UNDER_VOLTAGE, volts, index, HAL_GetTick());
 	} else {
-		error_unset(ERROR_CELL_UNDER_VOLTAGE, volt_error);
+		error_unset(ERROR_CELL_UNDER_VOLTAGE, volts, index);
 	}
 
-	if (volts > CELL_MAX_VOLTAGE) {
-		error_set(ERROR_CELL_OVER_VOLTAGE, volt_error, HAL_GetTick());
+	if (volts[index] > CELL_MAX_VOLTAGE) {
+		error_set(ERROR_CELL_OVER_VOLTAGE, volts, index, HAL_GetTick());
 	} else {
-		error_unset(ERROR_CELL_OVER_VOLTAGE, volt_error);
+		error_unset(ERROR_CELL_OVER_VOLTAGE, volts, index);
 	}
-
-	*error = error_check_fatal(volt_error, HAL_GetTick());
-	ER_CHK(error);
-
-End:;
 }
 
 /**
@@ -226,22 +212,16 @@ End:;
  * @param		temp		The temperature
  * @param		error		The error return code
  */
-void ltc6813_check_temperature(uint16_t temps, ERROR_STATUS_T *temp_error,
-							   error_t *error) {
-	if (temps >= CELL_MAX_TEMPERATURE) {
-		error_set(ERROR_CELL_OVER_TEMPERATURE, temp_error, HAL_GetTick());
+void ltc6813_check_temperature(uint16_t *temps, uint8_t index) {
+	if (temps[index] >= CELL_MAX_TEMPERATURE) {
+		error_set(ERROR_CELL_OVER_TEMPERATURE, temps, index, HAL_GetTick());
 	} else {
-		error_unset(ERROR_CELL_OVER_TEMPERATURE, temp_error);
+		error_unset(ERROR_CELL_OVER_TEMPERATURE, temps, index);
 	}
-
-	*error = error_check_fatal(temp_error, HAL_GetTick());
-	ER_CHK(error);
-
-End:;
 }
 
 void ltc6813_set_dcc(uint8_t indexes[], uint8_t cfgar[8], uint8_t cfgbr[8]) {
-	for (uint8_t i = 0; i < PACK_MODULE_COUNT; i++) {
+	for (uint8_t i = 0; i < PACK_CELL_COUNT; i++) {
 		if (indexes[i] < 8) {
 			cfgar[4] += dcc[indexes[i]];
 		} else if (indexes[i] >= 8 && indexes[i] < 12) {
