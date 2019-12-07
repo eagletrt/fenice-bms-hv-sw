@@ -37,8 +37,8 @@ uint8_t _min_index(uint16_t data[], size_t length) {
 	return min_value_index;
 }
 
-void _bubble_sort(uint8_t indexes[PACK_MODULE_COUNT],
-				  uint16_t values[PACK_MODULE_COUNT], uint8_t length) {
+void _bubble_sort(uint8_t indexes[PACK_CELL_COUNT],
+				  uint16_t values[PACK_CELL_COUNT], uint8_t length) {
 	while (length > 1) {
 		uint8_t newn = 0;
 		for (uint8_t i = 0; i < length - 1; i++) {
@@ -55,19 +55,19 @@ uint8_t bal_compute_indexes(uint16_t volts[], uint8_t indexes[],
 							uint16_t threshold) {
 	static bool even = true;  // Whether to return even or odd cells
 
-	uint8_t indexes_left = PACK_MODULE_COUNT;  // cells to check
-	uint8_t min_index = _min_index(volts, PACK_MODULE_COUNT);
+	uint8_t indexes_left = PACK_CELL_COUNT;  // cells to check
+	uint8_t min_index = _min_index(volts, PACK_CELL_COUNT);
 
-	for (uint8_t i = 0; i < PACK_MODULE_COUNT; i++) {
+	for (uint8_t i = 0; i < PACK_CELL_COUNT; i++) {
 		indexes[i] = i;  // Initialize indexes
 	}
 
 	// sort all indexes by voltage
-	_bubble_sort(indexes, volts, PACK_MODULE_COUNT);
+	_bubble_sort(indexes, volts, PACK_CELL_COUNT);
 
 	// mark indexes that represent values that are less than
 	// (minval + tresh)
-	for (uint8_t i = 0; i < PACK_MODULE_COUNT; i++) {
+	for (uint8_t i = 0; i < PACK_CELL_COUNT; i++) {
 		if (volts[indexes[i]] < volts[min_index] + threshold) {
 			indexes_left--;
 			indexes[i] = NULL_INDEX;
