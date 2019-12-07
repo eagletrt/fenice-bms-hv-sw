@@ -35,8 +35,8 @@ void pack_init(PACK_T *pack) {
 	pack->max_temperature = 0;
 	pack->min_temperature = 0;
 
-	pack->current.value = 0;
-	error_init(&pack->current.error);
+	pack->current = 0;
+	// error_init(&pack->current.error);
 
 	uint8_t i;
 	for (i = 0; i < LTC6813_COUNT; i++) {
@@ -71,25 +71,15 @@ void pack_init(PACK_T *pack) {
  *
  * @returns	The index of the last updated cell
  */
-uint8_t pack_update_voltages(SPI_HandleTypeDef *spi, PACK_T *pack,
-							 warning_t *warning, error_t *error) {
+void pack_update_voltages(SPI_HandleTypeDef *spi, PACK_T *pack) {
 	_ltc6813_adcv(spi, 0);
 
-	uint8_t cell;
 	uint8_t ltc_i;
 	for (ltc_i = 0; ltc_i < LTC6813_COUNT; ltc_i++) {
-		cell = ltc6813_read_voltages(spi, &ltc[ltc_i], pack->voltages,
-									 pack->voltage_errors, warning, error);
-		ER_CHK(error);
+		ltc6813_read_voltages(spi, &ltc[ltc_i], pack->voltages);
 	}
 
-End:;
 	pack_update_voltage_stats(pack);
-
-	if (*error == ERROR_LTC_PEC_ERROR) {
-		return ltc_i;
-	}
-	return cell;
 }
 
 /**
@@ -158,7 +148,7 @@ uint8_t pack_update_temperatures(SPI_HandleTypeDef *spi, PACK_T *pack,
  * @param		current	The current value to update
  * @param		error		The error return value
  */
-void pack_update_current(ER_INT16_T *current, error_t *error) {
+void pack_update_current(int16_t *current) {
 	int32_t tmp = 0;
 	uint16_t i;
 	for (i = 0; i < CURRENT_ARRAY_LENGTH; i++) {
@@ -170,20 +160,14 @@ void pack_update_current(ER_INT16_T *current, error_t *error) {
 	float in_volt = (((float)tmp * 3.3) / 4096);
 
 	// Check the current sensor datasheet for the correct formula
-	current->value = (int16_t)(-round((((in_volt - 2.048) * 200 / 1.25)) * 10));
-	current->value += 100;
+	*current = (int16_t)(-round((((in_volt - 2.048) * 200 / 1.25)) * 10));
+	*current += 100;
 
-	if (current->value > PACK_MAX_CURRENT) {
-		// error_add()
-		error_set(ERROR_OVER_CURRENT, &current->error, HAL_GetTick());
+	if (*current > PACK_MAX_CURRENT) {
+		error_set(ERROR_OVER_CURRENT, current, 0, HAL_GetTick());
 	} else {
-		error_unset(ERROR_OVER_CURRENT, &current->error);
+		error_unset(ERROR_OVER_CURRENT, current, 0);
 	}
-
-	*error = error_check_fatal(&current->error, HAL_GetTick());
-	ER_CHK(error);
-
-End:;
 }
 
 /**
@@ -261,22 +245,4 @@ bool pack_balance_cells(SPI_HandleTypeDef *spi, PACK_T *pack, bal_conf_t *conf,
 	}
 	cli_print("\r\nnothing to balance\r\n", 22);
 	return false;
-}
-
-uint8_t pack_check_errors(PACK_T *pack, error_t *error) {
-	*error = ERROR_OK;
-	warning_t warning;
-
-	uint8_t i;
-	for (i = 0; i < PACK_MODULE_COUNT; i++) {
-		ltc6813_check_voltage(pack->voltages[i], &pack->voltage_errors[i],
-							  &warning, error);
-		ER_CHK(error);
-		ltc6813_check_temperature(pack->temperatures[i],
-								  &pack->temperature_errors[i], error);
-		ER_CHK(error);
-	}
-
-End:
-	return i == PACK_MODULE_COUNT ? 255 : i;
 }

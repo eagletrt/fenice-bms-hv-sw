@@ -12,16 +12,16 @@
 #include <inttypes.h>
 #include "bal.h"
 #include "comm/ltc6813.h"
-#include "error.h"
+#include "error/error.h"
 #include "fenice_config.h"
 
 /** @brief Battery pack basic info */
 typedef struct {
 	uint16_t voltages[PACK_MODULE_COUNT]; /*!< [mV * 10] Cell voltages */
-	ERROR_STATUS_T voltage_errors[PACK_MODULE_COUNT];
+	error_status_t voltage_errors[PACK_MODULE_COUNT];
 
 	uint16_t temperatures[PACK_MODULE_COUNT]; /*!< [°C * 100] */
-	ERROR_STATUS_T temperature_errors[PACK_MODULE_COUNT];
+	error_status_t temperature_errors[PACK_MODULE_COUNT];
 
 	uint32_t total_voltage; /*!< [mV * 10] Total pack voltage */
 	uint16_t max_voltage;   /*!< [mV * 10] Maximum cell voltage */
@@ -31,21 +31,19 @@ typedef struct {
 	uint16_t max_temperature; /*!< [°C * 100] Maximum temperature */
 	uint16_t min_temperature; /*!< [°C * 100] Mimimum temperature */
 
-	ER_INT16_T current; /*!< [A * 10] Instant current draw. */
+	int16_t current; /*!< [A * 10] Instant current draw. */
 } PACK_T;
 
 void pack_init(PACK_T *pack);
-uint8_t pack_update_voltages(SPI_HandleTypeDef *spi, PACK_T *pack,
-							 warning_t *warning, error_t *error);
+void pack_update_voltages(SPI_HandleTypeDef *spi, PACK_T *pack);
 uint8_t pack_update_temperatures(SPI_HandleTypeDef *spi, PACK_T *pack,
 								 error_t *error);
 
-void pack_update_current(ER_INT16_T *current, error_t *error);
+void pack_update_current(int16_t *current);
 void pack_update_voltage_stats(PACK_T *pack);
 void pack_update_temperature_stats(PACK_T *pack);
 bool pack_balance_cells(SPI_HandleTypeDef *spi, PACK_T *pack, bal_conf_t *conf,
 						error_t *error);
-uint8_t pack_check_errors(PACK_T *pack, error_t *error);
 uint8_t pack_check_voltage_drops(PACK_T *pack,
 								 uint8_t cells[PACK_MODULE_COUNT]);
 

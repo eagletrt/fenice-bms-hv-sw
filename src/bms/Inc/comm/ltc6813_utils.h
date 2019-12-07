@@ -11,7 +11,7 @@
 
 #include <inttypes.h>
 #include <stm32f4xx_hal.h>
-#include "error.h"
+#include "error/error.h"
 #include "fenice_config.h"
 #include "ltc6813.h"
 
@@ -21,7 +21,7 @@ typedef struct {
 	uint8_t address;  //!< The isoSPI bus address
 	const bool
 		*cell_distribution;  //!< distribution of cells across the registers
-	ERROR_STATUS_T error;	//!< Error status for the LTC
+	error_status_t error;	//!< Error status for the LTC
 } LTC6813_T;
 
 /** @brief Table used to calculate the pec for messaging */
@@ -130,15 +130,11 @@ enum ltc6813_i2c_ctrl {
 };
 
 uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *spi, LTC6813_T *ltc,
-							  uint16_t volts[], ERROR_STATUS_T volts_error[],
-							  warning_t *warning, error_t *error);
+							  uint16_t volts[]);
 uint8_t ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, LTC6813_T *ltc,
-								  uint16_t temps[],
-								  ERROR_STATUS_T temps_error[], error_t *error);
-void ltc6813_check_voltage(uint16_t volt, ERROR_STATUS_T *volt_error,
-						   warning_t *warning, error_t *error);
-void ltc6813_check_temperature(uint16_t temp, ERROR_STATUS_T *temp_error,
-							   error_t *error);
+								  uint16_t temps[]);
+void ltc6813_check_voltage(uint16_t *volts, uint8_t index);
+void ltc6813_check_temperature(uint16_t *temps, uint8_t index);
 
 void ltc6813_set_dcc(uint8_t indexes[], uint8_t cfgar[8], uint8_t cfgbr[8]);
 uint16_t ltc6813_pec15(uint8_t len, uint8_t data[]);
