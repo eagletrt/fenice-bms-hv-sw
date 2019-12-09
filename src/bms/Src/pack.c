@@ -119,8 +119,9 @@ uint8_t pack_update_temperatures(SPI_HandleTypeDef *spi, PACK_T *pack,
 	uint8_t recv[8] = {0};
 
 	ltc6813_wakeup_idle(spi, false);
+
 	ltc6813_wrcomm_i2c_w(spi, 69, tx);
-	ltc6813_stcomm_i2c(spi, 4);
+	ltc6813_stcomm_i2c(spi, 3);
 
 	///// read
 	ltc6813_wrcomm_i2c_r(spi, 69);
@@ -174,7 +175,6 @@ void pack_update_current(ER_INT16_T *current, error_t *error) {
 	current->value += 100;
 
 	if (current->value > PACK_MAX_CURRENT) {
-		// error_add()
 		error_set(ERROR_OVER_CURRENT, &current->error, HAL_GetTick());
 	} else {
 		error_unset(ERROR_OVER_CURRENT, &current->error);
