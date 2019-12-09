@@ -88,18 +88,10 @@ typedef struct ER_INT16 {
 	ERROR_STATUS_T error;
 } ER_INT16_T;
 
-typedef struct er_node {
-	void *ref;
-	ERROR_STATUS_T status;
-	struct er_node *next;
-} er_node_t;
-
 bool _error_check_count(ERROR_STATUS_T *error);
 bool _error_check_timeout(ERROR_STATUS_T *error, uint32_t time);
 
 void error_init(ERROR_STATUS_T *error);
-
-bool error_add(er_node_t *head, void *ref, error_t type, uint32_t time_stamp);
 
 void error_set(error_t type, ERROR_STATUS_T *error, uint32_t time_stamp);
 void error_unset(error_t type, ERROR_STATUS_T *error);

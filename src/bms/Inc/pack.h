@@ -11,7 +11,7 @@
 
 #include <inttypes.h>
 #include "bal.h"
-#include "comm/ltc6813.h"
+#include "comm/ltc6813_utils.h"
 #include "error.h"
 #include "fenice_config.h"
 

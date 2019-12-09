@@ -43,13 +43,14 @@ uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *spi, LTC6813_T ltc[],
 		cmd[3] = (uint8_t)(cmd_pec);
 
 		ltc6813_wakeup_idle(spi, false);
+		ltc6813_enable_cs(spi, CS_LTC_GPIO_Port, CS_LTC_Pin);
 
-		// HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_RESET);
 		if (HAL_SPI_Transmit(spi, cmd, 4, 100) != HAL_OK) {
 			// goto End;
 		}
 		HAL_SPI_Receive(spi, data, 8 * LTC6813_COUNT, 100);
-		// HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_SET);
+
+		ltc6813_disable_cs(spi, CS_LTC_GPIO_Port, CS_LTC_Pin);
 
 #if LTC6813_EMU > 0
 		// Writes 3.6v to each cell
@@ -122,14 +123,12 @@ uint8_t ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, LTC6813_T *ltc,
 		cmd[3] = (uint8_t)(cmd_pec);
 
 		ltc6813_wakeup_idle(hspi, false);
+		ltc6813_enable_cs(hspi, CS_LTC_GPIO_Port, CS_LTC_Pin);
 
-		// HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_RESET);
-		// HAL_Delay(1);
 		HAL_SPI_Transmit(hspi, cmd, 4, 100);
-
 		HAL_SPI_Receive(hspi, data, 8, 100);
-		// HAL_Delay(1);
-		// HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_SET);
+
+		ltc6813_disable_cs(hspi, CS_LTC_GPIO_Port, CS_LTC_Pin);
 
 #if LTC6813_EMU > 0
 		// Writes 0.9292v (18°C) to each sensor
@@ -247,22 +246,23 @@ void ltc6813_set_dcc(uint8_t indexes[], uint8_t cfgar[8], uint8_t cfgbr[8]) {
 	}
 }
 
-/**
- * @brief		This function is used to calculate the PEC value
- *
- * @param		len		Length of the data array
- * @param		data	Array of data
- */
-uint16_t ltc6813_pec15(uint8_t len, uint8_t data[]) {
-	uint16_t remainder, address;
-	remainder = 16;  // PEC seed
-	for (int i = 0; i < len; i++) {
-		// calculate PEC table address
-		address = ((remainder >> 7) ^ data[i]) & 0xff;
-		remainder = (remainder << 8) ^ crcTable[address];
+void ltc6813_set_balancing(SPI_HandleTypeDef *hspi, uint8_t *indexes,
+						   int dcto) {
+	uint8_t cfgar[LTC6813_COUNT][8] = {0};
+	uint8_t cfgbr[LTC6813_COUNT][8] = {0};
+
+	for (uint8_t i = 0; i < LTC6813_COUNT; i++) {
+		// cfgbr[i][1] += 0b00001000; // set DTMEN
+		cfgar[i][0] += 0b00000010;  // set DTEN
+		cfgar[i][5] += dcto << 4;   // Set timer
+
+		// For each LTC we set the correct cfgr
+		ltc6813_set_dcc(indexes, cfgar[i], cfgbr[i]);
 	}
-	// The CRC15 has a 0 in the LSB so the final value must be multiplied by 2
-	return (remainder * 2);
+	ltc6813_wakeup_idle(hspi, true);
+
+	ltc6813_wrcfg(hspi, true, cfgar);
+	ltc6813_wrcfg(hspi, false, cfgbr);
 }
 
 /**
