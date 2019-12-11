@@ -90,88 +90,71 @@ End:;
 	return count;
 }
 
+void ltc6813_temp_set_register(SPI_HandleTypeDef *hspi, uint8_t address,
+							   uint8_t reg) {
+	uint8_t comm[8] = {0};
+
+	comm[0] = I2C_START | (address >> 3);
+	comm[1] = (address << 5) | (0 << 4) | I2C_MASTER_ACK;
+
+	comm[2] = I2C_BLANK | (reg >> 4);
+	comm[3] = (reg << 4) | I2C_MASTER_ACK;
+
+	comm[4] = I2C_START | (address >> 3);
+	comm[5] = (address << 5) | (1 << 4) | I2C_MASTER_ACK;
+
+	uint16_t pec = ltc6813_pec15(6, comm);
+	comm[6] = (uint8_t)(pec >> 8);
+	comm[7] = (uint8_t)(pec);
+
+	ltc6813_wrcomm_i2c(hspi, comm);
+}
+
+void ltc6813_temp_get(SPI_HandleTypeDef *hspi, uint8_t address) {
+	uint8_t comm[8] = {0};
+
+	comm[0] = I2C_BLANK | (0xF >> 4);
+	comm[1] = (0xF << 4) | I2C_MASTER_ACK;
+
+	comm[2] = I2C_BLANK | (0xF >> 4);
+	comm[3] = (uint8_t)(0xF << 4) | I2C_MASTER_ACK;
+
+	comm[4] = I2C_BLANK | (0xF >> 4);
+	comm[5] = (uint8_t)(0xF << 4) | I2C_MASTER_NACK_STOP;
+
+	uint16_t pec = ltc6813_pec15(6, comm);
+	comm[6] = (uint8_t)(pec >> 8);
+	comm[7] = (uint8_t)(pec);
+
+	HAL_Delay(1);
+	ltc6813_wrcomm_i2c(hspi, comm);
+}
+
 /**
  * @brief		This function is used to fetch the temperatures.
- * @details	The workings of this function are very similar to read_voltages,
- * 					the main difference to it is the presence of the even
- * 					parameter. Refer to the ltc6813_read_voltages comment for
- * 					the actual messages.
  *
  * @param		hspi		The SPI configuration structure
- * @param		even		indicates which set of cells is currently being
- * 									balanced: false for odd and true for even
- * cells
  * @param		ltc			The array of LTC6813 configurations
  * @param		temps		The array of temperatures
- * @param		error		The error return value
  */
-uint8_t ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, LTC6813_T *ltc,
-								  uint16_t temps[],
-								  ERROR_STATUS_T temps_error[],
-								  error_t *error) {
-	uint8_t cmd[4];
-	uint16_t cmd_pec;
-	uint8_t data[8];
+void ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, uint16_t temps[]) {
+	uint8_t recv[8] = {0};
 
-	cmd[0] = (uint8_t)0x80 + ltc->address;
+	ltc6813_wakeup_idle(hspi, false);
 
-	uint8_t count = 0;
-	for (uint8_t reg = 0; reg < LTC6813_REG_COUNT; reg++) {
-		cmd[1] = (uint8_t)rdcv_cmd[reg];
-		cmd_pec = ltc6813_pec15(2, cmd);
-		cmd[2] = (uint8_t)(cmd_pec >> 8);
-		cmd[3] = (uint8_t)(cmd_pec);
+	uint8_t tx = 0x41;
+	ltc6813_temp_set_register(hspi, 69, tx);
+	ltc6813_stcomm_i2c(hspi, 3);
 
-		ltc6813_wakeup_idle(hspi, false);
-		ltc6813_enable_cs(hspi, CS_LTC_GPIO_Port, CS_LTC_Pin);
+	///// read
+	ltc6813_temp_get(hspi, 69);
+	ltc6813_stcomm_i2c(hspi, 3);
 
-		HAL_SPI_Transmit(hspi, cmd, 4, 100);
-		HAL_SPI_Receive(hspi, data, 8, 100);
+	ltc6813_rdcomm_i2c(hspi, recv);
 
-		ltc6813_disable_cs(hspi, CS_LTC_GPIO_Port, CS_LTC_Pin);
-
-#if LTC6813_EMU > 0
-		// Writes 0.9292v (18°C) to each sensor
-
-		for (uint8_t emu_i = 0; emu_i < LTC6813_REG_CELL_COUNT * 2; emu_i++) {
-			// 9292
-			data[emu_i] = 0b00100100;
-			data[++emu_i] = 0b01001100;
-		}
-		uint16_t emu_pec = _pec15(6, data);
-		data[6] = (uint8_t)(emu_pec >> 8);
-		data[7] = (uint8_t)emu_pec;
-#endif
-
-		if (ltc6813_pec15(6, data) == (uint16_t)(data[6] * 256 + data[7])) {
-			error_unset(ERROR_LTC_PEC_ERROR, &ltc->error);
-
-			// Counts the cell inside the register
-			for (uint8_t cell = 0; cell < LTC6813_REG_CELL_COUNT; cell++) {
-				uint16_t temp = ltc6813_convert_temp(
-					ltc6813_convert_voltage(&data[2 * cell]));
-
-				if (temp > 0) {
-					temps[count] = temp;
-
-					ltc6813_check_temperature(temps[count], &temps_error[count],
-											  error);
-					ER_CHK(error);
-				}
-
-				count++;
-			}
-		} else {
-			error_set(ERROR_LTC_PEC_ERROR, &ltc->error, HAL_GetTick());
-		}
-	}
-
-	*error = error_check_fatal(&ltc->error, HAL_GetTick());
-	ER_CHK(error);  // In case of error, set the error and goto label End
-
-End:;
-
-	return count;
+	uint8_t d0 = (recv[0] << 4) | (recv[1] >> 4);
+	uint8_t d1 = (recv[2] << 4) | (recv[3] >> 4);
+	uint8_t d2 = (recv[4] << 4) | (recv[5] >> 4);
 }
 
 /**

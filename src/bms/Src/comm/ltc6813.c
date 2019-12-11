@@ -170,71 +170,15 @@ void ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool is_a,
 	ltc6813_disable_cs(hspi, CS_LTC_GPIO_Port, CS_LTC_Pin);
 }
 
-void ltc6813_wrcomm_i2c_w(SPI_HandleTypeDef *hspi, uint8_t address,
-						  uint8_t *data) {
+void ltc6813_wrcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t data[8]) {
 	uint8_t cmd[4] = {0b00000111, 0b00100001};  // WRCOMM
-
 	uint16_t cmd_pec = ltc6813_pec15(2, cmd);
 	cmd[2] = (uint8_t)(cmd_pec >> 8);
 	cmd[3] = (uint8_t)(cmd_pec);
 
-	uint8_t comm[8] = {0};
-
-	comm[0] = I2C_START | (address >> 3);
-	comm[1] = (address << 5) | (0 << 4) | I2C_MASTER_ACK;
-
-	comm[2] = I2C_BLANK | (data[0] >> 4);
-	comm[3] = (data[0] << 4) | I2C_MASTER_ACK;
-
-	comm[4] = I2C_START | (address >> 3);
-	comm[5] = (address << 5) | (1 << 4) | I2C_MASTER_ACK;
-
-	uint16_t pec = ltc6813_pec15(6, comm);
-	comm[6] = (uint8_t)(pec >> 8);
-	comm[7] = (uint8_t)(pec);
-
 	ltc6813_enable_cs(hspi, CS_LTC_GPIO_Port, CS_LTC_Pin);
-	/*HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_RESET);
-	HAL_Delay(1);*/
-
 	HAL_SPI_Transmit(hspi, cmd, 4, 100);
-	HAL_SPI_Transmit(hspi, comm, 8, 100);
-
-	/*HAL_Delay(1);
-	HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_SET);*/
-	ltc6813_disable_cs(hspi, CS_LTC_GPIO_Port, CS_LTC_Pin);
-}
-
-void ltc6813_wrcomm_i2c_r(SPI_HandleTypeDef *hspi, uint8_t address) {
-	uint8_t cmd[4] = {0b00000111, 0b00100001};  // WRCOMM
-
-	uint16_t cmd_pec = ltc6813_pec15(2, cmd);
-	cmd[2] = (uint8_t)(cmd_pec >> 8);
-	cmd[3] = (uint8_t)(cmd_pec);
-
-	uint8_t comm[8] = {0};
-
-	comm[0] = I2C_BLANK | (0xF >> 4);
-	comm[1] = (0xF << 4) | I2C_MASTER_ACK;
-
-	comm[2] = I2C_BLANK | (0xF >> 4);
-	comm[3] = (uint8_t)(0xF << 4) | I2C_MASTER_ACK;
-
-	comm[4] = I2C_BLANK | (0xF >> 4);
-	comm[5] = (uint8_t)(0xF << 4) | I2C_MASTER_NACK_STOP;
-
-	uint16_t pec = ltc6813_pec15(6, comm);
-	comm[6] = (uint8_t)(pec >> 8);
-	comm[7] = (uint8_t)(pec);
-
-	ltc6813_enable_cs(hspi, CS_LTC_GPIO_Port, CS_LTC_Pin);
-
-	HAL_SPI_Transmit(hspi, cmd, 4, 100);
-	HAL_SPI_Transmit(hspi, comm, 8, 100);
-
-	HAL_Delay(1);
-	// TODO: Fix this
-	// HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_SET);
+	HAL_SPI_Transmit(hspi, data, 8, 100);
 	ltc6813_disable_cs(hspi, CS_LTC_GPIO_Port, CS_LTC_Pin);
 }
 
@@ -246,10 +190,8 @@ bool ltc6813_rdcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t data[8]) {
 	cmd[3] = (uint8_t)(cmd_pec);
 
 	ltc6813_enable_cs(hspi, CS_LTC_GPIO_Port, CS_LTC_Pin);
-
 	HAL_SPI_Transmit(hspi, cmd, 4, 100);
 	HAL_SPI_Receive(hspi, data, 8, 100);
-
 	ltc6813_disable_cs(hspi, CS_LTC_GPIO_Port, CS_LTC_Pin);
 
 	if (ltc6813_pec15(6, data) == (uint16_t)(data[6] * 256 + data[7])) {

@@ -37,8 +37,7 @@ typedef struct {
 void pack_init(PACK_T *pack);
 uint8_t pack_update_voltages(SPI_HandleTypeDef *spi, PACK_T *pack,
 							 warning_t *warning, error_t *error);
-uint8_t pack_update_temperatures(SPI_HandleTypeDef *spi, PACK_T *pack,
-								 error_t *error);
+void pack_update_temperatures(SPI_HandleTypeDef *spi, PACK_T *pack);
 
 void pack_update_current(ER_INT16_T *current, error_t *error);
 void pack_update_voltage_stats(PACK_T *pack);
