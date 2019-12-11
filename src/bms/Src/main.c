@@ -289,11 +289,7 @@ End:;
 
 void read_temps(state_global_data_t *data) {
 	// Temperatures
-	data->error_index =
-		pack_update_temperatures(&hspi1, &data->pack, &data->error);
-	ER_CHK(&data->error);
-
-End:;
+	pack_update_temperatures(&hspi1, &data->pack);
 }
 /* USER CODE END 0 */
 

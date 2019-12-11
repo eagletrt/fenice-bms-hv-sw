@@ -146,6 +146,7 @@ uint16_t ltc6813_pec15(uint8_t len, uint8_t data[]);
 void _ltc6813_adcv(SPI_HandleTypeDef *hspi, bool DCP);
 void _ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool start, bool parity);
 
+void ltc6813_wrcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t data[8]);
 void ltc6813_wrcomm_i2c_w(SPI_HandleTypeDef *hspi, uint8_t address,
 						  uint8_t *data);
 void ltc6813_wrcomm_i2c_r(SPI_HandleTypeDef *hspi, uint8_t address);
