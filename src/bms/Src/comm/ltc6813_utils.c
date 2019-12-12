@@ -113,20 +113,20 @@ void ltc6813_temp_set_register(SPI_HandleTypeDef *hspi, uint8_t address,
 void ltc6813_temp_get(SPI_HandleTypeDef *hspi, uint8_t address) {
 	uint8_t comm[8] = {0};
 
-	comm[0] = I2C_BLANK | (0xF >> 4);
+	comm[0] = I2C_BLANK | (0xFF >> 4);
 	comm[1] = (0xF << 4) | I2C_MASTER_ACK;
 
-	comm[2] = I2C_BLANK | (0xF >> 4);
-	comm[3] = (uint8_t)(0xF << 4) | I2C_MASTER_ACK;
+	comm[2] = I2C_BLANK | (0xFF >> 4);
+	comm[3] = (uint8_t)(0xFF << 4) | I2C_MASTER_ACK;
 
-	comm[4] = I2C_BLANK | (0xF >> 4);
-	comm[5] = (uint8_t)(0xF << 4) | I2C_MASTER_NACK_STOP;
+	comm[4] = I2C_BLANK | (0xFF >> 4);
+	comm[5] = (uint8_t)(0xFF << 4) | I2C_MASTER_NACK_STOP;
 
 	uint16_t pec = ltc6813_pec15(6, comm);
 	comm[6] = (uint8_t)(pec >> 8);
 	comm[7] = (uint8_t)(pec);
 
-	HAL_Delay(1);
+	// HAL_Delay(1);
 	ltc6813_wrcomm_i2c(hspi, comm);
 }
 
