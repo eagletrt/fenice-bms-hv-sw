@@ -115,11 +115,24 @@ End:;
  * @returns	The index of the last updated cell
  */
 void pack_update_temperatures(SPI_HandleTypeDef *spi, PACK_T *pack) {
-	for (uint8_t ltc = 0; ltc < LTC6813_COUNT; ltc++) {
-		ltc6813_read_temperatures(
-			spi, pack->temperatures +
-					 ltc * (LTC6813_REG_COUNT * LTC6813_REG_CELL_COUNT));
+	uint8_t max[LTC6813_COUNT * 2];
+	uint8_t min[LTC6813_COUNT * 2];
+
+	pack->avg_temperature = 0;
+	pack->max_temperature = 0;
+	pack->min_temperature = UINT8_MAX;
+	for (uint8_t i = 0; i < LTC6813_COUNT; i++) {
+		ltc6813_read_temperatures(spi, &max[i * 2], &min[i * 2]);
+
+		pack->avg_temperature += max[i * 2] + max[i * 2 + 1];
+		pack->avg_temperature += min[i * 2] + min[i * 2 + 1];
+
+		pack->max_temperature = fmax(max[i * 2], pack->max_temperature);
+		pack->min_temperature = fmin(min[i * 2], pack->min_temperature);
 	}
+
+	pack->avg_temperature =
+		((float)pack->avg_temperature / (LTC6813_COUNT * 4)) * 10;
 }
 
 /**

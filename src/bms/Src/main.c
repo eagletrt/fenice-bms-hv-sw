@@ -86,6 +86,7 @@ uint32_t timer_bal = 0;
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+static void MX_NVIC_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -327,6 +328,9 @@ int main(void) {
 	MX_CAN1_Init();
 	MX_I2C1_Init();
 	MX_FATFS_Init();
+
+	/* Initialize interrupts */
+	MX_NVIC_Init();
 	/* USER CODE BEGIN 2 */
 	cli_init(&cli, &huart2);
 
@@ -405,6 +409,19 @@ void SystemClock_Config(void) {
 	if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK) {
 		Error_Handler();
 	}
+}
+
+/**
+ * @brief NVIC Configuration.
+ * @retval None
+ */
+static void MX_NVIC_Init(void) {
+	/* I2C1_EV_IRQn interrupt configuration */
+	HAL_NVIC_SetPriority(I2C1_EV_IRQn, 0, 0);
+	HAL_NVIC_EnableIRQ(I2C1_EV_IRQn);
+	/* I2C1_ER_IRQn interrupt configuration */
+	HAL_NVIC_SetPriority(I2C1_ER_IRQn, 0, 0);
+	HAL_NVIC_EnableIRQ(I2C1_ER_IRQn);
 }
 
 /* USER CODE BEGIN 4 */
