@@ -137,12 +137,13 @@ void ltc6813_temp_get(SPI_HandleTypeDef *hspi, uint8_t address) {
  * @param		ltc			The array of LTC6813 configurations
  * @param		temps		The array of temperatures
  */
-void ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, uint16_t temps[]) {
+void ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, uint8_t max[2],
+							   uint8_t min[2]) {
 	uint8_t recv[8] = {0};
 
 	ltc6813_wakeup_idle(hspi, false);
 
-	uint8_t tx = 0x41;
+	uint8_t tx = 0x00;
 	ltc6813_temp_set_register(hspi, 69, tx);
 	ltc6813_stcomm_i2c(hspi, 3);
 
@@ -155,6 +156,12 @@ void ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, uint16_t temps[]) {
 	uint8_t d0 = (recv[0] << 4) | (recv[1] >> 4);
 	uint8_t d1 = (recv[2] << 4) | (recv[3] >> 4);
 	uint8_t d2 = (recv[4] << 4) | (recv[5] >> 4);
+
+	max[0] = ltc6813_convert_temp(d0 >> 2);
+	max[1] = ltc6813_convert_temp((d0 & 0b00000011) << 4 | d1 >> 4);
+
+	min[0] = ltc6813_convert_temp((d1 & 0b00001111) << 2 | d2 >> 6);
+	min[1] = ltc6813_convert_temp(d2 & 0b00111111);
 }
 
 /**
@@ -266,19 +273,6 @@ uint16_t ltc6813_convert_voltage(uint8_t v_data[]) {
  *
  * @param		volt	Voltage [mV]
  *
- * @retval	Temperature [C° * 100]
+ * @retval	Temperature [C°]
  */
-uint16_t ltc6813_convert_temp(uint16_t volt) {
-	float voltf = volt * 0.0001;
-	float temp;
-	temp = -225.7 * voltf * voltf * voltf + 1310.6 * voltf * voltf -
-		   2594.8 * voltf + 1767.8;
-	return (uint16_t)(temp * 100);
-}
-
-/**
- * @brief		This function sets the GPIO configuration for the ltc
- *
- * @param		mask	first byte of CFGAR
- *
- */
+uint8_t ltc6813_convert_temp(uint8_t temp) { return temp; }

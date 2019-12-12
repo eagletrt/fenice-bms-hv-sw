@@ -56,8 +56,6 @@ void _ltc6813_adcv(SPI_HandleTypeDef *spi, bool dcp) {
 	HAL_SPI_Transmit(spi, cmd, 4, 100);
 
 	ltc6813_disable_cs(spi, CS_LTC_GPIO_Port, CS_LTC_Pin);
-	// HAL_Delay(1);
-	// HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_SET);
 }
 
 /**
@@ -208,16 +206,12 @@ void ltc6813_stcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t length) {
 	cmd[3] = (uint8_t)(cmd_pec);
 
 	ltc6813_enable_cs(hspi, CS_LTC_GPIO_Port, CS_LTC_Pin);
-	/*HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_RESET);
-	HAL_Delay(1);*/
 
 	HAL_SPI_Transmit(hspi, cmd, 4, 100);
 	for (uint8_t i = 0; i < 3 * length; i++) {
 		HAL_SPI_Transmit(hspi, (uint8_t *)0xFF, 1, 20);
 	}
 
-	/*HAL_Delay(1);
-	HAL_GPIO_WritePin(CS_LTC_GPIO_Port, CS_LTC_Pin, GPIO_PIN_SET);*/
 	ltc6813_disable_cs(hspi, CS_LTC_GPIO_Port, CS_LTC_Pin);
 }
 

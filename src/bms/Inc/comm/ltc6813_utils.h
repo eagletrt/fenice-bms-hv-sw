@@ -18,7 +18,8 @@
 uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *spi, LTC6813_T *ltc,
 							  uint16_t volts[], ERROR_STATUS_T volts_error[],
 							  warning_t *warning, error_t *error);
-void ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, uint16_t temps[]);
+void ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, uint8_t max[2],
+							   uint8_t min[2]);
 void ltc6813_check_voltage(uint16_t volt, ERROR_STATUS_T *volt_error,
 						   warning_t *warning, error_t *error);
 void ltc6813_check_temperature(uint16_t temp, ERROR_STATUS_T *temp_error,
@@ -28,6 +29,6 @@ void ltc6813_set_dcc(uint8_t indexes[], uint8_t cfgar[8], uint8_t cfgbr[8]);
 void ltc6813_set_balancing(SPI_HandleTypeDef *hspi, uint8_t *indexes, int dcto);
 
 uint16_t ltc6813_convert_voltage(uint8_t v_data[]);
-uint16_t ltc6813_convert_temp(uint16_t volt);
+uint8_t ltc6813_convert_temp(uint8_t temps);
 
 #endif

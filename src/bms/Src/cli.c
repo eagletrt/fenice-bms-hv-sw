@@ -44,11 +44,10 @@ void _cli_volts_all(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 void _cli_temps(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 				char *out) {
 	sprintf(out,
-			"average.....%.1f C\r\nmax.........%.1f "
-			"C\r\nmin.........%.1f C\r\n",
-			(float)data->pack.avg_temperature / 100,
-			(float)data->pack.max_temperature / 100,
-			(float)data->pack.min_temperature / 100);
+			"average.....%.1f C\r\nmax.........%-2u "
+			"C\r\nmin.........%-2u C\r\n",
+			(float)data->pack.avg_temperature / 10, data->pack.max_temperature,
+			data->pack.min_temperature);
 }
 
 void _cli_temps_all(char *cmd, state_global_data_t *data, BMS_STATE_T state,
@@ -56,8 +55,8 @@ void _cli_temps_all(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 	out[0] = '\0';
 
 	for (uint8_t i = 0; i < PACK_MODULE_COUNT; i++) {
-		sprintf(out + strlen(out), "| %-3u %.1f C ", i,
-				(float)data->pack.temperatures[i] / 100);
+		sprintf(out + strlen(out), "| %-3u %u C ", i,
+				data->pack.temperatures[i]);
 
 		if ((i + 1) % 9 == 0) {
 			sprintf(out + strlen(out), "\r\n");
