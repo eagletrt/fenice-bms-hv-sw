@@ -143,8 +143,7 @@ void ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, uint8_t max[2],
 
 	ltc6813_wakeup_idle(hspi, false);
 
-	uint8_t tx = 0x00;
-	ltc6813_temp_set_register(hspi, 69, tx);
+	ltc6813_temp_set_register(hspi, 69, 0xFF);
 	ltc6813_stcomm_i2c(hspi, 3);
 
 	///// read
@@ -157,11 +156,38 @@ void ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, uint8_t max[2],
 	uint8_t d1 = (recv[2] << 4) | (recv[3] >> 4);
 	uint8_t d2 = (recv[4] << 4) | (recv[5] >> 4);
 
-	max[0] = ltc6813_convert_temp(d0 >> 2);
-	max[1] = ltc6813_convert_temp((d0 & 0b00000011) << 4 | d1 >> 4);
+	max[0] = d0 >> 2;
+	max[1] = (d0 & 0b00000011) << 4 | d1 >> 4;
 
-	min[0] = ltc6813_convert_temp((d1 & 0b00001111) << 2 | d2 >> 6);
-	min[1] = ltc6813_convert_temp(d2 & 0b00111111);
+	min[0] = (d1 & 0b00001111) << 2 | d2 >> 6;
+	min[1] = d2 & 0b00111111;
+}
+
+void ltc6813_read_all_temps(SPI_HandleTypeDef *hspi, uint8_t *temps) {
+	uint8_t count = 0;
+
+	for (uint8_t i = 0; i < LTC6813_TEMP_COUNT / 4; i++) {
+		uint8_t recv[8] = {0};
+		ltc6813_wakeup_idle(hspi, false);
+
+		ltc6813_temp_set_register(hspi, 69, i);
+		ltc6813_stcomm_i2c(hspi, 3);
+
+		///// read
+		ltc6813_temp_get(hspi, 69);
+		ltc6813_stcomm_i2c(hspi, 3);
+
+		ltc6813_rdcomm_i2c(hspi, recv);
+
+		uint8_t d0 = (recv[0] << 4) | (recv[1] >> 4);
+		uint8_t d1 = (recv[2] << 4) | (recv[3] >> 4);
+		uint8_t d2 = (recv[4] << 4) | (recv[5] >> 4);
+
+		temps[count++] = d0 >> 2;
+		temps[count++] = (d0 & 0b00000011) << 4 | d1 >> 4;
+		temps[count++] = (d1 & 0b00001111) << 2 | d2 >> 6;
+		temps[count++] = d2 & 0b00111111;
+	}
 }
 
 /**

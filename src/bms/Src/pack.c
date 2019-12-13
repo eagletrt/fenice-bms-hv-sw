@@ -135,6 +135,10 @@ void pack_update_temperatures(SPI_HandleTypeDef *spi, PACK_T *pack) {
 		((float)pack->avg_temperature / (LTC6813_COUNT * 4)) * 10;
 }
 
+void pack_update_temperatures_all(SPI_HandleTypeDef *spi, uint8_t *temps) {
+	ltc6813_read_all_temps(spi, temps);
+}
+
 /**
  * @brief		Calculates the current exiting/entering the pack
  *

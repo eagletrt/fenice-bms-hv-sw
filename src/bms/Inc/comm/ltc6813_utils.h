@@ -20,6 +20,8 @@ uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *spi, LTC6813_T *ltc,
 							  warning_t *warning, error_t *error);
 void ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, uint8_t max[2],
 							   uint8_t min[2]);
+void ltc6813_read_all_temps(SPI_HandleTypeDef *hspi, uint8_t *temps);
+
 void ltc6813_check_voltage(uint16_t volt, ERROR_STATUS_T *volt_error,
 						   warning_t *warning, error_t *error);
 void ltc6813_check_temperature(uint16_t temp, ERROR_STATUS_T *temp_error,
