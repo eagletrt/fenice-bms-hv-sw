@@ -16,6 +16,12 @@
 		"tuple": "c",
 		"array": "c",
 		"string": "c",
-		"string_view": "c"
+		"string_view": "c",
+		"chrono": "c",
+		"random": "c",
+		"limits": "c",
+		"valarray": "c",
+		"cli.h": "c",
+		"main.h": "c"
 	}
 }

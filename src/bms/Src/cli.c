@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "bal.h"
+#include "pack.h"
 
 const char *cli_commands[N_COMMANDS] = {
 	"volts", "volts all", "temps", "temps all", "status", "bal", "?", "\ta"};
@@ -33,7 +34,7 @@ void _cli_volts_all(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 	out[0] = '\0';
 
 	for (uint8_t i = 0; i < PACK_MODULE_COUNT; i++) {
-		sprintf(out + strlen(out), "| %-3u %.3f V ", i,
+		sprintf(out + strlen(out), "| [%3u] %.3fv ", i,
 				(float)data->pack.voltages[i] / 10000);
 		if ((i + 1) % 9 == 0) {
 			sprintf(out + strlen(out), "|\r\n");
@@ -44,22 +45,26 @@ void _cli_volts_all(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 void _cli_temps(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 				char *out) {
 	sprintf(out,
-			"average.....%.1f C\r\nmax.........%-2u "
-			"C\r\nmin.........%-2u C\r\n",
+			"average.....%.1f C\r\nmax.........%2u "
+			"C\r\nmin.........%2u C\r\n"
+			"delta.......%2u C\r\n",
 			(float)data->pack.avg_temperature / 10, data->pack.max_temperature,
-			data->pack.min_temperature);
+			data->pack.min_temperature,
+			data->pack.max_temperature - data->pack.min_temperature);
 }
 
 void _cli_temps_all(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 					char *out) {
 	out[0] = '\0';
 
-	for (uint8_t i = 0; i < PACK_MODULE_COUNT; i++) {
-		sprintf(out + strlen(out), "| %-3u %u C ", i,
-				data->pack.temperatures[i]);
+	uint8_t temps[LTC6813_TEMP_COUNT * LTC6813_COUNT];
+	pack_update_temperatures_all(data->hspi, temps);
+
+	for (uint8_t i = 0; i < LTC6813_TEMP_COUNT * LTC6813_COUNT; i++) {
+		sprintf(out + strlen(out), "| [%3u] %2uc ", i, temps[i]);
 
 		if ((i + 1) % 9 == 0) {
-			sprintf(out + strlen(out), "\r\n");
+			sprintf(out + strlen(out), "|\r\n");
 		}
 	}
 }

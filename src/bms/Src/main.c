@@ -32,7 +32,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define TEMPS_READ_INTERVAL 461
+#define TEMPS_READ_INTERVAL 40
 #define VOLTS_READ_INTERVAL 10
 /* USER CODE END PD */
 
@@ -241,7 +241,7 @@ void check_timers(state_global_data_t *data) {
 		ER_CHK(&data->error);
 
 		// Delay voltage measurement to avoid interferences
-		timer_volts = HAL_GetTick() - (VOLTS_READ_INTERVAL / 2);
+		// timer_volts = HAL_GetTick() - (VOLTS_READ_INTERVAL / 2);
 	}
 
 	// Read and send voltages and current
@@ -334,6 +334,7 @@ int main(void) {
 	/* USER CODE BEGIN 2 */
 	cli_init(&cli, &huart2);
 
+	data.hspi = &hspi1;
 	error_init(&data.can_error);
 	data.error = ERROR_OK;
 

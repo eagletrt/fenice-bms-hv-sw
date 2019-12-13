@@ -20,7 +20,7 @@ typedef struct {
 	uint16_t voltages[PACK_MODULE_COUNT]; /*!< [mV * 10] Cell voltages */
 	ERROR_STATUS_T voltage_errors[PACK_MODULE_COUNT];
 
-	uint16_t temperatures[PACK_MODULE_COUNT]; /*!< [°C * 100] */
+	uint8_t temperatures[LTC6813_TEMP_COUNT * LTC6813_COUNT]; /*!< [°C] */
 	ERROR_STATUS_T temperature_errors[PACK_MODULE_COUNT];
 
 	uint32_t total_voltage; /*!< [mV * 10] Total pack voltage */
@@ -38,6 +38,7 @@ void pack_init(PACK_T *pack);
 uint8_t pack_update_voltages(SPI_HandleTypeDef *spi, PACK_T *pack,
 							 warning_t *warning, error_t *error);
 void pack_update_temperatures(SPI_HandleTypeDef *spi, PACK_T *pack);
+void pack_update_temperatures_all(SPI_HandleTypeDef *spi, uint8_t *temps);
 
 void pack_update_current(ER_INT16_T *current, error_t *error);
 void pack_update_voltage_stats(PACK_T *pack);

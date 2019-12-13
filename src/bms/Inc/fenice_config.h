@@ -24,6 +24,8 @@
 /* Max number of cells handled by a register.
 							   Refer to cell distribution */
 
+#define LTC6813_TEMP_COUNT 36
+
 // Total number of cells in series
 #define PACK_MODULE_COUNT LTC6813_COUNT* LTC6813_CELL_COUNT
 #define PACK_MAX_CURRENT 200

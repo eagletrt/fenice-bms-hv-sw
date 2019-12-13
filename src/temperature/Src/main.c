@@ -23,8 +23,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -34,8 +35,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define TXBUFFERSIZE 3
-#define RXBUFFERSIZE TXBUFFERSIZE
+#define TEMP_SIZE 36
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -49,11 +49,11 @@ I2C_HandleTypeDef hi2c1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-uint8_t temps[36] = {0};
+uint8_t temps[TEMP_SIZE] = {0};
+uint8_t max[2] = {0, 0};
+uint8_t min[2] = {UINT8_MAX, UINT8_MAX};
 
-uint8_t data[255];
-uint8_t offset = 0;
-uint8_t first = 0;
+uint8_t rx;
 uint8_t flag = 0;
 /* USER CODE END PV */
 
@@ -64,9 +64,11 @@ static void MX_I2C1_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_NVIC_Init(void);
 /* USER CODE BEGIN PFP */
+void get_temp_maxmin();
 /* USER CODE END PFP */
 
-/* Private user code ---------------------------------------------------------*/
+/* Private user code
+   ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 /* USER CODE END 0 */
 
@@ -105,6 +107,11 @@ int main(void) {
 	/* Initialize interrupts */
 	MX_NVIC_Init();
 	/* USER CODE BEGIN 2 */
+
+	for (uint8_t i = 0; i < TEMP_SIZE; i++) {
+		temps[i] = i + 1;
+	}
+	get_temp_maxmin();
 	/* USER CODE END 2 */
 
 	/* Infinite loop */
@@ -116,13 +123,16 @@ int main(void) {
 		/* USER CODE BEGIN 3 */
 		if (flag == 1) {
 			flag = 0;
-			HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 
-			HAL_UART_Transmit(&huart2, data, RXBUFFERSIZE, 100);
+			char k[255];
+			sprintf(k, "%d %d %d %d\r\n", max[0], max[1], min[0], min[1]);
+			HAL_UART_Transmit(&huart2, (uint8_t *)k, strlen(k), 10);
 
 			for (uint8_t i = 0; i < 36; i++) {
-				temps[i] = rand() % 55 + 1;
+				temps[i] = rand() % 30 + 20;
 			}
+
+			get_temp_maxmin();
 		}
 	}
 	/* USER CODE END 3 */
@@ -270,70 +280,66 @@ static void MX_GPIO_Init(void) {
 }
 
 /* USER CODE BEGIN 4 */
+
+void get_temp_maxmin() {
+	max[0] = max[1] = 0;
+	min[0] = min[1] = UINT8_MAX;
+
+	for (uint8_t i = 0; i < TEMP_SIZE; i++) {
+		if (temps[i] >= max[0]) {
+			max[1] = max[0];
+			max[0] = temps[i];
+		} else if (temps[i] > max[1]) {
+			max[1] = temps[i];
+		}
+
+		if (temps[i] <= min[0]) {
+			min[1] = min[0];
+			min[0] = temps[i];
+		} else if (temps[i] < min[1]) {
+			min[1] = temps[i];
+		}
+	}
+}
+
+void fourtemps_threebytes(uint8_t temps[4], uint8_t out[3]) {
+	out[0] = temps[0] << 2 | (temps[1] & 0b00111111) >> 4;
+	out[1] = temps[1] << 4 | (temps[2] & 0b00111111) >> 2;
+	out[2] = temps[2] << 6 | (temps[3] & 0b00111111);
+}
+
 void HAL_I2C_ListenCpltCallback(I2C_HandleTypeDef *hi2c) {
-	first = 1;
 	flag = 1;
 	HAL_I2C_EnableListen_IT(hi2c);  // slave is ready again
+	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 }
 
 void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection,
 						  uint16_t AddrMatchCode) {
+	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+
 	if (TransferDirection == I2C_DIRECTION_TRANSMIT) {
-		if (first) {
-			HAL_I2C_Slave_Seq_Receive_IT(hi2c, &offset, 1, I2C_NEXT_FRAME);
-		} else {
-			HAL_I2C_Slave_Seq_Receive_IT(hi2c, &data[offset], 1,
-										 I2C_NEXT_FRAME);
-		}
+		HAL_I2C_Slave_Seq_Receive_IT(hi2c, &rx, 1, I2C_NEXT_FRAME);
 	} else {
-		uint8_t max[2] = {0};
-		uint8_t min[2] = {UINT8_MAX};
+		uint8_t tx[3] = {0};
+		if (rx < TEMP_SIZE / 4) {
+			fourtemps_threebytes(temps + rx * 4, tx);
 
-		for (uint8_t i = 0; i < 36; i++) {
-			if (temps[i] > max[1]) {
-				if (temps[i] > max[0]) {
-					max[0] = temps[i];
-				} else {
-					max[1] = temps[i];
-				}
-			}
-
-			if (temps[i] < min[1]) {
-				if (temps[i] < min[0]) {
-					min[0] = temps[i];
-				} else {
-					min[1] = temps[i];
-				}
-			}
+		} else if (rx == 0xFF) {
+			uint8_t tmp[4] = {max[0], max[1], min[0], min[1]};
+			fourtemps_threebytes(tmp, tx);
 		}
-
-		uint8_t tx[3] = {max[0] << 2 | (max[1] & 0b00111111) >> 4,
-						 max[1] << 4 | (min[2] & 0b00111111) >> 2,
-						 min[2] << 6 | (min[3] & 0b00111111)};
-
 		HAL_I2C_Slave_Seq_Transmit_IT(hi2c, tx, 3, I2C_LAST_FRAME);
-
-		HAL_UART_Transmit(&huart2, data, 1, 10);
 	}
 }
 
 void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c) {
-	if (first) {
-		first = 0;
-	} else {
-		offset++;
-	}
-	HAL_I2C_Slave_Seq_Receive_IT(hi2c, data, 1, I2C_FIRST_FRAME);
+	HAL_I2C_Slave_Seq_Receive_IT(hi2c, &rx, 1, I2C_FIRST_FRAME);
 }
 
 void HAL_I2C_SlaveTxCpltCallback(I2C_HandleTypeDef *hi2c) {}
 
 void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c) {
-	if (HAL_I2C_GetError(hi2c) == HAL_I2C_ERROR_AF) {
-		offset--;  // transaction terminated by master
-	} else {
-	}
-
 	HAL_UART_Transmit(&huart2, (uint8_t *)"ERROR", 5, 10);
 }
 
