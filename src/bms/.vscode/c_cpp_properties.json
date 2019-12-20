@@ -15,7 +15,7 @@
         "STM32F446xx",
         "USE_HAL_DRIVER"
       ],
-      "compilerPath": "/usr/bin/gcc",
+      "compilerPath": "/usr/lib/ccache/bin/gcc",
       "cStandard": "c11",
       "cppStandard": "c++11"
     }
