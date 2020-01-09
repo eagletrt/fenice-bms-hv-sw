@@ -72,6 +72,7 @@ Src/gpio.c \
 Src/i2c.c \
 Src/main.c \
 Src/pack.c \
+Src/peripherals/si8902.c \
 Src/spi.c \
 Src/stm32f4xx_hal_msp.c \
 Src/stm32f4xx_it.c \
@@ -151,6 +152,7 @@ C_INCLUDES =  \
 -IDrivers/STM32F4xx_HAL_Driver/Inc/Legacy \
 -IInc \
 -IInc/comm \
+-IInc/peripherals \
 -IMiddlewares/Third_Party/FatFs/src
 
 
