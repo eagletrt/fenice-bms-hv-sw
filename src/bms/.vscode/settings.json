@@ -13,6 +13,7 @@
 		"stm32f4xx_hal.h": "c",
 		"fenice_config.h": "c",
 		"pack.h": "c",
-		"tuple": "c"
+		"tuple": "c",
+		"spi.h": "c"
 	}
 }
