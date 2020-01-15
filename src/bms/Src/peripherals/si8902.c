@@ -11,6 +11,12 @@
 
 #include "spi.h"
 
+/**
+ * @brief	Reads all the voltages using demand mode
+ *
+ * @param	hspi	the SPI configuration structure
+ * @param ain		the output array
+ */
 void si8902_read_voltages(SPI_HandleTypeDef *hspi, uint16_t ain[3]) {
 	spi_enable_cs(hspi, CS_ADC_GPIO_Port, LTC_CS_Pin);
 
@@ -28,7 +34,13 @@ void si8902_read_voltages(SPI_HandleTypeDef *hspi, uint16_t ain[3]) {
 	spi_disable_cs(hspi, CS_ADC_GPIO_Port, LTC_CS_Pin);
 }
 
-uint16_t si8902_convert_voltage(uint8_t adc_data[2]) {
+/**
+ * @brief Extracts the voltage from ADC_H and ADC_L bytes
+ *
+ * @param	adc_hl	the array of ADC_H and ADC_L
+ * @returns				The voltage value
+ */
+uint16_t si8902_convert_voltage(uint8_t adc_hl[2]) {
 	// MSB | LSB
-	return ((adc_data[0] & 0b00001111) << 6) | (adc_data[1] & 0b01111110) >> 1;
+	return ((adc_hl[0] & 0b00001111) << 6) | (adc_hl[1] & 0b01111110) >> 1;
 }

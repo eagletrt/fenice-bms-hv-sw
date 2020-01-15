@@ -15,7 +15,7 @@
 
 #include "main.h"
 
-uint8_t cnfg_0 = 0b11000010;
+static const uint8_t cnfg_0 = 0b11000010;
 
 typedef enum {
 	AIN0 = 0b00000000,
@@ -24,6 +24,6 @@ typedef enum {
 } MUX_CHANNEL;
 
 void si8902_read_voltages(SPI_HandleTypeDef *hspi, uint16_t ain[3]);
-uint16_t si8902_convert_voltage(uint8_t adc_data[2]);
+uint16_t si8902_convert_voltage(uint8_t adc_hl[2]);
 
 #endif
