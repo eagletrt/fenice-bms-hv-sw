@@ -63,7 +63,6 @@ Middlewares/Third_Party/FatFs/src/option/syscall.c \
 Src/bal.c \
 Src/can.c \
 Src/cli.c \
-Src/comm/ltc1865l.c \
 Src/comm/ltc6813.c \
 Src/comm/ltc6813_utils.c \
 Src/error.c \
