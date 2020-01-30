@@ -34,12 +34,16 @@ void _cli_volts_all(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 	out[0] = '\0';
 
 	for (uint8_t i = 0; i < PACK_MODULE_COUNT; i++) {
-		sprintf(out + strlen(out), "| [%3u] %.3fv ", i,
-				(float)data->pack.voltages[i] / 10000);
-		if ((i + 1) % 9 == 0) {
-			sprintf(out + strlen(out), "|\r\n");
+		if (i % LTC6813_CELL_COUNT == 0) {
+			sprintf(out + strlen(out), "%-3d", i % LTC6813_CELL_COUNT);
+		} else if (i % 9 == 0 && i > 0) {
+			sprintf(out + strlen(out), "\r\n%-3s", "");
 		}
+		sprintf(out + strlen(out), "[%2u %-.3fv] ", i % LTC6813_CELL_COUNT,
+				(float)data->pack.voltages[i] / 10000);
 	}
+
+	sprintf(out + strlen(out), "\r\n");
 }
 
 void _cli_temps(char *cmd, state_global_data_t *data, BMS_STATE_T state,
@@ -61,10 +65,10 @@ void _cli_temps_all(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 	pack_update_temperatures_all(data->hspi, temps);
 
 	for (uint8_t i = 0; i < LTC6813_TEMP_COUNT * LTC6813_COUNT; i++) {
-		sprintf(out + strlen(out), "| [%3u] %2uc ", i, temps[i]);
+		sprintf(out + strlen(out), "[%3u] %2uc ", i, temps[i]);
 
 		if ((i + 1) % 9 == 0) {
-			sprintf(out + strlen(out), "|\r\n");
+			sprintf(out + strlen(out), "\r\n");
 		}
 	}
 }
