@@ -23,6 +23,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <pct2075.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -45,6 +46,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 I2C_HandleTypeDef hi2c1;
+I2C_HandleTypeDef hi2c2;
 
 UART_HandleTypeDef huart2;
 
@@ -62,13 +64,13 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_I2C2_Init(void);
 static void MX_NVIC_Init(void);
 /* USER CODE BEGIN PFP */
 void get_temp_maxmin();
 /* USER CODE END PFP */
 
-/* Private user code
-   ---------------------------------------------------------*/
+/* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 /* USER CODE END 0 */
 
@@ -103,6 +105,7 @@ int main(void) {
 	MX_GPIO_Init();
 	MX_I2C1_Init();
 	MX_USART2_UART_Init();
+	MX_I2C2_Init();
 
 	/* Initialize interrupts */
 	MX_NVIC_Init();
@@ -121,6 +124,19 @@ int main(void) {
 		/* USER CODE END WHILE */
 
 		/* USER CODE BEGIN 3 */
+		for (uint8_t i = 0; i < 6; i++) {
+			uint16_t temp = pct2075_read(&hi2c2, i);
+
+			temp = CONV_TEMP(temp);
+
+			/*char o[100] = {0};
+			sprintf(o, "%d %f\r\n", i, (float)temp / 10);
+			HAL_UART_Transmit(&huart2, (uint8_t *)o, 100, 10);
+			*/
+		}
+		HAL_UART_Transmit(&huart2, (uint8_t *)"\n", 1, 1);
+		HAL_Delay(500);
+
 		if (flag == 1) {
 			flag = 0;
 
@@ -220,6 +236,36 @@ static void MX_I2C1_Init(void) {
 }
 
 /**
+ * @brief I2C2 Initialization Function
+ * @param None
+ * @retval None
+ */
+static void MX_I2C2_Init(void) {
+	/* USER CODE BEGIN I2C2_Init 0 */
+
+	/* USER CODE END I2C2_Init 0 */
+
+	/* USER CODE BEGIN I2C2_Init 1 */
+
+	/* USER CODE END I2C2_Init 1 */
+	hi2c2.Instance = I2C2;
+	hi2c2.Init.ClockSpeed = 400000;
+	hi2c2.Init.DutyCycle = I2C_DUTYCYCLE_16_9;
+	hi2c2.Init.OwnAddress1 = 0;
+	hi2c2.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+	hi2c2.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+	hi2c2.Init.OwnAddress2 = 0;
+	hi2c2.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+	hi2c2.Init.NoStretchMode = I2C_NOSTRETCH_ENABLE;
+	if (HAL_I2C_Init(&hi2c2) != HAL_OK) {
+		Error_Handler();
+	}
+	/* USER CODE BEGIN I2C2_Init 2 */
+
+	/* USER CODE END I2C2_Init 2 */
+}
+
+/**
  * @brief USART2 Initialization Function
  * @param None
  * @retval None
@@ -310,7 +356,7 @@ void fourtemps_threebytes(uint8_t temps[4], uint8_t out[3]) {
 
 void HAL_I2C_ListenCpltCallback(I2C_HandleTypeDef *hi2c) {
 	flag = 1;
-	HAL_I2C_EnableListen_IT(hi2c);  // slave is ready again
+	HAL_I2C_EnableListen_IT(hi2c);	// slave is ready again
 	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 }
 
@@ -360,8 +406,8 @@ void Error_Handler(void) {
 
 #ifdef USE_FULL_ASSERT
 /**
- * @brief  Reports the name of the source file and the source line
- * number where the assert_param error has occurred.
+ * @brief  Reports the name of the source file and the source line number
+ *         where the assert_param error has occurred.
  * @param  file: pointer to the source file name
  * @param  line: assert_param error line source number
  * @retval None
@@ -375,5 +421,4 @@ void assert_failed(uint8_t *file, uint32_t line) {
 }
 #endif /* USE_FULL_ASSERT */
 
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF
- * FILE****/
+/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
