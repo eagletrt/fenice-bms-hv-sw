@@ -12,9 +12,9 @@
 #include <inttypes.h>
 
 #include "stm32f4xx_hal.h"
-#define CONV_TEMP(x) ((float)x * .125) * 10
+#define PCT2075_CONV_TEMP(x) ((float)x * .125) * 10
 
-static const uint8_t addresses[223] = {
+static const uint8_t pct2075_address[223] = {
 	[000] = 0b10010000, [001] = 0b10010010, [010] = 0b10010100,
 	[011] = 0b10010110, [100] = 0b10011000, [101] = 0b10011010,
 	[110] = 0b10011100, [111] = 0b10011110, [200] = 0b11100000,
@@ -24,10 +24,6 @@ static const uint8_t addresses[223] = {
 	[120] = 0b01010100, [121] = 0b01010110, [002] = 0b01011000,
 	[012] = 0b01011010, [102] = 0b01011100, [112] = 0b01011110,
 	[022] = 0b01101010, [122] = 0b01101100, [222] = 0b01101110};
-
-#define NUM_SENSORS 6
-static const uint8_t addr[NUM_SENSORS] = {0b10010000, 0b10011000, 0b10010100,
-										  0b10011100, 0b01010000, 0b01010100};
 
 uint16_t pct2075_read(I2C_HandleTypeDef *hi2c, uint8_t index);
 

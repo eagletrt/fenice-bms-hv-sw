@@ -23,10 +23,10 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include <pct2075.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <temperature.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -36,7 +36,6 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define TEMP_SIZE 36
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -51,9 +50,13 @@ I2C_HandleTypeDef hi2c2;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-uint8_t temps[TEMP_SIZE] = {0};
+uint8_t matrix_i = 0;
+uint16_t temp_matrix[TEMP_SENSOR_COUNT][TEMP_SAMPLE_COUNT] = {0};
+uint8_t temps[TEMP_SENSOR_COUNT] = {0};
 uint8_t max[2] = {0, 0};
 uint8_t min[2] = {UINT8_MAX, UINT8_MAX};
+
+uint32_t temp_timer = 0;
 
 uint8_t rx;
 uint8_t flag = 0;
@@ -111,10 +114,6 @@ int main(void) {
 	MX_NVIC_Init();
 	/* USER CODE BEGIN 2 */
 
-	for (uint8_t i = 0; i < TEMP_SIZE; i++) {
-		temps[i] = i + 1;
-	}
-	get_temp_maxmin();
 	/* USER CODE END 2 */
 
 	/* Infinite loop */
@@ -124,18 +123,29 @@ int main(void) {
 		/* USER CODE END WHILE */
 
 		/* USER CODE BEGIN 3 */
-		for (uint8_t i = 0; i < 6; i++) {
-			uint16_t temp = pct2075_read(&hi2c2, i);
+		if (HAL_GetTick() - temp_timer >= TEMP_INTERVAL) {
+			temp_timer = HAL_GetTick();
 
-			temp = CONV_TEMP(temp);
+			I2C_HandleTypeDef *buses[TEMP_BUS_COUNT] = {&hi2c2};
+			temperature_read(buses, temp_matrix[matrix_i++]);
 
-			/*char o[100] = {0};
-			sprintf(o, "%d %f\r\n", i, (float)temp / 10);
-			HAL_UART_Transmit(&huart2, (uint8_t *)o, 100, 10);
-			*/
+			if (matrix_i == TEMP_SAMPLE_COUNT) {
+				matrix_i = 0;
+
+				// Compute average
+				for (uint8_t sens = 0; sens < TEMP_SENSOR_COUNT; sens++) {
+					temps[sens] = 0;
+					for (uint8_t sample = 0; sample < TEMP_SAMPLE_COUNT;
+						 sample++) {
+						temps[sens] += temp_matrix[sens][sample];
+						temp_matrix[sens][sample] = 0;
+					}
+					temps[sens] /= TEMP_SAMPLE_COUNT;
+				}
+
+				temperature_get_extremes(temps, min, max);
+			}
 		}
-		HAL_UART_Transmit(&huart2, (uint8_t *)"\n", 1, 1);
-		HAL_Delay(500);
 
 		if (flag == 1) {
 			flag = 0;
@@ -143,12 +153,6 @@ int main(void) {
 			char k[255];
 			sprintf(k, "%d %d %d %d\r\n", max[0], max[1], min[0], min[1]);
 			HAL_UART_Transmit(&huart2, (uint8_t *)k, strlen(k), 10);
-
-			for (uint8_t i = 0; i < 36; i++) {
-				temps[i] = rand() % 30 + 20;
-			}
-
-			get_temp_maxmin();
 		}
 	}
 	/* USER CODE END 3 */
@@ -327,27 +331,6 @@ static void MX_GPIO_Init(void) {
 
 /* USER CODE BEGIN 4 */
 
-void get_temp_maxmin() {
-	max[0] = max[1] = 0;
-	min[0] = min[1] = UINT8_MAX;
-
-	for (uint8_t i = 0; i < TEMP_SIZE; i++) {
-		if (temps[i] >= max[0]) {
-			max[1] = max[0];
-			max[0] = temps[i];
-		} else if (temps[i] > max[1]) {
-			max[1] = temps[i];
-		}
-
-		if (temps[i] <= min[0]) {
-			min[1] = min[0];
-			min[0] = temps[i];
-		} else if (temps[i] < min[1]) {
-			min[1] = temps[i];
-		}
-	}
-}
-
 void fourtemps_threebytes(uint8_t temps[4], uint8_t out[3]) {
 	out[0] = temps[0] << 2 | (temps[1] & 0b00111111) >> 4;
 	out[1] = temps[1] << 4 | (temps[2] & 0b00111111) >> 2;
@@ -368,7 +351,7 @@ void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection,
 		HAL_I2C_Slave_Seq_Receive_IT(hi2c, &rx, 1, I2C_NEXT_FRAME);
 	} else {
 		uint8_t tx[3] = {0};
-		if (rx < TEMP_SIZE / 4) {
+		if (rx < TEMP_SENSOR_COUNT / 4) {
 			fourtemps_threebytes(temps + rx * 4, tx);
 
 		} else if (rx == 0xFF) {
