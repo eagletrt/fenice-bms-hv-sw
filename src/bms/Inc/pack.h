@@ -10,10 +10,11 @@
 #define PACK_H_
 
 #include <inttypes.h>
+
+#include "../../fenice_config.h"
 #include "bal.h"
 #include "comm/ltc6813_utils.h"
 #include "error.h"
-#include "fenice_config.h"
 
 /** @brief Battery pack basic info */
 typedef struct {
@@ -24,8 +25,8 @@ typedef struct {
 	ERROR_STATUS_T temperature_errors[PACK_MODULE_COUNT];
 
 	uint32_t total_voltage; /*!< [mV * 10] Total pack voltage */
-	uint16_t max_voltage;   /*!< [mV * 10] Maximum cell voltage */
-	uint16_t min_voltage;   /*!< [mV * 10] Minimum cell voltage */
+	uint16_t max_voltage;	/*!< [mV * 10] Maximum cell voltage */
+	uint16_t min_voltage;	/*!< [mV * 10] Minimum cell voltage */
 
 	uint16_t avg_temperature; /*!< [°C * 100] Average pack temperature */
 	uint16_t max_temperature; /*!< [°C * 100] Maximum temperature */
