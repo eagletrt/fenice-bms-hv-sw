@@ -11,8 +11,9 @@
 
 #include <inttypes.h>
 #include <stm32f4xx_hal.h>
+
+#include "../../../fenice_config.h"
 #include "error.h"
-#include "fenice_config.h"
 #include "ltc6813.h"
 
 uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *spi, LTC6813_T *ltc,

@@ -12,7 +12,8 @@
 #define BAL_H
 
 #include <inttypes.h>
-#include "fenice_config.h"
+
+#include "../../fenice_config.h"
 
 #define NULL_INDEX 255
 
