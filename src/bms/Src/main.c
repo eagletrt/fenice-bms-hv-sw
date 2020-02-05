@@ -11,6 +11,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+
 #include "can.h"
 #include "fatfs.h"
 #include "gpio.h"
@@ -20,9 +21,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "../../fenice_config.h"
 #include "cli.h"
 #include "error.h"
-#include "fenice_config.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -45,13 +46,13 @@
 
 /* USER CODE BEGIN PV */
 state_func_t *const state_table[BMS_NUM_STATES] = {
-	do_state_init, do_state_idle,   do_state_precharge,
+	do_state_init, do_state_idle,	do_state_precharge,
 	do_state_on,   do_state_charge, do_state_halt};
 
 transition_func_t *const transition_table[BMS_NUM_STATES][BMS_NUM_STATES] = {
-	{NULL, to_idle, to_precharge, NULL, NULL, to_halt},  // from init
+	{NULL, to_idle, to_precharge, NULL, NULL, to_halt},	 // from init
 	{NULL, NULL, to_precharge, NULL, NULL, to_halt},	 // from idle
-	{NULL, to_idle, NULL, to_on, to_charge, to_halt},	// from precharge
+	{NULL, to_idle, NULL, to_on, to_charge, to_halt},	 // from precharge
 	{NULL, to_idle, NULL, NULL, NULL, to_halt},			 // from on
 	{NULL, NULL, NULL, NULL, NULL, to_halt}};			 // from halt
 
