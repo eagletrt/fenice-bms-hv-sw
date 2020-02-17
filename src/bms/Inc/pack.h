@@ -23,6 +23,8 @@ typedef struct {
 	uint16_t temperatures[PACK_MODULE_COUNT]; /*!< [°C * 100] */
 	ERROR_STATUS_T temperature_errors[PACK_MODULE_COUNT];
 
+	uint16_t adc_voltage;	/*!< Voltage measured at the battery ends */
+	uint16_t ext_voltage;	/*!< Voltage measured after the AIRs */
 	uint32_t total_voltage; /*!< [mV * 10] Total pack voltage */
 	uint16_t max_voltage;   /*!< [mV * 10] Maximum cell voltage */
 	uint16_t min_voltage;   /*!< [mV * 10] Minimum cell voltage */
