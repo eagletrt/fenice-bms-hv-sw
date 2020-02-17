@@ -7,11 +7,13 @@
  */
 
 #include "pack.h"
+
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stm32f4xx_hal.h>
 #include <string.h>
+
 #include "bal.h"
 #include "cli.h"
 
@@ -28,6 +30,8 @@ LTC6813_T ltc[LTC6813_COUNT];
  * @param	pack	The PACK_T struct to initialize
  */
 void pack_init(PACK_T *pack) {
+	pack->adc_voltage = 0;
+	pack->ext_voltage = 0;
 	pack->total_voltage = 0;
 	pack->max_voltage = 0;
 	pack->min_voltage = 0;
@@ -127,7 +131,7 @@ uint8_t pack_update_temperatures(SPI_HandleTypeDef *spi, PACK_T *pack,
 	ltc6813_stcomm_i2c(spi, 3);
 
 	if (!ltc6813_rdcomm_i2c(spi, recv)) {
-		cli_print("pecr\r\n", 8);
+		// cli_print("pecr\r\n", 8);
 	}
 
 	// uint8_t icom0 = recv[0] >> 4;
@@ -147,7 +151,7 @@ uint8_t pack_update_temperatures(SPI_HandleTypeDef *spi, PACK_T *pack,
 		send[0], recv[0], send[1], recv[1], send[2], recv[2], send[3], recv[3],
 		send[4], recv[4], send[5], recv[5], d0, d1, d2);
 
-	cli_print(kek, strlen(kek));
+	// cli_print(kek, strlen(kek));
 
 	return 0;
 }

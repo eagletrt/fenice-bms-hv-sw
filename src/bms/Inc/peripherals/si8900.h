@@ -1,5 +1,5 @@
 /**
- * @file		si8902.h
+ * @file		si8900.h
  * @brief		This file contains the functions to read bus and total pack
  * voltages
  *
@@ -15,7 +15,10 @@
 
 #include "main.h"
 
-static const uint8_t cnfg_0 = 0b11000010;
+#define VREF 3.33
+#define TIMEOUT 1500
+
+static const uint8_t cnfg_0 = 0b11001011;
 
 typedef enum {
 	AIN0 = 0b00000000,
@@ -23,7 +26,8 @@ typedef enum {
 	AIN2 = 0b00100000
 } MUX_CHANNEL;
 
-void si8902_read_voltages(SPI_HandleTypeDef *hspi, uint16_t ain[3]);
-uint16_t si8902_convert_voltage(uint8_t adc_hl[2]);
+bool si8900_init(UART_HandleTypeDef *hspi);
+void si8900_read_voltages(UART_HandleTypeDef *hspi, uint16_t ain[3]);
+uint16_t si8900_convert_voltage(uint8_t adc_hl[2]);
 
 #endif
