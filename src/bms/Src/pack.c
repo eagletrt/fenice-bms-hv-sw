@@ -78,8 +78,11 @@ uint8_t pack_update_voltages(SPI_HandleTypeDef *spi, PACK_T *pack,
 	uint8_t cell;
 	uint8_t ltc_i;
 	for (ltc_i = 0; ltc_i < LTC6813_COUNT; ltc_i++) {
-		cell = ltc6813_read_voltages(spi, &ltc[ltc_i], pack->voltages,
-									 pack->voltage_errors, warning, error);
+		cell = ltc6813_read_voltages(
+			spi, &ltc[ltc_i],
+			pack->voltages +
+				ltc_i * (LTC6813_REG_COUNT * LTC6813_REG_CELL_COUNT),
+			pack->voltage_errors, warning, error);
 		ER_CHK(error);
 	}
 
@@ -111,45 +114,29 @@ End:;
  *
  * @returns	The index of the last updated cell
  */
-uint8_t pack_update_temperatures(SPI_HandleTypeDef *spi, PACK_T *pack,
-								 error_t *error) {
-	uint8_t send[8] = {0};
+void pack_update_temperatures(SPI_HandleTypeDef *spi, PACK_T *pack) {
+	uint8_t max[LTC6813_COUNT * 2];
+	uint8_t min[LTC6813_COUNT * 2];
 
-	uint8_t tx[8] = {0x41, 0x42};
-	uint8_t recv[8] = {0};
+	pack->avg_temperature = 0;
+	pack->max_temperature = 0;
+	pack->min_temperature = UINT8_MAX;
+	for (uint8_t i = 0; i < LTC6813_COUNT; i++) {
+		ltc6813_read_temperatures(spi, &max[i * 2], &min[i * 2]);
 
-	ltc6813_wakeup_idle(spi, false);
-	ltc6813_wrcomm_i2c_w(spi, 69, tx);
-	ltc6813_stcomm_i2c(spi, 4);
+		pack->avg_temperature += max[i * 2] + max[i * 2 + 1];
+		pack->avg_temperature += min[i * 2] + min[i * 2 + 1];
 
-	///// read
-	ltc6813_wrcomm_i2c_r(spi, 69);
-	ltc6813_stcomm_i2c(spi, 3);
-
-	if (!ltc6813_rdcomm_i2c(spi, recv)) {
-		cli_print("pecr\r\n", 8);
+		pack->max_temperature = fmax(max[i * 2], pack->max_temperature);
+		pack->min_temperature = fmin(min[i * 2], pack->min_temperature);
 	}
 
-	// uint8_t icom0 = recv[0] >> 4;
-	uint8_t d0 = (recv[0] << 4) | (recv[1] >> 4);
-	// uint8_t fcom0 = recv[1] & 0x0F;
-	uint8_t d1 = (recv[2] << 4) | (recv[3] >> 4);
-	uint8_t d2 = (recv[4] << 4) | (recv[5] >> 4);
+	pack->avg_temperature =
+		((float)pack->avg_temperature / (LTC6813_COUNT * 4)) * 10;
+}
 
-	/*sprintf(kek, "\r\nicom0: %d\td0: %d\tfcom0: %d\td1: %d\r\n", icom0, d0,
-		fcom0, d1);*/
-
-	char kek[250] = {0};
-	sprintf(
-		kek,
-		"SEND\tRECV\r\n%x\t%x\r\n%x\t%x\r\n%x\t%x\r\n%x\t%x\r\n%x\t%x\r\n%x\t%x"
-		"\r\n%x\t%x\t%x\r\n\n",
-		send[0], recv[0], send[1], recv[1], send[2], recv[2], send[3], recv[3],
-		send[4], recv[4], send[5], recv[5], d0, d1, d2);
-
-	cli_print(kek, strlen(kek));
-
-	return 0;
+void pack_update_temperatures_all(SPI_HandleTypeDef *spi, uint8_t *temps) {
+	ltc6813_read_all_temps(spi, temps);
 }
 
 /**
@@ -174,7 +161,6 @@ void pack_update_current(ER_INT16_T *current, error_t *error) {
 	current->value += 100;
 
 	if (current->value > PACK_MAX_CURRENT) {
-		// error_add()
 		error_set(ERROR_OVER_CURRENT, &current->error, HAL_GetTick());
 	} else {
 		error_unset(ERROR_OVER_CURRENT, &current->error);

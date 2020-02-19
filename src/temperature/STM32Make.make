@@ -55,9 +55,11 @@ Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c \
 Src/main.c \
+Src/pct2075.c \
 Src/stm32f4xx_hal_msp.c \
 Src/stm32f4xx_it.c \
-Src/system_stm32f4xx.c
+Src/system_stm32f4xx.c \
+Src/temperature.c
 
 
 CPP_SOURCES = \

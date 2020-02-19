@@ -78,24 +78,14 @@ void UART_Error_Callback(void);
 #define CUR_HIGH_GPIO_Port GPIOC
 #define LTC_CS_Pin GPIO_PIN_4
 #define LTC_CS_GPIO_Port GPIOA
-#define ADCHV_CS_Pin GPIO_PIN_4
-#define ADCHV_CS_GPIO_Port GPIOC
-#define PRECHARGE_END_Pin GPIO_PIN_5
-#define PRECHARGE_END_GPIO_Port GPIOC
+
 #define TS_ON_Pin GPIO_PIN_12
 #define TS_ON_GPIO_Port GPIOB
 #define BMS_Fault_Pin GPIO_PIN_13
 #define BMS_Fault_GPIO_Port GPIOB
 #define IMD_Pin GPIO_PIN_14
 #define IMD_GPIO_Port GPIOB
-#define FB_FROM_TSMS_Pin GPIO_PIN_15
-#define FB_FROM_TSMS_GPIO_Port GPIOB
-#define FB_TO_TSMS_Pin GPIO_PIN_6
-#define FB_TO_TSMS_GPIO_Port GPIOC
-#define FB_FROM_SD_Pin GPIO_PIN_7
-#define FB_FROM_SD_GPIO_Port GPIOC
-#define FB_RESET_BTN_Pin GPIO_PIN_8
-#define FB_RESET_BTN_GPIO_Port GPIOC
+
 #define LED_1_Pin GPIO_PIN_9
 #define LED_1_GPIO_Port GPIOC
 #define LED_2_Pin GPIO_PIN_8
@@ -110,6 +100,9 @@ void UART_Error_Callback(void);
 #define CARD_OK_GPIO_Port GPIOC
 #define CHARGE_Pin GPIO_PIN_11
 #define CHARGE_GPIO_Port GPIOC
+#define WC_EEPROM_Pin GPIO_PIN_5
+#define WC_EEPROM_GPIO_Port GPIOB
+
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
