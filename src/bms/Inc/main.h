@@ -78,12 +78,14 @@ void UART_Error_Callback(void);
 #define CUR_HIGH_GPIO_Port GPIOC
 #define LTC_CS_Pin GPIO_PIN_4
 #define LTC_CS_GPIO_Port GPIOA
+
 #define TS_ON_Pin GPIO_PIN_12
 #define TS_ON_GPIO_Port GPIOB
 #define BMS_Fault_Pin GPIO_PIN_13
 #define BMS_Fault_GPIO_Port GPIOB
 #define IMD_Pin GPIO_PIN_14
 #define IMD_GPIO_Port GPIOB
+
 #define LED_1_Pin GPIO_PIN_9
 #define LED_1_GPIO_Port GPIOC
 #define LED_2_Pin GPIO_PIN_8
@@ -100,6 +102,7 @@ void UART_Error_Callback(void);
 #define CHARGE_GPIO_Port GPIOC
 #define WC_EEPROM_Pin GPIO_PIN_5
 #define WC_EEPROM_GPIO_Port GPIOB
+
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

@@ -16,6 +16,7 @@
         "USE_HAL_DRIVER"
       ],
       "compilerPath": "/sbin/gcc",
+
       "cStandard": "c11",
       "cppStandard": "c++11"
     }
