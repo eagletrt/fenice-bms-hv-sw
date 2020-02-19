@@ -23,7 +23,10 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <temperature.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -33,11 +36,6 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define TXBUFFERSIZE 3
-#define RXBUFFERSIZE TXBUFFERSIZE
-
-#define MASTER_REQ_READ 0x12
-#define MASTER_REQ_WRITE 0x34
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -47,13 +45,20 @@
 
 /* Private variables ---------------------------------------------------------*/
 I2C_HandleTypeDef hi2c1;
+I2C_HandleTypeDef hi2c2;
 
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-uint8_t data[255];
-uint8_t offset = 0;
-uint8_t first = 0;
+uint8_t matrix_i = 0;
+uint16_t temp_matrix[TEMP_SENSOR_COUNT][TEMP_SAMPLE_COUNT] = {0};
+uint8_t temps[TEMP_SENSOR_COUNT] = {0};
+uint8_t max[2] = {0, 0};
+uint8_t min[2] = {UINT8_MAX, UINT8_MAX};
+
+uint32_t temp_timer = 0;
+
+uint8_t rx;
 uint8_t flag = 0;
 /* USER CODE END PV */
 
@@ -62,8 +67,10 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_I2C2_Init(void);
 static void MX_NVIC_Init(void);
 /* USER CODE BEGIN PFP */
+void get_temp_maxmin();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -101,29 +108,51 @@ int main(void) {
 	MX_GPIO_Init();
 	MX_I2C1_Init();
 	MX_USART2_UART_Init();
+	MX_I2C2_Init();
 
 	/* Initialize interrupts */
 	MX_NVIC_Init();
 	/* USER CODE BEGIN 2 */
+
 	/* USER CODE END 2 */
 
 	/* Infinite loop */
 	/* USER CODE BEGIN WHILE */
-
-	/* USER CODE END WHILE */
-
-	/* USER CODE BEGIN 3 */
-
-	// HAL_I2C_Slave_Receive_IT(&hi2c1, data, 1);
-	// HAL_I2C_Slave_Seq_Receive_IT(&hi2c1, data, 1, I2C_FIRST_FRAME);
 	HAL_I2C_EnableListen_IT(&hi2c1);
 	while (1) {
+		/* USER CODE END WHILE */
+
+		/* USER CODE BEGIN 3 */
+		if (HAL_GetTick() - temp_timer >= TEMP_INTERVAL) {
+			temp_timer = HAL_GetTick();
+
+			I2C_HandleTypeDef *buses[TEMP_BUS_COUNT] = {&hi2c2};
+			temperature_read(buses, temp_matrix[matrix_i++]);
+
+			if (matrix_i == TEMP_SAMPLE_COUNT) {
+				matrix_i = 0;
+
+				// Compute average
+				for (uint8_t sens = 0; sens < TEMP_SENSOR_COUNT; sens++) {
+					temps[sens] = 0;
+					for (uint8_t sample = 0; sample < TEMP_SAMPLE_COUNT;
+						 sample++) {
+						temps[sens] += temp_matrix[sens][sample];
+						temp_matrix[sens][sample] = 0;
+					}
+					temps[sens] /= TEMP_SAMPLE_COUNT;
+				}
+
+				temperature_get_extremes(temps, min, max);
+			}
+		}
+
 		if (flag == 1) {
 			flag = 0;
-			HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 
-			HAL_UART_Transmit(&huart2, data, RXBUFFERSIZE, 100);
-			// HAL_I2C_Slave_Seq_Receive_IT(&hi2c1, data, 1, I2C_FIRST_FRAME);
+			char k[255];
+			sprintf(k, "%d %d %d %d\r\n", max[0], max[1], min[0], min[1]);
+			HAL_UART_Transmit(&huart2, (uint8_t *)k, strlen(k), 10);
 		}
 	}
 	/* USER CODE END 3 */
@@ -202,12 +231,42 @@ static void MX_I2C1_Init(void) {
 	hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
 	hi2c1.Init.OwnAddress2 = 0;
 	hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
-	hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_ENABLE;
+	hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
 	if (HAL_I2C_Init(&hi2c1) != HAL_OK) {
 		Error_Handler();
 	}
 	/* USER CODE BEGIN I2C1_Init 2 */
 	/* USER CODE END I2C1_Init 2 */
+}
+
+/**
+ * @brief I2C2 Initialization Function
+ * @param None
+ * @retval None
+ */
+static void MX_I2C2_Init(void) {
+	/* USER CODE BEGIN I2C2_Init 0 */
+
+	/* USER CODE END I2C2_Init 0 */
+
+	/* USER CODE BEGIN I2C2_Init 1 */
+
+	/* USER CODE END I2C2_Init 1 */
+	hi2c2.Instance = I2C2;
+	hi2c2.Init.ClockSpeed = 400000;
+	hi2c2.Init.DutyCycle = I2C_DUTYCYCLE_2;
+	hi2c2.Init.OwnAddress1 = 0;
+	hi2c2.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+	hi2c2.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+	hi2c2.Init.OwnAddress2 = 0;
+	hi2c2.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+	hi2c2.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+	if (HAL_I2C_Init(&hi2c2) != HAL_OK) {
+		Error_Handler();
+	}
+	/* USER CODE BEGIN I2C2_Init 2 */
+
+	/* USER CODE END I2C2_Init 2 */
 }
 
 /**
@@ -271,46 +330,45 @@ static void MX_GPIO_Init(void) {
 }
 
 /* USER CODE BEGIN 4 */
+
+void fourtemps_threebytes(uint8_t temps[4], uint8_t out[3]) {
+	out[0] = temps[0] << 2 | (temps[1] & 0b00111111) >> 4;
+	out[1] = temps[1] << 4 | (temps[2] & 0b00111111) >> 2;
+	out[2] = temps[2] << 6 | (temps[3] & 0b00111111);
+}
+
 void HAL_I2C_ListenCpltCallback(I2C_HandleTypeDef *hi2c) {
-	first = 1;
 	flag = 1;
-	HAL_I2C_EnableListen_IT(hi2c);  // slave is ready again
+	HAL_I2C_EnableListen_IT(hi2c);	// slave is ready again
+	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 }
 
 void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection,
 						  uint16_t AddrMatchCode) {
-	if (TransferDirection == I2C_DIRECTION_TRANSMIT) {
-		if (first) {
-			HAL_I2C_Slave_Seq_Receive_IT(hi2c, &offset, 1, I2C_NEXT_FRAME);
-		} else {
-			HAL_I2C_Slave_Seq_Receive_IT(hi2c, &data[offset], 1,
-										 I2C_NEXT_FRAME);
-		}
-	} else {
-		uint8_t tx[3] = {0xA, 0xB, 0xC};
-		HAL_I2C_Slave_Seq_Transmit_IT(hi2c, tx, 3, I2C_LAST_FRAME);
+	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
 
-		HAL_UART_Transmit(&huart2, (uint8_t *)"tx\r\n", 4, 10);
+	if (TransferDirection == I2C_DIRECTION_TRANSMIT) {
+		HAL_I2C_Slave_Seq_Receive_IT(hi2c, &rx, 1, I2C_NEXT_FRAME);
+	} else {
+		uint8_t tx[3] = {0};
+		if (rx < TEMP_SENSOR_COUNT / 4) {
+			fourtemps_threebytes(temps + rx * 4, tx);
+
+		} else if (rx == 0xFF) {
+			uint8_t tmp[4] = {max[0], max[1], min[0], min[1]};
+			fourtemps_threebytes(tmp, tx);
+		}
+		HAL_I2C_Slave_Seq_Transmit_IT(hi2c, tx, 3, I2C_LAST_FRAME);
 	}
 }
 
 void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c) {
-	if (first) {
-		first = 0;
-	} else {
-		offset++;
-	}
-	HAL_I2C_Slave_Seq_Receive_IT(hi2c, data, 1, I2C_NEXT_FRAME);
+	HAL_I2C_Slave_Seq_Receive_IT(hi2c, &rx, 1, I2C_FIRST_FRAME);
 }
 
 void HAL_I2C_SlaveTxCpltCallback(I2C_HandleTypeDef *hi2c) {}
 
 void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c) {
-	if (HAL_I2C_GetError(hi2c) == HAL_I2C_ERROR_AF) {
-		offset--;  // transaction terminated by master
-	} else {
-	}
-
 	HAL_UART_Transmit(&huart2, (uint8_t *)"ERROR", 5, 10);
 }
 
@@ -322,8 +380,8 @@ void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c) {
  */
 void Error_Handler(void) {
 	/* USER CODE BEGIN Error_Handler_Debug */
-	/* User can add his own implementation to report the HAL error return
-	 * state
+	/* User can add his own implementation to report the HAL error
+	 * return state
 	 */
 
 	/* USER CODE END Error_Handler_Debug */
@@ -339,9 +397,9 @@ void Error_Handler(void) {
  */
 void assert_failed(uint8_t *file, uint32_t line) {
 	/* USER CODE BEGIN 6 */
-	/* User can add his own implementation to report the file name and line
-	   number, tex: printf("Wrong parameters value: file %s on line %d\r\n",
-	   file, line) */
+	/* User can add his own implementation to report the file name and
+	   line number, tex: printf("Wrong parameters value: file %s on line
+	   %d\r\n", file, line) */
 	/* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */

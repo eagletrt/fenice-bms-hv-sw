@@ -13,8 +13,11 @@
 #include "bal.h"
 #include "error.h"
 #include "pack.h"
+#include "stm32f4xx_hal.h"
 
 typedef struct {
+	SPI_HandleTypeDef *hspi;
+
 	PACK_T pack;
 
 	ERROR_STATUS_T can_error;

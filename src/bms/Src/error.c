@@ -40,34 +40,6 @@ void error_init(ERROR_STATUS_T *error) {
 	error->time_stamp = 0;
 }
 
-void er_node_init(er_node_t *node, void *ref, error_t type,
-				  uint32_t timestamp) {
-	error_init(&node->status);
-	error_set(type, &node->status, timestamp);
-	node->ref = ref;
-	node->next = NULL;
-}
-
-bool error_add(er_node_t *head, void *ref, error_t type, uint32_t timestamp) {
-	er_node_t *current = head;
-	// TODO: Check first element empty
-
-	while (current->next != NULL) {
-		current = current->next;
-	}
-
-	current->next = malloc(sizeof(er_node_t));
-	if (current->next == NULL) {
-		return false;
-	}
-
-	er_node_init(current->next, ref, type, timestamp);
-
-	return true;
-}
-
-void error_remove(void) {}
-
 /**
  * @brief	Activates an error.
  *

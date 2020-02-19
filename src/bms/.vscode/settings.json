@@ -13,6 +13,15 @@
 		"stm32f4xx_hal.h": "c",
 		"fenice_config.h": "c",
 		"pack.h": "c",
-		"tuple": "c"
+		"tuple": "c",
+		"array": "c",
+		"string": "c",
+		"string_view": "c",
+		"chrono": "c",
+		"random": "c",
+		"limits": "c",
+		"valarray": "c",
+		"cli.h": "c",
+		"main.h": "c"
 	}
 }
