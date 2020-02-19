@@ -21,7 +21,7 @@ typedef struct {
 	uint16_t voltages[PACK_MODULE_COUNT]; /*!< [mV * 10] Cell voltages */
 	ERROR_STATUS_T voltage_errors[PACK_MODULE_COUNT];
 
-	uint8_t temperatures[LTC6813_TEMP_COUNT * LTC6813_COUNT]; /*!< [°C] */
+	uint8_t temperatures[TEMP_SENSOR_COUNT * LTC6813_COUNT]; /*!< [°C] */
 	ERROR_STATUS_T temperature_errors[PACK_MODULE_COUNT];
 
 	uint32_t total_voltage; /*!< [mV * 10] Total pack voltage */

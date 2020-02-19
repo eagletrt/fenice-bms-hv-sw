@@ -12,6 +12,7 @@
 #define BAL_H
 
 #include <inttypes.h>
+#include <stdbool.h>
 
 #include "../../fenice_config.h"
 

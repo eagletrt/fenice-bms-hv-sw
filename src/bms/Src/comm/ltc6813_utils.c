@@ -33,9 +33,9 @@ uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *spi, LTC6813_T ltc[],
 	uint16_t cmd_pec;
 	uint8_t data[8];
 
-	cmd[0] = 0;  // Broadcast
+	cmd[0] = 0;	 // Broadcast
 
-	uint8_t count = 0;  // volts[] index
+	uint8_t count = 0;	// volts[] index
 	for (uint8_t reg = 0; reg < LTC6813_REG_COUNT; reg++) {
 		cmd[1] = (uint8_t)rdcv_cmd[reg];
 		cmd_pec = ltc6813_pec15(2, cmd);
@@ -166,7 +166,7 @@ void ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, uint8_t max[2],
 void ltc6813_read_all_temps(SPI_HandleTypeDef *hspi, uint8_t *temps) {
 	uint8_t count = 0;
 
-	for (uint8_t i = 0; i < LTC6813_TEMP_COUNT / 4; i++) {
+	for (uint8_t i = 0; i < TEMP_SENSOR_COUNT / 4; i++) {
 		uint8_t recv[8] = {0};
 		ltc6813_wakeup_idle(hspi, false);
 
@@ -269,8 +269,8 @@ void ltc6813_set_balancing(SPI_HandleTypeDef *hspi, uint8_t *indexes,
 
 	for (uint8_t i = 0; i < LTC6813_COUNT; i++) {
 		// cfgbr[i][1] += 0b00001000; // set DTMEN
-		cfgar[i][0] += 0b00000010;  // set DTEN
-		cfgar[i][5] += dcto << 4;   // Set timer
+		cfgar[i][0] += 0b00000010;	// set DTEN
+		cfgar[i][5] += dcto << 4;	// Set timer
 
 		// For each LTC we set the correct cfgr
 		ltc6813_set_dcc(indexes, cfgar[i], cfgbr[i]);

@@ -9,9 +9,11 @@
  */
 
 #include "cli.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "bal.h"
 #include "pack.h"
 
@@ -61,10 +63,10 @@ void _cli_temps_all(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 					char *out) {
 	out[0] = '\0';
 
-	uint8_t temps[LTC6813_TEMP_COUNT * LTC6813_COUNT];
+	uint8_t temps[TEMP_SENSOR_COUNT * LTC6813_COUNT];
 	pack_update_temperatures_all(data->hspi, temps);
 
-	for (uint8_t i = 0; i < LTC6813_TEMP_COUNT * LTC6813_COUNT; i++) {
+	for (uint8_t i = 0; i < TEMP_SENSOR_COUNT * LTC6813_COUNT; i++) {
 		sprintf(out + strlen(out), "[%3u] %2uc ", i, temps[i]);
 
 		if ((i + 1) % 9 == 0) {
@@ -160,7 +162,7 @@ void cli_init(cli_t *cli, UART_HandleTypeDef *uart) {
 
 	cli_state_func_t *temp[N_COMMANDS] = {
 		&_cli_volts,  &_cli_volts_all, &_cli_temps, &_cli_temps_all,
-		&_cli_status, &_cli_balance,   &_cli_help,  &_cli_taba};
+		&_cli_status, &_cli_balance,   &_cli_help,	&_cli_taba};
 	memcpy(cli->states, temp, sizeof(cli->states));
 
 	LL_USART_EnableIT_RXNE(cli->uart->Instance);
@@ -214,7 +216,7 @@ void cli_handle_escape() {
 		uint8_t h_i;  // To be displayed history index
 
 		if (cli.rx.buffer[cli.rx.index] == 'A' &&
-			cli.history.showing > 0) {  // UP
+			cli.history.showing > 0) {	// UP
 
 			h_i = cli.history.showing - 1;
 		} else if (cli.rx.buffer[cli.rx.index] == 'B' &&
@@ -256,7 +258,7 @@ void cli_loop(state_global_data_t *data, BMS_STATE_T state) {
 
 		cli.rx.index = cli_clean(cli.rx.buffer);
 
-		if (cli.rx.index > 0) {  // Add to history
+		if (cli.rx.index > 0) {	 // Add to history
 
 			cli.history.list = realloc(
 				cli.history.list, (cli.history.index + 1) * sizeof(buffer_t));

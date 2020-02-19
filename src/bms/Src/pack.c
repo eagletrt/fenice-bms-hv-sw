@@ -7,11 +7,13 @@
  */
 
 #include "pack.h"
+
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stm32f4xx_hal.h>
 #include <string.h>
+
 #include "bal.h"
 #include "cli.h"
 
@@ -46,7 +48,7 @@ void pack_init(PACK_T *pack) {
 		error_init(&ltc[i].error);
 	}
 
-	for (i = 0; i < PACK_MODULE_COUNT; i++) {
+	for (i = 0; i < TEMP_SENSOR_COUNT * LTC6813_COUNT; i++) {
 		pack->voltages[i] = 0;
 		error_init(&pack->voltage_errors[i]);
 
