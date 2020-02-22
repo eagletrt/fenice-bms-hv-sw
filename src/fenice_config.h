@@ -85,7 +85,7 @@
 /**
  * Temperature measurement interval (ms)
  */
-#define TEMP_INTERVAL 100
+#define TEMP_READ_INTERVAL 100
 
 /**
  * How many temperatures to average together
@@ -101,7 +101,6 @@
  * How many sensor strips per bus
  */
 #define TEMP_STRIPS_PER_BUS 1
-I2C_S
 /**
  * How many sensors are on a strip
  */
