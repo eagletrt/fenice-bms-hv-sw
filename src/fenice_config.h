@@ -85,7 +85,7 @@
 /**
  * Temperature measurement interval (ms)
  */
-#define TEMP_INTERVAL 100
+#define TEMP_READ_INTERVAL 100
 
 /**
  * How many temperatures to average together
