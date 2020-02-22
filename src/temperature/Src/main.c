@@ -50,11 +50,10 @@ I2C_HandleTypeDef hi2c2;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-uint8_t matrix_i = 0;
-uint16_t temp_matrix[TEMP_SENSOR_COUNT][TEMP_SAMPLE_COUNT] = {0};
-uint8_t temps[TEMP_SENSOR_COUNT] = {0};
-uint8_t max[2] = {0, 0};
-uint8_t min[2] = {UINT8_MAX, UINT8_MAX};
+uint8_t temp_buffer_i = 0;
+uint16_t temp_buffer[TEMP_SENSOR_COUNT][TEMP_SAMPLE_COUNT] = {0};
+
+temperature_t temps = {.values = {0}, .min = {UINT8_MAX}, .max = {0}};
 
 uint32_t temp_timer = 0;
 
@@ -123,27 +122,20 @@ int main(void) {
 		/* USER CODE END WHILE */
 
 		/* USER CODE BEGIN 3 */
-		if (HAL_GetTick() - temp_timer >= TEMP_INTERVAL) {
+		// Read temperatures
+		if (HAL_GetTick() - temp_timer >= TEMP_READ_INTERVAL) {
 			temp_timer = HAL_GetTick();
 
 			I2C_HandleTypeDef *buses[TEMP_BUS_COUNT] = {&hi2c2};
-			temperature_read(buses, temp_matrix[matrix_i++]);
+			temperature_read_sample(buses, temp_buffer[temp_buffer_i++]);
 
-			if (matrix_i == TEMP_SAMPLE_COUNT) {
-				matrix_i = 0;
+			if (temp_buffer_i == TEMP_SAMPLE_COUNT) {
+				temp_buffer_i = 0;
 
 				// Compute average
-				for (uint8_t sens = 0; sens < TEMP_SENSOR_COUNT; sens++) {
-					temps[sens] = 0;
-					for (uint8_t sample = 0; sample < TEMP_SAMPLE_COUNT;
-						 sample++) {
-						temps[sens] += temp_matrix[sens][sample];
-						temp_matrix[sens][sample] = 0;
-					}
-					temps[sens] /= TEMP_SAMPLE_COUNT;
-				}
+				temperature_get_average(temp_buffer, temps.values);
 
-				temperature_get_extremes(temps, min, max);
+				temperature_get_extremes(temps.values, temps.min, temps.max);
 			}
 		}
 
@@ -151,7 +143,8 @@ int main(void) {
 			flag = 0;
 
 			char k[255];
-			sprintf(k, "%d %d %d %d\r\n", max[0], max[1], min[0], min[1]);
+			sprintf(k, "%d %d %d %d\r\n", temps.max[0], temps.max[1],
+					temps.min[0], temps.min[1]);
 			HAL_UART_Transmit(&huart2, (uint8_t *)k, strlen(k), 10);
 		}
 	}
@@ -352,10 +345,11 @@ void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection,
 	} else {
 		uint8_t tx[3] = {0};
 		if (rx < TEMP_SENSOR_COUNT / 4) {
-			fourtemps_threebytes(temps + rx * 4, tx);
+			fourtemps_threebytes(temps.values + rx * 4, tx);
 
 		} else if (rx == 0xFF) {
-			uint8_t tmp[4] = {max[0], max[1], min[0], min[1]};
+			uint8_t tmp[4] = {temps.max[0], temps.max[1], temps.min[0],
+							  temps.min[1]};
 			fourtemps_threebytes(tmp, tx);
 		}
 		HAL_I2C_Slave_Seq_Transmit_IT(hi2c, tx, 3, I2C_LAST_FRAME);
