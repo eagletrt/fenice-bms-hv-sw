@@ -333,6 +333,7 @@ int main(void) {
 	/* Initialize interrupts */
 	MX_NVIC_Init();
 	/* USER CODE BEGIN 2 */
+
 	cli_init(&cli, &huart2);
 
 	data.hspi = &hspi1;
@@ -424,6 +425,20 @@ static void MX_NVIC_Init(void) {
 	/* I2C1_ER_IRQn interrupt configuration */
 	HAL_NVIC_SetPriority(I2C1_ER_IRQn, 0, 0);
 	HAL_NVIC_EnableIRQ(I2C1_ER_IRQn);
+}
+
+/**
+  * @brief NVIC Configuration.
+  * @retval None
+  */
+static void MX_NVIC_Init(void)
+{
+  /* I2C1_EV_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(I2C1_EV_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(I2C1_EV_IRQn);
+  /* I2C1_ER_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(I2C1_ER_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(I2C1_ER_IRQn);
 }
 
 /* USER CODE BEGIN 4 */
