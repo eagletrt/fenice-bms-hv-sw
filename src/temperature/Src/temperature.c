@@ -10,8 +10,8 @@
 
 #include "pct2075.h"
 
-void temperature_read(I2C_HandleTypeDef *hi2c[TEMP_BUS_COUNT],
-					  uint16_t *temps) {
+void temperature_read_sample(I2C_HandleTypeDef *hi2c[TEMP_BUS_COUNT],
+							 uint16_t *buffer) {
 	uint8_t count = 0;
 
 	// For each bus, for each strip, read all sensors
@@ -19,10 +19,24 @@ void temperature_read(I2C_HandleTypeDef *hi2c[TEMP_BUS_COUNT],
 		for (uint8_t strip = 0; strip < TEMP_STRIPS_PER_BUS; strip++) {
 			for (uint8_t sens = 0; sens < TEMP_SENSORS_PER_STRIP; sens++) {
 				// Sum strip to change LSB of address coding
-				temps[count++] = pct2075_read(
+				buffer[count++] = pct2075_read(
 					hi2c[bus], TEMP_SENSOR_ADDRESS_CODING[sens] + strip);
 			}
 		}
+	}
+}
+
+void temperature_get_average(
+	uint16_t buffer[TEMP_SENSOR_COUNT][TEMP_SAMPLE_COUNT],
+	uint8_t temps[TEMP_SENSOR_COUNT]) {
+	for (uint8_t sens = 0; sens < TEMP_SENSOR_COUNT; sens++) {
+		temps[sens] = 0;
+
+		for (uint8_t sample = 0; sample < TEMP_SAMPLE_COUNT; sample++) {
+			temps[sens] += buffer[sens][sample];
+			buffer[sens][sample] = 0;
+		}
+		temps[sens] /= TEMP_SAMPLE_COUNT;
 	}
 }
 
