@@ -46,8 +46,8 @@
 
 /* USER CODE BEGIN PV */
 state_func_t *const state_table[BMS_NUM_STATES] = {
-	do_state_init, do_state_idle,	do_state_precharge,
-	do_state_on,   do_state_charge, do_state_halt};
+	do_state_init, do_state_idle, do_state_precharge,
+	do_state_on, do_state_charge, do_state_halt};
 
 transition_func_t *const transition_table[BMS_NUM_STATES][BMS_NUM_STATES] = {
 	{NULL, to_idle, to_precharge, NULL, NULL, to_halt},	 // from init
