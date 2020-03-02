@@ -23,6 +23,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -132,6 +133,15 @@ int main(void) {
 			if (temp_buffer_i == TEMP_SAMPLE_COUNT) {
 				temp_buffer_i = 0;
 
+				char k[255] = {'\0'};
+				for (uint8_t i = 0; i < TEMP_SENSORS_PER_STRIP; i++) {
+					sprintf(k + strlen(k), "%d ", temps.values[i]);
+				}
+
+				sprintf(k + strlen(k), "\r\n ");
+
+				HAL_UART_Transmit(&huart2, (uint8_t *)k, strlen(k), 100);
+
 				// Compute average
 				temperature_get_average(temp_buffer, temps.values);
 
@@ -142,10 +152,10 @@ int main(void) {
 		if (flag == 1) {
 			flag = 0;
 
-			char k[255];
+			/* char k[255];
 			sprintf(k, "%d %d %d %d\r\n", temps.max[0], temps.max[1],
 					temps.min[0], temps.min[1]);
-			HAL_UART_Transmit(&huart2, (uint8_t *)k, strlen(k), 10);
+			HAL_UART_Transmit(&huart2, (uint8_t *)k, strlen(k), 10);*/
 		}
 	}
 	/* USER CODE END 3 */
@@ -344,7 +354,7 @@ void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection,
 		HAL_I2C_Slave_Seq_Receive_IT(hi2c, &rx, 1, I2C_NEXT_FRAME);
 	} else {
 		uint8_t tx[3] = {0};
-		if (rx < TEMP_SENSOR_COUNT / 4) {
+		if (rx < ceil((float)TEMP_SENSOR_COUNT / 4)) {
 			fourtemps_threebytes(temps.values + rx * 4, tx);
 
 		} else if (rx == 0xFF) {
