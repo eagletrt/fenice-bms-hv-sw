@@ -85,9 +85,9 @@ void pack_update_temperatures(SPI_HandleTypeDef *spi, PACK_T *pack) {
 	pack->avg_temperature = 0;
 	pack->max_temperature = 0;
 	pack->min_temperature = UINT8_MAX;
-	for (uint8_t i = 0; i < LTC6813_COUNT; i++) {
-		ltc6813_read_temperatures(spi, &max[i * 2], &min[i * 2]);
+	ltc6813_read_temperatures(spi, max, min);
 
+	for (uint8_t i = 0; i < LTC6813_COUNT; i++) {
 		pack->avg_temperature += max[i * 2] + max[i * 2 + 1];
 		pack->avg_temperature += min[i * 2] + min[i * 2 + 1];
 

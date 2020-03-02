@@ -9,6 +9,8 @@
 
 #include "comm/ltc6813_utils.h"
 
+#include <math.h>
+
 #include "main.h"
 
 /**
@@ -137,7 +139,7 @@ void ltc6813_temp_get(SPI_HandleTypeDef *hspi, uint8_t address) {
  */
 void ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, uint8_t max[2],
 							   uint8_t min[2]) {
-	uint8_t recv[8] = {0};
+	uint8_t recv[8 * LTC6813_COUNT] = {0};
 
 	ltc6813_wakeup_idle(hspi, false);
 
@@ -150,25 +152,27 @@ void ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, uint8_t max[2],
 
 	ltc6813_rdcomm_i2c(hspi, recv);
 
-	uint8_t d0 = (recv[0] << 4) | (recv[1] >> 4);
-	uint8_t d1 = (recv[2] << 4) | (recv[3] >> 4);
-	uint8_t d2 = (recv[4] << 4) | (recv[5] >> 4);
+	for (uint8_t i = 0; i < LTC6813_COUNT; i++) {
+		uint8_t d0 = (recv[0 + i * TEMP_SENSOR_COUNT] << 4) | (recv[1 + i * TEMP_SENSOR_COUNT] >> 4);
+		uint8_t d1 = (recv[2 + i * TEMP_SENSOR_COUNT] << 4) | (recv[3 + i * TEMP_SENSOR_COUNT] >> 4);
+		uint8_t d2 = (recv[4 + i * TEMP_SENSOR_COUNT] << 4) | (recv[5 + i * TEMP_SENSOR_COUNT] >> 4);
 
-	max[0] = d0 >> 2;
-	max[1] = (d0 & 0b00000011) << 4 | d1 >> 4;
+		max[i * 2] = d0 >> 2;
+		max[1 + i * 2] = (d0 & 0b00000011) << 4 | d1 >> 4;
 
-	min[0] = (d1 & 0b00001111) << 2 | d2 >> 6;
-	min[1] = d2 & 0b00111111;
+		min[i * 2] = (d1 & 0b00001111) << 2 | d2 >> 6;
+		min[1 + i * 2] = d2 & 0b00111111;
+	}
 }
 
 void ltc6813_read_all_temps(SPI_HandleTypeDef *hspi, uint8_t *temps) {
 	uint8_t count = 0;
+	ltc6813_wakeup_idle(hspi, false);
 
-	for (uint8_t i = 0; i < TEMP_SENSOR_COUNT / 4; i++) {
-		uint8_t recv[8] = {0};
-		ltc6813_wakeup_idle(hspi, false);
+	for (uint8_t sens = 0; sens < ceil((float)TEMP_SENSOR_COUNT / 4); sens++) {
+		uint8_t recv[8 * LTC6813_COUNT] = {0};
 
-		ltc6813_temp_set_register(hspi, LTC6813_TEMP_ADDRESS, i);
+		ltc6813_temp_set_register(hspi, LTC6813_TEMP_ADDRESS, sens);
 		ltc6813_stcomm_i2c(hspi, 3);
 
 		///// read
@@ -177,14 +181,16 @@ void ltc6813_read_all_temps(SPI_HandleTypeDef *hspi, uint8_t *temps) {
 
 		ltc6813_rdcomm_i2c(hspi, recv);
 
-		uint8_t d0 = (recv[0] << 4) | (recv[1] >> 4);
-		uint8_t d1 = (recv[2] << 4) | (recv[3] >> 4);
-		uint8_t d2 = (recv[4] << 4) | (recv[5] >> 4);
+		for (uint8_t ltc = 0; ltc < LTC6813_COUNT; ltc++) {
+			uint8_t d0 = (recv[ltc * TEMP_SENSOR_COUNT] << 4) | (recv[1 + ltc * TEMP_SENSOR_COUNT] >> 4);
+			uint8_t d1 = (recv[2 + ltc * TEMP_SENSOR_COUNT] << 4) | (recv[3 + ltc * TEMP_SENSOR_COUNT] >> 4);
+			uint8_t d2 = (recv[4 + ltc * TEMP_SENSOR_COUNT] << 4) | (recv[5 + ltc * TEMP_SENSOR_COUNT] >> 4);
 
-		temps[count++] = d0 >> 2;
-		temps[count++] = (d0 & 0b00000011) << 4 | d1 >> 4;
-		temps[count++] = (d1 & 0b00001111) << 2 | d2 >> 6;
-		temps[count++] = d2 & 0b00111111;
+			temps[count++] = d0 >> 2;
+			temps[count++] = (d0 & 0b00000011) << 4 | d1 >> 4;
+			temps[count++] = (d1 & 0b00001111) << 2 | d2 >> 6;
+			temps[count++] = d2 & 0b00111111;
+		}
 	}
 }
 
