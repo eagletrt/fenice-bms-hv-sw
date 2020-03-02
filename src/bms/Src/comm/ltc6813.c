@@ -8,6 +8,8 @@
 
 #include "comm/ltc6813.h"
 
+#include "main.h"
+
 // Set to 1 to emulate the LTC daisy chain
 #define LTC6813_EMU 0
 
@@ -50,8 +52,8 @@ void _ltc6813_adcv(SPI_HandleTypeDef *spi, bool dcp) {
 	cmd[2] = (uint8_t)(cmd_pec >> 8);
 	cmd[3] = (uint8_t)(cmd_pec);
 
-	ltc6813_wakeup_idle(spi, false);
 	ltc6813_enable_cs(spi, CS_LTC_GPIO_Port, CS_LTC_Pin);
+	ltc6813_wakeup_idle(spi, false);
 
 	HAL_SPI_Transmit(spi, cmd, 4, 100);
 
@@ -169,7 +171,7 @@ void ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool is_a,
 }
 
 void ltc6813_wrcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t data[8]) {
-	uint8_t cmd[4] = {0b00000111, 0b00100001};  // WRCOMM
+	uint8_t cmd[4] = {0b00000111, 0b00100001};	// WRCOMM
 	uint16_t cmd_pec = ltc6813_pec15(2, cmd);
 	cmd[2] = (uint8_t)(cmd_pec >> 8);
 	cmd[3] = (uint8_t)(cmd_pec);
@@ -181,7 +183,7 @@ void ltc6813_wrcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t data[8]) {
 }
 
 bool ltc6813_rdcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t data[8]) {
-	uint8_t cmd[4] = {0b00000111, 0b00100010};  // RDCOMM
+	uint8_t cmd[4] = {0b00000111, 0b00100010};	// RDCOMM
 
 	uint16_t cmd_pec = ltc6813_pec15(2, cmd);
 	cmd[2] = (uint8_t)(cmd_pec >> 8);
@@ -199,7 +201,7 @@ bool ltc6813_rdcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t data[8]) {
 }
 
 void ltc6813_stcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t length) {
-	uint8_t cmd[4] = {0b00000111, 0b00100011};  // STCOMM
+	uint8_t cmd[4] = {0b00000111, 0b00100011};	// STCOMM
 
 	uint16_t cmd_pec = ltc6813_pec15(2, cmd);
 	cmd[2] = (uint8_t)(cmd_pec >> 8);
@@ -238,7 +240,7 @@ void ltc6813_wakeup_idle(SPI_HandleTypeDef *hspi, bool apply_delay) {
  */
 uint16_t ltc6813_pec15(uint8_t len, uint8_t data[]) {
 	uint16_t remainder, address;
-	remainder = 16;  // PEC seed
+	remainder = 16;	 // PEC seed
 	for (int i = 0; i < len; i++) {
 		// calculate PEC table address
 		address = ((remainder >> 7) ^ data[i]) & 0xff;

@@ -161,8 +161,8 @@ void cli_init(cli_t *cli, UART_HandleTypeDef *uart) {
 	cli->history.list = (buffer_t *)malloc(sizeof(buffer_t));
 
 	cli_state_func_t *temp[N_COMMANDS] = {
-		&_cli_volts,  &_cli_volts_all, &_cli_temps, &_cli_temps_all,
-		&_cli_status, &_cli_balance,   &_cli_help,	&_cli_taba};
+		&_cli_volts, &_cli_volts_all, &_cli_temps, &_cli_temps_all,
+		&_cli_status, &_cli_balance, &_cli_help, &_cli_taba};
 	memcpy(cli->states, temp, sizeof(cli->states));
 
 	LL_USART_EnableIT_RXNE(cli->uart->Instance);
