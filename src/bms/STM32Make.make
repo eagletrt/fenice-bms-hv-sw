@@ -76,7 +76,6 @@ Src/pack.c \
 Src/spi.c \
 Src/stm32f4xx_hal_msp.c \
 Src/stm32f4xx_it.c \
-Src/sys.c \
 Src/system_stm32f4xx.c \
 Src/usart.c \
 Src/user_diskio.c

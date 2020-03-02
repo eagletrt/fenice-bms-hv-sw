@@ -9,6 +9,8 @@
 
 #include "comm/ltc6813_utils.h"
 
+#include "main.h"
+
 /**
  * @brief		Polls all the registers of the LTC6813 and updates the cell
  * array
@@ -71,8 +73,8 @@ uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *spi, uint16_t volts[]) {
 					// offset by register (3 slots) + offset by ltc (18 slots) + cell
 					uint8_t index = (reg * LTC6813_REG_CELL_COUNT) + (ltc * LTC6813_CELL_COUNT) + cell;
 
-					// (size of value) * count
-					volts[index] = ltc6813_convert_voltage(&data[2 * count]);
+					// (size of value) * cell
+					volts[index] = ltc6813_convert_voltage(&data[2 * cell]);
 
 					ltc6813_check_voltage(volts, count);
 					count++;

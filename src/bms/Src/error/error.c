@@ -7,7 +7,9 @@
  */
 
 #include "error/error.h"
+
 #include <stdlib.h>
+
 #include "error/list.h"
 
 /**
@@ -15,19 +17,17 @@
  * 	- 500ms for voltage and current
  * 	- 1s for temperatures
  */
-#define LTC6813_PEC_TIMEOUT_COUNT 0  // 5000
+#define LTC6813_PEC_TIMEOUT_COUNT 0	 // 5000
 #define CELL_UNDER_VOLTAGE_TIMEOUT_MS 500
 #define CELL_OVER_VOLTAGE_TIMEOUT_MS 500
 #define CELL_UNDER_TEMPERATURE_TIMEOUT_MS 1000
 #define CELL_OVER_TEMPERATURE_TIMEOUT_MS 1000
-#define OVER_CURRENT_TIMEOUT_MS 500  // 400
+#define OVER_CURRENT_TIMEOUT_MS 500	 // 400
 #define CAN_TIMEOUT_MS 1000
 
 /** @brief	Defines the timeout in count or time for each error type */
 error_limits_t timeout[ERROR_NUM_ERRORS] = {
-	{LTC6813_PEC_TIMEOUT_COUNT, 0},	{0, CELL_UNDER_VOLTAGE_TIMEOUT_MS},
-	{0, CELL_OVER_VOLTAGE_TIMEOUT_MS}, {0, CELL_OVER_TEMPERATURE_TIMEOUT_MS},
-	{0, OVER_CURRENT_TIMEOUT_MS},	  {0, CAN_TIMEOUT_MS}};
+	{LTC6813_PEC_TIMEOUT_COUNT, 0}, {0, CELL_UNDER_VOLTAGE_TIMEOUT_MS}, {0, CELL_OVER_VOLTAGE_TIMEOUT_MS}, {0, CELL_OVER_TEMPERATURE_TIMEOUT_MS}, {0, OVER_CURRENT_TIMEOUT_MS}, {0, CAN_TIMEOUT_MS}};
 
 er_node_t *er_list;
 
