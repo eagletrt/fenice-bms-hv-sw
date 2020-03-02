@@ -6,10 +6,10 @@
  * @author		Matteo Bonora [matteo.bonora@studenti.unitn.it]
  */
 
-#include "comm/ltc6813.h"
+#include "peripherals/ltc6813.h"
 
 // Set to 1 to emulate the LTC daisy chain
-#define LTC6813_EMU 0
+#define LTC6813_EMU 1
 
 uint8_t GPIO_CONFIG;
 
@@ -163,8 +163,8 @@ void ltc6813_set_balancing(SPI_HandleTypeDef *hspi, uint8_t *indexes,
 
 	for (uint8_t i = 0; i < LTC6813_COUNT; i++) {
 		// cfgbr[i][1] += 0b00001000; // set DTMEN
-		cfgar[i][0] += 0b00000010;  // set DTEN
-		cfgar[i][5] += dcto << 4;   // Set timer
+		cfgar[i][0] += 0b00000010;	// set DTEN
+		cfgar[i][5] += dcto << 4;	// Set timer
 
 		// For each LTC we set the correct cfgr
 		ltc6813_set_dcc(indexes, cfgar[i], cfgbr[i]);
@@ -177,7 +177,7 @@ void ltc6813_set_balancing(SPI_HandleTypeDef *hspi, uint8_t *indexes,
 
 void ltc6813_wrcomm_i2c_w(SPI_HandleTypeDef *hspi, uint8_t address,
 						  uint8_t *data) {
-	uint8_t cmd[4] = {0b00000111, 0b00100001};  // WRCOMM
+	uint8_t cmd[4] = {0b00000111, 0b00100001};	// WRCOMM
 
 	uint16_t cmd_pec = ltc6813_pec15(2, cmd);
 	cmd[2] = (uint8_t)(cmd_pec >> 8);
@@ -210,7 +210,7 @@ void ltc6813_wrcomm_i2c_w(SPI_HandleTypeDef *hspi, uint8_t address,
 }
 
 void ltc6813_wrcomm_i2c_r(SPI_HandleTypeDef *hspi, uint8_t address) {
-	uint8_t cmd[4] = {0b00000111, 0b00100001};  // WRCOMM
+	uint8_t cmd[4] = {0b00000111, 0b00100001};	// WRCOMM
 
 	uint16_t cmd_pec = ltc6813_pec15(2, cmd);
 	cmd[2] = (uint8_t)(cmd_pec >> 8);
@@ -244,7 +244,7 @@ void ltc6813_wrcomm_i2c_r(SPI_HandleTypeDef *hspi, uint8_t address) {
 }
 
 bool ltc6813_rdcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t data[8]) {
-	uint8_t cmd[4] = {0b00000111, 0b00100010};  // RDCOMM
+	uint8_t cmd[4] = {0b00000111, 0b00100010};	// RDCOMM
 
 	uint16_t cmd_pec = ltc6813_pec15(2, cmd);
 	cmd[2] = (uint8_t)(cmd_pec >> 8);
@@ -267,7 +267,7 @@ bool ltc6813_rdcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t data[8]) {
 }
 
 void ltc6813_stcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t length) {
-	uint8_t cmd[4] = {0b00000111, 0b00100011};  // STCOMM
+	uint8_t cmd[4] = {0b00000111, 0b00100011};	// STCOMM
 
 	uint16_t cmd_pec = ltc6813_pec15(2, cmd);
 	cmd[2] = (uint8_t)(cmd_pec >> 8);

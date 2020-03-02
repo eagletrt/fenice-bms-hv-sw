@@ -8,7 +8,6 @@
         "Drivers/STM32F4xx_HAL_Driver/Inc",
         "Drivers/STM32F4xx_HAL_Driver/Inc/Legacy",
         "Inc",
-        "Inc/comm",
         "Inc/peripherals",
         "Middlewares/Third_Party/FatFs/src"
       ],
@@ -16,7 +15,7 @@
         "STM32F446xx",
         "USE_HAL_DRIVER"
       ],
-      "compilerPath": "/usr/bin/gcc",
+      "compilerPath": "/sbin/gcc",
       "cStandard": "c11",
       "cppStandard": "c++11"
     }

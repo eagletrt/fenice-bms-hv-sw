@@ -11,6 +11,7 @@
 #define SI8902_H
 
 #include <inttypes.h>
+#include <stdbool.h>
 #include <stm32f4xx_hal.h>
 
 #include "main.h"
@@ -21,13 +22,15 @@
 static const uint8_t cnfg_0 = 0b11001011;
 
 typedef enum {
-	AIN0 = 0b00000000,
-	AIN1 = 0b00010000,
-	AIN2 = 0b00100000
-} MUX_CHANNEL;
+	SI8900_AIN0 = 0,
+	SI8900_AIN1 = 1,
+	SI8900_AIN2 = 2
+} SI8900_CHANNEL;
 
 bool si8900_init(UART_HandleTypeDef *hspi);
-void si8900_read_voltages(UART_HandleTypeDef *hspi, uint16_t ain[3]);
+bool si8900_read_channel(UART_HandleTypeDef *huart, SI8900_CHANNEL ch,
+						 uint16_t *voltage);
+void si8900_read_voltages(UART_HandleTypeDef *huart, uint16_t ain[3]);
 uint16_t si8900_convert_voltage(uint8_t adc_hl[2]);
 
 #endif

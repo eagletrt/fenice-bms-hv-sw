@@ -10,10 +10,11 @@
 #define PACK_H_
 
 #include <inttypes.h>
+
 #include "bal.h"
-#include "comm/ltc6813.h"
 #include "error.h"
 #include "fenice_config.h"
+#include "peripherals/ltc6813.h"
 
 /** @brief Battery pack basic info */
 typedef struct {
@@ -26,8 +27,8 @@ typedef struct {
 	uint16_t adc_voltage;	/*!< Voltage measured at the battery ends */
 	uint16_t ext_voltage;	/*!< Voltage measured after the AIRs */
 	uint32_t total_voltage; /*!< [mV * 10] Total pack voltage */
-	uint16_t max_voltage;   /*!< [mV * 10] Maximum cell voltage */
-	uint16_t min_voltage;   /*!< [mV * 10] Minimum cell voltage */
+	uint16_t max_voltage;	/*!< [mV * 10] Maximum cell voltage */
+	uint16_t min_voltage;	/*!< [mV * 10] Minimum cell voltage */
 
 	uint16_t avg_temperature; /*!< [°C * 100] Average pack temperature */
 	uint16_t max_temperature; /*!< [°C * 100] Maximum temperature */

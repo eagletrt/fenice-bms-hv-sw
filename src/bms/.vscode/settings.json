@@ -13,8 +13,7 @@
 		"stm32f4xx_hal.h": "c",
 		"fenice_config.h": "c",
 		"pack.h": "c",
-		"tuple": "c",
 		"spi.h": "c",
-		"si8902.h": "c"
+		"si8900.h": "c"
 	}
 }

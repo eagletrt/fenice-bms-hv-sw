@@ -44,7 +44,31 @@ bool si8900_init(UART_HandleTypeDef *huart) {
 		timeout = time - HAL_GetTick() >= TIMEOUT;
 	}
 
+	HAL_UART_Receive(huart, NULL, 1, 10);
 	return code_confirm || timeout;
+}
+
+bool si8900_read_channel(UART_HandleTypeDef *huart, SI8900_CHANNEL ch,
+						 uint16_t *voltage) {
+	uint8_t conf = cnfg_0 | (ch << 4);
+
+	HAL_UART_Transmit(huart, &conf, 1, 1);
+
+	uint8_t recv[3] = {0};
+	uint8_t tmp = 0;
+	do {
+		HAL_UART_Receive(huart, recv, 3, 2);
+	} while (tmp != conf);
+	// if (recv[0] == conf) {
+	// uint8_t recv[2] = {0};
+
+	// HAL_UART_Receive(huart, recv, 2, 1);
+	*voltage = si8900_convert_voltage(recv + 1);
+
+	return true;
+	//}
+
+	return false;
 }
 
 /**
@@ -82,5 +106,5 @@ uint16_t si8900_convert_voltage(uint8_t adc_hl[2]) {
 	uint16_t dig =
 		((adc_hl[0] & 0b00001111) << 6) | ((adc_hl[1] & 0b01111110) >> 1);
 
-	return ((VREF * (float)dig) / 1024) * 10000;
+	return ((VREF * (float)dig) / 1024) * 100;
 }

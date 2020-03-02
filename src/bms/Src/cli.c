@@ -9,9 +9,11 @@
  */
 
 #include "cli.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "bal.h"
 
 const char *cli_commands[N_COMMANDS] = {
@@ -20,8 +22,11 @@ const char *cli_commands[N_COMMANDS] = {
 void _cli_volts(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 				char *out) {
 	sprintf(out,
-			"total.....%.2f V\r\nmax.......%.3f V\r\nmin.......%.3f V"
+			"bus.......%.2f V\r\nadc.......%.2f V\r\ntotal.....%.2f "
+			"V\r\nmax.......%.3f V\r\nmin.......%.3f V"
 			"\r\ndelta.....%.3f V\r\n",
+			(float)data->pack.ext_voltage / 100,
+			(float)data->pack.adc_voltage / 100,
 			(float)data->pack.total_voltage / 10000,
 			(float)data->pack.max_voltage / 10000,
 			(float)data->pack.min_voltage / 10000,
@@ -152,7 +157,7 @@ void cli_init(cli_t *cli, UART_HandleTypeDef *uart) {
 
 	cli_state_func_t *temp[N_COMMANDS] = {
 		&_cli_volts,  &_cli_volts_all, &_cli_temps, &_cli_temps_all,
-		&_cli_status, &_cli_balance,   &_cli_help,  &_cli_taba};
+		&_cli_status, &_cli_balance,   &_cli_help,	&_cli_taba};
 	memcpy(cli->states, temp, sizeof(cli->states));
 
 	LL_USART_EnableIT_RXNE(cli->uart->Instance);
@@ -206,7 +211,7 @@ void cli_handle_escape() {
 		uint8_t h_i;  // To be displayed history index
 
 		if (cli.rx.buffer[cli.rx.index] == 'A' &&
-			cli.history.showing > 0) {  // UP
+			cli.history.showing > 0) {	// UP
 
 			h_i = cli.history.showing - 1;
 		} else if (cli.rx.buffer[cli.rx.index] == 'B' &&
@@ -248,7 +253,7 @@ void cli_loop(state_global_data_t *data, BMS_STATE_T state) {
 
 		cli.rx.index = cli_clean(cli.rx.buffer);
 
-		if (cli.rx.index > 0) {  // Add to history
+		if (cli.rx.index > 0) {	 // Add to history
 
 			cli.history.list = realloc(
 				cli.history.list, (cli.history.index + 1) * sizeof(buffer_t));
