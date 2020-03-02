@@ -12,21 +12,21 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
-#include <stdio.h>
-
 #include "can.h"
 #include "fatfs.h"
 #include "gpio.h"
-#include "i2c.h"
 #include "spi.h"
 #include "usart.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <stdio.h>
+#include <string.h>
+
 #include "cli.h"
 #include "error.h"
 #include "fenice_config.h"
-#include "peripherals/si8902.h"
+#include "peripherals/si8900.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -36,7 +36,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define TEMPS_READ_INTERVAL 461
+#define TEMPS_READ_INTERVAL 500
 #define VOLTS_READ_INTERVAL 10
 /* USER CODE END PD */
 
@@ -242,9 +242,6 @@ void check_timers(state_global_data_t *data) {
 
 		read_temps(data);
 		ER_CHK(&data->error);
-
-		// Delay voltage measurement to avoid interferences
-		timer_volts = HAL_GetTick() - (VOLTS_READ_INTERVAL / 2);
 	}
 
 	// Read and send voltages and current
@@ -253,6 +250,10 @@ void check_timers(state_global_data_t *data) {
 
 		read_volts(data);
 		ER_CHK(&data->error);
+
+		// TODO: check return error
+		si8900_read_channel(&huart3, SI8900_AIN0, &data->pack.adc_voltage);
+		si8900_read_channel(&huart3, SI8900_AIN1, &data->pack.ext_voltage);
 	}
 
 	if (data->balancing.enable && tick - timer_bal >= BAL_CYCLE_LENGTH + 5000) {
@@ -333,10 +334,16 @@ int main(void) {
 	MX_SPI1_Init();
 	MX_USART2_UART_Init();
 	MX_CAN1_Init();
-	MX_I2C1_Init();
 	MX_FATFS_Init();
+	MX_USART3_UART_Init();
 	/* USER CODE BEGIN 2 */
 	cli_init(&cli, &huart2);
+
+	if (si8900_init(&huart3)) {
+		cli_print("SI8900 INITIALIZED\r\n", 20);
+	} else {
+		cli_print("SI8900 ERROR\r\n", 20);
+	}
 
 	error_init(&data.can_error);
 	data.error = ERROR_OK;
@@ -348,18 +355,21 @@ int main(void) {
 
 	/* Infinite loop */
 	/* USER CODE BEGIN WHILE */
+
 	while (1) {
 		/* USER CODE END WHILE */
 
 		/* USER CODE BEGIN 3 */
 		state = run_state(state, &data);
 
-		uint16_t volts[3] = {0};
-		si8902_read_voltages(&hspi1, volts);
-
-		char text[18];
-		sprintf(text, "%d %d %d", volts[0], volts[1], volts[2]);
-		cli_print(text, 6);
+		uint16_t temp[3] = {0};
+		// si8900_read_voltages(&huart3, temp);
+		if (si8900_read_channel(&huart3, 0, &temp[0])) {
+			char c[20];
+			sprintf(c, "%d\r\n", temp[0]);
+			cli_print(c, strlen(c));
+		}
+		HAL_Delay(500);
 
 		check_timers(&data);
 		ER_CHK(&data.error);

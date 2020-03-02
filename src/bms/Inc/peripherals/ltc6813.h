@@ -17,11 +17,12 @@
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stm32f4xx_hal.h>
-#include "comm/ltc6813_utils.h"
+
 #include "error.h"
 #include "fenice_config.h"
+#include "peripherals/ltc6813_utils.h"
 
-extern uint8_t GPIO_CONFIG;  // GPIO CONFIG
+extern uint8_t GPIO_CONFIG;	 // GPIO CONFIG
 
 void ltc6813_wakeup_idle(SPI_HandleTypeDef *hspi, bool apply_delay);
 

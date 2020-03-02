@@ -7,7 +7,7 @@
  * @author		Matteo Bonora [matteo.bonora@studenti.unitn.it]
  */
 
-#include "comm/ltc6813_utils.h"
+#include "peripherals/ltc6813_utils.h"
 
 /**
  * @brief		Polls all the registers of the LTC6813 and updates the cell
@@ -33,9 +33,9 @@ uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *spi, LTC6813_T ltc[],
 	uint16_t cmd_pec;
 	uint8_t data[8];
 
-	cmd[0] = 0;  // Broadcast
+	cmd[0] = 0;	 // Broadcast
 
-	uint8_t count = 0;  // volts[] index
+	uint8_t count = 0;	// volts[] index
 	for (uint8_t reg = 0; reg < LTC6813_REG_COUNT; reg++) {
 		cmd[1] = (uint8_t)rdcv_cmd[reg];
 		cmd_pec = ltc6813_pec15(2, cmd);
@@ -168,7 +168,7 @@ uint8_t ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, LTC6813_T *ltc,
 	}
 
 	*error = error_check_fatal(&ltc->error, HAL_GetTick());
-	ER_CHK(error);  // In case of error, set the error and goto label End
+	ER_CHK(error);	// In case of error, set the error and goto label End
 
 End:;
 
@@ -255,7 +255,7 @@ void ltc6813_set_dcc(uint8_t indexes[], uint8_t cfgar[8], uint8_t cfgbr[8]) {
  */
 uint16_t ltc6813_pec15(uint8_t len, uint8_t data[]) {
 	uint16_t remainder, address;
-	remainder = 16;  // PEC seed
+	remainder = 16;	 // PEC seed
 	for (int i = 0; i < len; i++) {
 		// calculate PEC table address
 		address = ((remainder >> 7) ^ data[i]) & 0xff;
