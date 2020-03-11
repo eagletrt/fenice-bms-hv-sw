@@ -44,8 +44,7 @@ void pack_update_temperatures_all(SPI_HandleTypeDef *spi, uint8_t *temps);
 void pack_update_current(int16_t *current);
 void pack_update_voltage_stats(PACK_T *pack);
 void pack_update_temperature_stats(PACK_T *pack);
-bool pack_balance_cells(SPI_HandleTypeDef *spi, PACK_T *pack, bal_conf_t *conf,
-						error_t *error);
+bool pack_balance_cells(SPI_HandleTypeDef *spi, PACK_T *pack, bal_conf_t *conf);
 uint8_t pack_check_voltage_drops(PACK_T *pack,
 								 uint8_t cells[PACK_CELL_COUNT]);
 

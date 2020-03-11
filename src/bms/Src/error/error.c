@@ -10,6 +10,7 @@
 
 #include <stdlib.h>
 
+#include "error/error_data.h"
 #include "error/list.h"
 
 /**
@@ -29,49 +30,45 @@
 error_limits_t timeout[ERROR_NUM_ERRORS] = {
 	{LTC6813_PEC_TIMEOUT_COUNT, 0}, {0, CELL_UNDER_VOLTAGE_TIMEOUT_MS}, {0, CELL_OVER_VOLTAGE_TIMEOUT_MS}, {0, CELL_OVER_TEMPERATURE_TIMEOUT_MS}, {0, OVER_CURRENT_TIMEOUT_MS}, {0, CAN_TIMEOUT_MS}};
 
-er_node_t *er_list;
+er_node_t *er_list = NULL;
 
 /**
  * @brief	Initializes an error structure
  *
  * @param	error	The error structure to initialize
  */
-void error_init(error_status_t *error) {
-	error->type = ERROR_OK;
+void error_init(error_status_t *error, error_t type, uint8_t offset, uint32_t timestamp) {
+	error->type = type;
+	error->offset = offset;
 	error->count = 0;
-	error->active = false;
 	error->fatal = false;
-	error->time_stamp = 0;
+	error->active = true;
+	error->time_stamp = timestamp;
 }
 
 /**
- * @brief	Activates an error.
+ * @brief	Activates an error
+ * 
+ * @details	
  *
- * @param	type	The error type
- * @param	er		The error structure to activate
- * @param	now		The current time
+ * @param	type			The error type
+ * @param	offset		The offset (index) of the error in error_data
+ * @param	timestamp	Current timestamp
  */
-void error_set(error_t type, void *ref, uint8_t index, uint32_t now) {
-	er_node_t *node = list_find(er_list, type, ref, index);
+bool error_set(error_t type, uint8_t offset, uint32_t timestamp) {
+	// Check if error exists
+	if (error_reference[type][offset] == NULL) {
+		error_status_t *er = (error_status_t *)malloc(sizeof(error_status_t));
 
-	if (node == NULL) {
-		error_status_t er;
-		error_init(&er);
-		er_node_init(node, ref, index, type);
-		node->status = er;
+		error_init(er, type, offset, timestamp);
 
-		list_add(er_list, node);
+		error_reference[type][offset] = list_insert(&er_list, er);
+
+		return true;
 	}
 
-	// If the error is already enabled
-	if (node->status.active) {
-		node->status.count++;
-	} else {
-		node->status.type = type;
-		node->status.active = true;
-		node->status.time_stamp = now;
-		node->status.count = 1;
-	}
+	error_reference[type][offset]->status.count++;
+	return false;
 }
 
 /**
@@ -80,15 +77,59 @@ void error_set(error_t type, void *ref, uint8_t index, uint32_t now) {
  * @param		type	The type of error to deactivate
  * @param		er		The error structure to deactivate
  */
-bool error_unset(error_t type, void *ref, uint8_t index) {
-	er_node_t *node = list_find(er_list, type, ref, index);
+bool error_unset(error_t type, uint8_t offset) {
+	// Check if error is fatal; in that case do not remove it, but deactivate it
+	if (error_reference[type][offset] != NULL) {
+		if (error_reference[type][offset]->status.fatal) {
+			error_reference[type][offset]->status.active = false;
+			return true;
+		}
 
-	if (node != NULL) {
-		// TODO: Optimize
-		return list_remove(&er_list, node);
+		list_remove(error_reference[type][offset]);
+
+		error_reference[type][offset] = NULL;
+
+		return true;
 	}
 
 	return false;
+}
+
+uint8_t error_count() {
+	er_node_t *node = er_list;
+	uint8_t count = 0;
+
+	while (node != NULL) {
+		count++;
+		node = node->next;
+	}
+
+	return count;
+}
+
+uint16_t error_dump(error_status_t errors[]) {
+	er_node_t *node = er_list;
+	uint16_t count = 0;
+
+	while (node != NULL) {
+		errors[count++] = node->status;
+		node = node->next;
+	}
+
+	return count;
+}
+
+error_t error_verify(uint32_t now) {
+	er_node_t *node = er_list;
+	error_t ret = ERROR_OK;
+
+	while (node != NULL && ret == ERROR_OK) {
+		ret = error_check_fatal(&(node->status), now);
+
+		node = node->next;
+	}
+
+	return ret;
 }
 
 /**
@@ -102,12 +143,11 @@ bool error_unset(error_t type, void *ref, uint8_t index) {
  * @retval	The error return value.
  */
 error_t error_check_fatal(error_status_t *error, uint32_t now) {
-	if (error->active) {
-		if (_error_check_count(error) || _error_check_timeout(error, now)) {
-			error->fatal = true;
-			return error->type;
-		}
+	if (_error_check_count(error) || _error_check_timeout(error, now)) {
+		error->fatal = true;
+		return error->type;
 	}
+
 	return ERROR_OK;
 }
 

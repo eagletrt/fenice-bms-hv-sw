@@ -72,6 +72,8 @@ const char *error_names[ERROR_NUM_ERRORS] = {
 	[ERROR_CAN] = "CAN",
 	[ERROR_OK] = "ok"};
 
+const char *bool_names[2] = {"false", "true"};
+
 BMS_STATE_T state = BMS_INIT;
 state_global_data_t data;
 
@@ -96,10 +98,6 @@ static void MX_NVIC_Init(void);
 /* USER CODE BEGIN 0 */
 
 BMS_STATE_T do_state_init(state_global_data_t *data) {
-	error_init(&data->can_error);
-
-	data->error = ERROR_OK;
-
 	pack_init(&(data->pack));
 	return BMS_IDLE;
 }
@@ -218,6 +216,8 @@ BMS_STATE_T do_state_halt(state_global_data_t *data) { return BMS_HALT; }
 BMS_STATE_T run_state(BMS_STATE_T state, state_global_data_t *data) {
 	BMS_STATE_T new_state = state_table[state](data);
 
+	data->error = error_verify(HAL_GetTick());
+
 	if (data->error != ERROR_OK) {
 		new_state = BMS_HALT;
 	}
@@ -239,7 +239,6 @@ void check_timers(state_global_data_t *data) {
 		timer_temps = tick;
 
 		read_temps(data);
-		ER_CHK(&data->error);
 
 		// Delay voltage measurement to avoid interferences
 		// timer_volts = HAL_GetTick() - (VOLTS_READ_INTERVAL / 2);
@@ -250,19 +249,15 @@ void check_timers(state_global_data_t *data) {
 		timer_volts = tick;
 
 		read_volts(data);
-		ER_CHK(&data->error);
 	}
 
 	if (data->balancing.enable && tick - timer_bal >= BAL_CYCLE_LENGTH + 5000) {
 		timer_bal = tick;
-		if (!pack_balance_cells(&hspi1, &data->pack, &data->balancing,
-								&data->error)) {
+		if (!pack_balance_cells(&hspi1, &data->pack, &data->balancing)) {
 			data->balancing.enable = false;
 			cli_print("turning balancing off\r\n", 23);
 		}
 	}
-
-End:;
 }
 
 /**
@@ -326,8 +321,6 @@ int main(void) {
 	cli_init(&cli, &huart2);
 
 	data.hspi = &hspi1;
-	error_init(&data.can_error);
-	data.error = ERROR_OK;
 
 	data.balancing.threshold = BAL_MAX_VOLTAGE_THRESHOLD;
 	data.balancing.slot_time = 2;

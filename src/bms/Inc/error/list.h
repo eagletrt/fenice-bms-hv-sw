@@ -11,20 +11,18 @@
 
 #include <inttypes.h>
 #include <stdbool.h>
+
 #include "error/error_def.h"
 
 typedef struct er_node {
-	void *ref;
-	uint8_t ref_index;
+	struct er_node *prev;
 	error_status_t status;
 	struct er_node *next;
 } er_node_t;
 
-void er_node_init(er_node_t *node, void *ref, uint8_t ref_index, error_t type);
-bool list_add(er_node_t *head, er_node_t *item);
-bool list_pop(er_node_t **head);
-bool list_remove(er_node_t **head, er_node_t *node);
-er_node_t *list_find(er_node_t *head, error_t type, void *ref,
-					 uint8_t ref_index);
+void list_init(er_node_t *head);
 
+er_node_t *list_insert(er_node_t **head, error_status_t *status);
+bool list_add(er_node_t *head, er_node_t *item);
+bool list_remove(er_node_t *head);
 #endif
