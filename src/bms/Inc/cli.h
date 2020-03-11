@@ -17,7 +17,7 @@
 
 #define BUF_SIZE 255
 #define HISTORY_LENGTH 100
-#define N_COMMANDS 8
+#define N_COMMANDS 9
 #define PS1_SIZE 2
 typedef void cli_state_func_t(char *cmd, state_global_data_t *data,
 							  BMS_STATE_T state, char *out);

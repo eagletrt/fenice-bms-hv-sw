@@ -20,12 +20,8 @@ typedef struct {
 
 	PACK_T pack;
 
-	error_status_t can_error;
-
-	error_t error;
-	uint8_t error_index;
-
 	bal_conf_t balancing;
+	error_t error;
 
 } state_global_data_t;
 

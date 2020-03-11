@@ -7,12 +7,50 @@
  */
 
 #include "error/list.h"
+
 #include <stdlib.h>
 
-void er_node_init(er_node_t *node, void *ref, uint8_t ref_index, error_t type) {
-	node->ref = ref;
-	node->ref_index = ref_index;
+void list_init(er_node_t *head) {
+	head = NULL;
+}
+
+/**
+ * @brief		Inserts at the beginning of the list
+ * @details	The function itselfs creates the values for 
+ * 
+ * 					------------
+ *					|   prev   |
+ *					|   HEAD   |
+ *					|   next   |
+ *					------------
+ *					     ^
+ *					     |
+ *					     V
+ *					------------
+ *					|   prev   |
+ *					|   node   |
+ *					|   next   |
+ *					------------
+ * 
+ * @param head		List head
+ * @param status	Error status reference passed by address
+ */
+er_node_t *list_insert(er_node_t **head, error_status_t *status) {
+	er_node_t *node = (er_node_t *)malloc(sizeof(er_node_t));
+	// TODO: check if malloc succeeded
+
+	node->prev = NULL;
 	node->next = NULL;
+	node->status = *status;
+
+	if (head != NULL) {
+		(*head)->prev = node;
+		node->next = *head;
+	}
+
+	*head = node;
+
+	return *head;
 }
 
 bool list_add(er_node_t *head, er_node_t *item) {
@@ -36,50 +74,18 @@ bool list_add(er_node_t *head, er_node_t *item) {
 	return true;
 }
 
-bool list_pop(er_node_t **head) {
-	er_node_t *next_node = NULL;
-
-	if (*head == NULL) {
+bool list_remove(er_node_t *head) {
+	if (head == NULL) {
 		return false;
 	}
 
-	next_node = (*head)->next;
-	free(*head);
-	*head = next_node;
+	if ((head)->prev != NULL) {
+		(head)->prev->next = (head)->next;
+	}
+	if ((head)->next != NULL) {
+		(head)->next->prev = (head)->prev;
+	}
 
+	free(head);
 	return true;
-}
-
-bool list_remove(er_node_t **head, er_node_t *node) {
-	er_node_t *current = *head;
-	er_node_t *temp_node = NULL;
-
-	if (*head == node) {
-		return list_pop(head);
-	}
-
-	while (current->next != node) {
-		current = current->next;
-	}
-
-	temp_node = current->next;
-	current->next = temp_node->next;
-	free(temp_node);
-
-	return true;
-}
-
-er_node_t *list_find(er_node_t *head, error_t type, void *ref,
-					 uint8_t ref_index) {
-	er_node_t *current = head;
-
-	while (current != NULL) {
-		if (current->ref == ref && current->ref_index &&
-			current->status.type == type) {
-			return current;
-		}
-
-		current = current->next;
-	}
-	return NULL;
 }

@@ -125,9 +125,9 @@ void pack_update_current(int16_t *current) {
 	*current += 100;
 
 	if (*current > PACK_MAX_CURRENT) {
-		error_set(ERROR_OVER_CURRENT, current, 0, HAL_GetTick());
+		error_set(ERROR_OVER_CURRENT, 0, HAL_GetTick());
 	} else {
-		error_unset(ERROR_OVER_CURRENT, current, 0);
+		error_unset(ERROR_OVER_CURRENT, 0);
 	}
 }
 
@@ -146,10 +146,11 @@ void pack_update_voltage_stats(PACK_T *pack) {
 	for (i = 0; i < PACK_CELL_COUNT; i++) {
 		tot_voltage += (uint32_t)pack->voltages[i];
 
-		if (!pack->voltage_errors[i].active) {
-			max_voltage = fmax(max_voltage, pack->voltages[i]);
-			min_voltage = fmin(min_voltage, pack->voltages[i]);
-		}
+		// TODO: Check for errors
+		//if (!pack->voltage_errors[i].active) {
+		max_voltage = fmax(max_voltage, pack->voltages[i]);
+		min_voltage = fmin(min_voltage, pack->voltages[i]);
+		//}
 	}
 
 	pack->total_voltage = tot_voltage;
@@ -184,8 +185,7 @@ void pack_update_temperature_stats(PACK_T *pack) {
 	pack->min_temperature = fmin(min_temperature, max_temperature);
 }
 
-bool pack_balance_cells(SPI_HandleTypeDef *spi, PACK_T *pack, bal_conf_t *conf,
-						error_t *error) {
+bool pack_balance_cells(SPI_HandleTypeDef *spi, PACK_T *pack, bal_conf_t *conf) {
 	uint8_t indexes[PACK_CELL_COUNT];
 	size_t len = bal_compute_indexes(pack->voltages, indexes, conf->threshold);
 

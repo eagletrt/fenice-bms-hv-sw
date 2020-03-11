@@ -22,6 +22,7 @@
 		"limits": "c",
 		"valarray": "c",
 		"cli.h": "c",
-		"main.h": "c"
+		"main.h": "c",
+		"list.h": "c"
 	}
 }

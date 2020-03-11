@@ -68,7 +68,7 @@ uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *spi, uint16_t volts[]) {
 
 		for (uint8_t ltc = 0; ltc < LTC6813_COUNT; ltc++) {
 			if (ltc6813_pec15(6, data) == (uint16_t)(data[6] * 256 + data[7])) {
-				error_unset(ERROR_LTC_PEC_ERROR, NULL, ltc);
+				error_unset(ERROR_LTC_PEC_ERROR, ltc);
 
 				// For every cell in the register
 				for (uint8_t cell = 0; cell < LTC6813_REG_CELL_COUNT; cell++) {
@@ -82,7 +82,7 @@ uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *spi, uint16_t volts[]) {
 					count++;
 				}
 			} else {
-				error_set(ERROR_LTC_PEC_ERROR, NULL, ltc, HAL_GetTick());
+				error_set(ERROR_LTC_PEC_ERROR, ltc, HAL_GetTick());
 			}
 		}
 	}
@@ -202,15 +202,15 @@ void ltc6813_read_all_temps(SPI_HandleTypeDef *hspi, uint8_t *temps) {
  */
 void ltc6813_check_voltage(uint16_t *volts, uint8_t index) {
 	if (volts[index] < CELL_MIN_VOLTAGE) {
-		error_set(ERROR_CELL_UNDER_VOLTAGE, volts, index, HAL_GetTick());
+		error_set(ERROR_CELL_UNDER_VOLTAGE, index, HAL_GetTick());
 	} else {
-		error_unset(ERROR_CELL_UNDER_VOLTAGE, volts, index);
+		error_unset(ERROR_CELL_UNDER_VOLTAGE, index);
 	}
 
 	if (volts[index] > CELL_MAX_VOLTAGE) {
-		error_set(ERROR_CELL_OVER_VOLTAGE, volts, index, HAL_GetTick());
+		error_set(ERROR_CELL_OVER_VOLTAGE, index, HAL_GetTick());
 	} else {
-		error_unset(ERROR_CELL_OVER_VOLTAGE, volts, index);
+		error_unset(ERROR_CELL_OVER_VOLTAGE, index);
 	}
 }
 
@@ -222,9 +222,9 @@ void ltc6813_check_voltage(uint16_t *volts, uint8_t index) {
  */
 void ltc6813_check_temperature(uint16_t *temps, uint8_t index) {
 	if (temps[index] >= CELL_MAX_TEMPERATURE) {
-		error_set(ERROR_CELL_OVER_TEMPERATURE, temps, index, HAL_GetTick());
+		error_set(ERROR_CELL_OVER_TEMPERATURE, index, HAL_GetTick());
 	} else {
-		error_unset(ERROR_CELL_OVER_TEMPERATURE, temps, index);
+		error_unset(ERROR_CELL_OVER_TEMPERATURE, index);
 	}
 }
 
