@@ -152,16 +152,19 @@ void ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, uint8_t max[2],
 
 	ltc6813_rdcomm_i2c(hspi, recv);
 
-	for (uint8_t i = 0; i < LTC6813_COUNT; i++) {
-		uint8_t d0 = (recv[0 + i * TEMP_SENSOR_COUNT] << 4) | (recv[1 + i * TEMP_SENSOR_COUNT] >> 4);
-		uint8_t d1 = (recv[2 + i * TEMP_SENSOR_COUNT] << 4) | (recv[3 + i * TEMP_SENSOR_COUNT] >> 4);
-		uint8_t d2 = (recv[4 + i * TEMP_SENSOR_COUNT] << 4) | (recv[5 + i * TEMP_SENSOR_COUNT] >> 4);
+	for (uint8_t ltc = 0; ltc < LTC6813_COUNT; ltc++) {
+		// For each ltc we skip 8 bits (6 data + 2 pec);
+		uint8_t base_index = ltc * (LTC6813_COUNT + 2);
 
-		max[i * 2] = d0 >> 2;
-		max[1 + i * 2] = (d0 & 0b00000011) << 4 | d1 >> 4;
+		uint8_t d0 = (recv[0 + base_index] << 4) | (recv[1 + base_index] >> 4);
+		uint8_t d1 = (recv[2 + base_index] << 4) | (recv[3 + base_index] >> 4);
+		uint8_t d2 = (recv[4 + base_index] << 4) | (recv[5 + base_index] >> 4);
 
-		min[i * 2] = (d1 & 0b00001111) << 2 | d2 >> 6;
-		min[1 + i * 2] = d2 & 0b00111111;
+		max[ltc * 2] = d0 >> 2;
+		max[1 + ltc * 2] = (d0 & 0b00000011) << 4 | d1 >> 4;
+
+		min[ltc * 2] = (d1 & 0b00001111) << 2 | d2 >> 6;
+		min[1 + ltc * 2] = d2 & 0b00111111;
 	}
 }
 
@@ -182,9 +185,11 @@ void ltc6813_read_all_temps(SPI_HandleTypeDef *hspi, uint8_t *temps) {
 		ltc6813_rdcomm_i2c(hspi, recv);
 
 		for (uint8_t ltc = 0; ltc < LTC6813_COUNT; ltc++) {
-			uint8_t d0 = (recv[ltc * TEMP_SENSOR_COUNT] << 4) | (recv[1 + ltc * TEMP_SENSOR_COUNT] >> 4);
-			uint8_t d1 = (recv[2 + ltc * TEMP_SENSOR_COUNT] << 4) | (recv[3 + ltc * TEMP_SENSOR_COUNT] >> 4);
-			uint8_t d2 = (recv[4 + ltc * TEMP_SENSOR_COUNT] << 4) | (recv[5 + ltc * TEMP_SENSOR_COUNT] >> 4);
+			uint8_t base_index = ltc * (LTC6813_COUNT + 2);
+
+			uint8_t d0 = (recv[0 + base_index] << 4) | (recv[1 + base_index] >> 4);
+			uint8_t d1 = (recv[2 + base_index] << 4) | (recv[3 + base_index] >> 4);
+			uint8_t d2 = (recv[4 + base_index] << 4) | (recv[5 + base_index] >> 4);
 
 			temps[count++] = d0 >> 2;
 			temps[count++] = (d0 & 0b00000011) << 4 | d1 >> 4;
