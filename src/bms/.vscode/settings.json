@@ -23,6 +23,7 @@
 		"valarray": "c",
 		"cli.h": "c",
 		"main.h": "c",
-		"list.h": "c"
+		"list.h": "c",
+		"math.h": "c"
 	}
 }
