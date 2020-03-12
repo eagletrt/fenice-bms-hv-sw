@@ -15,10 +15,11 @@
 #include <string.h>
 
 #include "bal.h"
+#include "error/error.h"
 #include "pack.h"
 
 const char *cli_commands[N_COMMANDS] = {
-	"volts", "volts all", "temps", "temps all", "status", "bal", "?", "\ta"};
+	"volts", "volts all", "temps", "temps all", "status", "errors", "bal", "?", "\ta"};
 
 void _cli_volts(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 				char *out) {
@@ -35,13 +36,14 @@ void _cli_volts_all(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 					char *out) {
 	out[0] = '\0';
 
-	for (uint8_t i = 0; i < PACK_MODULE_COUNT; i++) {
+	for (uint8_t i = 0; i < PACK_CELL_COUNT; i++) {
 		if (i % LTC6813_CELL_COUNT == 0) {
-			sprintf(out + strlen(out), "%-3d", i % LTC6813_CELL_COUNT);
-		} else if (i % 9 == 0 && i > 0) {
+			sprintf(out + strlen(out), "\r\n%-3d", i / LTC6813_CELL_COUNT);
+		} else if (i % (LTC6813_CELL_COUNT / 2) == 0 && i > 0) {
 			sprintf(out + strlen(out), "\r\n%-3s", "");
 		}
-		sprintf(out + strlen(out), "[%2u %-.3fv] ", i % LTC6813_CELL_COUNT,
+
+		sprintf(out + strlen(out), "[%3u %-.3fv] ", i,
 				(float)data->pack.voltages[i] / 10000);
 	}
 
@@ -63,33 +65,35 @@ void _cli_temps_all(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 					char *out) {
 	out[0] = '\0';
 
-	uint8_t temps[TEMP_SENSOR_COUNT * LTC6813_COUNT];
+	uint8_t temps[PACK_TEMP_COUNT];
 	pack_update_temperatures_all(data->hspi, temps);
 
-	for (uint8_t i = 0; i < TEMP_SENSOR_COUNT * LTC6813_COUNT; i++) {
-		sprintf(out + strlen(out), "[%3u] %2uc ", i, temps[i]);
-
-		if ((i + 1) % 9 == 0) {
-			sprintf(out + strlen(out), "\r\n");
+	for (uint8_t i = 0; i < PACK_TEMP_COUNT; i++) {
+		if (i % TEMP_SENSOR_COUNT == 0) {
+			sprintf(out + strlen(out), "\r\n%-3d", i / TEMP_SENSOR_COUNT);
+		} else if (i % (TEMP_SENSOR_COUNT / 2) == 0 && i > 0) {
+			sprintf(out + strlen(out), "\r\n%-3s", "");
 		}
+		sprintf(out + strlen(out), "[%3u %2uc] ", i, temps[i]);
 	}
+
+	sprintf(out + strlen(out), "\r\n");
 }
 void _cli_status(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 				 char *out) {
-#define n_items 5
-
-	char error_i[4] = {'\0'};
-	itoa(data->error_index, error_i, 10);
+#define n_items 4
 
 	char *bal = data->balancing.enable ? "true" : "false";
 
 	char thresh[5] = {'\0'};
 	itoa((float)data->balancing.threshold / 10, thresh, 10);
 
+	char er_count[3] = {'\0'};
+	itoa(error_count(), er_count, 10);
+
 	char *values[n_items][3] = {
 		{"BMS state", (char *)bms_state_names[state]},
-		{"global error", (char *)error_names[data->error]},
-		{"global error index", error_i},
+		{"error count", er_count},
 		{"balancing", bal},
 		{"balancing threshold", thresh}};
 
@@ -117,28 +121,34 @@ void _cli_balance(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 	}
 }
 
+void _cli_errors(char *cmd, state_global_data_t *data, BMS_STATE_T state, char *out) {
+	uint8_t count = error_count();
+	error_status_t errors[count];
+	error_dump(errors);
+
+	sprintf(out, "total %u\r\n", count);
+	for (uint8_t i = 0; i < count; i++) {
+		sprintf(out + strlen(out),
+				"type........%s\r\n"
+				"timestamp...%lu (%lums ago)\r\n"
+				"offset......%u\r\n"
+				"active......%s\r\n"
+				"fatal.......%s\r\n"
+				"count.......%lu\r\n",
+				error_names[errors[i].type], errors[i].time_stamp, HAL_GetTick() - errors[i].time_stamp, errors[i].offset, bool_names[errors[i].active], bool_names[errors[i].fatal], errors[i].count);
+	}
+}
+
 void _cli_taba(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 			   char *out) {
 	sprintf(out,
-			" #######    #    ######     #    ######     #    ####### ####### "
-			"######  \r\n"
-			"    #      # #   #     #   # #   #     #   # #      #    #       "
-			"# "
-			"    # \r\n"
-			"    #     #   #  #     #  #   #  #     #  #   #     #    #       "
-			"# "
-			"    # \r\n"
-			"    #    #     # ######  #     # ######  #     #    #    #####   "
-			"# "
-			"    # \r\n"
-			"    #    ####### #     # ####### #   #   #######    #    #       "
-			"# "
-			"    # \r\n"
-			"    #    #     # #     # #     # #    #  #     #    #    #       "
-			"# "
-			"    # \r\n"
-			"    #    #     # ######  #     # #     # #     #    #    ####### "
-			"######  \r\n");
+			" #######    #    ######     #    ######     #    ####### ####### ######  \r\n"
+			"    #      # #   #     #   # #   #     #   # #      #    #       #     # \r\n"
+			"    #     #   #  #     #  #   #  #     #  #   #     #    #       #     # \r\n"
+			"    #    #     # ######  #     # ######  #     #    #    #####   #     # \r\n"
+			"    #    ####### #     # ####### #   #   #######    #    #       #     # \r\n"
+			"    #    #     # #     # #     # #    #  #     #    #    #       #     # \r\n"
+			"    #    #     # ######  #     # #     # #     #    #    ####### ######  \r\n");
 }
 
 void _cli_help(char *cmd, state_global_data_t *data, BMS_STATE_T state,
@@ -161,8 +171,8 @@ void cli_init(cli_t *cli, UART_HandleTypeDef *uart) {
 	cli->history.list = (buffer_t *)malloc(sizeof(buffer_t));
 
 	cli_state_func_t *temp[N_COMMANDS] = {
-		&_cli_volts,  &_cli_volts_all, &_cli_temps, &_cli_temps_all,
-		&_cli_status, &_cli_balance,   &_cli_help,	&_cli_taba};
+		&_cli_volts, &_cli_volts_all, &_cli_temps, &_cli_temps_all,
+		&_cli_status, &_cli_errors, &_cli_balance, &_cli_help, &_cli_taba};
 	memcpy(cli->states, temp, sizeof(cli->states));
 
 	LL_USART_EnableIT_RXNE(cli->uart->Instance);
@@ -282,7 +292,7 @@ void cli_loop(state_global_data_t *data, BMS_STATE_T state) {
 
 		cli.rx.index = 0;
 
-		char buf[2000] = "?\r\n";
+		char buf[3000] = "?\r\n";
 
 		for (uint8_t i = 0; i < N_COMMANDS; i++) {
 			if (strncmp(cli.rx.buffer, cli_commands[i],

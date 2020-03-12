@@ -46,8 +46,8 @@
 
 /* USER CODE BEGIN PV */
 state_func_t *const state_table[BMS_NUM_STATES] = {
-	do_state_init, do_state_idle,	do_state_precharge,
-	do_state_on,   do_state_charge, do_state_halt};
+	do_state_init, do_state_idle, do_state_precharge,
+	do_state_on, do_state_charge, do_state_halt};
 
 transition_func_t *const transition_table[BMS_NUM_STATES][BMS_NUM_STATES] = {
 	{NULL, to_idle, to_precharge, NULL, NULL, to_halt},	 // from init
@@ -71,6 +71,8 @@ const char *error_names[ERROR_NUM_ERRORS] = {
 	[ERROR_OVER_CURRENT] = "over-current",
 	[ERROR_CAN] = "CAN",
 	[ERROR_OK] = "ok"};
+
+const char *bool_names[2] = {"false", "true"};
 
 BMS_STATE_T state = BMS_INIT;
 state_global_data_t data;
@@ -96,10 +98,6 @@ static void MX_NVIC_Init(void);
 /* USER CODE BEGIN 0 */
 
 BMS_STATE_T do_state_init(state_global_data_t *data) {
-	error_init(&data->can_error);
-
-	data->error = ERROR_OK;
-
 	pack_init(&(data->pack));
 	return BMS_IDLE;
 }
@@ -218,6 +216,8 @@ BMS_STATE_T do_state_halt(state_global_data_t *data) { return BMS_HALT; }
 BMS_STATE_T run_state(BMS_STATE_T state, state_global_data_t *data) {
 	BMS_STATE_T new_state = state_table[state](data);
 
+	data->error = error_verify(HAL_GetTick());
+
 	if (data->error != ERROR_OK) {
 		new_state = BMS_HALT;
 	}
@@ -239,10 +239,6 @@ void check_timers(state_global_data_t *data) {
 		timer_temps = tick;
 
 		read_temps(data);
-		ER_CHK(&data->error);
-
-		// Delay voltage measurement to avoid interferences
-		// timer_volts = HAL_GetTick() - (VOLTS_READ_INTERVAL / 2);
 	}
 
 	// Read and send voltages and current
@@ -250,19 +246,15 @@ void check_timers(state_global_data_t *data) {
 		timer_volts = tick;
 
 		read_volts(data);
-		ER_CHK(&data->error);
 	}
 
 	if (data->balancing.enable && tick - timer_bal >= BAL_CYCLE_LENGTH + 5000) {
 		timer_bal = tick;
-		if (!pack_balance_cells(&hspi1, &data->pack, &data->balancing,
-								&data->error)) {
+		if (!pack_balance_cells(&hspi1, &data->pack, &data->balancing)) {
 			data->balancing.enable = false;
 			cli_print("turning balancing off\r\n", 23);
 		}
 	}
-
-End:;
 }
 
 /**
@@ -271,22 +263,13 @@ End:;
  */
 void read_volts(state_global_data_t *data) {
 	// Voltages
-	warning_t warning = WARN_OK;
 
-	data->error_index =
-		pack_update_voltages(&hspi1, &data->pack, &warning, &data->error);
-	ER_CHK(&data->error);
-
-	if (warning != WARN_OK) {
-	}
+	pack_update_voltages(&hspi1, &data->pack);
 
 	// Current
-	// pack_update_current(&data->pack.current, &data->error);
-	ER_CHK(&data->error);
+	pack_update_current(&data->pack.current);
 
 	// Update total values
-
-End:;
 }
 
 void read_temps(state_global_data_t *data) {
@@ -296,19 +279,17 @@ void read_temps(state_global_data_t *data) {
 /* USER CODE END 0 */
 
 /**
- * @brief  The application entry point.
- * @retval int
- */
+  * @brief  The application entry point.
+  * @retval int
+  */
 int main(void) {
 	/* USER CODE BEGIN 1 */
 
 	/* USER CODE END 1 */
 
-	/* MCU
-	 * Configuration--------------------------------------------------------*/
+	/* MCU Configuration--------------------------------------------------------*/
 
-	/* Reset of all peripherals, Initializes the Flash interface and the
-	 * Systick. */
+	/* Reset of all peripherals, Initializes the Flash interface and the Systick. */
 	HAL_Init();
 
 	/* USER CODE BEGIN Init */
@@ -337,8 +318,6 @@ int main(void) {
 	cli_init(&cli, &huart2);
 
 	data.hspi = &hspi1;
-	error_init(&data.can_error);
-	data.error = ERROR_OK;
 
 	data.balancing.threshold = BAL_MAX_VOLTAGE_THRESHOLD;
 	data.balancing.slot_time = 2;
@@ -352,17 +331,8 @@ int main(void) {
 
 		/* USER CODE BEGIN 3 */
 		state = run_state(state, &data);
-
 		check_timers(&data);
-		ER_CHK(&data.error);
 
-		data.error = error_check_fatal(&data.can_error, HAL_GetTick());
-		ER_CHK(&data.error);
-
-		data.error_index = pack_check_errors(&data.pack, &data.error);
-		ER_CHK(&data.error);
-
-	End:
 		cli_loop(&data, state);
 	}
 	return 0;
@@ -370,24 +340,25 @@ int main(void) {
 }
 
 /**
- * @brief System Clock Configuration
- * @retval None
- */
+  * @brief System Clock Configuration
+  * @retval None
+  */
 void SystemClock_Config(void) {
 	RCC_OscInitTypeDef RCC_OscInitStruct = {0};
 	RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
-	/** Configure the main internal regulator output voltage
-	 */
+	/** Configure the main internal regulator output voltage 
+  */
 	__HAL_RCC_PWR_CLK_ENABLE();
 	__HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
-	/** Initializes the CPU, AHB and APB busses clocks
-	 */
-	RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-	RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+	/** Initializes the CPU, AHB and APB busses clocks 
+  */
+	RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+	RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+	RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
 	RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-	RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-	RCC_OscInitStruct.PLL.PLLM = 4;
+	RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+	RCC_OscInitStruct.PLL.PLLM = 8;
 	RCC_OscInitStruct.PLL.PLLN = 180;
 	RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
 	RCC_OscInitStruct.PLL.PLLQ = 2;
@@ -395,15 +366,14 @@ void SystemClock_Config(void) {
 	if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
 		Error_Handler();
 	}
-	/** Activate the Over-Drive mode
-	 */
+	/** Activate the Over-Drive mode 
+  */
 	if (HAL_PWREx_EnableOverDrive() != HAL_OK) {
 		Error_Handler();
 	}
-	/** Initializes the CPU, AHB and APB busses clocks
-	 */
-	RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK |
-								  RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
+	/** Initializes the CPU, AHB and APB busses clocks 
+  */
+	RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
 	RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
 	RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
 	RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
@@ -415,9 +385,9 @@ void SystemClock_Config(void) {
 }
 
 /**
- * @brief NVIC Configuration.
- * @retval None
- */
+  * @brief NVIC Configuration.
+  * @retval None
+  */
 static void MX_NVIC_Init(void) {
 	/* I2C1_EV_IRQn interrupt configuration */
 	HAL_NVIC_SetPriority(I2C1_EV_IRQn, 0, 0);
@@ -505,9 +475,9 @@ void UART_Error_Callback(void) {
 /* USER CODE END 4 */
 
 /**
- * @brief  This function is executed in case of error occurrence.
- * @retval None
- */
+  * @brief  This function is executed in case of error occurrence.
+  * @retval None
+  */
 void Error_Handler(void) {
 	/* USER CODE BEGIN Error_Handler_Debug */
 	/* User can add his own implementation to report the HAL error return
@@ -519,12 +489,12 @@ void Error_Handler(void) {
 
 #ifdef USE_FULL_ASSERT
 /**
- * @brief  Reports the name of the source file and the source line number
- *         where the assert_param error has occurred.
- * @param  file: pointer to the source file name
- * @param  line: assert_param error line source number
- * @retval None
- */
+  * @brief  Reports the name of the source file and the source line number
+  *         where the assert_param error has occurred.
+  * @param  file: pointer to the source file name
+  * @param  line: assert_param error line source number
+  * @retval None
+  */
 void assert_failed(uint8_t *file, uint32_t line) {
 	/* USER CODE BEGIN 6 */
 	/* User can add his own implementation to report the file name and line

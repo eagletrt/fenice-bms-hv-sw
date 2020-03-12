@@ -11,7 +11,7 @@
 #define FSM_H
 
 #include "bal.h"
-#include "error.h"
+#include "error/error.h"
 #include "pack.h"
 #include "stm32f4xx_hal.h"
 
@@ -20,12 +20,8 @@ typedef struct {
 
 	PACK_T pack;
 
-	ERROR_STATUS_T can_error;
-
-	error_t error;
-	uint8_t error_index;
-
 	bal_conf_t balancing;
+	error_t error;
 
 } state_global_data_t;
 
