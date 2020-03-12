@@ -15,8 +15,8 @@
 #include <string.h>
 
 #include "bal.h"
-#include "pack.h"
 #include "error/error.h"
+#include "pack.h"
 
 const char *cli_commands[N_COMMANDS] = {
 	"volts", "volts all", "temps", "temps all", "status", "errors", "bal", "?", "\ta"};
@@ -70,7 +70,7 @@ void _cli_temps_all(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 
 	for (uint8_t i = 0; i < PACK_TEMP_COUNT; i++) {
 		if (i % TEMP_SENSOR_COUNT == 0) {
-			sprintf(out + strlen(out), "\r\n%-3d", i / PACK_TEMP_COUNT);
+			sprintf(out + strlen(out), "\r\n%-3d", i / TEMP_SENSOR_COUNT);
 		} else if (i % (TEMP_SENSOR_COUNT / 2) == 0 && i > 0) {
 			sprintf(out + strlen(out), "\r\n%-3s", "");
 		}
@@ -292,7 +292,7 @@ void cli_loop(state_global_data_t *data, BMS_STATE_T state) {
 
 		cli.rx.index = 0;
 
-		char buf[2000] = "?\r\n";
+		char buf[3000] = "?\r\n";
 
 		for (uint8_t i = 0; i < N_COMMANDS; i++) {
 			if (strncmp(cli.rx.buffer, cli_commands[i],

@@ -10,7 +10,7 @@
 
 #include <stdlib.h>
 
-#include "error/error_data.h"
+#include "error/error_list_ref.h"
 #include "error/list.h"
 
 /**
@@ -35,7 +35,10 @@ er_node_t *er_list = NULL;
 /**
  * @brief	Initializes an error structure
  *
- * @param	error	The error structure to initialize
+ * @param	error			The error structure to initialize
+ * @param type			The error type
+ * @param	offset		The offset (index) of the error in error_data
+ * @param	timestamp	The timestamp at which the error occurred
  */
 void error_init(error_status_t *error, error_t type, uint8_t offset, uint32_t timestamp) {
 	error->type = type;
@@ -54,45 +57,47 @@ void error_init(error_status_t *error, error_t type, uint8_t offset, uint32_t ti
  * @param	type			The error type
  * @param	offset		The offset (index) of the error in error_data
  * @param	timestamp	Current timestamp
+ * 
+ * @returns	whether the error has been set
  */
 bool error_set(error_t type, uint8_t offset, uint32_t timestamp) {
 	// Check if error exists
-	if (error_reference[type][offset] == NULL) {
+	if (error_list_ref_array[type][offset] == NULL) {
 		error_status_t er;
 		error_init(&er, type, offset, timestamp);
 
-		error_reference[type][offset] = list_insert(&er_list, &er);
+		error_list_ref_array[type][offset] = list_insert(&er_list, &er);
 
-		if (error_reference[type][offset] == NULL) {
+		if (error_list_ref_array[type][offset] == NULL) {
 			return false;
 		}
 
 		return true;
 	}
 
-	error_reference[type][offset]->status.count++;
+	error_list_ref_array[type][offset]->status.count++;
 	return true;
 }
 
 /**
- * @brief		Deactivates an error.
+ * @brief		Deactivates an error
  *
- * @param		type	The type of error to deactivate
- * @param		er		The error structure to deactivate
+ * @param		type		The type of error to deactivate
+ * @param		offset	The offset of the error type
+ * 
+ * @returns	whether the error has been unset
  */
 bool error_unset(error_t type, uint8_t offset) {
 	// Check if error is fatal; in that case do not remove it, but deactivate it
-	if (error_reference[type][offset] != NULL) {
-		if (error_reference[type][offset]->status.fatal) {
-			error_reference[type][offset]->status.active = false;
+	if (error_list_ref_array[type][offset] != NULL) {
+		if (error_list_ref_array[type][offset]->status.fatal) {
+			error_list_ref_array[type][offset]->status.active = false;
 			return true;
 		}
 
-		//free(&(error_reference[type][offset]->status));
+		list_remove(&er_list, error_list_ref_array[type][offset]);
 
-		list_remove(&er_list, error_reference[type][offset]);
-
-		error_reference[type][offset] = NULL;
+		error_list_ref_array[type][offset] = NULL;
 
 		return true;
 	}
@@ -100,6 +105,9 @@ bool error_unset(error_t type, uint8_t offset) {
 	return false;
 }
 
+/**
+ * @returns	The number of currently running errors
+ */
 uint8_t error_count() {
 	er_node_t *node = er_list;
 	uint8_t count = 0;
@@ -112,6 +120,9 @@ uint8_t error_count() {
 	return count;
 }
 
+/**
+ * @returns the current array of errors
+ */
 uint16_t error_dump(error_status_t errors[]) {
 	er_node_t *node = er_list;
 	uint16_t count = 0;
@@ -124,6 +135,11 @@ uint16_t error_dump(error_status_t errors[]) {
 	return count;
 }
 
+/**
+ * @brief Checks every error for expiration
+ * 
+ * @returns	The expired error type, or ERROR_OK
+ */
 error_t error_verify(uint32_t now) {
 	er_node_t *node = er_list;
 	error_t ret = ERROR_OK;
