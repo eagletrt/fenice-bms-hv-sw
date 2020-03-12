@@ -42,7 +42,7 @@ uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *spi, uint16_t volts[]) {
 		cmd[2] = (uint8_t)(cmd_pec >> 8);
 		cmd[3] = (uint8_t)(cmd_pec);
 
-		ltc6813_wakeup_idle(spi, false);
+		ltc6813_wakeup_idle(spi);
 		ltc6813_enable_cs(spi, CS_LTC_GPIO_Port, CS_LTC_Pin);
 
 		if (HAL_SPI_Transmit(spi, cmd, 4, 100) != HAL_OK) {
@@ -141,7 +141,7 @@ void ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, uint8_t max[2],
 							   uint8_t min[2]) {
 	uint8_t recv[8 * LTC6813_COUNT] = {0};
 
-	ltc6813_wakeup_idle(hspi, false);
+	ltc6813_wakeup_idle(hspi);
 
 	ltc6813_temp_set_register(hspi, LTC6813_TEMP_ADDRESS, 0xFF);
 	ltc6813_stcomm_i2c(hspi, 3);
@@ -170,7 +170,7 @@ void ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, uint8_t max[2],
 
 void ltc6813_read_all_temps(SPI_HandleTypeDef *hspi, uint8_t *temps) {
 	uint8_t count = 0;
-	ltc6813_wakeup_idle(hspi, false);
+	ltc6813_wakeup_idle(hspi);
 
 	for (uint8_t sens = 0; sens < ceil((float)TEMP_SENSOR_COUNT / 4); sens++) {
 		uint8_t recv[8 * LTC6813_COUNT] = {0};
@@ -268,7 +268,7 @@ void ltc6813_set_balancing(SPI_HandleTypeDef *hspi, uint8_t *indexes,
 		// For each LTC we set the correct cfgr
 		ltc6813_set_dcc(indexes, cfgar[i], cfgbr[i]);
 	}
-	ltc6813_wakeup_idle(hspi, true);
+	ltc6813_wakeup_idle(hspi);
 
 	ltc6813_wrcfg(hspi, true, cfgar);
 	ltc6813_wrcfg(hspi, false, cfgbr);
