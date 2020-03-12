@@ -66,7 +66,8 @@ Src/cli.c \
 Src/comm/ltc1865l.c \
 Src/comm/ltc6813.c \
 Src/comm/ltc6813_utils.c \
-Src/error.c \
+Src/error/error.c \
+Src/error/list.c \
 Src/fatfs.c \
 Src/gpio.c \
 Src/i2c.c \
@@ -75,7 +76,6 @@ Src/pack.c \
 Src/spi.c \
 Src/stm32f4xx_hal_msp.c \
 Src/stm32f4xx_it.c \
-Src/sys.c \
 Src/system_stm32f4xx.c \
 Src/usart.c \
 Src/user_diskio.c
@@ -151,6 +151,7 @@ C_INCLUDES =  \
 -IDrivers/STM32F4xx_HAL_Driver/Inc/Legacy \
 -IInc \
 -IInc/comm \
+-IInc/error \
 -IMiddlewares/Third_Party/FatFs/src
 
 

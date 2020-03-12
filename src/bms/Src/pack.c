@@ -21,8 +21,6 @@
 
 uint32_t adc_current[CURRENT_ARRAY_LENGTH];
 
-LTC6813_T ltc[LTC6813_COUNT];
-
 /**
  * @brief	Initializes the pack
  *
@@ -37,25 +35,17 @@ void pack_init(PACK_T *pack) {
 	pack->max_temperature = 0;
 	pack->min_temperature = 0;
 
-	pack->current.value = 0;
-	error_init(&pack->current.error);
+	pack->current = 0;
+	// error_init(&pack->current.error);
 
-	uint8_t i;
-	for (i = 0; i < LTC6813_COUNT; i++) {
-		ltc[i].address = (uint8_t)8 * i;
-		// cell_distribution is not duplicated through the array of ltcs
-
-		error_init(&ltc[i].error);
+	for (uint8_t i = 0; i < PACK_CELL_COUNT; i++) {
+		pack->voltages[i] = 0;
+		//error_init(&pack->voltage_errors[i]);
 	}
 
-	for (i = 0; i < TEMP_SENSOR_COUNT * LTC6813_COUNT; i++) {
-		pack->voltages[i] = 0;
-		error_init(&pack->voltage_errors[i]);
-
-		// Split this cycle if temperatures has a different size than voltage
-
+	for (uint8_t i = 0; i < TEMP_SENSOR_COUNT * LTC6813_COUNT; i++) {
 		pack->temperatures[i] = 0;
-		error_init(&pack->temperature_errors[i]);
+		//error_init(&pack->temperature_errors[i]);
 	}
 
 	// LTC6813 GPIO configuration
@@ -73,48 +63,20 @@ void pack_init(PACK_T *pack) {
  *
  * @returns	The index of the last updated cell
  */
-uint8_t pack_update_voltages(SPI_HandleTypeDef *spi, PACK_T *pack,
-							 warning_t *warning, error_t *error) {
+void pack_update_voltages(SPI_HandleTypeDef *spi, PACK_T *pack) {
 	_ltc6813_adcv(spi, 0);
 
-	uint8_t cell;
-	uint8_t ltc_i;
-	for (ltc_i = 0; ltc_i < LTC6813_COUNT; ltc_i++) {
-		cell = ltc6813_read_voltages(
-			spi, &ltc[ltc_i],
-			pack->voltages +
-				ltc_i * (LTC6813_REG_COUNT * LTC6813_REG_CELL_COUNT),
-			pack->voltage_errors, warning, error);
-		ER_CHK(error);
-	}
+	ltc6813_read_voltages(spi, pack->voltages);
 
-End:;
 	pack_update_voltage_stats(pack);
-
-	if (*error == ERROR_LTC_PEC_ERROR) {
-		return ltc_i;
-	}
-	return cell;
 }
 
 /**
- * @brief		Polls the LTCs for temperatures
- * @details	Temperature measurements with the current hardware architecture
- * 					lasts 600ms: too slow for the BMS. To avoid stopping for
- * 					that long, everytime this function is called only two LTCs
- * 					are polled, and only even or odd cells are measured from
- * 					them. When all LTCs have been polled, we start from the
- * 					beginning and we flip the odd/even bit to read the remaining
- * 					cells. This decreases the update frequency on a single cell,
- * 					but greatly improves (~10x) the blocking time of temperature
- * 					measurements. The time to update a single cell can be
- * 					calculated as following: 2*CELL_COUNT*(52ms+CALL_INTERVAL)
+ * @brief		Gets quick temperature stats from the cellboards
+ * @details	
  *
  * @param		spi			The SPI configuration structure
  * @param		pack		The PACK_T struct to update
- * @param		error		The error return value
- *
- * @returns	The index of the last updated cell
  */
 void pack_update_temperatures(SPI_HandleTypeDef *spi, PACK_T *pack) {
 	uint8_t max[LTC6813_COUNT * 2];
@@ -123,9 +85,9 @@ void pack_update_temperatures(SPI_HandleTypeDef *spi, PACK_T *pack) {
 	pack->avg_temperature = 0;
 	pack->max_temperature = 0;
 	pack->min_temperature = UINT8_MAX;
-	for (uint8_t i = 0; i < LTC6813_COUNT; i++) {
-		ltc6813_read_temperatures(spi, &max[i * 2], &min[i * 2]);
+	ltc6813_read_temperatures(spi, max, min);
 
+	for (uint8_t i = 0; i < LTC6813_COUNT; i++) {
 		pack->avg_temperature += max[i * 2] + max[i * 2 + 1];
 		pack->avg_temperature += min[i * 2] + min[i * 2 + 1];
 
@@ -147,7 +109,7 @@ void pack_update_temperatures_all(SPI_HandleTypeDef *spi, uint8_t *temps) {
  * @param		current	The current value to update
  * @param		error		The error return value
  */
-void pack_update_current(ER_INT16_T *current, error_t *error) {
+void pack_update_current(int16_t *current) {
 	int32_t tmp = 0;
 	uint16_t i;
 	for (i = 0; i < CURRENT_ARRAY_LENGTH; i++) {
@@ -159,19 +121,14 @@ void pack_update_current(ER_INT16_T *current, error_t *error) {
 	float in_volt = (((float)tmp * 3.3) / 4096);
 
 	// Check the current sensor datasheet for the correct formula
-	current->value = (int16_t)(-round((((in_volt - 2.048) * 200 / 1.25)) * 10));
-	current->value += 100;
+	*current = (int16_t)(-round((((in_volt - 2.048) * 200 / 1.25)) * 10));
+	*current += 100;
 
-	if (current->value > PACK_MAX_CURRENT) {
-		error_set(ERROR_OVER_CURRENT, &current->error, HAL_GetTick());
+	if (*current > PACK_MAX_CURRENT) {
+		error_set(ERROR_OVER_CURRENT, 0, HAL_GetTick());
 	} else {
-		error_unset(ERROR_OVER_CURRENT, &current->error);
+		error_unset(ERROR_OVER_CURRENT, 0);
 	}
-
-	*error = error_check_fatal(&current->error, HAL_GetTick());
-	ER_CHK(error);
-
-End:;
 }
 
 /**
@@ -185,14 +142,14 @@ void pack_update_voltage_stats(PACK_T *pack) {
 	uint16_t max_voltage = pack->voltages[0];
 	uint16_t min_voltage = UINT16_MAX;
 
-	uint8_t i;
-	for (i = 0; i < PACK_MODULE_COUNT; i++) {
+	for (uint16_t i = 0; i < PACK_CELL_COUNT; i++) {
 		tot_voltage += (uint32_t)pack->voltages[i];
 
-		if (!pack->voltage_errors[i].active) {
-			max_voltage = fmax(max_voltage, pack->voltages[i]);
-			min_voltage = fmin(min_voltage, pack->voltages[i]);
-		}
+		// TODO: Check for errors
+		//if (!pack->voltage_errors[i].active) {
+		max_voltage = fmax(max_voltage, pack->voltages[i]);
+		min_voltage = fmin(min_voltage, pack->voltages[i]);
+		//}
 	}
 
 	pack->total_voltage = tot_voltage;
@@ -212,7 +169,7 @@ void pack_update_temperature_stats(PACK_T *pack) {
 	uint16_t min_temperature = UINT16_MAX;
 
 	uint8_t temp_count = 0;
-	for (int i = 0; i < PACK_MODULE_COUNT; i++) {
+	for (uint16_t i = 0; i < TEMP_SENSOR_COUNT; i++) {
 		if (pack->temperatures[i] > 0) {
 			avg_temperature += (uint32_t)pack->temperatures[i];
 
@@ -227,16 +184,15 @@ void pack_update_temperature_stats(PACK_T *pack) {
 	pack->min_temperature = fmin(min_temperature, max_temperature);
 }
 
-bool pack_balance_cells(SPI_HandleTypeDef *spi, PACK_T *pack, bal_conf_t *conf,
-						error_t *error) {
-	uint8_t indexes[PACK_MODULE_COUNT];
+bool pack_balance_cells(SPI_HandleTypeDef *spi, PACK_T *pack, bal_conf_t *conf) {
+	uint8_t indexes[PACK_CELL_COUNT];
 	size_t len = bal_compute_indexes(pack->voltages, indexes, conf->threshold);
 
 	if (len > 0) {
 		char out[BUF_SIZE];
 		sprintf(out, "\r\nBalancing cells\r\n");
 
-		for (uint8_t i = 0; i < PACK_MODULE_COUNT; i++) {
+		for (uint8_t i = 0; i < PACK_CELL_COUNT; i++) {
 			if (indexes[i] < NULL_INDEX) {
 				sprintf(out + strlen(out), "%d ", indexes[i]);
 			}
@@ -249,22 +205,4 @@ bool pack_balance_cells(SPI_HandleTypeDef *spi, PACK_T *pack, bal_conf_t *conf,
 	}
 	cli_print("\r\nnothing to balance\r\n", 22);
 	return false;
-}
-
-uint8_t pack_check_errors(PACK_T *pack, error_t *error) {
-	*error = ERROR_OK;
-	warning_t warning;
-
-	uint8_t i;
-	for (i = 0; i < PACK_MODULE_COUNT; i++) {
-		ltc6813_check_voltage(pack->voltages[i], &pack->voltage_errors[i],
-							  &warning, error);
-		ER_CHK(error);
-		ltc6813_check_temperature(pack->temperatures[i],
-								  &pack->temperature_errors[i], error);
-		ER_CHK(error);
-	}
-
-End:
-	return i == PACK_MODULE_COUNT ? 255 : i;
 }

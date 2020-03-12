@@ -1,6 +1,6 @@
 {
 	"C_Cpp.default.cStandard": "c11",
-	"C_Cpp.clang_format_fallbackStyle": "{BasedOnStyle: Google, UseTab: true, IndentWidth: 4, TabWidth: 4, ColumnLimit: 80, AllowShortIfStatementsOnASingleLine: false}",
+	"C_Cpp.clang_format_fallbackStyle": "{BasedOnStyle: Google, UseTab: true, IndentWidth: 4, TabWidth: 4, ColumnLimit: 0, AllowShortIfStatementsOnASingleLine: false}",
 	"stm32-for-vscode.openocdPath": "openocd",
 	"cortex-debug.openocdPath": "openocd",
 	"stm32-for-vscode.makePath": "make",
@@ -22,6 +22,8 @@
 		"limits": "c",
 		"valarray": "c",
 		"cli.h": "c",
-		"main.h": "c"
+		"main.h": "c",
+		"list.h": "c",
+		"math.h": "c"
 	}
 }

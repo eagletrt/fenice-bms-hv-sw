@@ -24,10 +24,10 @@ typedef struct bal_conf_t {
 	uint8_t slot_time;
 } bal_conf_t;
 
-void _bubble_sort(uint8_t indexes[PACK_MODULE_COUNT],
-				  uint16_t values[PACK_MODULE_COUNT], uint8_t length);
-uint8_t bal_compute_indexes(uint16_t volts[PACK_MODULE_COUNT],
-							uint8_t indexes[PACK_MODULE_COUNT],
+void _bubble_sort(uint8_t indexes[PACK_CELL_COUNT],
+				  uint16_t values[PACK_CELL_COUNT], uint8_t length);
+uint8_t bal_compute_indexes(uint16_t volts[PACK_CELL_COUNT],
+							uint8_t indexes[PACK_CELL_COUNT],
 							uint16_t threshold);
 
 #endif
