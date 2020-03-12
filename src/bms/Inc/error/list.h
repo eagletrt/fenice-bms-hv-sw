@@ -23,6 +23,5 @@ typedef struct er_node {
 void list_init(er_node_t *head);
 
 er_node_t *list_insert(er_node_t **head, error_status_t *status);
-bool list_add(er_node_t *head, er_node_t *item);
-bool list_remove(er_node_t *head);
+bool list_remove(er_node_t **head, er_node_t *node);
 #endif
