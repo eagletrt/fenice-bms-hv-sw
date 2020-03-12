@@ -50,7 +50,7 @@ void _ltc6813_adcv(SPI_HandleTypeDef *spi, bool dcp) {
 	cmd[3] = (uint8_t)(cmd_pec);
 
 	ltc6813_enable_cs(spi, CS_LTC_GPIO_Port, CS_LTC_Pin);
-	ltc6813_wakeup_idle(spi, false);
+	ltc6813_wakeup_idle(spi);
 
 	HAL_SPI_Transmit(spi, cmd, 4, 100);
 
@@ -126,7 +126,7 @@ void _ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool start_bal, bool even) {
 	cfgr[6] = (uint8_t)(cmd_pec >> 8);
 	cfgr[7] = (uint8_t)(cmd_pec);
 
-	ltc6813_wakeup_idle(hspi, true);
+	ltc6813_wakeup_idle(hspi);
 
 	ltc6813_enable_cs(hspi, CS_LTC_GPIO_Port, CS_LTC_Pin);
 	HAL_SPI_Transmit(hspi, wrcfg, 4, 100);
@@ -219,7 +219,7 @@ void ltc6813_stcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t length) {
  *
  * @param		hspi	The SPI configuration structure
  */
-void ltc6813_wakeup_idle(SPI_HandleTypeDef *hspi, bool apply_delay) {
+void ltc6813_wakeup_idle(SPI_HandleTypeDef *hspi) {
 	uint8_t data = 0xFF;
 
 	ltc6813_enable_cs(hspi, CS_LTC_GPIO_Port, CS_LTC_Pin);

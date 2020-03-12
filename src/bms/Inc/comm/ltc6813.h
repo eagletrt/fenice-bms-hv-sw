@@ -133,7 +133,7 @@ void ltc6813_enable_cs(SPI_HandleTypeDef *spi, GPIO_TypeDef *gpio,
 					   uint16_t pin);
 void ltc6813_disable_cs(SPI_HandleTypeDef *spi, GPIO_TypeDef *gpio,
 						uint16_t pin);
-void ltc6813_wakeup_idle(SPI_HandleTypeDef *hspi, bool apply_delay);
+void ltc6813_wakeup_idle(SPI_HandleTypeDef *hspi);
 uint16_t ltc6813_pec15(uint8_t len, uint8_t data[]);
 
 void _ltc6813_adcv(SPI_HandleTypeDef *hspi, bool DCP);
