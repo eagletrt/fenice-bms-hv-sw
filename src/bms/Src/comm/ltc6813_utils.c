@@ -31,7 +31,7 @@
 uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *spi, uint16_t volts[]) {
 	uint8_t cmd[4];
 	uint16_t cmd_pec;
-	uint8_t data[8];
+	uint8_t data[8 * LTC6813_COUNT];
 
 	cmd[0] = 0;	 // Broadcast
 
@@ -52,7 +52,7 @@ uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *spi, uint16_t volts[]) {
 
 		ltc6813_disable_cs(spi, CS_LTC_GPIO_Port, CS_LTC_Pin);
 
-#if LTC6813_EMU > 0
+#if LTC6813_EMU == 1
 		// Writes 3.6v to each cell
 
 		uint8_t emu_i;
@@ -61,7 +61,7 @@ uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *spi, uint16_t volts[]) {
 			data[emu_i] = 0b10100000;
 			data[++emu_i] = 0b10001100;
 		}
-		uint16_t emu_pec = _pec15(6, data);
+		uint16_t emu_pec = ltc6813_pec15(6, data);
 		data[6] = (uint8_t)(emu_pec >> 8);
 		data[7] = (uint8_t)emu_pec;
 #endif
@@ -73,12 +73,12 @@ uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *spi, uint16_t volts[]) {
 				// For every cell in the register
 				for (uint8_t cell = 0; cell < LTC6813_REG_CELL_COUNT; cell++) {
 					// offset by register (3 slots) + offset by ltc (18 slots) + cell
-					uint8_t index = (reg * LTC6813_REG_CELL_COUNT) + (ltc * LTC6813_CELL_COUNT) + cell;
+					uint16_t index = (reg * LTC6813_REG_CELL_COUNT) + (ltc * LTC6813_CELL_COUNT) + cell;
 
 					// (size of value) * cell
 					volts[index] = ltc6813_convert_voltage(&data[2 * cell]);
 
-					ltc6813_check_voltage(volts, count);
+					ltc6813_check_voltage(volts, index);
 					count++;
 				}
 			} else {

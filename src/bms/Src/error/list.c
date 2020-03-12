@@ -37,15 +37,17 @@ void list_init(er_node_t *head) {
  */
 er_node_t *list_insert(er_node_t **head, error_status_t *status) {
 	er_node_t *node = (er_node_t *)malloc(sizeof(er_node_t));
-	// TODO: check if malloc succeeded
 
-	node->prev = NULL;
-	node->next = NULL;
+	if (node == NULL) {
+		return NULL;
+	}
+
 	node->status = *status;
+	node->prev = NULL;
+	node->next = *head;
 
-	if (head != NULL) {
+	if (*head != NULL) {
 		(*head)->prev = node;
-		node->next = *head;
 	}
 
 	*head = node;
@@ -53,39 +55,22 @@ er_node_t *list_insert(er_node_t **head, error_status_t *status) {
 	return *head;
 }
 
-bool list_add(er_node_t *head, er_node_t *item) {
-	er_node_t *current = head;
-
-	if (current != NULL) {
-		while (current->next != NULL) {
-			current = current->next;
-		}
-
-		current = current->next;  // Step into NULL
-	}
-
-	current = malloc(sizeof(er_node_t));
-	if (current == NULL) {
+bool list_remove(er_node_t **head, er_node_t *node) {
+	if (*head == NULL || node == NULL) {
 		return false;
 	}
 
-	current = item;
-
-	return true;
-}
-
-bool list_remove(er_node_t *head) {
-	if (head == NULL) {
-		return false;
+	if (*head == node) {
+		*head = node->next;
 	}
 
-	if ((head)->prev != NULL) {
-		(head)->prev->next = (head)->next;
+	if (node->prev != NULL) {
+		node->prev->next = node->next;
 	}
-	if ((head)->next != NULL) {
-		(head)->next->prev = (head)->prev;
+	if (node->next != NULL) {
+		node->next->prev = node->prev;
 	}
 
-	free(head);
+	free(node);
 	return true;
 }

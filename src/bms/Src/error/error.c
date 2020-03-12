@@ -58,17 +58,20 @@ void error_init(error_status_t *error, error_t type, uint8_t offset, uint32_t ti
 bool error_set(error_t type, uint8_t offset, uint32_t timestamp) {
 	// Check if error exists
 	if (error_reference[type][offset] == NULL) {
-		error_status_t *er = (error_status_t *)malloc(sizeof(error_status_t));
+		error_status_t er;
+		error_init(&er, type, offset, timestamp);
 
-		error_init(er, type, offset, timestamp);
+		error_reference[type][offset] = list_insert(&er_list, &er);
 
-		error_reference[type][offset] = list_insert(&er_list, er);
+		if (error_reference[type][offset] == NULL) {
+			return false;
+		}
 
 		return true;
 	}
 
 	error_reference[type][offset]->status.count++;
-	return false;
+	return true;
 }
 
 /**
@@ -85,7 +88,9 @@ bool error_unset(error_t type, uint8_t offset) {
 			return true;
 		}
 
-		list_remove(error_reference[type][offset]);
+		//free(&(error_reference[type][offset]->status));
+
+		list_remove(&er_list, error_reference[type][offset]);
 
 		error_reference[type][offset] = NULL;
 

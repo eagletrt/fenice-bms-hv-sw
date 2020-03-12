@@ -11,13 +11,12 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-
 #include "can.h"
 #include "fatfs.h"
-#include "gpio.h"
 #include "i2c.h"
 #include "spi.h"
 #include "usart.h"
+#include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -239,9 +238,7 @@ void check_timers(state_global_data_t *data) {
 		timer_temps = tick;
 
 		read_temps(data);
-
-		// Delay voltage measurement to avoid interferences
-		// timer_volts = HAL_GetTick() - (VOLTS_READ_INTERVAL / 2);
+		error_unset(ERROR_OVER_CURRENT, 0);
 	}
 
 	// Read and send voltages and current

@@ -10,9 +10,6 @@
 
 #include "main.h"
 
-// Set to 1 to emulate the LTC daisy chain
-#define LTC6813_EMU 1
-
 uint8_t GPIO_CONFIG;
 
 void ltc6813_enable_cs(SPI_HandleTypeDef *spi, GPIO_TypeDef *gpio,

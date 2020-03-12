@@ -142,8 +142,7 @@ void pack_update_voltage_stats(PACK_T *pack) {
 	uint16_t max_voltage = pack->voltages[0];
 	uint16_t min_voltage = UINT16_MAX;
 
-	uint8_t i;
-	for (i = 0; i < PACK_CELL_COUNT; i++) {
+	for (uint16_t i = 0; i < PACK_CELL_COUNT; i++) {
 		tot_voltage += (uint32_t)pack->voltages[i];
 
 		// TODO: Check for errors
@@ -170,7 +169,7 @@ void pack_update_temperature_stats(PACK_T *pack) {
 	uint16_t min_temperature = UINT16_MAX;
 
 	uint8_t temp_count = 0;
-	for (uint8_t i = 0; i < TEMP_SENSOR_COUNT; i++) {
+	for (uint16_t i = 0; i < TEMP_SENSOR_COUNT; i++) {
 		if (pack->temperatures[i] > 0) {
 			avg_temperature += (uint32_t)pack->temperatures[i];
 

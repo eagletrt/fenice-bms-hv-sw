@@ -15,6 +15,9 @@
 //=================================== LTC6813 ===============================
 //===========================================================================
 
+// Set to 1 to emulate the LTC daisy chain
+#define LTC6813_EMU 1
+
 /**
  * Number of daisy chained LTCs
  */
@@ -69,8 +72,7 @@
 /**
  * How many sensors on each cellboard
  */
-#define TEMP_SENSOR_COUNT \
-	TEMP_BUS_COUNT* TEMP_STRIPS_PER_BUS* TEMP_SENSORS_PER_STRIP
+#define TEMP_SENSOR_COUNT (TEMP_BUS_COUNT * TEMP_STRIPS_PER_BUS * TEMP_SENSORS_PER_STRIP)
 
 //===========================================================================
 //================================ Pack Settings ============================
@@ -79,7 +81,12 @@
 /**
  * Total number of cells in series
  */
-#define PACK_CELL_COUNT LTC6813_COUNT* LTC6813_CELL_COUNT
+#define PACK_CELL_COUNT (LTC6813_COUNT * LTC6813_CELL_COUNT)
+
+/**
+ * How many temperature sensors in the pack
+ */
+#define PACK_TEMP_COUNT (TEMP_SENSOR_COUNT * LTC6813_COUNT)
 
 /**
  * Max current. In (A * 10)
@@ -109,11 +116,6 @@
  *  How much does a balancing cycle last (ms)
  */
 #define BAL_CYCLE_LENGTH 120000
-
-/**
- * How many sensors in the pack
- */
-#define PACK_TEMP_COUNT TEMP_SENSOR_COUNT* LTC6813_COUNT
 
 /**
  * The address pin coding for each sensor in a strip. The LSB must be changed

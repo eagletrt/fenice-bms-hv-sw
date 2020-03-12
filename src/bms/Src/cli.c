@@ -38,11 +38,12 @@ void _cli_volts_all(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 
 	for (uint8_t i = 0; i < PACK_CELL_COUNT; i++) {
 		if (i % LTC6813_CELL_COUNT == 0) {
-			sprintf(out + strlen(out), "%-3d", i % LTC6813_CELL_COUNT);
-		} else if (i % 9 == 0 && i > 0) {
+			sprintf(out + strlen(out), "\r\n%-3d", i / LTC6813_CELL_COUNT);
+		} else if (i % (LTC6813_CELL_COUNT / 2) == 0 && i > 0) {
 			sprintf(out + strlen(out), "\r\n%-3s", "");
 		}
-		sprintf(out + strlen(out), "[%2u %-.3fv] ", i % LTC6813_CELL_COUNT,
+
+		sprintf(out + strlen(out), "[%3u %-.3fv] ", i,
 				(float)data->pack.voltages[i] / 10000);
 	}
 
@@ -64,16 +65,19 @@ void _cli_temps_all(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 					char *out) {
 	out[0] = '\0';
 
-	uint8_t temps[TEMP_SENSOR_COUNT * LTC6813_COUNT];
+	uint8_t temps[PACK_TEMP_COUNT];
 	pack_update_temperatures_all(data->hspi, temps);
 
-	for (uint8_t i = 0; i < TEMP_SENSOR_COUNT * LTC6813_COUNT; i++) {
-		sprintf(out + strlen(out), "[%3u] %2uc ", i, temps[i]);
-
-		if ((i + 1) % 9 == 0) {
-			sprintf(out + strlen(out), "\r\n");
+	for (uint8_t i = 0; i < PACK_TEMP_COUNT; i++) {
+		if (i % TEMP_SENSOR_COUNT == 0) {
+			sprintf(out + strlen(out), "\r\n%-3d", i / PACK_TEMP_COUNT);
+		} else if (i % (TEMP_SENSOR_COUNT / 2) == 0 && i > 0) {
+			sprintf(out + strlen(out), "\r\n%-3s", "");
 		}
+		sprintf(out + strlen(out), "[%3u %2uc] ", i, temps[i]);
 	}
+
+	sprintf(out + strlen(out), "\r\n");
 }
 void _cli_status(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 				 char *out) {
@@ -118,20 +122,19 @@ void _cli_balance(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 }
 
 void _cli_errors(char *cmd, state_global_data_t *data, BMS_STATE_T state, char *out) {
-	error_status_t errors[UINT8_MAX];
+	uint8_t count = error_count();
+	error_status_t errors[count];
+	error_dump(errors);
 
-	uint8_t count = error_dump(errors);
-	sprintf(out, "count %u\r\n\n", count);
-
+	sprintf(out, "total %u\r\n", count);
 	for (uint8_t i = 0; i < count; i++) {
 		sprintf(out + strlen(out),
-				"type.......%s\r\n"
-
-				"timestamp..%lu (%lums ago)\r\n"
-				"offset.....%u\r\n"
-				"active.....%s\r\n"
-				"fatal......%s\r\n"
-				"count......%lu\r\n\n",
+				"type........%s\r\n"
+				"timestamp...%lu (%lums ago)\r\n"
+				"offset......%u\r\n"
+				"active......%s\r\n"
+				"fatal.......%s\r\n"
+				"count.......%lu\r\n",
 				error_names[errors[i].type], errors[i].time_stamp, HAL_GetTick() - errors[i].time_stamp, errors[i].offset, bool_names[errors[i].active], bool_names[errors[i].fatal], errors[i].count);
 	}
 }
@@ -139,25 +142,13 @@ void _cli_errors(char *cmd, state_global_data_t *data, BMS_STATE_T state, char *
 void _cli_taba(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 			   char *out) {
 	sprintf(out,
-			" #######    #    ######     #    ######     #    ####### ####### "
-			"######  \r\n"
-			"    #      # #   #     #   # #   #     #   # #      #    #       "
-			"# "
-			"    # \r\n"
-			"    #     #   #  #     #  #   #  #     #  #   #     #    #       "
-			"# "
-			"    # \r\n"
-			"    #    #     # ######  #     # ######  #     #    #    #####   "
-			"# "
-			"    # \r\n"
-			"    #    ####### #     # ####### #   #   #######    #    #       "
-			"# "
-			"    # \r\n"
-			"    #    #     # #     # #     # #    #  #     #    #    #       "
-			"# "
-			"    # \r\n"
-			"    #    #     # ######  #     # #     # #     #    #    ####### "
-			"######  \r\n");
+			" #######    #    ######     #    ######     #    ####### ####### ######  \r\n"
+			"    #      # #   #     #   # #   #     #   # #      #    #       #     # \r\n"
+			"    #     #   #  #     #  #   #  #     #  #   #     #    #       #     # \r\n"
+			"    #    #     # ######  #     # ######  #     #    #    #####   #     # \r\n"
+			"    #    ####### #     # ####### #   #   #######    #    #       #     # \r\n"
+			"    #    #     # #     # #     # #    #  #     #    #    #       #     # \r\n"
+			"    #    #     # ######  #     # #     # #     #    #    ####### ######  \r\n");
 }
 
 void _cli_help(char *cmd, state_global_data_t *data, BMS_STATE_T state,
