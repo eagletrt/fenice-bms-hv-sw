@@ -27,6 +27,9 @@ typedef enum error {
 	ERROR_OVER_CURRENT,
 	ERROR_CAN,
 
+	ERROR_ADC_INIT,
+	ERROR_ADC_TIMEOUT,
+
 	ERROR_NUM_ERRORS
 } error_t;
 

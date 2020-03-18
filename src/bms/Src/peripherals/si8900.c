@@ -14,7 +14,10 @@
 #include <string.h>
 
 #include "cli.h"
+#include "error/error.h"
 #include "usart.h"
+
+bool si8900_ready = false;
 
 /**
  * @brief		Initializes the ADC
@@ -40,6 +43,7 @@ bool si8900_init(UART_HandleTypeDef *huart) {
 		if (recv == 0x55) {
 			if (code_receive) {
 				code_confirm = true;
+				si8900_ready = true;
 			}
 			code_receive = true;
 		} else {
@@ -48,13 +52,14 @@ bool si8900_init(UART_HandleTypeDef *huart) {
 		}
 		HAL_UART_Transmit(huart, &tx, 1, 10);
 
-		timeout = (HAL_GetTick() - time) >= SI8900_TIMEOUT;
+		timeout = (HAL_GetTick() - time) >= SI8900_INIT_TIMEOUT;
 	}
 
-	// TODO: Add error management
 	if (timeout) {
+		error_set(ERROR_ADC_INIT, 0, HAL_GetTick());
 		return false;
 	}
+	error_unset(ERROR_ADC_INIT, 0);
 	return true;
 }
 
@@ -69,25 +74,30 @@ bool si8900_init(UART_HandleTypeDef *huart) {
  */
 bool si8900_read_channel(UART_HandleTypeDef *huart, SI8900_CHANNEL ch,
 						 uint16_t *voltage) {
-	uint8_t conf = si8900_cnfg_0 | (ch << 4);
+	if (si8900_ready) {
+		uint8_t conf = si8900_cnfg_0 | (ch << 4);
 
-	HAL_UART_Transmit(huart, &conf, 1, 1);
+		HAL_UART_Transmit(huart, &conf, 1, 1);
 
-	uint32_t time = HAL_GetTick();
-	uint8_t tmp = 0;
-	do {
-		HAL_UART_Receive(huart, &tmp, 1, 1);
+		uint32_t time = HAL_GetTick();
+		uint8_t tmp = 0;
+		do {
+			HAL_UART_Receive(huart, &tmp, 1, 1);
 
-		if ((HAL_GetTick() - time) >= SI8900_TIMEOUT) {
-			return false;
-		}
-	} while (tmp != conf);
+			if ((HAL_GetTick() - time) >= SI8900_TIMEOUT) {
+				error_set(ERROR_ADC_TIMEOUT, 0, HAL_GetTick());
+				return false;
+			}
+		} while (tmp != conf);
+		error_unset(ERROR_ADC_TIMEOUT, 0);
 
-	uint8_t recv[2];
-	HAL_UART_Receive(huart, recv, 2, 1);
-	*voltage = si8900_convert_voltage(recv);
+		uint8_t recv[2];
+		HAL_UART_Receive(huart, recv, 2, 1);
+		*voltage = si8900_convert_voltage(recv);
 
-	return true;
+		return true;
+	}
+	return false;
 }
 
 /**

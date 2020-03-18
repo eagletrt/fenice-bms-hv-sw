@@ -69,6 +69,8 @@ const char *error_names[ERROR_NUM_ERRORS] = {
 	[ERROR_CELL_OVER_TEMPERATURE] = "over-temperature",
 	[ERROR_OVER_CURRENT] = "over-current",
 	[ERROR_CAN] = "CAN",
+	[ERROR_ADC_INIT] = "adc init",
+	[ERROR_ADC_TIMEOUT] = "adc timeout",
 	[ERROR_OK] = "ok"};
 
 const char *bool_names[2] = {"false", "true"};
