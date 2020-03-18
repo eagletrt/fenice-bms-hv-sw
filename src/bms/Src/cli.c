@@ -126,10 +126,10 @@ void _cli_errors(char *cmd, state_global_data_t *data, BMS_STATE_T state, char *
 	error_status_t errors[count];
 	error_dump(errors);
 
-	sprintf(out, "total %u\r\n", count);
+	sprintf(out, "total %u", count);
 	for (uint8_t i = 0; i < count; i++) {
 		sprintf(out + strlen(out),
-				"type........%s\r\n"
+				"\r\ntype........%s\r\n"
 				"timestamp...%lu (%lums ago)\r\n"
 				"offset......%u\r\n"
 				"active......%s\r\n"
