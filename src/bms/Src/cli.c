@@ -24,8 +24,11 @@ const char *cli_commands[N_COMMANDS] = {
 void _cli_volts(char *cmd, state_global_data_t *data, BMS_STATE_T state,
 				char *out) {
 	sprintf(out,
-			"total.....%.2f V\r\nmax.......%.3f V\r\nmin.......%.3f V"
+			"bus.......%.2f V\r\nadc.......%.2f V\r\ntotal.....%.2f "
+			"V\r\nmax.......%.3f V\r\nmin.......%.3f V"
 			"\r\ndelta.....%.3f V\r\n",
+			(float)data->pack.adc_voltage / 100,
+			(float)data->pack.ext_voltage / 100,
 			(float)data->pack.total_voltage / 10000,
 			(float)data->pack.max_voltage / 10000,
 			(float)data->pack.min_voltage / 10000,

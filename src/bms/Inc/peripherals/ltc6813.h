@@ -19,8 +19,8 @@
 #include <stm32f4xx_hal.h>
 
 #include "../../../fenice_config.h"
-#include "comm/ltc6813_utils.h"
 #include "error/error.h"
+#include "peripherals/ltc6813_utils.h"
 
 /** @brief Table used to calculate the pec for messaging */
 static const uint16_t crcTable[256] = {

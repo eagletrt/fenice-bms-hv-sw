@@ -24,6 +24,10 @@
 		"cli.h": "c",
 		"main.h": "c",
 		"list.h": "c",
-		"math.h": "c"
+		"math.h": "c",
+		"spi.h": "c",
+		"si8900.h": "c",
+		"usart.h": "c",
+		"gpio.h": "c"
 	}
 }

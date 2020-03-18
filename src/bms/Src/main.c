@@ -12,10 +12,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
-#include "can.h"
 #include "fatfs.h"
 #include "gpio.h"
-#include "i2c.h"
 #include "spi.h"
 #include "usart.h"
 
@@ -23,7 +21,8 @@
 /* USER CODE BEGIN Includes */
 #include "../../fenice_config.h"
 #include "cli.h"
-#include "error.h"
+#include "error/error.h"
+#include "si8900.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -89,7 +88,6 @@ uint32_t timer_bal = 0;
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-static void MX_NVIC_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -246,6 +244,10 @@ void check_timers(state_global_data_t *data) {
 		timer_volts = tick;
 
 		read_volts(data);
+
+		// TODO: check return error
+		si8900_read_channel(&huart3, SI8900_AIN0, &data->pack.adc_voltage);
+		si8900_read_channel(&huart3, SI8900_AIN1, &data->pack.ext_voltage);
 	}
 
 	if (data->balancing.enable && tick - timer_bal >= BAL_CYCLE_LENGTH + 5000) {
@@ -307,15 +309,17 @@ int main(void) {
 	MX_GPIO_Init();
 	MX_SPI1_Init();
 	MX_USART2_UART_Init();
-	MX_CAN1_Init();
-	MX_I2C1_Init();
 	MX_FATFS_Init();
-
-	/* Initialize interrupts */
-	MX_NVIC_Init();
+	MX_USART3_UART_Init();
 	/* USER CODE BEGIN 2 */
 
 	cli_init(&cli, &huart2);
+
+	if (si8900_init(&huart3)) {
+		cli_print("SI8900 INITIALIZED\r\n", 20);
+	} else {
+		cli_print("SI8900 ERROR\r\n", 20);
+	}
 
 	data.hspi = &hspi1;
 
@@ -384,94 +388,8 @@ void SystemClock_Config(void) {
 	}
 }
 
-/**
-  * @brief NVIC Configuration.
-  * @retval None
-  */
-static void MX_NVIC_Init(void) {
-	/* I2C1_EV_IRQn interrupt configuration */
-	HAL_NVIC_SetPriority(I2C1_EV_IRQn, 0, 0);
-	HAL_NVIC_EnableIRQ(I2C1_EV_IRQn);
-	/* I2C1_ER_IRQn interrupt configuration */
-	HAL_NVIC_SetPriority(I2C1_ER_IRQn, 0, 0);
-	HAL_NVIC_EnableIRQ(I2C1_ER_IRQn);
-}
-
 /* USER CODE BEGIN 4 */
-/**
- * @brief  Rx Transfer completed callback
- * @note   This example shows a simple way to report end of IT Rx transfer,
- * and you can add your own implementation.
- * @retval None
- */
-void UART_CharReception_Callback(void) {
-	/* Read Received character. RXNE flag is cleared by reading of DR
-	 * register
-	 */
 
-	cli_char_receive();
-}
-
-/**
- * @brief  Function called for achieving next TX Byte sending
- * @retval None
- */
-void UART_TXEmpty_Callback(void) {
-	// if (tx_buf.index == (ubSizeToSend - 1)) {
-	/* Disable TXE interrupt */
-	LL_USART_DisableIT_TXE(USART2);
-
-	/* Enable TC interrupt */
-	LL_USART_EnableIT_TC(USART2);
-	//}
-
-	/* Fill DR with a new char */
-	// LL_USART_TransmitData8(USART2, aTxStartMessage[rx_buf.index++]);
-}
-
-/**
- * @brief  Function called at completion of last byte transmission
- * @retval None
- */
-void UART_CharTransmitComplete_Callback(void) {
-	// if (tx_buf.index == sizeof(aTxStartMessage)) {
-	// 	tx_buf.index = 0;
-
-	// 	/* Disable TC interrupt */
-	LL_USART_DisableIT_TC(USART2);
-
-	// 	/* Set Tx complete boolean to 1 */
-	// 	tx_complete = 1;
-	// }
-}
-
-/**
- * @brief  UART error callbacks
- * @note   This example shows a simple way to report transfer error, and you
- * can add your own implementation.
- * @retval None
- */
-void UART_Error_Callback(void) {
-	__IO uint32_t sr_reg;
-
-	/* Disable USARTx_IRQn */
-	NVIC_DisableIRQ(USART2_IRQn);
-
-	/* Error handling example :
-	  - Read USART SR register to identify flag that leads to IT raising
-	  - Perform corresponding error handling treatment according to flag
-	*/
-	sr_reg = LL_USART_ReadReg(USART2, SR);
-	if (sr_reg & LL_USART_SR_NE) {
-		/* Turn LED2 off: Transfer error in reception/transmission process
-		 */
-		// BSP_LED_Off(LED2);
-	} else {
-		/* Turn LED2 off: Transfer error in reception/transmission process
-		 */
-		// BSP_LED_Off(LED2);
-	}
-}
 /* USER CODE END 4 */
 
 /**

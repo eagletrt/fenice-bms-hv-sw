@@ -21,7 +21,17 @@
 #include "spi.h"
 
 /* USER CODE BEGIN 0 */
+void spi_enable_cs(SPI_HandleTypeDef *spi, GPIO_TypeDef *gpio, uint16_t pin) {
+	HAL_GPIO_WritePin(gpio, pin, GPIO_PIN_RESET);
+	while (spi->State != HAL_SPI_STATE_READY)
+		;
+}
 
+void spi_disable_cs(SPI_HandleTypeDef *spi, GPIO_TypeDef *gpio, uint16_t pin) {
+	while (spi->State != HAL_SPI_STATE_READY)
+		;
+	HAL_GPIO_WritePin(gpio, pin, GPIO_PIN_SET);
+}
 /* USER CODE END 0 */
 
 SPI_HandleTypeDef hspi1;
