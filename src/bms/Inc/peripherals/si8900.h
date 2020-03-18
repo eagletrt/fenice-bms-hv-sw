@@ -5,6 +5,7 @@
  *
  * @date		Gen 09, 2020
  * @author	Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @coauthor Simone Ruffini [simone.ruffini@tutanota.com]
  */
 
 #ifndef SI8902_H
@@ -16,10 +17,10 @@
 
 #include "main.h"
 
-#define VREF 3.33
-#define TIMEOUT 1500
+#define SI8900_VREF 3.33
+#define SI8900_TIMEOUT 1500
 
-static const uint8_t cnfg_0 = 0b11001011;
+static const uint8_t si8900_cnfg_0 = 0b11000011;
 
 typedef enum {
 	SI8900_AIN0 = 0,
