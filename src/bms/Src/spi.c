@@ -1,21 +1,21 @@
 /**
- ******************************************************************************
- * File Name          : SPI.c
- * Description        : This file provides code for the configuration
- *                      of the SPI instances.
- ******************************************************************************
- * @attention
- *
- * <h2><center>&copy; Copyright (c) 2019 STMicroelectronics.
- * All rights reserved.</center></h2>
- *
- * This software component is licensed by ST under Ultimate Liberty license
- * SLA0044, the "License"; You may not use this file except in compliance with
- * the License. You may obtain a copy of the License at:
- *                             www.st.com/SLA0044
- *
- ******************************************************************************
- */
+  ******************************************************************************
+  * File Name          : SPI.c
+  * Description        : This file provides code for the configuration
+  *                      of the SPI instances.
+  ******************************************************************************
+  * @attention
+  *
+  * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
+  * All rights reserved.</center></h2>
+  *
+  * This software component is licensed by ST under Ultimate Liberty license
+  * SLA0044, the "License"; You may not use this file except in compliance with
+  * the License. You may obtain a copy of the License at:
+  *                             www.st.com/SLA0044
+  *
+  ******************************************************************************
+  */
 
 /* Includes ------------------------------------------------------------------*/
 #include "spi.h"
@@ -65,11 +65,11 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *spiHandle) {
 		__HAL_RCC_SPI1_CLK_ENABLE();
 
 		__HAL_RCC_GPIOA_CLK_ENABLE();
-		/**SPI1 GPIO Configuration
-		PA5     ------> SPI1_SCK
-		PA6     ------> SPI1_MISO
-		PA7     ------> SPI1_MOSI
-		*/
+		/**SPI1 GPIO Configuration    
+    PA5     ------> SPI1_SCK
+    PA6     ------> SPI1_MISO
+    PA7     ------> SPI1_MOSI 
+    */
 		GPIO_InitStruct.Pin = GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7;
 		GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
 		GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -91,11 +91,11 @@ void HAL_SPI_MspDeInit(SPI_HandleTypeDef *spiHandle) {
 		/* Peripheral clock disable */
 		__HAL_RCC_SPI1_CLK_DISABLE();
 
-		/**SPI1 GPIO Configuration
-		PA5     ------> SPI1_SCK
-		PA6     ------> SPI1_MISO
-		PA7     ------> SPI1_MOSI
-		*/
+		/**SPI1 GPIO Configuration    
+    PA5     ------> SPI1_SCK
+    PA6     ------> SPI1_MISO
+    PA7     ------> SPI1_MOSI 
+    */
 		HAL_GPIO_DeInit(GPIOA, GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7);
 
 		/* USER CODE BEGIN SPI1_MspDeInit 1 */

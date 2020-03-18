@@ -49,8 +49,8 @@
 
 /* USER CODE BEGIN PV */
 state_func_t *const state_table[BMS_NUM_STATES] = {
-	do_state_init, do_state_idle,	do_state_precharge,
-	do_state_on,   do_state_charge, do_state_halt};
+	do_state_init, do_state_idle, do_state_precharge,
+	do_state_on, do_state_charge, do_state_halt};
 
 transition_func_t *const transition_table[BMS_NUM_STATES][BMS_NUM_STATES] = {
 	{NULL, to_idle, to_precharge, NULL, NULL, to_halt},	 // from init
@@ -90,6 +90,7 @@ uint32_t timer_bal = 0;
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+static void MX_NVIC_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -249,11 +250,12 @@ void check_timers(state_global_data_t *data) {
 		timer_volts = tick;
 
 		read_volts(data);
-		ER_CHK(&data->error);
 
 		// TODO: check return error
 		si8900_read_channel(&huart3, SI8900_AIN0, &data->pack.adc_voltage);
 		si8900_read_channel(&huart3, SI8900_AIN1, &data->pack.ext_voltage);
+
+		ER_CHK(&data->error);
 	}
 
 	if (data->balancing.enable && tick - timer_bal >= BAL_CYCLE_LENGTH + 5000) {
@@ -303,19 +305,17 @@ End:;
 /* USER CODE END 0 */
 
 /**
- * @brief  The application entry point.
- * @retval int
- */
+  * @brief  The application entry point.
+  * @retval int
+  */
 int main(void) {
 	/* USER CODE BEGIN 1 */
 
 	/* USER CODE END 1 */
 
-	/* MCU
-	 * Configuration--------------------------------------------------------*/
+	/* MCU Configuration--------------------------------------------------------*/
 
-	/* Reset of all peripherals, Initializes the Flash interface and the
-	 * Systick. */
+	/* Reset of all peripherals, Initializes the Flash interface and the Systick. */
 	HAL_Init();
 
 	/* USER CODE BEGIN Init */
@@ -336,6 +336,9 @@ int main(void) {
 	MX_CAN1_Init();
 	MX_FATFS_Init();
 	MX_USART3_UART_Init();
+
+	/* Initialize interrupts */
+	MX_NVIC_Init();
 	/* USER CODE BEGIN 2 */
 	cli_init(&cli, &huart2);
 
@@ -362,15 +365,6 @@ int main(void) {
 		/* USER CODE BEGIN 3 */
 		state = run_state(state, &data);
 
-		uint16_t temp[3] = {0};
-		// si8900_read_voltages(&huart3, temp);
-		if (si8900_read_channel(&huart3, 0, &temp[0])) {
-			char c[20];
-			sprintf(c, "%d\r\n", temp[0]);
-			cli_print(c, strlen(c));
-		}
-		HAL_Delay(500);
-
 		check_timers(&data);
 		ER_CHK(&data.error);
 
@@ -388,19 +382,19 @@ int main(void) {
 }
 
 /**
- * @brief System Clock Configuration
- * @retval None
- */
+  * @brief System Clock Configuration
+  * @retval None
+  */
 void SystemClock_Config(void) {
 	RCC_OscInitTypeDef RCC_OscInitStruct = {0};
 	RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
-	/** Configure the main internal regulator output voltage
-	 */
+	/** Configure the main internal regulator output voltage 
+  */
 	__HAL_RCC_PWR_CLK_ENABLE();
 	__HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
-	/** Initializes the CPU, AHB and APB busses clocks
-	 */
+	/** Initializes the CPU, AHB and APB busses clocks 
+  */
 	RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
 	RCC_OscInitStruct.HSEState = RCC_HSE_ON;
 	RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
@@ -413,15 +407,14 @@ void SystemClock_Config(void) {
 	if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
 		Error_Handler();
 	}
-	/** Activate the Over-Drive mode
-	 */
+	/** Activate the Over-Drive mode 
+  */
 	if (HAL_PWREx_EnableOverDrive() != HAL_OK) {
 		Error_Handler();
 	}
-	/** Initializes the CPU, AHB and APB busses clocks
-	 */
-	RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK |
-								  RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
+	/** Initializes the CPU, AHB and APB busses clocks 
+  */
+	RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
 	RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
 	RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
 	RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
@@ -432,87 +425,24 @@ void SystemClock_Config(void) {
 	}
 }
 
+/**
+  * @brief NVIC Configuration.
+  * @retval None
+  */
+static void MX_NVIC_Init(void) {
+	/* USART2_IRQn interrupt configuration */
+	HAL_NVIC_SetPriority(USART2_IRQn, 0, 0);
+	HAL_NVIC_EnableIRQ(USART2_IRQn);
+}
+
 /* USER CODE BEGIN 4 */
-/**
- * @brief  Rx Transfer completed callback
- * @note   This example shows a simple way to report end of IT Rx transfer,
- * and you can add your own implementation.
- * @retval None
- */
-void UART_CharReception_Callback(void) {
-	/* Read Received character. RXNE flag is cleared by reading of DR
-	 * register
-	 */
 
-	cli_char_receive();
-}
-
-/**
- * @brief  Function called for achieving next TX Byte sending
- * @retval None
- */
-void UART_TXEmpty_Callback(void) {
-	// if (tx_buf.index == (ubSizeToSend - 1)) {
-	/* Disable TXE interrupt */
-	LL_USART_DisableIT_TXE(USART2);
-
-	/* Enable TC interrupt */
-	LL_USART_EnableIT_TC(USART2);
-	//}
-
-	/* Fill DR with a new char */
-	// LL_USART_TransmitData8(USART2, aTxStartMessage[rx_buf.index++]);
-}
-
-/**
- * @brief  Function called at completion of last byte transmission
- * @retval None
- */
-void UART_CharTransmitComplete_Callback(void) {
-	// if (tx_buf.index == sizeof(aTxStartMessage)) {
-	// 	tx_buf.index = 0;
-
-	// 	/* Disable TC interrupt */
-	LL_USART_DisableIT_TC(USART2);
-
-	// 	/* Set Tx complete boolean to 1 */
-	// 	tx_complete = 1;
-	// }
-}
-
-/**
- * @brief  UART error callbacks
- * @note   This example shows a simple way to report transfer error, and you
- * can add your own implementation.
- * @retval None
- */
-void UART_Error_Callback(void) {
-	__IO uint32_t sr_reg;
-
-	/* Disable USARTx_IRQn */
-	NVIC_DisableIRQ(USART2_IRQn);
-
-	/* Error handling example :
-	  - Read USART SR register to identify flag that leads to IT raising
-	  - Perform corresponding error handling treatment according to flag
-	*/
-	sr_reg = LL_USART_ReadReg(USART2, SR);
-	if (sr_reg & LL_USART_SR_NE) {
-		/* Turn LED2 off: Transfer error in reception/transmission process
-		 */
-		// BSP_LED_Off(LED2);
-	} else {
-		/* Turn LED2 off: Transfer error in reception/transmission process
-		 */
-		// BSP_LED_Off(LED2);
-	}
-}
 /* USER CODE END 4 */
 
 /**
- * @brief  This function is executed in case of error occurrence.
- * @retval None
- */
+  * @brief  This function is executed in case of error occurrence.
+  * @retval None
+  */
 void Error_Handler(void) {
 	/* USER CODE BEGIN Error_Handler_Debug */
 	/* User can add his own implementation to report the HAL error return
@@ -524,12 +454,12 @@ void Error_Handler(void) {
 
 #ifdef USE_FULL_ASSERT
 /**
- * @brief  Reports the name of the source file and the source line number
- *         where the assert_param error has occurred.
- * @param  file: pointer to the source file name
- * @param  line: assert_param error line source number
- * @retval None
- */
+  * @brief  Reports the name of the source file and the source line number
+  *         where the assert_param error has occurred.
+  * @param  file: pointer to the source file name
+  * @param  line: assert_param error line source number
+  * @retval None
+  */
 void assert_failed(uint8_t *file, uint32_t line) {
 	/* USER CODE BEGIN 6 */
 	/* User can add his own implementation to report the file name and line

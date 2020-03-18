@@ -21,7 +21,7 @@
 #include "usart.h"
 
 /* USER CODE BEGIN 0 */
-
+#include "cli.h"
 /* USER CODE END 0 */
 
 UART_HandleTypeDef huart2;
@@ -90,9 +90,6 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
     GPIO_InitStruct.Alternate = GPIO_AF7_USART2;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-    /* USART2 interrupt Init */
-    HAL_NVIC_SetPriority(USART2_IRQn, 0, 0);
-    HAL_NVIC_EnableIRQ(USART2_IRQn);
   /* USER CODE BEGIN USART2_MspInit 1 */
 
   /* USER CODE END USART2_MspInit 1 */
@@ -126,7 +123,6 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /* USER CODE BEGIN USART3_MspInit 1 */
-
   /* USER CODE END USART3_MspInit 1 */
   }
 }
@@ -177,6 +173,81 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 } 
 
 /* USER CODE BEGIN 1 */
+
+/**
+ * @brief  Rx Transfer completed callback
+ * @note   This example shows a simple way to report end of IT Rx transfer,
+ * and you can add your own implementation.
+ * @retval None
+ */
+void UART_CharReception_Callback(void) {
+	/* Read Received character. RXNE flag is cleared by reading of DR
+	 * register
+	 */
+
+	cli_char_receive();
+}
+
+/**
+ * @brief  Function called for achieving next TX Byte sending
+ * @retval None
+ */
+void UART_TXEmpty_Callback(void) {
+	// if (tx_buf.index == (ubSizeToSend - 1)) {
+	/* Disable TXE interrupt */
+	LL_USART_DisableIT_TXE(USART2);
+
+	/* Enable TC interrupt */
+	LL_USART_EnableIT_TC(USART2);
+	//}
+
+	/* Fill DR with a new char */
+	// LL_USART_TransmitData8(USART2, aTxStartMessage[rx_buf.index++]);
+}
+
+/**
+ * @brief  Function called at completion of last byte transmission
+ * @retval None
+ */
+void UART_CharTransmitComplete_Callback(void) {
+	// if (tx_buf.index == sizeof(aTxStartMessage)) {
+	// 	tx_buf.index = 0;
+
+	// 	/* Disable TC interrupt */
+	LL_USART_DisableIT_TC(USART2);
+
+	// 	/* Set Tx complete boolean to 1 */
+	// 	tx_complete = 1;
+	// }
+}
+
+/**
+ * @brief  UART error callbacks
+ * @note   This example shows a simple way to report transfer error, and you
+ * can add your own implementation.
+ * @retval None
+ */
+void UART_Error_Callback(void) {
+	__IO uint32_t sr_reg;
+
+	/* Disable USARTx_IRQn */
+	NVIC_DisableIRQ(USART2_IRQn);
+
+	/* Error handling example :
+	  - Read USART SR register to identify flag that leads to IT raising
+	  - Perform corresponding error handling treatment according to flag
+	*/
+	sr_reg = LL_USART_ReadReg(USART2, SR);
+	if (sr_reg & LL_USART_SR_NE) {
+		/* Turn LED2 off: Transfer error in reception/transmission process
+		 */
+		// BSP_LED_Off(LED2);
+	} else {
+		/* Turn LED2 off: Transfer error in reception/transmission process
+		 */
+		// BSP_LED_Off(LED2);
+	}
+}
 
 /* USER CODE END 1 */
 
