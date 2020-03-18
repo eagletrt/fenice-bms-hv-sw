@@ -247,7 +247,6 @@ void check_timers(state_global_data_t *data) {
 
 		read_volts(data);
 
-		// TODO: check return error
 		si8900_read_channel(&huart3, SI8900_AIN0, &data->pack.adc_voltage);
 		si8900_read_channel(&huart3, SI8900_AIN1, &data->pack.ext_voltage);
 	}
