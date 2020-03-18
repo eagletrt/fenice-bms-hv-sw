@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../../../fenice_config.h"
 #include "cli.h"
 #include "error/error.h"
 #include "usart.h"

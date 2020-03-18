@@ -320,7 +320,7 @@ int main(void) {
 	if (si8900_init(&huart3)) {
 		cli_print("SI8900 INITIALIZED\r\n", 20);
 	} else {
-		cli_print("SI8900 ERROR\r\n", 20);
+		cli_print("SI8900 ERROR\r\n", 14);
 	}
 
 	data.hspi = &hspi1;

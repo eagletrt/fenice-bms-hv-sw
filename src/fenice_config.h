@@ -74,6 +74,13 @@
  */
 #define TEMP_SENSOR_COUNT (TEMP_BUS_COUNT * TEMP_STRIPS_PER_BUS * TEMP_SENSORS_PER_STRIP)
 
+/**
+ * The address pin coding for each sensor in a strip. The LSB must be changed
+ * from [0-2] to differentiate between each strip.
+ */
+static const uint8_t TEMP_SENSOR_ADDRESS_CODING[TEMP_SENSORS_PER_STRIP] = {
+	000, 100, 010, 110, 020, 120};
+
 //===========================================================================
 //================================ Pack Settings ============================
 //===========================================================================
@@ -117,11 +124,23 @@
  */
 #define BAL_CYCLE_LENGTH 120000
 
+//===========================================================================
+//=============================== SI8900 Settings ===========================
+//===========================================================================
+
 /**
- * The address pin coding for each sensor in a strip. The LSB must be changed
- * from [0-2] to differentiate between each strip.
+ * Max time to wait for the sensor to initialize (auto-baudrate detection)
  */
-static const uint8_t TEMP_SENSOR_ADDRESS_CODING[TEMP_SENSORS_PER_STRIP] = {
-	000, 100, 010, 110, 020, 120};
+#define SI8900_INIT_TIMEOUT 1000
+
+/**
+ * Max time to wait for a voltage reading
+ */
+#define SI8900_TIMEOUT 5
+
+/**
+ * Reference voltage of the ADC
+ */
+#define SI8900_VREF 3.33
 
 #endif /* CHIMERA_CONFIG_H_ */

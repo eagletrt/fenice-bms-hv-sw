@@ -17,10 +17,6 @@
 
 #include "main.h"
 
-#define SI8900_VREF 3.33
-#define SI8900_INIT_TIMEOUT 1000
-#define SI8900_TIMEOUT 50
-
 static const uint8_t si8900_cnfg_0 = 0b11000011;
 
 typedef enum {
