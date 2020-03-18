@@ -19,7 +19,6 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_hal.h"
-#include "stm32f4xx_hal.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -78,24 +77,12 @@ void UART_Error_Callback(void);
 #define CUR_HIGH_GPIO_Port GPIOC
 #define CS_LTC_Pin GPIO_PIN_4
 #define CS_LTC_GPIO_Port GPIOA
-#define ADCHV_CS_Pin GPIO_PIN_4
-#define ADCHV_CS_GPIO_Port GPIOC
-#define PRECHARGE_END_Pin GPIO_PIN_5
-#define PRECHARGE_END_GPIO_Port GPIOC
 #define TS_ON_Pin GPIO_PIN_12
 #define TS_ON_GPIO_Port GPIOB
-#define BMS_Fault_Pin GPIO_PIN_13
-#define BMS_Fault_GPIO_Port GPIOB
+#define BMS_FAULT_Pin GPIO_PIN_13
+#define BMS_FAULT_GPIO_Port GPIOB
 #define IMD_Pin GPIO_PIN_14
 #define IMD_GPIO_Port GPIOB
-#define FB_FROM_TSMS_Pin GPIO_PIN_15
-#define FB_FROM_TSMS_GPIO_Port GPIOB
-#define FB_TO_TSMS_Pin GPIO_PIN_6
-#define FB_TO_TSMS_GPIO_Port GPIOC
-#define FB_FROM_SD_Pin GPIO_PIN_7
-#define FB_FROM_SD_GPIO_Port GPIOC
-#define FB_RESET_BTN_Pin GPIO_PIN_8
-#define FB_RESET_BTN_GPIO_Port GPIOC
 #define LED_1_Pin GPIO_PIN_9
 #define LED_1_GPIO_Port GPIOC
 #define LED_2_Pin GPIO_PIN_8
@@ -104,12 +91,6 @@ void UART_Error_Callback(void);
 #define LED_3_GPIO_Port GPIOA
 #define EEPROM_WC_Pin GPIO_PIN_10
 #define EEPROM_WC_GPIO_Port GPIOA
-#define CARD_CS_Pin GPIO_PIN_15
-#define CARD_CS_GPIO_Port GPIOA
-#define CARD_OK_Pin GPIO_PIN_10
-#define CARD_OK_GPIO_Port GPIOC
-#define CHARGE_Pin GPIO_PIN_11
-#define CHARGE_GPIO_Port GPIOC
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

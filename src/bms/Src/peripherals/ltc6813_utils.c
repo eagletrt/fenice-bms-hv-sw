@@ -7,7 +7,7 @@
  * @author		Matteo Bonora [matteo.bonora@studenti.unitn.it]
  */
 
-#include "comm/ltc6813_utils.h"
+#include "peripherals/ltc6813_utils.h"
 
 #include <math.h>
 

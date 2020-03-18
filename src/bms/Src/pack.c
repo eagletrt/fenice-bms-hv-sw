@@ -28,6 +28,8 @@ uint32_t adc_current[CURRENT_ARRAY_LENGTH];
  * @param	pack	The PACK_T struct to initialize
  */
 void pack_init(PACK_T *pack) {
+	pack->adc_voltage = 0;
+	pack->ext_voltage = 0;
 	pack->total_voltage = 0;
 	pack->max_voltage = 0;
 	pack->min_voltage = 0;

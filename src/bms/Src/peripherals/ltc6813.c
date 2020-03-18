@@ -6,7 +6,7 @@
  * @author		Matteo Bonora [matteo.bonora@studenti.unitn.it]
  */
 
-#include "comm/ltc6813.h"
+#include "peripherals/ltc6813.h"
 
 #include "main.h"
 
