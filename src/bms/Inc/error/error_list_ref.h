@@ -53,6 +53,9 @@ er_node_t *error_list_ref_ltc[LTC6813_COUNT];
 
 er_node_t *error_list_ref_can;
 
+er_node_t *error_adc_init;
+er_node_t *error_adc_timeout;
+
 /**
  * @brief	this array contains the references to error_list_ref_XXX variables
  * @details	this array is indexed by using error_type_t enum, an element is contained in this array if:
@@ -64,5 +67,6 @@ er_node_t *error_list_ref_can;
  *          and valueof(ERROR_CELL_OVER_VOLTAGE)
  * 
  */
-er_node_t **error_list_ref_array[ERROR_NUM_ERRORS] = {NULL, error_list_ref_ltc, error_list_ref_voltages, error_list_ref_voltages, error_list_ref_temperatures, &error_list_ref_current, &error_list_ref_can};
+er_node_t **error_list_ref_array[ERROR_NUM_ERRORS] = {NULL, error_list_ref_ltc, error_list_ref_voltages, error_list_ref_voltages, error_list_ref_temperatures, &error_list_ref_current,
+													  &error_list_ref_can, [ERROR_ADC_INIT] = &error_adc_init, [ERROR_ADC_TIMEOUT] = &error_adc_timeout};
 #endif
