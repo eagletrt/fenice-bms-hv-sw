@@ -8,6 +8,7 @@
         "Drivers/STM32G4xx_HAL_Driver/Inc",
         "Drivers/STM32G4xx_HAL_Driver/Inc/Legacy",
         "Inc",
+        "Inc/common",
         "Inc/error",
         "Inc/peripherals"
       ],

@@ -8,10 +8,8 @@
 
 #include "error/error.h"
 
-#include <stdlib.h>
-
+#include "common/list.h"
 #include "error/error_list_ref.h"
-#include "error/list.h"
 
 /**
  * Reaction times by the rules:
@@ -30,7 +28,7 @@
 error_limits_t timeout[ERROR_NUM_ERRORS] = {
 	{LTC6813_PEC_TIMEOUT_COUNT, 0}, {0, CELL_UNDER_VOLTAGE_TIMEOUT_MS}, {0, CELL_OVER_VOLTAGE_TIMEOUT_MS}, {0, CELL_OVER_TEMPERATURE_TIMEOUT_MS}, {0, OVER_CURRENT_TIMEOUT_MS}, {0, CAN_TIMEOUT_MS}};
 
-er_node_t *er_list = NULL;
+node_t *er_list = NULL;
 
 /**
  * @brief	Initializes an error structure
@@ -66,7 +64,7 @@ bool error_set(error_t type, uint8_t offset, uint32_t timestamp) {
 		error_status_t er;
 		error_init(&er, type, offset, timestamp);
 
-		error_list_ref_array[type][offset] = list_insert(&er_list, &er);
+		error_list_ref_array[type][offset] = list_insert(&er_list, &er, sizeof(error_status_t));
 
 		if (error_list_ref_array[type][offset] == NULL) {
 			return false;
@@ -75,7 +73,7 @@ bool error_set(error_t type, uint8_t offset, uint32_t timestamp) {
 		return true;
 	}
 
-	error_list_ref_array[type][offset]->status.count++;
+	((error_status_t *)error_list_ref_array[type][offset]->data)->count++;
 	return true;
 }
 
@@ -90,8 +88,8 @@ bool error_set(error_t type, uint8_t offset, uint32_t timestamp) {
 bool error_unset(error_t type, uint8_t offset) {
 	// Check if error is fatal; in that case do not remove it, but deactivate it
 	if (error_list_ref_array[type][offset] != NULL) {
-		if (error_list_ref_array[type][offset]->status.fatal) {
-			error_list_ref_array[type][offset]->status.active = false;
+		if (((error_status_t *)error_list_ref_array[type][offset]->data)->fatal) {
+			((error_status_t *)error_list_ref_array[type][offset]->data)->active = false;
 			return true;
 		}
 
@@ -105,11 +103,12 @@ bool error_unset(error_t type, uint8_t offset) {
 	return false;
 }
 
+// TODO: Make a generic one in list.c?
 /**
  * @returns	The number of currently running errors
  */
 uint8_t error_count() {
-	er_node_t *node = er_list;
+	node_t *node = er_list;
 	uint8_t count = 0;
 
 	while (node != NULL) {
@@ -124,11 +123,11 @@ uint8_t error_count() {
  * @returns the current array of errors
  */
 uint16_t error_dump(error_status_t errors[]) {
-	er_node_t *node = er_list;
+	node_t *node = er_list;
 	uint16_t count = 0;
 
 	while (node != NULL) {
-		errors[count++] = node->status;
+		errors[count++] = *(error_status_t *)node->data;
 		node = node->next;
 	}
 
@@ -141,11 +140,11 @@ uint16_t error_dump(error_status_t errors[]) {
  * @returns	The expired error type, or ERROR_OK
  */
 error_t error_verify(uint32_t now) {
-	er_node_t *node = er_list;
+	node_t *node = er_list;
 	error_t ret = ERROR_OK;
 
 	while (node != NULL && ret == ERROR_OK) {
-		ret = error_check_fatal(&(node->status), now);
+		ret = error_check_fatal((error_status_t *)(node->data), now);
 
 		node = node->next;
 	}
