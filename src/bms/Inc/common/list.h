@@ -24,6 +24,6 @@ void list_init(node_t *head);
 node_t *list_insert(node_t **head, void *data, size_t data_size);
 bool list_remove(node_t **head, node_t *node);
 uint8_t list_count(node_t *head);
-node_t *list_get_nth(node_t *head, uint8_t index);
+void *list_get_nth(node_t *head, uint8_t index);
 
 #endif
