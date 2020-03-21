@@ -11,6 +11,7 @@
 #ifndef CLI_H
 #define CLI_H
 #include <stdbool.h>
+
 #include "fsm.h"
 #include "stm32g4xx_hal.h"
 
@@ -22,8 +23,9 @@ typedef void cli_state_func_t(char *cmd, state_global_data_t *data,
 							  BMS_STATE_T state, char *out);
 
 typedef struct buffer_t {
+	bool receive;
 	uint8_t index;
-	char *buffer;
+	char buffer[BUF_SIZE];
 } buffer_t;
 
 typedef struct history_t {
@@ -35,6 +37,8 @@ typedef struct history_t {
 
 typedef struct cli_t {
 	UART_HandleTypeDef *uart;
+
+	char read_buf;
 
 	buffer_t rx;
 	bool complete;
@@ -52,5 +56,6 @@ extern cli_t cli;
 void cli_init(cli_t *cli, UART_HandleTypeDef *uart);
 void cli_print(char *text, size_t length);
 void cli_loop(state_global_data_t *data, BMS_STATE_T state);
+void cli_handle_interrupt();
 void cli_char_receive();
 #endif

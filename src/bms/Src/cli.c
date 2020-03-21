@@ -166,8 +166,9 @@ void cli_init(cli_t *cli, UART_HandleTypeDef *uart) {
 	cli->uart = uart;
 	cli->complete = false;
 	cli->echo = true;
+	cli->read_buf = '\0';
 	cli->rx.index = 0;
-	cli->rx.buffer = (char *)malloc(BUF_SIZE);
+	cli->rx.receive = true;
 
 	cli->escaping = 255;
 
@@ -177,10 +178,6 @@ void cli_init(cli_t *cli, UART_HandleTypeDef *uart) {
 		&_cli_volts, &_cli_volts_all, &_cli_temps, &_cli_temps_all,
 		&_cli_status, &_cli_errors, &_cli_balance, &_cli_help, &_cli_taba};
 	memcpy(cli->states, temp, sizeof(cli->states));
-
-	LL_USART_EnableIT_RXNE(cli->uart->Instance);
-	LL_USART_EnableIT_ERROR(cli->uart->Instance);
-	LL_USART_EnableIT_TXE(cli->uart->Instance);
 
 	char init[BUF_SIZE];
 	sprintf(init,
@@ -261,6 +258,11 @@ void cli_handle_escape() {
 }
 
 void cli_loop(state_global_data_t *data, BMS_STATE_T state) {
+	if (cli.rx.receive) {
+		cli.rx.receive = false;
+		cli_char_receive();
+	}
+
 	if (cli.complete) {
 		cli.complete = false;
 
@@ -276,8 +278,7 @@ void cli_loop(state_global_data_t *data, BMS_STATE_T state) {
 			cli.history.list = realloc(
 				cli.history.list, (cli.history.index + 1) * sizeof(buffer_t));
 
-			cli.history.list[cli.history.index].buffer =
-				(char *)malloc(sizeof(char) * BUF_SIZE);
+			//cli.history.list[cli.history.index].buffer = (char *)malloc(sizeof(char) * BUF_SIZE);
 
 			// strcpy(cli.history.list[cli.history.index].buffer,
 			// cli.rx.buffer);
@@ -295,52 +296,57 @@ void cli_loop(state_global_data_t *data, BMS_STATE_T state) {
 
 		cli.rx.index = 0;
 
-		char buf[3000] = "?\r\n";
+		char tx_buf[3000] = "?\r\n";
 
 		for (uint8_t i = 0; i < N_COMMANDS; i++) {
 			if (strncmp(cli.rx.buffer, cli_commands[i],
 						strlen(cli_commands[i])) == 0) {
-				cli.states[i](cli.rx.buffer, data, state, buf);
+				cli.states[i](cli.rx.buffer, data, state, tx_buf);
 			}
 		}
 
 		cli.rx.buffer[0] = '\0';
 
-		HAL_UART_Transmit(cli.uart, (uint8_t *)buf, strlen(buf), 200);
+		HAL_UART_Transmit(cli.uart, (uint8_t *)tx_buf, strlen(tx_buf), 200);
 		HAL_UART_Transmit(cli.uart, (uint8_t *)ps1, PS1_SIZE, 100);
 	}
 }
 
+void cli_handle_interrupt() {
+	cli.rx.receive = true;
+}
+
 // Interrupt callback
 void cli_char_receive() {
-	uint8_t rx_char = LL_USART_ReceiveData8(USART2);
+	HAL_UART_Receive_IT(cli.uart, (uint8_t *)&cli.read_buf, 1);
 
-	if (rx_char == '\033') {  // Arrow
-		cli.escaping = cli.rx.index;
-	} else if (rx_char == '\r' || rx_char == '\n') {
-		cli.complete = true;
-		cli.rx.buffer[cli.rx.index] = '\0';
+	if (cli.read_buf != '\0') {
+		if (cli.read_buf == '\033') {  // Arrow
+			cli.escaping = cli.rx.index;
+		} else if (cli.read_buf == '\r' || cli.read_buf == '\n') {
+			cli.complete = true;
+			cli.rx.buffer[cli.rx.index] = '\0';
 
-		HAL_UART_Transmit(cli.uart, (uint8_t *)"\r\n", 2, 200);
+			HAL_UART_Transmit(cli.uart, (uint8_t *)"\r\n", 2, 10);
 
-		return;
-	}
+			return;
+		}
 
-	// Add to buffer
-	cli.rx.buffer[cli.rx.index] = rx_char;
+		cli.rx.buffer[cli.rx.index] = cli.read_buf;
 
-	if (cli.escaping < 255 && cli.rx.index > cli.escaping + 1) {
-		cli.complete = true;
-		return;
-	}
+		if (cli.escaping < BUF_SIZE && cli.rx.index > cli.escaping + 1) {
+			cli.complete = true;
+			return;
+		}
+		cli.rx.index++;
 
-	cli.rx.index++;
+		// Echo the last char
+		if (cli.escaping == BUF_SIZE && cli.echo) {
+			HAL_UART_Transmit(cli.uart, (uint8_t *)&cli.read_buf, 1, 10);
+		}
 
-	if (cli.escaping == 255 && cli.echo) {
-		HAL_UART_Transmit(cli.uart, &rx_char, 1, 50);
-	}
-
-	if (cli.rx.index == BUF_SIZE) {
-		cli.complete = true;
+		if (cli.rx.index == BUF_SIZE) {
+			cli.complete = true;
+		}
 	}
 }
