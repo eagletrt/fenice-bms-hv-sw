@@ -10,7 +10,7 @@
 #define LTC6813_UTILS_H
 
 #include <inttypes.h>
-#include <stm32f4xx_hal.h>
+#include <stm32g4xx_hal.h>
 
 #include "../../../fenice_config.h"
 #include "error/error.h"

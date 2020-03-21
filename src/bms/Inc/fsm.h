@@ -13,7 +13,7 @@
 #include "bal.h"
 #include "error/error.h"
 #include "pack.h"
-#include "stm32f4xx_hal.h"
+#include "stm32g4xx_hal.h"
 
 typedef struct {
 	SPI_HandleTypeDef *hspi;
