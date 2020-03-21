@@ -59,6 +59,7 @@ Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_uart_ex.c \
 Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_pwr.c \
 Src/bal.c \
 Src/cli.c \
+Src/common/list.c \
 Src/error/error.c \
 Src/fdcan.c \
 Src/gpio.c \
@@ -143,6 +144,7 @@ C_INCLUDES =  \
 -IDrivers/STM32G4xx_HAL_Driver/Inc \
 -IDrivers/STM32G4xx_HAL_Driver/Inc/Legacy \
 -IInc \
+-IInc/common \
 -IInc/error \
 -IInc/peripherals
 
