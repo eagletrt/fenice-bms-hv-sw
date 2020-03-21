@@ -130,17 +130,22 @@ static const uint8_t TEMP_SENSOR_ADDRESS_CODING[TEMP_SENSORS_PER_STRIP] = {
 
 /**
  * Max time to wait for the sensor to initialize (auto-baudrate detection)
- */
+*/
 #define SI8900_INIT_TIMEOUT 1000
 
 /**
  * Max time to wait for a voltage reading
- */
+*/
 #define SI8900_TIMEOUT 5
 
 /**
  * Reference voltage of the ADC
- */
+*/
 #define SI8900_VREF 3.33
+
+/*
+ * If the cli should echo the input
+*/
+#define CLI_ECHO 1
 
 #endif /* CHIMERA_CONFIG_H_ */
