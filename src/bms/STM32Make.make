@@ -36,32 +36,31 @@ BUILD_DIR = build
 ######################################
 # C sources
 C_SOURCES =  \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma_ex.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ex.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ramfunc.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr_ex.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc_ex.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_spi.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c \
-Middlewares/Third_Party/FatFs/src/diskio.c \
-Middlewares/Third_Party/FatFs/src/ff.c \
-Middlewares/Third_Party/FatFs/src/ff_gen_drv.c \
-Middlewares/Third_Party/FatFs/src/option/syscall.c \
+Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal.c \
+Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_cortex.c \
+Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_dma.c \
+Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_dma_ex.c \
+Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_exti.c \
+Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_fdcan.c \
+Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_flash.c \
+Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_flash_ex.c \
+Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_flash_ramfunc.c \
+Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_gpio.c \
+Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_pwr.c \
+Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_pwr_ex.c \
+Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_rcc.c \
+Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_rcc_ex.c \
+Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_spi.c \
+Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_spi_ex.c \
+Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_tim.c \
+Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_tim_ex.c \
+Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_uart.c \
+Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_uart_ex.c \
+Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_pwr.c \
 Src/bal.c \
 Src/cli.c \
 Src/error/error.c \
-Src/error/list.c \
-Src/fatfs.c \
+Src/fdcan.c \
 Src/gpio.c \
 Src/main.c \
 Src/pack.c \
@@ -69,11 +68,10 @@ Src/peripherals/ltc6813.c \
 Src/peripherals/ltc6813_utils.c \
 Src/peripherals/si8900.c \
 Src/spi.c \
-Src/stm32f4xx_hal_msp.c \
-Src/stm32f4xx_it.c \
-Src/system_stm32f4xx.c \
-Src/usart.c \
-Src/user_diskio.c
+Src/stm32g4xx_hal_msp.c \
+Src/stm32g4xx_it.c \
+Src/system_stm32g4xx.c \
+Src/usart.c
 
 
 CPP_SOURCES = \
@@ -81,7 +79,7 @@ CPP_SOURCES = \
 
 # ASM sources
 ASM_SOURCES =  \
-startup_stm32f446xx.s
+startup_stm32g474xx.s
 
 
 
@@ -130,7 +128,7 @@ AS_DEFS =
 # C defines
 C_DEFS =  \
 -DUSE_HAL_DRIVER \
--DSTM32F446xx
+-DSTM32G474xx
 
 
 
@@ -140,14 +138,13 @@ AS_INCLUDES = \
 
 # C includes
 C_INCLUDES =  \
--IDrivers/CMSIS/Device/ST/STM32F4xx/Include \
+-IDrivers/CMSIS/Device/ST/STM32G4xx/Include \
 -IDrivers/CMSIS/Include \
--IDrivers/STM32F4xx_HAL_Driver/Inc \
--IDrivers/STM32F4xx_HAL_Driver/Inc/Legacy \
+-IDrivers/STM32G4xx_HAL_Driver/Inc \
+-IDrivers/STM32G4xx_HAL_Driver/Inc/Legacy \
 -IInc \
 -IInc/error \
--IInc/peripherals \
--IMiddlewares/Third_Party/FatFs/src
+-IInc/peripherals
 
 
 
@@ -171,7 +168,7 @@ CXXFLAGS += -feliminate-unused-debug-types
 # LDFLAGS
 #######################################
 # link script
-LDSCRIPT = STM32F446RETx_FLASH.ld
+LDSCRIPT = STM32G474CETx_FLASH.ld
 
 # libraries
 LIBS = -lc -lm -lnosys 
@@ -221,13 +218,13 @@ $(BUILD_DIR):
 # flash
 #######################################
 flash: $(BUILD_DIR)/$(TARGET).elf
-	openocd -f interface/stlink-v2-1.cfg  -f target/stm32f4x.cfg -c "program $(BUILD_DIR)/$(TARGET).elf verify reset exit"
+	openocd -f interface/stlink-v2-1.cfg  -f target/false -c "program $(BUILD_DIR)/$(TARGET).elf verify reset exit"
 
 #######################################
 # erase
 #######################################
 erase: $(BUILD_DIR)/$(TARGET).elf
-	openocd -f interface/stlink-v2-1.cfg -f target/stm32f4x.cfg -c "init; reset halt; stm32f4x mass_erase 0; exit"
+	openocd -f interface/stlink-v2-1.cfg -f target/false -c "init; reset halt; stm32g4x mass_erase 0; exit"
 
 #######################################
 # clean up

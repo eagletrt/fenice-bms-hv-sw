@@ -11,7 +11,7 @@
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <stm32f4xx_hal.h>
+#include <stm32g4xx_hal.h>
 #include <string.h>
 
 #include "bal.h"

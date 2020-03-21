@@ -12,8 +12,7 @@
 #define CLI_H
 #include <stdbool.h>
 #include "fsm.h"
-#include "stm32f4xx_hal.h"
-#include "stm32f4xx_ll_usart.h"
+#include "stm32g4xx_hal.h"
 
 #define BUF_SIZE 255
 #define HISTORY_LENGTH 100

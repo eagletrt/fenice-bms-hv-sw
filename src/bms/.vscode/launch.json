@@ -4,6 +4,21 @@
       "showDevDebugOutput": true,
       "cwd": "${workspaceRoot}",
       "executable": "./build/fenice-bms.elf",
+      "name": "Debug STM32G4",
+      "request": "launch",
+      "type": "cortex-debug",
+      "servertype": "openocd",
+      "preLaunchTask": "Build STM",
+      "device": "stlink",
+      "configFiles": [
+        "interface/stlink.cfg",
+        "board/stm32g4x.cfg"
+      ]
+    },
+    {
+      "showDevDebugOutput": true,
+      "cwd": "${workspaceRoot}",
+      "executable": "./build/fenice-bms.elf",
       "name": "Debug STM32",
       "request": "launch",
       "type": "cortex-debug",
@@ -12,7 +27,7 @@
       "device": "stlink",
       "configFiles": [
         "interface/stlink-v2-1.cfg",
-        "target/stm32f4x.cfg"
+        "target/false"
       ]
     }
   ]
