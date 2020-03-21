@@ -108,15 +108,7 @@ bool error_unset(error_t type, uint8_t offset) {
  * @returns	The number of currently running errors
  */
 uint8_t error_count() {
-	node_t *node = er_list;
-	uint8_t count = 0;
-
-	while (node != NULL) {
-		count++;
-		node = node->next;
-	}
-
-	return count;
+	return list_count(er_list);
 }
 
 /**

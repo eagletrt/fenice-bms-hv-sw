@@ -1,6 +1,6 @@
 /**
  * @file		list.c
- * @brief		This file contains the functions to manage the error linked list
+ * @brief		This file contains a generic implementation of a double linked list
  *
  * @date		Dec 7, 2019
  * @author	Matteo Bonora [matteo.bonora@studenti.unitn.it]
@@ -15,37 +15,23 @@ void list_init(node_t *head) {
 }
 
 /**
- * @brief		Inserts at the beginning of the list
- * @details	The function itselfs creates the values for 
+ * @brief		Inserts a node at the beginning of the list
  * 
- * 					------------
- *					|   prev   |
- *					|   HEAD   |
- *					|   next   |
- *					------------
- *					     ^
- *					     |
- *					     V
- *					------------
- *					|   prev   |
- *					|   node   |
- *					|   next   |
- *					------------
- * 
- * @param head		List head
- * @param status	Error status reference passed by address
+ * @param head			List head
+ * @param data			Pointer to data element to be inserted
+ * @param data_size	Size of data field
  */
 node_t *list_insert(node_t **head, void *data, size_t data_size) {
 	node_t *node = (node_t *)malloc(sizeof(node_t));
 
-	node->data = malloc(sizeof(data));
+	node->data = malloc(data_size);
 
-	if (node == NULL) {
+	if (node == NULL || node->data == NULL) {
 		return NULL;
 	}
 
 	// Copy each byte to node->data
-	for (uint8_t i = 0; i < data_size; i++) {
+	for (uint16_t i = 0; i < data_size; i++) {
 		*(char *)(node->data + i) = *(char *)(data + i);
 	}
 
@@ -61,6 +47,13 @@ node_t *list_insert(node_t **head, void *data, size_t data_size) {
 	return *head;
 }
 
+/**
+ * @brief Removes a given node
+ * 
+ * @param	head	list head
+ * @param node	the node to delete
+ */
+// TODO: is head really necessary here?
 bool list_remove(node_t **head, node_t *node) {
 	if (*head == NULL || node == NULL) {
 		return false;
@@ -80,4 +73,28 @@ bool list_remove(node_t **head, node_t *node) {
 	free(node->data);
 	free(node);
 	return true;
+}
+
+uint8_t list_count(node_t *head) {
+	node_t *node = head;
+	uint8_t count = 0;
+
+	while (node != NULL) {
+		count++;
+		node = node->next;
+	}
+
+	return count;
+}
+
+node_t *list_get_nth(node_t *head, uint8_t index) {
+	node_t *node = head;
+
+	uint8_t i = 0;
+	while (node != NULL || i != index) {
+		i++;
+		node = node->next;
+	}
+
+	return node;
 }
