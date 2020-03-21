@@ -135,8 +135,10 @@ static const uint8_t TEMP_SENSOR_ADDRESS_CODING[TEMP_SENSORS_PER_STRIP] = {
 
 /**
  * Max time to wait for a voltage reading
+ * 
+ * Keep it low, it will pause the main loop
 */
-#define SI8900_TIMEOUT 5
+#define SI8900_TIMEOUT 0
 
 /**
  * Reference voltage of the ADC

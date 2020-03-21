@@ -24,7 +24,8 @@ bool si8900_ready = false;
  * @brief		Initializes the ADC
  * @details	This function does the auto-baudrate detection initialization	function described
  * 					in si's datasheet: https://www.silabs.com/documents/public/application-notes/AN635.pdf
- * @param	huart	The UART configuration structure
+ * 
+ * @param		huart	The UART configuration structure
  * @returns	whether the initialization ended successfully.
  */
 bool si8900_init(UART_HandleTypeDef *huart) {

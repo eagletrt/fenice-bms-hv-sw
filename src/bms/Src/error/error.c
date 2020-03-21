@@ -103,7 +103,6 @@ bool error_unset(error_t type, uint8_t offset) {
 	return false;
 }
 
-// TODO: Make a generic one in list.c?
 /**
  * @returns	The number of currently running errors
  */

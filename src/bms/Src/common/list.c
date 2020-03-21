@@ -87,14 +87,18 @@ uint8_t list_count(node_t *head) {
 	return count;
 }
 
-node_t *list_get_nth(node_t *head, uint8_t index) {
+void *list_get_nth(node_t *head, uint8_t index) {
 	node_t *node = head;
 
+	// TODO: Check logic
 	uint8_t i = 0;
-	while (node != NULL || i != index) {
+	while (node != NULL) {
+		if (i == index) {
+			return node->data;
+		}
 		i++;
 		node = node->next;
 	}
 
-	return node;
+	return NULL;
 }

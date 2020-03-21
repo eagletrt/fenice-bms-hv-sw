@@ -29,6 +29,7 @@
 		"si8900.h": "c",
 		"usart.h": "c",
 		"gpio.h": "c",
-		"variant": "c"
+		"variant": "c",
+		"stdlib.h": "c"
 	}
 }

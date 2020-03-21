@@ -129,7 +129,7 @@ void _cli_errors(char *cmd, state_global_data_t *data, BMS_STATE_T state, char *
 	error_status_t errors[count];
 	error_dump(errors);
 
-	sprintf(out, "total %u", count);
+	sprintf(out, "total %u\r\n", count);
 	for (uint8_t i = 0; i < count; i++) {
 		sprintf(out + strlen(out),
 				"\r\ntype........%s\r\n"
@@ -232,19 +232,20 @@ void cli_print(char *text, size_t length) {
 
 void cli_handle_escape() {
 	buffer_t *cur_buffer = (buffer_t *)cli.buffers->data;
+	uint8_t list_n = list_count(cli.buffers);
 
 	if (cur_buffer->buffer[cur_buffer->index - 1] == '[') {
 		cli.escaping = BUF_SIZE;
 		uint8_t h_i;  // Index of history to be displayed
 
 		if (cur_buffer->buffer[cur_buffer->index] == 'A' &&
-			cli.history_index > 0) {  // UP
-
-			h_i = cli.history_index - 1;
-		} else if (cur_buffer->buffer[cur_buffer->index] == 'B' &&
-				   cli.history_index < list_count(cli.buffers)) {  // DOWN
+			cli.history_index < list_n - 1) {  // UP
 
 			h_i = cli.history_index + 1;
+		} else if (cur_buffer->buffer[cur_buffer->index] == 'B' &&
+				   cli.history_index > 1) {	 // DOWN
+
+			h_i = cli.history_index - 1;
 		} else {
 			return;
 		}
@@ -286,7 +287,21 @@ void cli_loop(state_global_data_t *data, BMS_STATE_T state) {
 		// Clean the buffer from backspaces
 		cur_buffer->index = cli_clean(cur_buffer->buffer);
 
-		if (cur_buffer->index > 0) {
+		// TODO: Make this better
+		char tx_buf[3000] = "?\r\n";
+
+		// Check which command corresponds with the buffer
+		for (uint8_t i = 0; i < N_COMMANDS; i++) {
+			if (strncmp(cur_buffer->buffer, cli_commands[i], strlen(cli_commands[i])) == 0) {
+				cli.states[i](cur_buffer->buffer, data, state, tx_buf);
+			}
+		}
+
+		buffer_t *last_buf = (buffer_t *)list_get_nth(cli.buffers, 1);
+
+		// Check if last history entry is equal to the current
+		bool comp = last_buf == NULL || strcmp(cur_buffer->buffer, last_buf->buffer) != 0;
+		if (cur_buffer->index > 0 && comp) {
 			// If the last command wasn't empty, we save it to history.
 			// To do that we simply add an empty buffer before it so that it will not be overwritten by the next command
 
@@ -297,19 +312,13 @@ void cli_loop(state_global_data_t *data, BMS_STATE_T state) {
 		} else {
 			// We need to reuse the last buffer
 			cur_buffer->index = 0;
+			cur_buffer->buffer[0] = '\0';
 		}
 
-		// TODO: Make this better
-		char tx_buf[3000] = "?\r\n";
+		cli.history_index = 0;
 
-		for (uint8_t i = 0; i < N_COMMANDS; i++) {
-			if (strncmp(cur_buffer->buffer, cli_commands[i],
-						strlen(cli_commands[i])) == 0) {
-				cli.states[i](cur_buffer->buffer, data, state, tx_buf);
-			}
-		}
-
-		cur_buffer->buffer[0] = '\0';
+		// cur_buffer might not be current anymore
+		((buffer_t *)(cli.buffers->data))->buffer[0] = '\0';
 
 		HAL_UART_Transmit(cli.uart, (uint8_t *)tx_buf, strlen(tx_buf), 200);
 		HAL_UART_Transmit(cli.uart, (uint8_t *)ps, PS_SIZE, 100);
