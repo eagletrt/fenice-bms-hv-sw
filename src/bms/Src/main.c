@@ -340,8 +340,8 @@ int main(void) {
 		/* USER CODE END WHILE */
 
 		/* USER CODE BEGIN 3 */
-		//state = run_state(state, &data);
-		//check_timers(&data);
+		state = run_state(state, &data);
+		check_timers(&data);
 
 		cli_loop(&data, state);
 	}

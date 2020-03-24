@@ -274,6 +274,7 @@ void cli_loop(state_global_data_t *data, BMS_STATE_T state) {
 	if (cli.receive) {
 		cli.receive = false;
 		cli_char_receive();
+		HAL_UART_Receive_IT(cli.uart, (uint8_t *)&cli.input_buf, 1);
 	}
 
 	if (cli.complete) {
@@ -331,8 +332,6 @@ void cli_handle_interrupt() {
 
 // Interrupt callback
 void cli_char_receive() {
-	HAL_UART_Receive_IT(cli.uart, (uint8_t *)&cli.input_buf, 1);
-
 	if (cli.input_buf != '\0') {
 		buffer_t *cur_buffer = (buffer_t *)cli.buffers->data;
 
