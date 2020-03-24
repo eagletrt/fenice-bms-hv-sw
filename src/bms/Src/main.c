@@ -285,8 +285,7 @@ void read_temps(state_global_data_t *data) {
   * @brief  The application entry point.
   * @retval int
   */
-int main(void)
-{
+int main(void) {
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
