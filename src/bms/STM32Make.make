@@ -58,6 +58,7 @@ Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_uart.c \
 Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_uart_ex.c \
 Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_pwr.c \
 Src/bal.c \
+Src/brusa.c \
 Src/cli.c \
 Src/common/list.c \
 Src/error/error.c \
