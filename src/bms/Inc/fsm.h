@@ -4,40 +4,25 @@
  *
  * @date		Oct 24, 2019
  *
- * @author		Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @author	Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @author	Simone Ruffini[simone.ruffini@tutanota.com]
  */
 
 #ifndef FSM_H
 #define FSM_H
 
-#include "bal.h"
-#include "error/error.h"
-#include "pack.h"
-#include "stm32g4xx_hal.h"
+#include <inttypes.h>
 
-typedef struct {
-	SPI_HandleTypeDef *hspi;
+typedef uint8_t state_func_t();
 
-	PACK_T pack;
+typedef struct fsm {
+	uint8_t current_state;
+	state_func_t ***state_table;
+	char **state_names;
+} fsm_t;
 
-	bal_conf_t balancing;
-	error_t error;
-
-} state_global_data_t;
-
-typedef enum {
-	BMS_INIT,
-	BMS_IDLE,
-	BMS_PRECHARGE,
-	BMS_ON,
-	BMS_CHARGE,
-	BMS_HALT,
-	BMS_NUM_STATES
-} BMS_STATE_T;
-
-extern const char *bms_state_names[BMS_NUM_STATES];
-
-typedef BMS_STATE_T state_func_t(state_global_data_t *data);
-typedef void transition_func_t(state_global_data_t *data);
+uint8_t fsm_transition(fsm_t *fsm, uint8_t future_state);
+void fsm_run_state(fsm_t *fsm);
+void fsm_init(fsm_t *fsm, state_func_t ***state_table, char **state_names, uint8_t initial_state);
 
 #endif
