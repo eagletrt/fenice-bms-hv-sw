@@ -20,10 +20,10 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "../../fenice_config.h"
-//#include "bms.c"
 #include "cli_bms.h"
 #include "error/error.h"
-#include "si8900.h"
+#include "fsm_bms.h"
+#include "sfsm_bmsi8900.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -140,12 +140,13 @@ int main(void) {
 	/* USER CODE BEGIN 2 */
 	FDCAN1_Init();
 
-	cli_init(&cli, &huart2);
+	fsm_bms_init();
+	cli_bms_init();
 
 	if (si8900_init(&huart3)) {
-		cli_print("SI8900 INITIALIZED\r\n", 20);
+		cli_print(&cli_bms, "SI8900 INITIALIZED\r\n", 20);
 	} else {
-		cli_print("SI8900 ERROR\r\n", 14);
+		cli_print(&cli_bms, "SI8900 ERROR\r\n", 14);
 	}
 
 	/* USER CODE END 2 */
@@ -156,10 +157,10 @@ int main(void) {
 		/* USER CODE END WHILE */
 
 		/* USER CODE BEGIN 3 */
-		fsm_run_state(&bms_fsm);
+		fsm_run_state(&fsm_bms);
 		check_timers();
 
-		cli_loop();
+		cli_loop(&cli_bms);
 	}
 	return 0;
 	/* USER CODE END 3 */

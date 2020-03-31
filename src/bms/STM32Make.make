@@ -58,13 +58,14 @@ Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_uart.c \
 Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_uart_ex.c \
 Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_pwr.c \
 Src/bal.c \
-Src/bms.c \
 Src/cli_bms.c \
 Src/common/cli.c \
+Src/common/fsm.c \
 Src/common/list.c \
 Src/error/error.c \
+Src/error/error_list_ref.c \
 Src/fdcan.c \
-Src/fsm.c \
+Src/fsm_bms.c \
 Src/gpio.c \
 Src/main.c \
 Src/pack.c \

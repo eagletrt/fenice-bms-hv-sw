@@ -52,15 +52,6 @@ typedef struct error_status {
 	uint32_t time_stamp; /* Last time the error activated */
 } error_status_t;
 
-const char *error_names[ERROR_NUM_ERRORS] = {
-	[ERROR_LTC_PEC_ERROR] = "PEC",
-	[ERROR_CELL_UNDER_VOLTAGE] = "under-voltage",
-	[ERROR_CELL_OVER_VOLTAGE] = "over-voltage",
-	[ERROR_CELL_OVER_TEMPERATURE] = "over-temperature",
-	[ERROR_OVER_CURRENT] = "over-current",
-	[ERROR_CAN] = "CAN",
-	[ERROR_ADC_INIT] = "adc init",
-	[ERROR_ADC_TIMEOUT] = "adc timeout",
-	[ERROR_OK] = "ok"};
+extern const char *error_names[ERROR_NUM_ERRORS];
 
 #endif
