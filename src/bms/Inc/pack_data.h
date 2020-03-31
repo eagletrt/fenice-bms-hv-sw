@@ -16,51 +16,57 @@
 
 #include "../../fenice_config.h"
 
+#define TOTAL_VOLTAGE_T uint32_t
+#define ADC_VOLTAGE_T uint16_t
+#define VOLTAGE_T uint16_t
+#define TEMPERATURE_T uint8_t
+#define CURRENT_T int16_t
+
 //_________________________________________Private Macros_________________________________________
 #define __PD_DEFINE(_data_type_, _data_name_) \
-	struct {                                  \
+	struct PD_##_data_name_##_s {             \
 		_data_type_ data;                     \
 		uint32_t timestamp;                   \
 	} PD_##_data_name_
 
-#define TOTAL_VOLTAGE_T uint32_t
-#define ADC_VOLTAGE_T uint16_t
-#define VOLTAGES_T uint16_t
-#define TEMPERATURES_T uint8_t
+VOLTAGE_T pd_set_voltage(uint8_t index, VOLTAGE_T voltage);
+VOLTAGE_T pd_get_voltage(uint8_t index);
 
-#define CURRENT_T int16_t
+/**
+ * @brief copy all values of PD_voltage in the array 
+ * 
+ * @param array reference to a local array: the array values will be changed
+ */
+void pd_get_voltage_array(VOLTAGE_T *const array);
 
-void set_voltage(uint8_t index, VOLTAGES_T voltage);
-VOLTAGES_T get_voltage(uint8_t index);
+ADC_VOLTAGE_T pd_set_bus_voltage(ADC_VOLTAGE_T bus_voltage);
+ADC_VOLTAGE_T pd_get_bus_voltage();
 
-void set_bus_voltage(ADC_VOLTAGE_T bus_voltage);
-ADC_VOLTAGE_T get_bus_voltage();
+ADC_VOLTAGE_T pd_set_adc_voltage(ADC_VOLTAGE_T adc_voltage);
+ADC_VOLTAGE_T pd_get_adc_voltage();
 
-void set_adc_voltage(ADC_VOLTAGE_T adc_voltage);
-ADC_VOLTAGE_T get_adc_voltage();
+TOTAL_VOLTAGE_T pd_set_total_voltage(TOTAL_VOLTAGE_T total_voltage);
+TOTAL_VOLTAGE_T pd_get_total_voltage();
 
-void set_total_voltage(TOTAL_VOLTAGE_T total_voltage);
-TOTAL_VOLTAGE_T get_total_voltage();
+VOLTAGE_T pd_set_max_voltage(VOLTAGE_T voltage);
+VOLTAGE_T pd_get_max_voltage();
 
-void set_max_voltage(VOLTAGES_T voltage);
-VOLTAGES_T get_max_voltage();
+VOLTAGE_T pd_set_min_voltage(VOLTAGE_T voltage);
+VOLTAGE_T pd_get_min_voltage();
 
-void set_min_voltage(VOLTAGES_T voltage);
-VOLTAGES_T get_min_voltage();
+TEMPERATURE_T pd_set_temperature(uint8_t index, TEMPERATURE_T temperature);
+TEMPERATURE_T pd_get_temperature(uint8_t index);
 
-void set_temperature(uint8_t index, TEMPERATURES_T temperature);
-TOTAL_VOLTAGE_T get_temperature(uint8_t index);
+TEMPERATURE_T pd_set_avg_temperature(TEMPERATURE_T temperature);
+TEMPERATURE_T pd_get_avg_temperature();
 
-void set_avg_temperature(TEMPERATURES_T temperature);
-TOTAL_VOLTAGE_T get_avg_temperature();
+TEMPERATURE_T pd_set_max_temperature(TEMPERATURE_T temperature);
+TEMPERATURE_T pd_get_max_temperature();
 
-void set_max_temperature(TEMPERATURES_T temperature);
-TOTAL_VOLTAGE_T get_max_temperature();
+TEMPERATURE_T pd_set_min_temperature(TEMPERATURE_T temperature);
+TEMPERATURE_T pd_get_min_temperature();
 
-void set_min_temperature(TEMPERATURES_T temperature);
-TOTAL_VOLTAGE_T get_min_temperature();
-
-void set_current(TEMPERATURES_T temperature);
-TOTAL_VOLTAGE_T get_current();
+CURRENT_T pd_set_current(CURRENT_T current);
+CURRENT_T pd_get_current();
 
 #endif

@@ -23,8 +23,8 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "bms.h"
 #include "error/error.h"
-#include "fsm.h"
 #include "pack.h"
 #include "stm32g4xx_ll_usart.h"
 /* USER CODE END Includes */
@@ -48,22 +48,9 @@ extern "C" {
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
-BMS_STATE_T do_state_init(state_global_data_t *data);
-BMS_STATE_T do_state_idle(state_global_data_t *data);
-BMS_STATE_T do_state_precharge(state_global_data_t *data);
-BMS_STATE_T do_state_on(state_global_data_t *data);
-BMS_STATE_T do_state_charge(state_global_data_t *data);
-BMS_STATE_T do_state_halt(state_global_data_t *data);
-
-void to_idle(state_global_data_t *data);
-void to_precharge(state_global_data_t *data);
-void to_on(state_global_data_t *data);
-void to_charge(state_global_data_t *data);
-void to_halt(state_global_data_t *data);
-
-void check_timers(state_global_data_t *data);
-void read_volts(state_global_data_t *data);
-void read_temps(state_global_data_t *data);
+void check_timers();
+void read_volts();
+void read_temps();
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/

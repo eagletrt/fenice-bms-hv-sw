@@ -21,7 +21,7 @@
 #include "usart.h"
 
 /* USER CODE BEGIN 0 */
-#include "cli.h"
+#include "cli_bms.h"
 /* USER CODE END 0 */
 
 UART_HandleTypeDef huart2;
@@ -172,7 +172,7 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle) {
 /* USER CODE BEGIN 1 */
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart) {
-	cli_handle_interrupt();
+	cli_handle_interrupt(&cli_bms);
 }
 
 void HAL_UART_ErrorCallback(UART_HandleTypeDef* huart) {
