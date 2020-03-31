@@ -12,6 +12,19 @@
 #include <math.h>
 
 #include "main.h"
+#include "pack_data.h"
+
+enum ltc6813_i2c_ctrl {
+	I2C_READ = 1,
+	I2C_WRITE = 0,
+	I2C_START = 0b01100000,
+	I2C_STOP = 0b00010000,
+	I2C_BLANK = 0b00000000,
+	I2C_NO_TRANSMIT = 0b01110000,
+	I2C_MASTER_ACK = 0b00000000,
+	I2C_MASTER_NACK = 0b00001000,
+	I2C_MASTER_NACK_STOP = 0b00001001
+};
 
 /**
  * @brief		Polls all the registers of the LTC6813 and updates the cell
@@ -26,9 +39,8 @@
  * 					  (BRD)
  *
  * @param		spi		The SPI configuration structure
- * @param		volts	The array of voltages
  */
-uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *spi, uint16_t volts[]) {
+uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *hspi) {
 	uint8_t cmd[4];
 	uint16_t cmd_pec;
 	uint8_t data[8 * LTC6813_COUNT];
@@ -42,15 +54,15 @@ uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *spi, uint16_t volts[]) {
 		cmd[2] = (uint8_t)(cmd_pec >> 8);
 		cmd[3] = (uint8_t)(cmd_pec);
 
-		ltc6813_wakeup_idle(spi);
-		ltc6813_enable_cs(spi, CS_LTC_GPIO_Port, CS_LTC_Pin);
+		ltc6813_wakeup_idle(hspi);
+		ltc6813_enable_cs(hspi, CS_LTC_GPIO_Port, CS_LTC_Pin);
 
-		if (HAL_SPI_Transmit(spi, cmd, 4, 100) != HAL_OK) {
+		if (HAL_SPI_Transmit(hspi, cmd, 4, 100) != HAL_OK) {
 			// goto End;
 		}
-		HAL_SPI_Receive(spi, data, 8 * LTC6813_COUNT, 100);
+		HAL_SPI_Receive(hspi, data, 8 * LTC6813_COUNT, 100);
 
-		ltc6813_disable_cs(spi, CS_LTC_GPIO_Port, CS_LTC_Pin);
+		ltc6813_disable_cs(hspi, CS_LTC_GPIO_Port, CS_LTC_Pin);
 
 #if LTC6813_EMU == 1
 		// Writes 3.6v to each cell
@@ -76,9 +88,9 @@ uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *spi, uint16_t volts[]) {
 					uint16_t index = (reg * LTC6813_REG_CELL_COUNT) + (ltc * LTC6813_CELL_COUNT) + cell;
 
 					// (size of value) * cell
-					volts[index] = ltc6813_convert_voltage(&data[2 * cell]);
+					VOLTAGE_T v = pd_set_voltage(index, ltc6813_convert_voltage(&data[2 * cell]));
+					ltc6813_check_voltage(v, index);
 
-					ltc6813_check_voltage(volts, index);
 					count++;
 				}
 			} else {
@@ -168,7 +180,7 @@ void ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, uint8_t max[2],
 	}
 }
 
-void ltc6813_read_all_temps(SPI_HandleTypeDef *hspi, uint8_t *temps) {
+void ltc6813_read_all_temps(SPI_HandleTypeDef *hspi) {
 	uint8_t count = 0;
 	ltc6813_wakeup_idle(hspi);
 
@@ -191,10 +203,10 @@ void ltc6813_read_all_temps(SPI_HandleTypeDef *hspi, uint8_t *temps) {
 			uint8_t d1 = (recv[2 + base_index] << 4) | (recv[3 + base_index] >> 4);
 			uint8_t d2 = (recv[4 + base_index] << 4) | (recv[5 + base_index] >> 4);
 
-			temps[count++] = d0 >> 2;
-			temps[count++] = (d0 & 0b00000011) << 4 | d1 >> 4;
-			temps[count++] = (d1 & 0b00001111) << 2 | d2 >> 6;
-			temps[count++] = d2 & 0b00111111;
+			pd_set_temperature(count++, d0 >> 2);
+			pd_set_temperature(count++, (d0 & 0b00000011) << 4 | d1 >> 4);
+			pd_set_temperature(count++, (d1 & 0b00001111) << 2 | d2 >> 6);
+			pd_set_temperature(count++, d2 & 0b00111111);
 		}
 	}
 }
@@ -205,14 +217,14 @@ void ltc6813_read_all_temps(SPI_HandleTypeDef *hspi, uint8_t *temps) {
  * @param		volts		The voltage
  * @param		error		The error return code
  */
-void ltc6813_check_voltage(uint16_t *volts, uint8_t index) {
-	if (volts[index] < CELL_MIN_VOLTAGE) {
+void ltc6813_check_voltage(uint16_t volts, uint8_t index) {
+	if (volts < CELL_MIN_VOLTAGE) {
 		error_set(ERROR_CELL_UNDER_VOLTAGE, index, HAL_GetTick());
 	} else {
 		error_unset(ERROR_CELL_UNDER_VOLTAGE, index);
 	}
 
-	if (volts[index] > CELL_MAX_VOLTAGE) {
+	if (volts > CELL_MAX_VOLTAGE) {
 		error_set(ERROR_CELL_OVER_VOLTAGE, index, HAL_GetTick());
 	} else {
 		error_unset(ERROR_CELL_OVER_VOLTAGE, index);
@@ -225,8 +237,8 @@ void ltc6813_check_voltage(uint16_t *volts, uint8_t index) {
  * @param		temp		The temperature
  * @param		error		The error return code
  */
-void ltc6813_check_temperature(uint16_t *temps, uint8_t index) {
-	if (temps[index] >= CELL_MAX_TEMPERATURE) {
+void ltc6813_check_temperature(uint16_t temps, uint8_t index) {
+	if (temps >= CELL_MAX_TEMPERATURE) {
 		error_set(ERROR_CELL_OVER_TEMPERATURE, index, HAL_GetTick());
 	} else {
 		error_unset(ERROR_CELL_OVER_TEMPERATURE, index);

@@ -30,6 +30,9 @@
 		"usart.h": "c",
 		"gpio.h": "c",
 		"variant": "c",
-		"stdlib.h": "c"
+		"stdlib.h": "c",
+		"fsm.h": "c",
+		"bal.h": "c",
+		"data.h": "c"
 	}
 }

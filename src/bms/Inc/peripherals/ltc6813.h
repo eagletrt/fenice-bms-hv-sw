@@ -93,38 +93,28 @@ static const uint8_t rdcv_cmd[LTC6813_REG_COUNT] = {
 	0b1011,	 // F
 };
 
-// Time to discharge the cell
-static const uint16_t dcto[16] = {
-	0x00,  // disabled
-	0x01,  // 0,5 min
-	0x02,  // 1
-	0x03,  // 2
-	0x04,  // 3-
-	0x05,  // 4
-	0x06,  // 5
-	0x07,  // 10
-	0x08,  // 15
-
-	0x09,  // 20
-	0x0a,  // 30
-	0x0b,  // 40
-	0x0c,  // 60
-
-	0x0d,  // 75
-	0x0e,  // 90
-	0x0f   // 120
-};
-
-enum ltc6813_i2c_ctrl {
-	I2C_READ = 1,
-	I2C_WRITE = 0,
-	I2C_START = 0b01100000,
-	I2C_STOP = 0b00010000,
-	I2C_BLANK = 0b00000000,
-	I2C_NO_TRANSMIT = 0b01110000,
-	I2C_MASTER_ACK = 0b00000000,
-	I2C_MASTER_NACK = 0b00001000,
-	I2C_MASTER_NACK_STOP = 0b00001001
+/**
+ * @brief Time to discharge the cell
+ * 
+ * @details Maps dcto memory value to millis
+ */
+static const uint32_t dcto[16] = {
+	0,		  // disabled
+	30000,	  // 30 sec
+	60000,	  // 1 min
+	120000,	  // 2 ...
+	180000,	  // 3
+	240000,	  // 4
+	300000,	  // 5
+	600000,	  // 10
+	900000,	  // 15
+	1200000,  // 20
+	1800000,  // 30
+	2400000,  // 40
+	3600000,  // 60
+	4500000,  // 75
+	5400000,  // 90
+	7200000	  // 120
 };
 
 extern uint8_t GPIO_CONFIG;	 // GPIO CONFIG
@@ -146,7 +136,6 @@ void ltc6813_wrcomm_i2c_r(SPI_HandleTypeDef *hspi, uint8_t address);
 void ltc6813_stcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t length);
 bool ltc6813_rdcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t data[8]);
 
-void ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool is_a,
-				   uint8_t cfgr[LTC6813_COUNT][8]);
+void ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool is_a, uint8_t cfgr[LTC6813_COUNT][8]);
 
 #endif /* LTC6813_H_ */

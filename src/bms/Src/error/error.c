@@ -8,7 +8,6 @@
 
 #include "error/error.h"
 
-#include "common/list.h"
 #include "error/error_list_ref.h"
 
 /**
@@ -106,6 +105,7 @@ bool error_unset(error_t type, uint8_t offset) {
 /**
  * @returns	The number of currently running errors
  */
+// TODO: Remove
 uint8_t error_count() {
 	return list_count(er_list);
 }
@@ -113,6 +113,7 @@ uint8_t error_count() {
 /**
  * @returns the current array of errors
  */
+// TODO: Make
 uint16_t error_dump(error_status_t errors[]) {
 	node_t *node = er_list;
 	uint16_t count = 0;
