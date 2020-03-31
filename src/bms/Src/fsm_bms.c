@@ -1,6 +1,6 @@
 /**
- * @file        bms.c
- * @brief		business logic of the bms.
+ * @file		fsm_bms.c
+ * @brief		BMS's state machine
  *
  * @date		Mar 25, 2020
  * 
@@ -11,7 +11,9 @@
 #include <stdio.h>
 
 //#include "pack_data.h"
-#include "bms.h"
+#include <string.h>
+
+#include "fsm_bms.h"
 
 //------------------------------Declarations------------------------------------------
 bms_state_t do_state_init();
@@ -26,7 +28,7 @@ bms_state_t to_charge();
 bms_state_t to_on();
 bms_state_t to_halt();
 
-state_func_t *const state_table[BMS_NUM_STATES][BMS_NUM_STATES] = {
+state_func_t *bms_state_table[BMS_NUM_STATES][BMS_NUM_STATES] = {
 	{do_state_init, to_idle, to_precharge, NULL, NULL, to_halt},	 // from init
 	{NULL, do_state_idle, to_precharge, NULL, NULL, to_halt},		 // from idle
 	{NULL, to_idle, do_state_precharge, to_on, to_charge, to_halt},	 // from precharge
@@ -34,12 +36,25 @@ state_func_t *const state_table[BMS_NUM_STATES][BMS_NUM_STATES] = {
 	{NULL, to_idle, NULL, NULL, do_state_charge, to_halt},			 // from charge
 	{NULL, NULL, NULL, NULL, NULL, do_state_halt}};					 // from halt
 
-const char *bms_state_names[BMS_NUM_STATES] = {[BMS_IDLE] = "init",
-											   [BMS_IDLE] = "idle",
-											   [BMS_PRECHARGE] = "pre-charge",
-											   [BMS_ON] = "on",
-											   [BMS_CHARGE] = "charge",
-											   [BMS_HALT] = "halt"};
+char *bms_state_names[BMS_NUM_STATES] = {[BMS_IDLE] = "init",
+										 [BMS_IDLE] = "idle",
+										 [BMS_PRECHARGE] = "pre-charge",
+										 [BMS_ON] = "on",
+										 [BMS_CHARGE] = "charge",
+										 [BMS_HALT] = "halt"};
+
+fsm_t fsm_bms;
+
+void fsm_bms_init() {
+	fsm_bms.current_state = BMS_INIT;
+	memcpy(fsm_bms.state_table, bms_state_table, BMS_NUM_STATES * BMS_NUM_STATES * sizeof(state_func_t *));
+	/*
+	for (int i = 0; i < BMS_NUM_STATES; i++) {
+		fsm_bms.state_table[i] = bms_state_names[i];
+	}
+	*/
+	fsm_bms.state_names = bms_state_names;
+}
 
 bms_state_t do_state_init() {
 	//pack_init(&pack);

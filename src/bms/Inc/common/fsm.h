@@ -17,12 +17,12 @@ typedef uint8_t state_func_t();
 
 typedef struct fsm {
 	uint8_t current_state;
-	state_func_t ***state_table;
+	state_func_t ***const state_table;
 	char **state_names;
 } fsm_t;
 
 uint8_t fsm_transition(fsm_t *fsm, uint8_t future_state);
 void fsm_run_state(fsm_t *fsm);
-void fsm_init(fsm_t *fsm, state_func_t ***state_table, char **state_names, uint8_t initial_state);
+//void fsm_init(fsm_t *fsm);
 
 #endif
