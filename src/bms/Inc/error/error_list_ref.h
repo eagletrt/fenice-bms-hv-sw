@@ -35,26 +35,26 @@
     node_t* error_list_ref_<insert the relative data name in data.c>;
 */
 
-node_t *error_list_ref_voltages[PACK_CELL_COUNT];
+extern node_t *error_list_ref_voltages[PACK_CELL_COUNT];
 
-node_t *error_list_ref_temperatures[PACK_TEMP_COUNT];
+extern node_t *error_list_ref_temperatures[PACK_TEMP_COUNT];
 
-node_t *error_list_ref_total_voltage;
-node_t *error_list_ref_max_voltage;
-node_t *error_list_ref_min_voltage;
+extern node_t *error_list_ref_total_voltage;
+extern node_t *error_list_ref_max_voltage;
+extern node_t *error_list_ref_min_voltage;
 
-node_t *error_list_ref_avg_temperature;
-node_t *error_list_ref_max_temperature;
-node_t *error_list_ref_min_temperature;
+extern node_t *error_list_ref_avg_temperature;
+extern node_t *error_list_ref_max_temperature;
+extern node_t *error_list_ref_min_temperature;
 
-node_t *error_list_ref_current;
+extern node_t *error_list_ref_current;
 
-node_t *error_list_ref_ltc[LTC6813_COUNT];
+extern node_t *error_list_ref_ltc[LTC6813_COUNT];
 
-node_t *error_list_ref_can;
+extern node_t *error_list_ref_can;
 
-node_t *error_adc_init;
-node_t *error_adc_timeout;
+extern node_t *error_adc_init;
+extern node_t *error_adc_timeout;
 
 /**
  * @brief	this array contains the references to error_list_ref_XXX variables
@@ -67,6 +67,5 @@ node_t *error_adc_timeout;
  *          and valueof(ERROR_CELL_OVER_VOLTAGE)
  * 
  */
-const node_t **error_list_ref_array[ERROR_NUM_ERRORS] = {NULL, error_list_ref_ltc, error_list_ref_voltages, error_list_ref_voltages, error_list_ref_temperatures, &error_list_ref_current,
-														 &error_list_ref_can, [ERROR_ADC_INIT] = &error_adc_init, [ERROR_ADC_TIMEOUT] = &error_adc_timeout};
+extern node_t **const error_list_ref_array[ERROR_NUM_ERRORS];
 #endif

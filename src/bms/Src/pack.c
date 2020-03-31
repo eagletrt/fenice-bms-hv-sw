@@ -10,9 +10,7 @@
 
 #include <math.h>
 #include <stdbool.h>
-#include <stdio.h>
 #include <stm32g4xx_hal.h>
-#include <string.h>
 
 #include "pack_data.h"
 #include "peripherals/si8900.h"
@@ -191,29 +189,18 @@ bool pack_balance_cells(SPI_HandleTypeDef *hspi) {
 		uint8_t indexes[PACK_CELL_COUNT];
 
 		VOLTAGE_T voltages[PACK_CELL_COUNT];
+
 		// makes a copy off all cell voltages
 		pd_get_voltage_array(voltages);
 
 		size_t len = bal_compute_indexes(voltages, indexes, balancing.threshold);
 
 		if (len > 0) {
-			char out[BUF_SIZE];
-			sprintf(out, "\r\nBalancing cells\r\n");
-
-			for (uint8_t i = 0; i < PACK_CELL_COUNT; i++) {
-				if (indexes[i] < NULL_INDEX) {
-					sprintf(out + strlen(out), "%d ", indexes[i]);
-				}
-			}
-			sprintf(out + strlen(out), "\r\n");
-			cli_print(out, strlen(out));
-
 			ltc6813_set_balancing(hspi, indexes, balancing.slot_time);
 			return true;
 		}
 
 		balancing.enable = false;
-		cli_print("\r\nnothing to balance\r\n", 22);
 	}
 	return false;
 }

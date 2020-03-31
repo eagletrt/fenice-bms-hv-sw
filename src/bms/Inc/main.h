@@ -23,7 +23,6 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "bms.h"
 #include "error/error.h"
 #include "pack.h"
 #include "stm32g4xx_ll_usart.h"

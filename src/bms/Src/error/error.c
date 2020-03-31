@@ -23,6 +23,17 @@
 #define OVER_CURRENT_TIMEOUT_MS 500	 // 400
 #define CAN_TIMEOUT_MS 1000
 
+const char *error_names[ERROR_NUM_ERRORS] = {
+	[ERROR_LTC_PEC_ERROR] = "PEC",
+	[ERROR_CELL_UNDER_VOLTAGE] = "under-voltage",
+	[ERROR_CELL_OVER_VOLTAGE] = "over-voltage",
+	[ERROR_CELL_OVER_TEMPERATURE] = "over-temperature",
+	[ERROR_OVER_CURRENT] = "over-current",
+	[ERROR_CAN] = "CAN",
+	[ERROR_ADC_INIT] = "adc init",
+	[ERROR_ADC_TIMEOUT] = "adc timeout",
+	[ERROR_OK] = "ok"};
+
 /** @brief	Defines the timeout in count or time for each error type */
 error_limits_t timeout[ERROR_NUM_ERRORS] = {
 	{LTC6813_PEC_TIMEOUT_COUNT, 0}, {0, CELL_UNDER_VOLTAGE_TIMEOUT_MS}, {0, CELL_OVER_VOLTAGE_TIMEOUT_MS}, {0, CELL_OVER_TEMPERATURE_TIMEOUT_MS}, {0, OVER_CURRENT_TIMEOUT_MS}, {0, CAN_TIMEOUT_MS}};

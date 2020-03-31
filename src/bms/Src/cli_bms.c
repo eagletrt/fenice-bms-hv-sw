@@ -16,6 +16,7 @@
 
 #include "bal.h"
 #include "error/error.h"
+#include "fsm_bms.h"
 #include "pack_data.h"
 #include "usart.h"
 
@@ -129,7 +130,7 @@ void _cli_status(char *cmd, char *out) {
 	itoa(error_count(), er_count, 10);
 
 	char *values[n_items][3] = {
-		{"BMS state", (char *)bms_state_names[state]}, {"error count", er_count}, {"balancing", bal}, {"balancing threshold", thresh}};
+		{"BMS state", (char *)fsm_bms.state_names[fsm_bms.current_state]}, {"error count", er_count}, {"balancing", bal}, {"balancing threshold", thresh}};
 
 	out[0] = '\0';
 	for (uint8_t i = 0; i < n_items; i++) {
