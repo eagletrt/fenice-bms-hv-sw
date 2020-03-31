@@ -67,6 +67,6 @@ node_t *error_adc_timeout;
  *          and valueof(ERROR_CELL_OVER_VOLTAGE)
  * 
  */
-node_t **error_list_ref_array[ERROR_NUM_ERRORS] = {NULL, error_list_ref_ltc, error_list_ref_voltages, error_list_ref_voltages, error_list_ref_temperatures, &error_list_ref_current,
-												   &error_list_ref_can, [ERROR_ADC_INIT] = &error_adc_init, [ERROR_ADC_TIMEOUT] = &error_adc_timeout};
+const node_t **error_list_ref_array[ERROR_NUM_ERRORS] = {NULL, error_list_ref_ltc, error_list_ref_voltages, error_list_ref_voltages, error_list_ref_temperatures, &error_list_ref_current,
+														 &error_list_ref_can, [ERROR_ADC_INIT] = &error_adc_init, [ERROR_ADC_TIMEOUT] = &error_adc_timeout};
 #endif

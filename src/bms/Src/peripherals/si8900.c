@@ -14,7 +14,6 @@
 #include <string.h>
 
 #include "../../../fenice_config.h"
-#include "cli.h"
 #include "error/error.h"
 #include "usart.h"
 
@@ -74,8 +73,7 @@ bool si8900_init(UART_HandleTypeDef *huart) {
  * 
  * @returns whether the reading succeded
  */
-bool si8900_read_channel(UART_HandleTypeDef *huart, SI8900_CHANNEL ch,
-						 uint16_t *voltage) {
+bool si8900_read_channel(UART_HandleTypeDef *huart, SI8900_CHANNEL ch, uint16_t *voltage) {
 	if (si8900_ready) {
 		uint8_t conf = si8900_cnfg_0 | (ch << 4);
 

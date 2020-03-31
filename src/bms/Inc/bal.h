@@ -18,16 +18,13 @@
 
 #define NULL_INDEX 255
 
-typedef struct bal_conf_t {
+typedef struct bal_conf {
 	bool enable;
 	uint16_t threshold;
 	uint8_t slot_time;
 } bal_conf_t;
 
-void _bubble_sort(uint8_t indexes[PACK_CELL_COUNT],
-				  uint16_t values[PACK_CELL_COUNT], uint8_t length);
-uint8_t bal_compute_indexes(uint16_t volts[PACK_CELL_COUNT],
-							uint8_t indexes[PACK_CELL_COUNT],
-							uint16_t threshold);
+void _bubble_sort(uint8_t indexes[PACK_CELL_COUNT], uint16_t values[PACK_CELL_COUNT], uint8_t length);
+uint8_t bal_compute_indexes(uint16_t volts[PACK_CELL_COUNT], uint8_t indexes[PACK_CELL_COUNT], uint16_t threshold);
 
 #endif
