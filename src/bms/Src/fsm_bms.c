@@ -11,6 +11,7 @@
 #include <stdio.h>
 
 //#include "pack_data.h"
+#include <stdlib.h>
 #include <string.h>
 
 #include "fsm_bms.h"
@@ -28,32 +29,39 @@ bms_state_t to_charge();
 bms_state_t to_on();
 bms_state_t to_halt();
 
-state_func_t *bms_state_table[BMS_NUM_STATES][BMS_NUM_STATES] = {
-	{do_state_init, to_idle, to_precharge, NULL, NULL, to_halt},	 // from init
-	{NULL, do_state_idle, to_precharge, NULL, NULL, to_halt},		 // from idle
-	{NULL, to_idle, do_state_precharge, to_on, to_charge, to_halt},	 // from precharge
-	{NULL, to_idle, NULL, do_state_on, NULL, to_halt},				 // from on
-	{NULL, to_idle, NULL, NULL, do_state_charge, to_halt},			 // from charge
-	{NULL, NULL, NULL, NULL, NULL, do_state_halt}};					 // from halt
-
-char *bms_state_names[BMS_NUM_STATES] = {[BMS_IDLE] = "init",
-										 [BMS_IDLE] = "idle",
-										 [BMS_PRECHARGE] = "pre-charge",
-										 [BMS_ON] = "on",
-										 [BMS_CHARGE] = "charge",
-										 [BMS_HALT] = "halt"};
-
 fsm_t fsm_bms;
 
 void fsm_bms_init() {
-	fsm_bms.current_state = BMS_INIT;
-	memcpy(fsm_bms.state_table, bms_state_table, BMS_NUM_STATES * BMS_NUM_STATES * sizeof(state_func_t *));
-	/*
-	for (int i = 0; i < BMS_NUM_STATES; i++) {
-		fsm_bms.state_table[i] = bms_state_names[i];
+	state_func_t *bms_state_table[BMS_NUM_STATES][BMS_NUM_STATES] = {
+		{do_state_init, to_idle, to_precharge, NULL, NULL, to_halt},	 // from init
+		{NULL, do_state_idle, to_precharge, NULL, NULL, to_halt},		 // from idle
+		{NULL, to_idle, do_state_precharge, to_on, to_charge, to_halt},	 // from precharge
+		{NULL, to_idle, NULL, do_state_on, NULL, to_halt},				 // from on
+		{NULL, to_idle, NULL, NULL, do_state_charge, to_halt},			 // from charge
+		{NULL, NULL, NULL, NULL, NULL, do_state_halt}};					 // from halt
+
+	char *bms_state_names[BMS_NUM_STATES] = {[BMS_INIT] = "init",
+											 [BMS_IDLE] = "idle",
+											 [BMS_PRECHARGE] = "pre-charge",
+											 [BMS_ON] = "on",
+											 [BMS_CHARGE] = "charge",
+											 [BMS_HALT] = "halt"};
+
+	fsm_bms.state_table = (state_func_t ***)malloc(BMS_NUM_STATES * sizeof(state_func_t **));
+	for (uint8_t i = 0; i < BMS_NUM_STATES; i++) {
+		fsm_bms.state_table[i] = (state_func_t **)malloc(BMS_NUM_STATES * sizeof(state_func_t *));
+		for (uint8_t j = 0; j < BMS_NUM_STATES; j++) {
+			fsm_bms.state_table[i][j] = bms_state_table[i][j];
+		}
 	}
-	*/
-	fsm_bms.state_names = bms_state_names;
+
+	fsm_bms.state_names = (char **)malloc(sizeof(char **) * BMS_NUM_STATES);
+	for (uint8_t i = 0; i < BMS_NUM_STATES; i++) {
+		fsm_bms.state_names[i] = (char *)malloc(sizeof(bms_state_names[i]));
+		strcpy(fsm_bms.state_names[i], bms_state_names[i]);
+	}
+
+	fsm_bms.current_state = BMS_INIT;
 }
 
 bms_state_t do_state_init() {

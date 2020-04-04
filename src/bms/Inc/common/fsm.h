@@ -17,7 +17,7 @@ typedef uint8_t state_func_t();
 
 typedef struct fsm {
 	uint8_t current_state;
-	state_func_t ***const state_table;
+	state_func_t ***state_table;
 	char **state_names;
 } fsm_t;
 
