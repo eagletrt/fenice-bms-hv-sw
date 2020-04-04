@@ -18,7 +18,6 @@ typedef struct node {
 	void *data;
 	struct node *next;
 } node_t;
-
 void list_init(node_t *head);
 
 node_t *list_insert(node_t **head, void *data, size_t data_size);
