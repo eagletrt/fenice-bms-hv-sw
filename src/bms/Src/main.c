@@ -23,7 +23,7 @@
 #include "cli_bms.h"
 #include "error/error.h"
 #include "fsm_bms.h"
-#include "sfsm_bmsi8900.h"
+#include "si8900.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -158,7 +158,7 @@ int main(void) {
 
 		/* USER CODE BEGIN 3 */
 		fsm_run_state(&fsm_bms);
-		check_timers();
+		//check_timers();
 
 		cli_loop(&cli_bms);
 	}

@@ -39,8 +39,8 @@ typedef struct cli_t {
 
 	char input_buf;	 // Input byte
 
-	node_t *history;		// stream (history)
-	uint8_t history_index;	// Index of currently selected buf
+	node_t *history;		  // stream (history)
+	node_t *current_history;  // Currently "selected" history item
 
 	buffer_t current_command;
 
