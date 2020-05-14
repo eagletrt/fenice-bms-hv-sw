@@ -17,14 +17,17 @@ CFLAGS=-I $(LIB_INCLUDE)
 all: $(TARGET)
 
 $(TARGET): $(SOURCES) $(OBJ)
+	@mkdir -p $(@D)
 	$(CC) -o $@ $^ $(MUNIT_SOURCE) $(CFLAGS)
 
 $(BUILD_DIR)/%.o: %.c
+	@mkdir -p $(@D)
 	$(CC) -c -o $@ $^ $(CFLAGS)
 
 .PHONY: clean
 clean:
-	rm -rf $(TARGET) $(OBJ)
+	rm -f $(TARGET) $(OBJ)
+	rm -d $(BUILD_DIR)
 
 .PHONY: test
 test: all
