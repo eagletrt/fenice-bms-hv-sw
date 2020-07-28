@@ -8,53 +8,87 @@
 
 #include "error/error.h"
 
+#include <stdlib.h>
+
 #include "error/error_list_ref.h"
+#include "tim.h"
+
+#define TIMER htim2
 
 /**
  * Reaction times by the rules:
- * 	- 500ms for voltage and current
+ * 	- 500ms for voltages and current
  * 	- 1s for temperatures
  */
-#define LTC6813_PEC_TIMEOUT_COUNT 0	 // 5000
-#define CELL_UNDER_VOLTAGE_TIMEOUT_MS 500
-#define CELL_OVER_VOLTAGE_TIMEOUT_MS 500
-#define CELL_UNDER_TEMPERATURE_TIMEOUT_MS 1000
-#define CELL_OVER_TEMPERATURE_TIMEOUT_MS 1000
-#define OVER_CURRENT_TIMEOUT_MS 500	 // 400
-#define CAN_TIMEOUT_MS 1000
+const error_timeout error_timeouts[ERROR_NUM_ERRORS] = {
+	[ERROR_LTC_PEC_ERROR] = SOFT,
+	[ERROR_CELL_UNDER_VOLTAGE] = SHORT,
+	[ERROR_CELL_OVER_VOLTAGE] = SHORT,
+	[ERROR_OVER_CURRENT] = SHORT,
+	[ERROR_CAN] = REGULAR,
+	[ERROR_ADC_INIT] = SOFT,
+	[ERROR_ADC_TIMEOUT] = SOFT,
+	[ERROR_FEEDBACK_HARD] = INSTANT,
+	[ERROR_FEEDBACK_SOFT] = SOFT};
 
-const char *error_names[ERROR_NUM_ERRORS] = {
-	[ERROR_LTC_PEC_ERROR] = "PEC",
-	[ERROR_CELL_UNDER_VOLTAGE] = "under-voltage",
-	[ERROR_CELL_OVER_VOLTAGE] = "over-voltage",
-	[ERROR_CELL_OVER_TEMPERATURE] = "over-temperature",
-	[ERROR_OVER_CURRENT] = "over-current",
-	[ERROR_CAN] = "CAN",
-	[ERROR_ADC_INIT] = "adc init",
-	[ERROR_ADC_TIMEOUT] = "adc timeout",
-	[ERROR_OK] = "ok"};
+llist er_list = NULL;
 
-/** @brief	Defines the timeout in count or time for each error type */
-error_limits_t timeout[ERROR_NUM_ERRORS] = {
-	{LTC6813_PEC_TIMEOUT_COUNT, 0}, {0, CELL_UNDER_VOLTAGE_TIMEOUT_MS}, {0, CELL_OVER_VOLTAGE_TIMEOUT_MS}, {0, CELL_OVER_TEMPERATURE_TIMEOUT_MS}, {0, OVER_CURRENT_TIMEOUT_MS}, {0, CAN_TIMEOUT_MS}};
+/**
+ * @returns The time left before the error becomes fatal
+ */
+uint32_t get_timeout_delta(error_t *error) {
+	uint32_t delta = error->timestamp + error_timeouts[error->id] - HAL_GetTick();
+	return delta >= 0 ? delta : 0;
+}
 
-node_t *er_list = NULL;
+bool error_equals(llist_node a, llist_node b) {
+	return ((error_t *)a)->id == ((error_t *)b)->id && ((error_t *)a)->offset == ((error_t *)b)->offset;
+}
+
+/**
+ * @brief Compares the timeout delta between two errors
+ * 
+ * @returns 1 if a < b. 0 if a == b. -1 otherwise
+ */
+int8_t error_compare(llist_node a, llist_node b) {
+	if (get_timeout_delta((error_t *)a) < get_timeout_delta((error_t *)b))
+		return 1;
+	if (get_timeout_delta((error_t *)a) == get_timeout_delta((error_t *)b))
+		return 0;
+	return -1;
+}
+
+bool error_set_timer(error_t *error) {
+	HAL_TIM_Base_Stop_IT(&TIMER);
+
+	if (error != NULL && error->state == ERROR_ACTIVE) {
+		// Set counter period register to the delta
+		TIMER.Instance->ARR = get_timeout_delta(error) - 1;
+		HAL_TIM_Base_Start_IT(&TIMER);
+
+		return true;
+	}
+
+	return false;
+}
+
+void error_init() {
+	er_list = llist_init(error_compare, error_equals);
+}
 
 /**
  * @brief	Initializes an error structure
  *
  * @param	error			The error structure to initialize
- * @param type			The error type
+ * @param id				The error id
  * @param	offset		The offset (index) of the error in error_data
  * @param	timestamp	The timestamp at which the error occurred
  */
-void error_init(error_status_t *error, error_t type, uint8_t offset, uint32_t timestamp) {
-	error->type = type;
+void error_init_error(error_t *error, error_id id, uint8_t offset, uint32_t timestamp) {
+	error->id = id;
 	error->offset = offset;
-	error->count = 0;
-	error->fatal = false;
-	error->active = true;
-	error->time_stamp = timestamp;
+	error->state = ERROR_ACTIVE;
+	error->timestamp = timestamp;
 }
 
 /**
@@ -62,51 +96,70 @@ void error_init(error_status_t *error, error_t type, uint8_t offset, uint32_t ti
  * 
  * @details	
  *
- * @param	type			The error type
+ * @param	id			The error id
  * @param	offset		The offset (index) of the error in error_data
  * @param	timestamp	Current timestamp
  * 
  * @returns	whether the error has been set
  */
-bool error_set(error_t type, uint8_t offset, uint32_t timestamp) {
+bool error_set(error_id id, uint8_t offset, uint32_t timestamp) {
 	// Check if error exists
-	if (error_list_ref_array[type][offset] == NULL) {
-		error_status_t er;
-		error_init(&er, type, offset, timestamp);
+	if (ERROR_GET_REF(id, offset) == NULL) {
+		error_t *error = malloc(sizeof(error_t));
 
-		error_list_ref_array[type][offset] = list_insert(&er_list, &er, sizeof(error_status_t));
-
-		if (error_list_ref_array[type][offset] == NULL) {
+		if (error == NULL) {
 			return false;
 		}
 
-		return true;
+		error_init_error(error, id, offset, timestamp);
+
+		if (llist_insert_priority(er_list, (llist_node)error) != LLIST_SUCCESS) {
+			return false;
+		}
+
+		ERROR_GET_REF(id, offset) = error;
+
+		// Re-set timer if first in list
+		if (error_equals(llist_get_head(er_list), error)) {
+			error_set_timer(error);
+		}
 	}
 
-	((error_status_t *)error_list_ref_array[type][offset]->data)->count++;
 	return true;
 }
 
 /**
  * @brief		Deactivates an error
  *
- * @param		type		The type of error to deactivate
- * @param		offset	The offset of the error type
+ * @param		id		The id of error to deactivate
+ * @param		offset	The offset of the error id
  * 
  * @returns	whether the error has been unset
  */
-bool error_unset(error_t type, uint8_t offset) {
-	// Check if error is fatal; in that case do not remove it, but deactivate it
-	if (error_list_ref_array[type][offset] != NULL) {
-		if (((error_status_t *)error_list_ref_array[type][offset]->data)->fatal) {
-			((error_status_t *)error_list_ref_array[type][offset]->data)->active = false;
+bool error_unset(error_id id, uint8_t offset) {
+	if (ERROR_GET_REF(id, offset) != NULL) {
+		error_t *error = ERROR_GET_REF(id, offset);
+
+		// Check if error is fatal; in that case do not remove it, but deactivate it
+		if (error->state == ERROR_FATAL) {
+			//error->state = ERROR_NOT_ACTIVE;
 			return true;
 		}
 
-		list_remove(&er_list, error_list_ref_array[type][offset]);
+		// If we are removing the first error, re-set the timer to the second error
+		if (error_equals(llist_get_head(er_list), (llist_node)error)) {
+			error_t *tmp = NULL;
 
-		error_list_ref_array[type][offset] = NULL;
+			// No need to check llist_get output because passing NULL to error_set_timer is legal
+			llist_get(er_list, 1, (llist_node *)&tmp);
+			error_set_timer(tmp);
+		}
 
+		if (llist_remove_by_node(er_list, (llist_node)error) != LLIST_SUCCESS) {
+			return false;
+		}
+
+		ERROR_GET_REF(id, offset) = NULL;
 		return true;
 	}
 
@@ -118,98 +171,13 @@ bool error_unset(error_t type, uint8_t offset) {
  */
 // TODO: Remove
 uint8_t error_count() {
-	return list_count(er_list);
+	return llist_size(er_list);
 }
 
 /**
- * @returns the current array of errors
+ * @returns	An array of running errors
  */
-// TODO: Make
-uint16_t error_dump(error_status_t errors[]) {
-	node_t *node = er_list;
-	uint16_t count = 0;
-
-	while (node != NULL) {
-		errors[count++] = *(error_status_t *)node->data;
-		node = node->next;
-	}
-
-	return count;
-}
-
-/**
- * @brief Checks every error for expiration
- * 
- * @returns	The expired error type, or ERROR_OK
- */
-error_t error_verify(uint32_t now) {
-	node_t *node = er_list;
-	error_t ret = ERROR_OK;
-
-	while (node != NULL && ret == ERROR_OK) {
-		ret = error_check_fatal((error_status_t *)(node->data), now);
-
-		node = node->next;
-	}
-
-	return ret;
-}
-
-/**
- * @brief		Checks if an error has become fatal.
- * @details	This function checks if the provided error structure has exceeded
- * 					one or more of its critical limits.
- *
- * @param		error	The error structure to check.
- * @param		now		The current time.
- *
- * @retval	The error return value.
- */
-error_t error_check_fatal(error_status_t *error, uint32_t now) {
-	if (_error_check_count(error) || _error_check_timeout(error, now)) {
-		error->fatal = true;
-		return error->type;
-	}
-
-	return ERROR_OK;
-}
-
-/**
- * @brief		Checks whether to trigger a count-based error.
- * @details	This will trigger the error if the number of occurrences exceeds the
- * 					count parameter of that error type.
- *
- * @param		error	The error structure to check
- *
- * @retval	true for error, false for OK
- */
-bool _error_check_count(error_status_t *error) {
-	if (timeout[error->type].count) {
-		/** Compares the actual count to the timeout for this error type */
-		if (error->count > timeout[error->type].count) {
-			return true;
-		}
-	}
-
-	return false;
-}
-
-/**
- * @brief		Checks whether to trigger a time-based error.
- * @details	This will trigger the error if the time elapsed between the first
- * 					occurrence of the error and the current time is more than
- * 					the timeout for that type of error.
- *
- * @param		error	The error struct to check
- * @param		now		The current time
- *
- * @retval	true for error, false for OK
- */
-bool _error_check_timeout(error_status_t *error, uint32_t now) {
-	if (timeout[error->type].timeout) {
-		if (now - error->time_stamp > timeout[error->type].timeout) {
-			return true;
-		}
-	}
-	return false;
+size_t error_dump(error_t errors[]) {
+	llist_export(er_list, (llist_node *)&errors);
+	return llist_size(er_list);
 }

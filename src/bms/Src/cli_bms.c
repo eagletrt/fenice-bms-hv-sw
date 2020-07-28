@@ -32,6 +32,16 @@ void _cli_errors(char *cmd, char *out);
 void _cli_taba(char *cmd, char *out);
 void _cli_help(char *cmd, char *out);
 
+const char *error_names[ERROR_NUM_ERRORS] = {
+	[ERROR_LTC_PEC_ERROR] = "PEC",
+	[ERROR_CELL_UNDER_VOLTAGE] = "under-voltage",
+	[ERROR_CELL_OVER_VOLTAGE] = "over-voltage",
+	[ERROR_CELL_OVER_TEMPERATURE] = "over-temperature",
+	[ERROR_OVER_CURRENT] = "over-current",
+	[ERROR_CAN] = "CAN",
+	[ERROR_ADC_INIT] = "adc init",
+	[ERROR_ADC_TIMEOUT] = "adc timeout"};
+
 char const *const feedback_names[FEEDBACK_N] = {
 	[FEEDBACK_VREF_POS] = "VREF",
 	[FEEDBACK_FROM_TSMS_POS] = "FROM TSMS",
