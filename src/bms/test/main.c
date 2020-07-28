@@ -3,7 +3,7 @@
 #include "test_list.h"
 
 int main(int argc, char* argv[]) {
-	MunitSuite main_suite[] = {test_list_suite, NULL};
+	MunitSuite main_suite[] = {test_list_suite, {NULL, NULL, NULL, MUNIT_TEST_OPTION_NONE, MUNIT_SUITE_OPTION_NONE}};
 	MunitSuite mainsuite = {
 		"",
 		NULL,

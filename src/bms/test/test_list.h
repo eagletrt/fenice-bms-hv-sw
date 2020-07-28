@@ -3,7 +3,7 @@
 
 #include "munit.h"
 
-static void* test_list_setup(const MunitParameter params[], void* user_data);
-static MunitResult test_list_insert(const MunitParameter params[], void* user_data_or_fixture);
+void* test_list_setup(const MunitParameter params[], void* user_data);
+MunitResult test_list_insert(const MunitParameter params[], void* user_data_or_fixture);
 
 #endif
