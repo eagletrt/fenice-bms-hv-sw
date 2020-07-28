@@ -13,8 +13,6 @@
 #include "error/error_list_ref.h"
 #include "tim.h"
 
-#define TIMER htim2
-
 /**
  * Reaction times by the rules:
  * 	- 500ms for voltages and current
@@ -59,12 +57,12 @@ int8_t error_compare(llist_node a, llist_node b) {
 }
 
 bool error_set_timer(error_t *error) {
-	HAL_TIM_Base_Stop_IT(&TIMER);
+	HAL_TIM_Base_Stop_IT(&htim_Err);
 
 	if (error != NULL && error->state == ERROR_ACTIVE) {
 		// Set counter period register to the delta
-		TIMER.Instance->ARR = get_timeout_delta(error) - 1;
-		HAL_TIM_Base_Start_IT(&TIMER);
+		htim_Err.Instance->ARR = get_timeout_delta(error) - 1;
+		HAL_TIM_Base_Start_IT(&htim_Err);
 
 		return true;
 	}
