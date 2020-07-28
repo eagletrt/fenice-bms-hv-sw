@@ -32,6 +32,24 @@ void _cli_errors(char *cmd, char *out);
 void _cli_taba(char *cmd, char *out);
 void _cli_help(char *cmd, char *out);
 
+char const *const feedback_names[FEEDBACK_N] = {
+	[FEEDBACK_VREF_POS] = "VREF",
+	[FEEDBACK_FROM_TSMS_POS] = "FROM TSMS",
+	[FEEDBACK_TO_TSMS_POS] = "TO TSMS",
+	[FEEDBACK_FROM_SHUTDOWN_POS] = "FROM SHUTDOWN",
+	[FEEDBACK_LATCH_IMD_POS] = "LATCH IMD",
+	[FEEDBACK_LATCH_BMS_POS] = "LATCH BMS",
+	[FEEDBACK_IMD_FAULT_POS] = "IMD FAULT",
+	[FEEDBACK_BMS_FAULT_POS] = "BMS FAULT",
+	[FEEDBACK_TSAL_HV_POS] = "TSAL OVER 60V",
+	[FEEDBACK_AIR_POSITIVE_POS] = "AIR POSITIVE",
+	[FEEDBACK_AIR_NEGATIVE_POS] = "AIR NEGATIVE",
+	[FEEDBACK_PC_END_POS] = "PRE-CHARGE END",
+	[FEEDBACK_RELAY_LV_POS] = "RELAY LV",
+	[FEEDBACK_IMD_SHUTDOWN_POS] = "IMD SHUTDOWN",
+	[FEEDBACK_BMS_SHUTDOWN_POS] = "BMS SHUTDOWN",
+	[FEEDBACK_TS_ON_POS] = "TS ON"};
+
 char *command_names[N_COMMANDS] = {
 	"volts", "volts all", "temps", "temps all", "status", "errors", "bal", "?", "\ta"};
 
@@ -129,8 +147,10 @@ void _cli_status(char *cmd, char *out) {
 	char er_count[3] = {'\0'};
 	itoa(error_count(), er_count, 10);
 
-	char *values[n_items][3] = {
-		{"BMS state", (char *)fsm_bms.state_names[fsm_bms.current_state]}, {"error count", er_count}, {"balancing", bal}, {"balancing threshold", thresh}};
+	// TODO: Fix this
+	char *values[n_items][2] = {
+		{"BMS state", ""}, {"error count", er_count}, {"balancing", bal}, {"balancing threshold", thresh}};
+	//{"BMS state", (char *)fsm_bms.state_names[fsm_bms.current_state]}, {"error count", er_count}, {"balancing", bal}, {"balancing threshold", thresh}};
 
 	out[0] = '\0';
 	for (uint8_t i = 0; i < n_items; i++) {
@@ -169,7 +189,7 @@ void _cli_errors(char *cmd, char *out) {
 				"active......%s\r\n"
 				"fatal.......%s\r\n"
 				"count.......%lu\r\n",
-				error_names[errors[i].type], errors[i].time_stamp, HAL_GetTick() - errors[i].time_stamp, errors[i].offset, bool_names[errors[i].active], bool_names[errors[i].fatal], errors[i].count);
+				error_types[errors[i].type].name, errors[i].time_stamp, HAL_GetTick() - errors[i].time_stamp, errors[i].offset, bool_names[errors[i].active], bool_names[errors[i].fatal], errors[i].count);
 	}
 }
 
