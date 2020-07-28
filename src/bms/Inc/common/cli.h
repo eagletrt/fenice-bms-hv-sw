@@ -13,7 +13,7 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
-#include "common/list.h"
+#include "common/llist.h"
 #include "stm32g4xx_hal.h"
 
 #define BUF_SIZE 64
