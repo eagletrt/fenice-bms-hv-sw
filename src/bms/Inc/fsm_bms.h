@@ -15,18 +15,19 @@
 
 typedef enum {
 	BMS_INIT,
+	BMS_SET_TS_OFF,
 	BMS_IDLE,
+	BMS_PRECHARGE_START,
 	BMS_PRECHARGE,
-	BMS_ON,
+	BMS_PRECHARGE_END,
+	BMS_RUN,
 	BMS_CHARGE,
+	BMS_TO_HALT,
 	BMS_HALT,
 	BMS_NUM_STATES
-} bms_state_t;
+} bms_states;
 
-extern fsm_t fsm_bms;
-
-extern state_func_t *state_table[BMS_NUM_STATES][BMS_NUM_STATES];
-extern char *bms_state_names[BMS_NUM_STATES];
+extern fsm fsm_bms;
 
 void fsm_bms_init();
 
