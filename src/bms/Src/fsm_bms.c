@@ -17,6 +17,7 @@
 #include "error.h"
 #include "main.h"
 #include "pack.h"
+#include "tim.h"
 
 //------------------------------Declarations------------------------------------------
 bms_states do_init(fsm *FSM);
@@ -65,6 +66,20 @@ void fsm_bms_init() {
 	// }
 
 	fsm_bms.current_state = BMS_INIT;
+}
+
+/**
+ * @brief Does the staccah-staccah on the fsm
+ * 
+ * @details Called by the HAL timer interrupt, this function immediately executes do_to_halt and puts the fsm into HALT state
+ */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+	if (htim == &htim_Err) {  //htim_Err is a #define to htim2 (barely a substition) so tim.h must be included
+		HAL_TIM_Base_Stop_IT(htim);
+
+		fsm_bms.future_state = BMS_TO_HALT;
+		fsm_run_state(&fsm_bms);
+	}
 }
 
 bms_states do_init(fsm *FSM) {
