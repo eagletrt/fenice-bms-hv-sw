@@ -30,8 +30,11 @@ __PD_DEFINE(TEMPERATURE_T, min_temperature); /*!< [°C * 100] Mimimum temperatur
 
 __PD_DEFINE(CURRENT_T, current); /*!< [A * 10] Instant current draw. */
 
+FEEDBACK_T pd_feedback;
+
 // Voltage
-VOLTAGE_T pd_set_voltage(uint8_t index, VOLTAGE_T voltage) {
+VOLTAGE_T
+pd_set_voltage(uint8_t index, VOLTAGE_T voltage) {
 	PD_voltages[index].data = voltage;
 	PD_voltages[index].timestamp = HAL_GetTick();
 	return voltage;

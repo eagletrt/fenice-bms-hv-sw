@@ -14,6 +14,7 @@
 #include "../../fenice_config.h"
 #include "bal.h"
 #include "error/error.h"
+#include "pack_data.h"
 #include "peripherals/ltc6813_utils.h"
 
 extern bal_conf_t balancing;  // TODO: Remove bal_conf_t struct (remove enable and the rest has to be managed by the state machine with the eeprom too)
@@ -27,5 +28,14 @@ void pack_update_current();
 void pack_update_voltage_stats();
 void pack_update_temperature_stats();
 bool pack_balance_cells(SPI_HandleTypeDef *hspi);
+
+bool pack_set_ts_off();
+bool pack_set_pc_start();
+bool pack_set_precharge_end();
+
+bool pack_feedback_check(FEEDBACK_T fb_check_mask, FEEDBACK_T fb_value, error_type error_type);
+bool pack_feedback_check_charge();
+bool pack_feedback_check_precharge();
+bool pack_feedback_check_on();
 
 #endif

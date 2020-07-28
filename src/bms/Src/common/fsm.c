@@ -10,21 +10,12 @@
 
 #include "common/fsm.h"
 
-uint8_t fsm_transition(fsm_t *fsm, uint8_t future_state) {
-	state_func_t *transition = fsm->state_table[fsm->current_state][future_state];
-
-	if (transition) {
-		return transition();
-	}
-
-	// No state function exists -> go ahead
-	// TODO: add warning maybe?
-	return fsm->current_state;
+void fsm_init(fsm *FSM) {
+	FSM->current_state = FSM->states[0];
+	FSM->future_state = FSM->current_state;
 }
 
-void fsm_run_state(fsm_t *fsm) {
-	fsm->current_state = fsm_transition(fsm, fsm->current_state);
+void fsm_run_state(fsm *FSM) {
+	FSM->current_state = FSM->future_state;
+	FSM->future_state = FSM->states[FSM->current_state(FSM)];
 }
-
-//void fsm_init(fsm_t *fsm) {
-//}

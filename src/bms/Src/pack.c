@@ -12,7 +12,6 @@
 #include <stdbool.h>
 #include <stm32g4xx_hal.h>
 
-#include "pack_data.h"
 #include "peripherals/si8900.h"
 
 #define CURRENT_ARRAY_LENGTH 512
@@ -35,6 +34,7 @@ void pack_init() {
 
 	pd_set_current(0);
 
+	pd_feedback = 0;
 	for (uint8_t i = 0; i < PACK_CELL_COUNT; i++) {
 		pd_set_voltage(i, 0);
 	}
@@ -131,11 +131,7 @@ void pack_update_current() {
 
 	pd_set_current(current);
 
-	if (current > PACK_MAX_CURRENT) {
-		error_set(ERROR_OVER_CURRENT, 0, HAL_GetTick());
-	} else {
-		error_unset(ERROR_OVER_CURRENT, 0);
-	}
+	error_toggle_check(current > PACK_MAX_CURRENT, ERROR_OVER_CURRENT, 0);
 }
 
 /**
@@ -204,3 +200,86 @@ bool pack_balance_cells(SPI_HandleTypeDef *hspi) {
 	}
 	return false;
 }
+
+void pack_read_feedback(FEEDBACK_T fb_mask) {
+	//initialize the pd_feedback value to 0 on the mask bits;
+	pd_feedback &= (~fb_mask);
+	for (uint8_t i = 0; i < FEEDBACK_N; ++i) {
+		if ((1U << i) & fb_mask) {
+			HAL_GPIO_WritePin(MUX_A0_GPIO_Port, MUX_A0_Pin, (i & 0b00000001));
+			HAL_GPIO_WritePin(MUX_A1_GPIO_Port, MUX_A1_Pin, (i & 0b00000010));
+			HAL_GPIO_WritePin(MUX_A2_GPIO_Port, MUX_A2_Pin, (i & 0b00000100));
+			HAL_GPIO_WritePin(MUX_A3_GPIO_Port, MUX_A3_Pin, (i & 0b00001000));
+
+			pd_feedback |= (HAL_GPIO_ReadPin(ANALOG_DATA_GPIO_Port, ANALOG_DATA_Pin) << i);
+		}
+	}
+}
+
+bool pack_feedback_check(FEEDBACK_T fb_check_mask, FEEDBACK_T fb_value, error_type error_type) {
+	//remove not used bit with the mask and find the ones that differ with the xor
+	uint16_t difference = (fb_check_mask & pd_feedback) ^ fb_value;
+
+	for (uint8_t i = 0; i < FEEDBACK_N; i++) {
+		if (fb_check_mask & (1U << i)) {
+			error_toggle_check(difference & (1 << i), error_type, i);
+		}
+	}
+
+	return pd_feedback == fb_value;
+}
+
+bool pack_set_ts_off() {
+	//Switch off airs
+	HAL_GPIO_WritePin(TS_ON_GPIO_Port, TS_ON_Pin, GPIO_PIN_RESET);
+
+	pack_read_feedback(FEEDBACK_TS_OFF_MASK);
+	pack_feedback_check(FEEDBACK_TS_OFF_MASK, FEEDBACK_TS_OFF_VAL, ERROR_FEEDBACK_HARD);
+
+	// TODO: return something meaningful, or void
+	return true;
+}
+
+bool pack_set_pc_start() {
+	//switch on AIR-
+	HAL_GPIO_WritePin(TS_ON_GPIO_Port, TS_ON_Pin, GPIO_PIN_SET);
+
+	// Check feedback
+	pack_read_feedback(FEEDBACK_TO_PRECHARGE_MASK);
+	pack_feedback_check(FEEDBACK_TO_PRECHARGE_MASK, FEEDBACK_TO_PRECHARGE_VAL, ERROR_FEEDBACK_HARD);
+
+	// TODO: return something meaningful, or void
+	return true;
+}
+
+bool pack_set_precharge_end() {
+	//switch on AIR+
+	HAL_GPIO_WritePin(PC_ENDED_GPIO_Port, PC_ENDED_Pin, GPIO_PIN_SET);
+	HAL_Delay(10);	// non so quanto debba essere. In chimera con 1ms si triggerava però boh
+	HAL_GPIO_WritePin(PC_ENDED_GPIO_Port, PC_ENDED_Pin, GPIO_PIN_RESET);
+
+	// Check feedback
+	pack_read_feedback(FEEDBACK_ON_MASK);
+	return pack_feedback_check(FEEDBACK_ON_MASK, FEEDBACK_ON_VAL, ERROR_FEEDBACK_HARD);
+}
+
+// //this ckeck is performed during ON state and from PRECHARGE TO ON
+// bool pack_feedback_check_on() {
+// 	uint16_t difference = pd_feedback ^ FEEDBACK_ON;
+
+// 	for (uint8_t i = 0; i < FEEDBACK_N; i++) {
+// 		error_toggle_check(difference & (1 << i), ERROR_FEEDBACK_HARD, i);
+// 	}
+
+// 	return pd_feedback == FEEDBACK_ON;
+// }
+
+// bool pack_feedback_check_charge() {
+// 	uint16_t difference = pd_feedback ^ FEEDBACK_CHARGE;
+
+// 	for (uint8_t i = 0; i < FEEDBACK_N; i++) {
+// 		error_toggle_check(difference & (1 << i), ERROR_FEEDBACK_HARD, i);
+// 	}
+
+// 	return pd_feedback == FEEDBACK_CHARGE;
+// }
