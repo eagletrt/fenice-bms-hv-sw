@@ -13,16 +13,18 @@
 
 #include <inttypes.h>
 
-typedef uint8_t state_func_t();
+typedef struct fsm fsm;
 
-typedef struct fsm {
-	uint8_t current_state;
-	state_func_t ***state_table;
+typedef uint16_t (*state_function)(fsm *);
+
+// the array pointed by states must not contain null pointers
+struct fsm {
+	state_function current_state;
+	state_function future_state;
+	uint16_t number_states;
+	state_function *states;
 	char **state_names;
-} fsm_t;
-
-uint8_t fsm_transition(fsm_t *fsm, uint8_t future_state);
-void fsm_run_state(fsm_t *fsm);
-//void fsm_init(fsm_t *fsm);
-
+};
+void fsm_init(fsm *FSM);
+void fsm_run_state(fsm *FSM);
 #endif

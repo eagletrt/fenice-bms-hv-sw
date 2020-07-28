@@ -35,6 +35,11 @@
 		"bal.h": "c",
 		"data.h": "c",
 		"stdio.h": "c",
-		"string.h": "c"
+		"string.h": "c",
+		"fsm_bms.h": "c",
+		"cassert": "c",
+		"stm32g4xx_hal.h": "c",
+		"condition_variable": "c",
+		"future": "c"
 	}
 }

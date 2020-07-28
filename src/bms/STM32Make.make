@@ -225,13 +225,13 @@ $(BUILD_DIR):
 # flash
 #######################################
 flash: $(BUILD_DIR)/$(TARGET).elf
-	openocd -f interface/stlink-v2-1.cfg  -f target/false -c "program $(BUILD_DIR)/$(TARGET).elf verify reset exit"
+	openocd -f interface/stlink.cfg  -f target/stm32g4x.cfg -c "program $(BUILD_DIR)/$(TARGET).elf verify reset exit"
 
 #######################################
 # erase
 #######################################
 erase: $(BUILD_DIR)/$(TARGET).elf
-	openocd -f interface/stlink-v2-1.cfg -f target/false -c "init; reset halt; stm32g4x mass_erase 0; exit"
+	openocd -f interface/stlink.cfg -f target/stm32g4x.cfg -c "init; reset halt; stm32g4x mass_erase 0; exit"
 
 #######################################
 # clean up
