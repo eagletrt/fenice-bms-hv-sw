@@ -64,7 +64,8 @@ Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_tim_ex.c \
 Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_pwr.c \
 Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_uart.c \
 Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_uart_ex.c \
-Src/system_stm32g4xx.c
+Src/system_stm32g4xx.c \
+Src/tim.c
 
 # ASM sources
 ASM_SOURCES =  \

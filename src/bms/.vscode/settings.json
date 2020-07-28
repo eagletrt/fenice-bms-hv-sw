@@ -40,6 +40,17 @@
 		"cassert": "c",
 		"stm32g4xx_hal.h": "c",
 		"condition_variable": "c",
-		"future": "c"
+		"future": "c",
+		"thread": "c",
+		"hash_map": "c",
+		"deque": "c",
+		"forward_list": "c",
+		"list": "c",
+		"unordered_map": "c",
+		"unordered_set": "c",
+		"vector": "c",
+		"initializer_list": "c",
+		"bitset": "c",
+		"algorithm": "c"
 	}
 }

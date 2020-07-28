@@ -1,17 +1,22 @@
 MUNIT_SOURCE=munit/munit.c
 LIB_INCLUDE=munit
 
+SRC=../Src
+
+INC=../Inc
+INC_PARAMS=$(foreach d, $(INC), -I$d)
+
 BUILD_DIR=build
 EXECUTABLE=main
 TARGET=$(BUILD_DIR)/$(EXECUTABLE)
 
-SOURCES=main.c
+SOURCES=main.c $(SRC)/common/llist.c
 OBJECTS=test_list.o
 OBJ=$(BUILD_DIR)/$(OBJECTS)
 
 CC?=gcc
 
-CFLAGS=-I $(LIB_INCLUDE)
+CFLAGS=-I $(LIB_INCLUDE) $(INC_PARAMS) -Wall# -fprofile-arcs -ftest-coverage
 
 .PHONY: all
 all: $(TARGET)

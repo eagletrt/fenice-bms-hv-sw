@@ -61,7 +61,7 @@ Src/bal.c \
 Src/cli_bms.c \
 Src/common/cli.c \
 Src/common/fsm.c \
-Src/common/list.c \
+Src/common/llist.c \
 Src/error/error.c \
 Src/error/error_list_ref.c \
 Src/fdcan.c \
@@ -77,6 +77,7 @@ Src/spi.c \
 Src/stm32g4xx_hal_msp.c \
 Src/stm32g4xx_it.c \
 Src/system_stm32g4xx.c \
+Src/tim.c \
 Src/usart.c
 
 
