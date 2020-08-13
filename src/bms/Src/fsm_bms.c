@@ -20,22 +20,39 @@
 #include "tim.h"
 
 //------------------------------Declarations------------------------------------------
-bms_states do_init(fsm *FSM);
-bms_states do_ts_off(fsm *FSM);
-bms_states do_idle(fsm *FSM);
-bms_states do_precharge_start(fsm *FSM);
-bms_states do_precharge(fsm *FSM);
-bms_states do_precharge_end(fsm *FSM);
-bms_states do_run(fsm *FSM);
-bms_states do_charge(fsm *FSM);
-bms_states do_to_halt(fsm *FSM);
-bms_states do_halt(fsm *FSM);
+uint16_t do_init(fsm *FSM);
+uint16_t do_ts_off(fsm *FSM);
+uint16_t do_idle(fsm *FSM);
+uint16_t do_precharge_start(fsm *FSM);
+uint16_t do_precharge(fsm *FSM);
+uint16_t do_precharge_end(fsm *FSM);
+uint16_t do_run(fsm *FSM);
+uint16_t do_charge(fsm *FSM);
+uint16_t do_to_halt(fsm *FSM);
+uint16_t do_halt(fsm *FSM);
 
 fsm fsm_bms;
 
 uint32_t timer_precharge = 0;
 
 void fsm_bms_init() {
+	fsm_bms.state_table = malloc(sizeof(state_function) * BMS_NUM_STATES);
+
+	fsm_bms.state_table[BMS_INIT] = &do_init;
+
+	fsm_bms.state_table[BMS_SET_TS_OFF] = &do_ts_off;
+	fsm_bms.state_table[BMS_IDLE] = &do_idle;
+	fsm_bms.state_table[BMS_PRECHARGE_START] = &do_precharge_start;
+	fsm_bms.state_table[BMS_PRECHARGE] = &do_precharge;
+	fsm_bms.state_table[BMS_PRECHARGE_END] = &do_precharge_end;
+	fsm_bms.state_table[BMS_RUN] = &do_run;
+	fsm_bms.state_table[BMS_CHARGE] = &do_charge;
+	fsm_bms.state_table[BMS_TO_HALT] = &do_to_halt;
+	fsm_bms.state_table[BMS_HALT] = &do_halt;
+
+	fsm_bms.future_state = fsm_bms.state_table[BMS_INIT];
+	fsm_bms.current_state = fsm_bms.state_table[BMS_INIT];
+
 	// state_function *bms_states_tab[BMS_NUM_STATES][BMS_NUM_STATES] = {
 	// 	{do_init, to_idle, to_precharge, NULL, NULL, to_halt},	   // from init
 	// 	{NULL, do_idle, to_precharge, NULL, NULL, to_halt},		   // from idle
@@ -64,8 +81,6 @@ void fsm_bms_init() {
 	// 	fsm_bms.state_names[i] = (char *)malloc(sizeof(bms_states_names[i]));
 	// 	strcpy(fsm_bms.state_names[i], bms_states_names[i]);
 	// }
-
-	fsm_bms.current_state = BMS_INIT;
 }
 
 /**
@@ -77,24 +92,24 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	if (htim == &htim_Err) {  //htim_Err is a #define to htim2 (barely a substition) so tim.h must be included
 		HAL_TIM_Base_Stop_IT(htim);
 
-		fsm_bms.future_state = BMS_TO_HALT;
+		fsm_bms.future_state = fsm_bms.state_table[BMS_TO_HALT];
 		fsm_run_state(&fsm_bms);
 	}
 }
 
-bms_states do_init(fsm *FSM) {
+uint16_t do_init(fsm *FSM) {
 	pack_init();
 	return BMS_IDLE;
 }
 
-bms_states do_ts_off(fsm *FSM) {
+uint16_t do_ts_off(fsm *FSM) {
 	pack_set_ts_off();
 
 	// can_send(&hcan, CAN_ID_BMS, CAN_MSG_TS_OFF, 8);
 	return BMS_IDLE;
 }
 
-bms_states do_idle(fsm *FSM) {
+uint16_t do_idle(fsm *FSM) {
 	// Check CAN
 	//if (data->can_rx.StdId == CAN_ID_ECU) {
 	//	if (data->can_rx.Data[0] == CAN_IN_TS_ON) {
@@ -111,7 +126,7 @@ bms_states do_idle(fsm *FSM) {
 	return BMS_IDLE;
 }
 
-bms_states do_precharge_start(fsm *FSM) {
+uint16_t do_precharge_start(fsm *FSM) {
 	// Precharge
 	// bms_precharge_start(&data->bms);
 	pack_set_pc_start();
@@ -120,22 +135,24 @@ bms_states do_precharge_start(fsm *FSM) {
 	return BMS_PRECHARGE;
 }
 
-bms_states do_precharge(fsm *FSM) {
+uint16_t do_precharge(fsm *FSM) {
 	bms_states return_state = BMS_PRECHARGE;
 
 	if (HAL_GetTick() - timer_precharge < PRECHARGE_TIMEOUT) {
 		if (pd_get_bus_voltage() >= pd_get_adc_voltage() * PRECHARGE_VOLTAGE_THRESHOLD) {
 			pack_set_precharge_end();
-			return_state = BMS_RUN;
+			return_state = BMS_PRECHARGE_END;
 
 			if (HAL_GPIO_ReadPin(CHARGE_GPIO_Port, CHARGE_Pin)) {
 				return_state = BMS_CHARGE;
 			}
 		}
 	} else {
-		return_state = BMS_HALT;
+		// If the precharge takes too long, we shut down and start from idle
+		return_state = BMS_SET_TS_OFF;
 	}
-	return (error_verify(HAL_GetTick()) == ERROR_OK) ? return_state : BMS_HALT;
+
+	return return_state;
 
 	/*
 	if (pd_get_bus_voltage() >= pd_get_adc_voltage() * PRECHARGE_VOLTAGE_THRESHOLD) {
@@ -156,7 +173,7 @@ bms_states do_precharge(fsm *FSM) {
 	*/
 }
 
-bms_states do_precharge_end(fsm *FSM) {
+uint16_t do_precharge_end(fsm *FSM) {
 	// bms_precharge_end(&data->bms);
 	// HAL_CAN_ConfigFilter(&hcan, &CAN_FILTER_NORMAL);
 	// can_send(&hcan, CAN_ID_BMS, CAN_MSG_TS_ON, 8);
@@ -164,7 +181,7 @@ bms_states do_precharge_end(fsm *FSM) {
 	return BMS_RUN;
 }
 
-bms_states do_run(fsm *FSM) {
+uint16_t do_run(fsm *FSM) {
 	// if (data->can_rx.StdId == CAN_ID_ECU) {
 	// 	if (data->can_rx.Data[0] == CAN_IN_TS_OFF) {
 	// 		return BMS_IDLE;
@@ -174,7 +191,11 @@ bms_states do_run(fsm *FSM) {
 	return BMS_RUN;
 }
 
-bms_states do_to_halt(fsm *FSM) {
+uint16_t do_charge(fsm *FSM) {
+	return BMS_CHARGE;
+}
+
+uint16_t do_to_halt(fsm *FSM) {
 	// bms_set_ts_off(&data->bms);
 	// bms_set_fault(&data->bms);
 
@@ -182,4 +203,4 @@ bms_states do_to_halt(fsm *FSM) {
 	return BMS_HALT;
 }
 
-bms_states do_halt(fsm *FSM) { return BMS_HALT; }
+uint16_t do_halt(fsm *FSM) { return BMS_HALT; }

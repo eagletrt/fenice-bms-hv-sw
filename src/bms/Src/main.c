@@ -48,7 +48,6 @@
 /* USER CODE BEGIN PV */
 DMA_HandleTypeDef hdma_adc1;
 
-uint32_t timer_precharge = 0;
 uint32_t timer_volts = 0;
 uint32_t timer_temps = 0;
 uint32_t timer_bal = 0;
@@ -142,6 +141,7 @@ int main(void) {
 	/* USER CODE BEGIN 2 */
 	FDCAN1_Init();
 
+	error_init();
 	fsm_bms_init();
 	cli_bms_init();
 

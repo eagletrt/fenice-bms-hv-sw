@@ -51,6 +51,7 @@
 		"vector": "c",
 		"initializer_list": "c",
 		"bitset": "c",
-		"algorithm": "c"
+		"algorithm": "c",
+		"ranges": "c"
 	}
 }

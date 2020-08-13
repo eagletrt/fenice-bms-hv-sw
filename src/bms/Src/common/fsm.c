@@ -11,11 +11,11 @@
 #include "common/fsm.h"
 
 void fsm_init(fsm *FSM) {
-	FSM->current_state = FSM->states[0];
+	FSM->current_state = FSM->state_table[0];
 	FSM->future_state = FSM->current_state;
 }
 
 void fsm_run_state(fsm *FSM) {
 	FSM->current_state = FSM->future_state;
-	FSM->future_state = FSM->states[FSM->current_state(FSM)];
+	FSM->future_state = FSM->state_table[FSM->current_state(FSM)];
 }

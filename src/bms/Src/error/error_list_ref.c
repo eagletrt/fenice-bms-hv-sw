@@ -15,7 +15,7 @@
  * @author		Simone Ruffini [simone.ruffini@studenti.unitn.it]
  */
 
-#include "error_list_ref.h"
+#include "error/error_list_ref.h"
 
 #include <stdio.h>
 
@@ -30,26 +30,44 @@
     node_t* error_list_ref_<insert the relative data name in data.c>;
 */
 
-node_t *error_list_ref_voltages[PACK_CELL_COUNT];
+llist_node error_list_ref_voltages[PACK_CELL_COUNT] = {NULL};
 
-node_t *error_list_ref_temperatures[PACK_TEMP_COUNT];
+llist_node error_list_ref_temperatures[PACK_TEMP_COUNT] = {NULL};
 
-node_t *error_list_ref_total_voltage;
-node_t *error_list_ref_max_voltage;
-node_t *error_list_ref_min_voltage;
+llist_node error_list_ref_current[1] = {NULL};
+llist_node error_list_ref_ltc[LTC6813_COUNT] = {NULL};
+llist_node error_list_ref_can[1] = {NULL};
+llist_node error_adc_init[1] = {NULL};
+llist_node error_adc_timeout[1] = {NULL};
+llist_node error_feedback_hard[1] = {NULL};
+llist_node error_feedback_soft[1] = {NULL};
 
-node_t *error_list_ref_avg_temperature;
-node_t *error_list_ref_max_temperature;
-node_t *error_list_ref_min_temperature;
+llist_node *const error_list_ref_array[ERROR_NUM_ERRORS] = {
+	[ERROR_LTC_PEC_ERROR] = error_list_ref_ltc,
+	[ERROR_CELL_UNDER_VOLTAGE] = error_list_ref_voltages,
+	[ERROR_CELL_OVER_VOLTAGE] = error_list_ref_voltages,
+	[ERROR_CELL_OVER_TEMPERATURE] = error_list_ref_temperatures,
+	[ERROR_OVER_CURRENT] = error_list_ref_current,
+	[ERROR_CAN] = error_list_ref_can,
+	[ERROR_ADC_INIT] = error_adc_init,
+	[ERROR_ADC_TIMEOUT] = error_adc_timeout,
+	[ERROR_FEEDBACK_HARD] = error_feedback_hard,
+	[ERROR_FEEDBACK_SOFT] = error_feedback_soft,
+};
 
-node_t *error_list_ref_current;
-
-node_t *error_list_ref_ltc[LTC6813_COUNT];
-
-node_t *error_list_ref_can;
-
-node_t *error_adc_init;
-node_t *error_adc_timeout;
-
-node_t **const error_list_ref_array[ERROR_NUM_ERRORS] = {NULL, error_list_ref_ltc, error_list_ref_voltages, error_list_ref_voltages, error_list_ref_temperatures, &error_list_ref_current,
-														 &error_list_ref_can, [ERROR_ADC_INIT] = &error_adc_init, [ERROR_ADC_TIMEOUT] = &error_adc_timeout};
+/**
+ * @brief Returns the cell memory position of error_list_ref_array
+ * 
+ * @details error_list_ref_array is an array of llist_node arrays (not a matrix). After first dereference
+ * 			by @param id we get the memory addres of the relative error_<id> error variable. 
+ * 			With that memory addres we can offset by @param offset (in case the error_<id> is an array) 
+ * 			and get a memory addres: &error_<id>[offset].
+ * @param 	id 			The error id
+ * @param	offset		The &error_<id>[offset]
+ * 
+ * @returns a 
+ */
+llist_node *error_list_ref_array_element(uint16_t id, uint16_t offset) {
+	llist_node *tmp = *(error_list_ref_array + id);
+	return tmp + offset;
+}

@@ -102,7 +102,7 @@ void error_init_error(error_t *error, error_id id, uint8_t offset, uint32_t time
  */
 bool error_set(error_id id, uint8_t offset, uint32_t timestamp) {
 	// Check if error exists
-	if (ERROR_GET_REF(id, offset) == NULL) {
+	if (*error_list_ref_array_element(id, offset) == NULL) {
 		error_t *error = malloc(sizeof(error_t));
 
 		if (error == NULL) {
@@ -115,8 +115,9 @@ bool error_set(error_id id, uint8_t offset, uint32_t timestamp) {
 			return false;
 		}
 
-		ERROR_GET_REF(id, offset) = error;
-
+		//ERROR_GET_REF(id, offset) = (llist_node)error;
+		(*error_list_ref_array_element(id, offset)) = (llist_node)error;
+		//error_list_ref_array[id][offset] = (llist_node)error;
 		// Re-set timer if first in list
 		if (error_equals(llist_get_head(er_list), error)) {
 			error_set_timer(error);
@@ -135,8 +136,8 @@ bool error_set(error_id id, uint8_t offset, uint32_t timestamp) {
  * @returns	whether the error has been unset
  */
 bool error_unset(error_id id, uint8_t offset) {
-	if (ERROR_GET_REF(id, offset) != NULL) {
-		error_t *error = ERROR_GET_REF(id, offset);
+	if (*error_list_ref_array_element(id, offset) != NULL) {
+		error_t *error = (error_t *)(*error_list_ref_array_element(id, offset));
 
 		// Check if error is fatal; in that case do not remove it, but deactivate it
 		if (error->state == ERROR_FATAL) {
@@ -157,7 +158,9 @@ bool error_unset(error_id id, uint8_t offset) {
 			return false;
 		}
 
-		ERROR_GET_REF(id, offset) = NULL;
+		//ERROR_GET_REF(id, offset) = NULL;
+		(*error_list_ref_array_element(id, offset)) = NULL;
+		//error_list_ref_array[id][offset] = NULL;
 		return true;
 	}
 
@@ -176,6 +179,6 @@ uint8_t error_count() {
  * @returns	An array of running errors
  */
 size_t error_dump(error_t errors[]) {
-	llist_export(er_list, (llist_node *)&errors);
+	llist_export(er_list, (llist_node *)errors);
 	return llist_size(er_list);
 }

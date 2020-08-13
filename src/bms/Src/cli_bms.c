@@ -149,7 +149,7 @@ void _cli_temps_all(char *cmd, char *out) {
 void _cli_status(char *cmd, char *out) {
 #define n_items 4
 
-	char *bal = balancing.enable ? "true" : "false";
+	char *bal = bool_names[balancing.enable];
 
 	char thresh[5] = {'\0'};
 	itoa((float)balancing.threshold / 10, thresh, 10);
@@ -186,20 +186,18 @@ void _cli_balance(char *cmd, char *out) {
 }
 
 void _cli_errors(char *cmd, char *out) {
-	uint8_t count = error_count();
-	error_status_t errors[count];
+	uint16_t count = error_count();
+	error_t errors[count];
 	error_dump(errors);
 
 	sprintf(out, "total %u\r\n", count);
-	for (uint8_t i = 0; i < count; i++) {
+	for (uint16_t i = 0; i < count; i++) {
 		sprintf(out + strlen(out),
 				"\r\ntype........%s\r\n"
 				"timestamp...%lu (%lums ago)\r\n"
 				"offset......%u\r\n"
-				"active......%s\r\n"
-				"fatal.......%s\r\n"
-				"count.......%lu\r\n",
-				error_types[errors[i].type].name, errors[i].time_stamp, HAL_GetTick() - errors[i].time_stamp, errors[i].offset, bool_names[errors[i].active], bool_names[errors[i].fatal], errors[i].count);
+				"state.......%u\r\n",
+				error_names[errors[i].state], errors[i].timestamp, HAL_GetTick() - errors[i].timestamp, errors[i].offset, errors[i].state);
 	}
 }
 

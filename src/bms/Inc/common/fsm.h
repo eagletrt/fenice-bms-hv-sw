@@ -22,7 +22,7 @@ struct fsm {
 	state_function current_state;
 	state_function future_state;
 	uint16_t number_states;
-	state_function *states;
+	state_function *state_table;
 	char **state_names;
 };
 void fsm_init(fsm *FSM);

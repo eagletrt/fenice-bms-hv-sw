@@ -17,7 +17,7 @@
 #include "stm32g4xx_hal.h"
 
 #define BUF_SIZE 64
-#define PS_SIZE 2
+#define PS_SIZE 3
 // TODO: Enforce this limit
 #define HISTORY_MAX_SIZE 100
 
@@ -39,8 +39,8 @@ typedef struct cli_t {
 
 	char input_buf;	 // Input byte
 
-	node_t *history;		  // stream (history)
-	node_t *current_history;  // Currently "selected" history item
+	llist *history;				  // stream (history)
+	uint32_t current_hist_index;  // Currently "selected" history item
 
 	buffer_t current_command;
 
@@ -52,7 +52,7 @@ typedef struct cli_t {
 } cli_t;
 
 static const char *bool_names[2] = {"false", "true"};
-static const char cli_ps[PS_SIZE] = "> ";
+static const char cli_ps[PS_SIZE] = "> \0";
 
 void cli_buf_init(buffer_t *buf);
 void cli_init(cli_t *cli);

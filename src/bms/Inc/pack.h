@@ -33,7 +33,7 @@ bool pack_set_ts_off();
 bool pack_set_pc_start();
 bool pack_set_precharge_end();
 
-bool pack_feedback_check(FEEDBACK_T fb_check_mask, FEEDBACK_T fb_value, error_type error_type);
+bool pack_feedback_check(FEEDBACK_T fb_check_mask, FEEDBACK_T fb_value, error_id error_id);
 bool pack_feedback_check_charge();
 bool pack_feedback_check_precharge();
 bool pack_feedback_check_on();
