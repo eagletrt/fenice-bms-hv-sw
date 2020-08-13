@@ -70,7 +70,7 @@ LLIST_RETURN llist_destroy(llist list);
 
 /**
  * @brief Add a node to a list on top(head)
- * @param[in] list the list to operator upon
+ * @param[in] list the list to operate upon
  * @param[in] new_node the node to add (must be malloc outside)
  * @return int LLIST_SUCCESS if success
  */
@@ -167,7 +167,7 @@ size_t llist_size(llist list);
 LLIST_RETURN llist_find(llist list, llist_node node, size_t *index);
 
 /**
- * @brief Finds the index of a node
+ * @brief Finds the node given an index in the list
  * @param[in] list the list to operator upon
  * @param[in] index the index of the node.
  * @param[in/out]  node the found node(NULL if not present)

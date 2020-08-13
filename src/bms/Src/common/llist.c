@@ -356,15 +356,17 @@ size_t llist_size(llist list) {
 	return ((_list *)list)->count;
 }
 
+//TODO: llist_export shall make a snapshot of the llist because llist_node are in heap and can be removed.
+// So in llist_export memcpy must be used to copy llist_node pointed memory sapce into array.
+// To do that llist_export must get the size of the llist_node parameter
 LLIST_RETURN llist_export(llist list, llist_node array[]) {
 	if (list == NULL || array == NULL) {
 		return LLIST_NULL_ARGUMENT;
 	}
 
 	_node *iterator = ((_list *)list)->head;
-
-	for (size_t count = 0; count < ((_list *)list)->count; count++) {
-		array[count] = iterator->data;
+	for (size_t i = 0; iterator->next != NULL; i++) {
+		array[i] = iterator->data;
 
 		iterator = iterator->next;
 	}

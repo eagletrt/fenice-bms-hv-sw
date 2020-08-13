@@ -216,13 +216,13 @@ void pack_read_feedback(FEEDBACK_T fb_mask) {
 	}
 }
 
-bool pack_feedback_check(FEEDBACK_T fb_check_mask, FEEDBACK_T fb_value, error_type error_type) {
+bool pack_feedback_check(FEEDBACK_T fb_check_mask, FEEDBACK_T fb_value, error_id error_id) {
 	//remove not used bit with the mask and find the ones that differ with the xor
 	uint16_t difference = (fb_check_mask & pd_feedback) ^ fb_value;
 
 	for (uint8_t i = 0; i < FEEDBACK_N; i++) {
 		if (fb_check_mask & (1U << i)) {
-			error_toggle_check(difference & (1 << i), error_type, i);
+			error_toggle_check(difference & (1 << i), error_id, i);
 		}
 	}
 
