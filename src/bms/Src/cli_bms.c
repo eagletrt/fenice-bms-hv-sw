@@ -40,7 +40,9 @@ const char *error_names[ERROR_NUM_ERRORS] = {
 	[ERROR_OVER_CURRENT] = "over-current",
 	[ERROR_CAN] = "CAN",
 	[ERROR_ADC_INIT] = "adc init",
-	[ERROR_ADC_TIMEOUT] = "adc timeout"};
+	[ERROR_ADC_TIMEOUT] = "adc timeout",
+	[ERROR_FEEDBACK_HARD] = "soft feedback",
+	[ERROR_FEEDBACK_SOFT] = "hard feedback"};
 
 char const *const feedback_names[FEEDBACK_N] = {
 	[FEEDBACK_VREF_POS] = "VREF",
@@ -187,7 +189,8 @@ void _cli_balance(char *cmd, char *out) {
 
 void _cli_errors(char *cmd, char *out) {
 	uint16_t count = error_count();
-	error_t errors[count];
+	//error_t errors[count];
+	error_t *errors = malloc(sizeof(error_t) * count);
 	error_dump(errors);
 
 	sprintf(out, "total %u\r\n", count);
@@ -199,6 +202,8 @@ void _cli_errors(char *cmd, char *out) {
 				"state.......%u\r\n",
 				error_names[errors[i].state], errors[i].timestamp, HAL_GetTick() - errors[i].timestamp, errors[i].offset, errors[i].state);
 	}
+
+	free(errors);
 }
 
 void _cli_taba(char *cmd, char *out) {

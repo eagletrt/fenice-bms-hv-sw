@@ -10,6 +10,7 @@
 #include "common/llist.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 typedef struct node {
 	struct node *prev;
@@ -359,14 +360,14 @@ size_t llist_size(llist list) {
 //TODO: llist_export shall make a snapshot of the llist because llist_node are in heap and can be removed.
 // So in llist_export memcpy must be used to copy llist_node pointed memory sapce into array.
 // To do that llist_export must get the size of the llist_node parameter
-LLIST_RETURN llist_export(llist list, llist_node array[]) {
+LLIST_RETURN llist_export(llist list, llist_node array[], size_t node_size) {
 	if (list == NULL || array == NULL) {
 		return LLIST_NULL_ARGUMENT;
 	}
 
 	_node *iterator = ((_list *)list)->head;
-	for (size_t i = 0; iterator->next != NULL; i++) {
-		array[i] = iterator->data;
+	for (size_t i = 0; i < ((_list *)list)->count; i++) {
+		memcpy(array + (i * node_size), iterator->data, node_size);
 
 		iterator = iterator->next;
 	}
