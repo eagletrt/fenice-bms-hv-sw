@@ -145,8 +145,7 @@ llist_node llist_get_tail(llist list);
  * @param[out] array	the array to export to
  * 			the array must be list->size long
  */
-LLIST_RETURN llist_export(llist list, llist_node array[]);
-
+LLIST_RETURN llist_export(llist list, llist_node array[], size_t node_size);
 /**
  * @brief return the number of elements in the list
  * @param[in] list the list to operate on

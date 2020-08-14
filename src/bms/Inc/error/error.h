@@ -81,7 +81,7 @@ bool error_set(error_id type, uint8_t offset, uint32_t now);
 bool error_unset(error_id type, uint8_t offset);
 
 uint8_t error_count();
-size_t error_dump(error_t errors[]);
+void error_dump(error_t errors[]);
 bool compare_timeouts(error_t *a, error_t *b);
 
 #endif /* ERROR_H_ */

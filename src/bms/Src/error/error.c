@@ -178,7 +178,6 @@ uint8_t error_count() {
 /**
  * @returns	An array of running errors
  */
-size_t error_dump(error_t errors[]) {
-	llist_export(er_list, (llist_node *)errors);
-	return llist_size(er_list);
+void error_dump(error_t *errors) {
+	llist_export(er_list, (llist_node *)errors, sizeof(error_t));
 }
