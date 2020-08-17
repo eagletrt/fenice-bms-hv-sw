@@ -32,8 +32,20 @@ void _cli_errors(char *cmd, char *out);
 void _cli_taba(char *cmd, char *out);
 void _cli_help(char *cmd, char *out);
 
+const char *state_names[BMS_NUM_STATES] = {
+	[BMS_INIT] = "init",
+	[BMS_SET_TS_OFF] = "ts off",
+	[BMS_IDLE] = "idle",
+	[BMS_PRECHARGE_START] = "precharge start",
+	[BMS_PRECHARGE] = "precharge",
+	[BMS_PRECHARGE_END] = "precharge end",
+	[BMS_RUN] = "run",
+	[BMS_CHARGE] = "charge",
+	[BMS_TO_HALT] = "to halt",
+	[BMS_HALT] = "halt"};
+
 const char *error_names[ERROR_NUM_ERRORS] = {
-	[ERROR_LTC_PEC_ERROR] = "PEC",
+	[ERROR_LTC_PEC_ERROR] = "LTC PEC mismatch",
 	[ERROR_CELL_UNDER_VOLTAGE] = "under-voltage",
 	[ERROR_CELL_OVER_VOLTAGE] = "over-voltage",
 	[ERROR_CELL_OVER_TEMPERATURE] = "over-temperature",
@@ -161,7 +173,7 @@ void _cli_status(char *cmd, char *out) {
 
 	// TODO: Fix this
 	char *values[n_items][2] = {
-		{"BMS state", ""}, {"error count", er_count}, {"balancing", bal}, {"balancing threshold", thresh}};
+		{"BMS state", state_names[fsm_bms.current_state]}, {"error count", er_count}, {"balancing", bal}, {"balancing threshold", thresh}};
 	//{"BMS state", (char *)fsm_bms.state_names[fsm_bms.current_state]}, {"error count", er_count}, {"balancing", bal}, {"balancing threshold", thresh}};
 
 	out[0] = '\0';
@@ -189,10 +201,10 @@ void _cli_balance(char *cmd, char *out) {
 
 void _cli_errors(char *cmd, char *out) {
 	uint16_t count = error_count();
-	//error_t errors[count];
-	error_t *errors = malloc(sizeof(error_t) * count);
+	error_t errors[count];
 	error_dump(errors);
 
+	uint32_t now = HAL_GetTick();
 	sprintf(out, "total %u\r\n", count);
 	for (uint16_t i = 0; i < count; i++) {
 		sprintf(out + strlen(out),
@@ -200,10 +212,8 @@ void _cli_errors(char *cmd, char *out) {
 				"timestamp...%lu (%lums ago)\r\n"
 				"offset......%u\r\n"
 				"state.......%u\r\n",
-				error_names[errors[i].state], errors[i].timestamp, HAL_GetTick() - errors[i].timestamp, errors[i].offset, errors[i].state);
+				error_names[errors[i].id], errors[i].timestamp, now - errors[i].timestamp, errors[i].offset, errors[i].state);
 	}
-
-	free(errors);
 }
 
 void _cli_taba(char *cmd, char *out) {

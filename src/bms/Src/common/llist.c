@@ -43,12 +43,6 @@ LLIST_RETURN _list_allocate(_node **new_node, llist_node new_data) {
 	return LLIST_SUCCESS;
 }
 
-/**
- * @brief[internal use] deletes a _node and it's data 
- * @param[in] list the _list to operate upon
- * @param[in] node the _node to delete 
- * @return LLIST_SUCCSESS if success 
- */
 LLIST_RETURN _list_delete_node(_list *list, _node *node) {
 	if ((list == NULL) || (node == NULL))
 		return LLIST_NULL_ARGUMENT;
@@ -83,9 +77,6 @@ LLIST_RETURN _list_delete_node(_list *list, _node *node) {
 	return LLIST_SUCCESS;
 }
 
-/**
- * 	llist_node is the data that is mallocked outside the list
- */
 LLIST_RETURN _list_insert_prev(_list *list, _node *pos_node, llist_node new_data) {
 	if ((list == NULL) || (new_data == NULL)) {
 		return LLIST_NULL_ARGUMENT;
@@ -357,10 +348,7 @@ size_t llist_size(llist list) {
 	return ((_list *)list)->count;
 }
 
-//TODO: llist_export shall make a snapshot of the llist because llist_node are in heap and can be removed.
-// So in llist_export memcpy must be used to copy llist_node pointed memory sapce into array.
-// To do that llist_export must get the size of the llist_node parameter
-LLIST_RETURN llist_export(llist list, llist_node array[], size_t node_size) {
+LLIST_RETURN llist_export(llist list, void *array, size_t node_size) {
 	if (list == NULL || array == NULL) {
 		return LLIST_NULL_ARGUMENT;
 	}
@@ -368,7 +356,6 @@ LLIST_RETURN llist_export(llist list, llist_node array[], size_t node_size) {
 	_node *iterator = ((_list *)list)->head;
 	for (size_t i = 0; i < ((_list *)list)->count; i++) {
 		memcpy(array + (i * node_size), iterator->data, node_size);
-
 		iterator = iterator->next;
 	}
 

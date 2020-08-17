@@ -19,12 +19,15 @@ typedef uint16_t (*state_function)(fsm *);
 
 // the array pointed by states must not contain null pointers
 struct fsm {
-	state_function current_state;
-	state_function future_state;
+	//state_function current_state;
+	//state_function future_state;
+	uint16_t current_state;
+	uint16_t future_state;
 	uint16_t number_states;
 	state_function *state_table;
 	char **state_names;
 };
+
 void fsm_init(fsm *FSM);
 void fsm_run_state(fsm *FSM);
 #endif
