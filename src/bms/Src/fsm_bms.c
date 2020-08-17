@@ -36,10 +36,10 @@ fsm fsm_bms;
 uint32_t timer_precharge = 0;
 
 void fsm_bms_init() {
+	fsm_init(&fsm_bms);
+
 	fsm_bms.state_table = malloc(sizeof(state_function) * BMS_NUM_STATES);
-
 	fsm_bms.state_table[BMS_INIT] = &do_init;
-
 	fsm_bms.state_table[BMS_SET_TS_OFF] = &do_ts_off;
 	fsm_bms.state_table[BMS_IDLE] = &do_idle;
 	fsm_bms.state_table[BMS_PRECHARGE_START] = &do_precharge_start;
@@ -49,9 +49,6 @@ void fsm_bms_init() {
 	fsm_bms.state_table[BMS_CHARGE] = &do_charge;
 	fsm_bms.state_table[BMS_TO_HALT] = &do_to_halt;
 	fsm_bms.state_table[BMS_HALT] = &do_halt;
-
-	fsm_bms.future_state = fsm_bms.state_table[BMS_INIT];
-	fsm_bms.current_state = fsm_bms.state_table[BMS_INIT];
 
 	// state_function *bms_states_tab[BMS_NUM_STATES][BMS_NUM_STATES] = {
 	// 	{do_init, to_idle, to_precharge, NULL, NULL, to_halt},	   // from init
@@ -92,7 +89,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	if (htim == &htim_Err) {  //htim_Err is a #define to htim2 (barely a substition) so tim.h must be included
 		HAL_TIM_Base_Stop_IT(htim);
 
-		fsm_bms.future_state = fsm_bms.state_table[BMS_TO_HALT];
+		fsm_bms.future_state = BMS_TO_HALT;
 		fsm_run_state(&fsm_bms);
 	}
 }

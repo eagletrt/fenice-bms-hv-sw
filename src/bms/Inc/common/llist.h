@@ -141,11 +141,14 @@ llist_node llist_get_tail(llist list);
 
 /**
  * @brief exports the list into an array
+ * @details the array must be list->size long
+ * 
  * @param[in] list	the list to operate on
- * @param[out] array	the array to export to
- * 			the array must be list->size long
+ * @param[out] array	the array to export to (its memory address)
+ * 
+ * @return int LIST_SUCCEES for success
  */
-LLIST_RETURN llist_export(llist list, llist_node array[], size_t node_size);
+LLIST_RETURN llist_export(llist list, void *array, size_t node_size);
 /**
  * @brief return the number of elements in the list
  * @param[in] list the list to operate on

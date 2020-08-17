@@ -187,13 +187,11 @@ MunitResult test_export(const MunitParameter params[], void* user_data_or_fixtur
 	llist list = (llist)user_data_or_fixture;
 	size_t count = llist_size(list);
 
-	struct data* verify_data = malloc(sizeof(struct data) * count);
-	munit_assert_uint32(llist_export(list, (llist_node*)verify_data, sizeof(struct data)), ==, LLIST_SUCCESS);
+	struct data verify_data[count];
 
+	//struct data* verify_data = (llist_node *) malloc(sizeof(struct data) * count);
+	munit_assert_uint32(llist_export(list, (void*)verify_data, sizeof(struct data)), ==, LLIST_SUCCESS);
 	for (size_t i = 0; i < count; i++) {
-		printf("\n%i\t%s", verify_data[i].integer, verify_data[i].string);
-		printf("\n%i\t%s\n", test_arr[i].integer, test_arr[i].string);
-		fflush(stdout);
 		munit_assert_int(data_equal((llist_node)&verify_data[i], (llist_node)&test_arr[i]), ==, 1);
 	}
 
@@ -215,11 +213,11 @@ MunitResult test_insert_priority(const MunitParameter params[], void* user_data_
 	}
 
 	// Verify
-	llist_node verify_data[TEST_ARR_SIZE];
-	munit_assert_uint32(llist_export(list, &verify_data, sizeof(struct data)), ==, LLIST_SUCCESS);
+	struct data verify_data[TEST_ARR_SIZE];
+	munit_assert_uint32(llist_export(list, (void*)verify_data, sizeof(struct data)), ==, LLIST_SUCCESS);
 
 	for (size_t i = 1; i < TEST_ARR_SIZE; i++) {
-		munit_assert_int(data_compare(verify_data[i - 1], verify_data[i]), >=, 0);
+		munit_assert_int(data_compare((llist_node)&verify_data[i - 1], (llist_node)&verify_data[i]), >=, 0);
 	}
 
 	return MUNIT_OK;
