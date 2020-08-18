@@ -58,13 +58,18 @@ Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_uart.c \
 Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_uart_ex.c \
 Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_pwr.c \
 Src/bal.c \
-Src/cli.c \
-Src/common/list.c \
+Src/cli_bms.c \
+Src/common/cli.c \
+Src/common/fsm.c \
+Src/common/llist.c \
 Src/error/error.c \
+Src/error/error_list_ref.c \
 Src/fdcan.c \
+Src/fsm_bms.c \
 Src/gpio.c \
 Src/main.c \
 Src/pack.c \
+Src/pack_data.c \
 Src/peripherals/ltc6813.c \
 Src/peripherals/ltc6813_utils.c \
 Src/peripherals/si8900.c \
@@ -72,6 +77,7 @@ Src/spi.c \
 Src/stm32g4xx_hal_msp.c \
 Src/stm32g4xx_it.c \
 Src/system_stm32g4xx.c \
+Src/tim.c \
 Src/usart.c
 
 
@@ -220,13 +226,13 @@ $(BUILD_DIR):
 # flash
 #######################################
 flash: $(BUILD_DIR)/$(TARGET).elf
-	openocd -f interface/stlink-v2-1.cfg  -f target/false -c "program $(BUILD_DIR)/$(TARGET).elf verify reset exit"
+	openocd -f interface/stlink.cfg  -f target/stm32g4x.cfg -c "program $(BUILD_DIR)/$(TARGET).elf verify reset exit"
 
 #######################################
 # erase
 #######################################
 erase: $(BUILD_DIR)/$(TARGET).elf
-	openocd -f interface/stlink-v2-1.cfg -f target/false -c "init; reset halt; stm32g4x mass_erase 0; exit"
+	openocd -f interface/stlink.cfg -f target/stm32g4x.cfg -c "init; reset halt; stm32g4x mass_erase 0; exit"
 
 #######################################
 # clean up

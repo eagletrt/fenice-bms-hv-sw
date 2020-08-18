@@ -1,8 +1,8 @@
 /**
   ******************************************************************************
-  * File Name          : FDCAN.h
+  * File Name          : TIM.h
   * Description        : This file provides code for the configuration
-  *                      of the FDCAN instances.
+  *                      of the TIM instances.
   ******************************************************************************
   * @attention
   *
@@ -17,8 +17,8 @@
   ******************************************************************************
   */
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __fdcan_H
-#define __fdcan_H
+#ifndef __tim_H
+#define __tim_H
 #ifdef __cplusplus
  extern "C" {
 #endif
@@ -30,22 +30,22 @@
 
 /* USER CODE END Includes */
 
-extern FDCAN_HandleTypeDef hfdcan1;
+extern TIM_HandleTypeDef htim2;
 
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
 
-void MX_FDCAN1_Init(void);
+void MX_TIM2_Init(void);
 
 /* USER CODE BEGIN Prototypes */
-void FDCAN1_Init(void);
+
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus
 }
 #endif
-#endif /*__ fdcan_H */
+#endif /*__ tim_H */
 
 /**
   * @}

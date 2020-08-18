@@ -16,7 +16,7 @@
         "STM32G474xx",
         "USE_HAL_DRIVER"
       ],
-      "compilerPath": "/sbin/gcc",
+      "compilerPath": "/usr/bin/gcc",
       "cStandard": "c11",
       "cppStandard": "c++11"
     }
