@@ -81,7 +81,7 @@ bool si8900_read_channel(UART_HandleTypeDef *huart, SI8900_CHANNEL ch, uint16_t 
 
 		uint32_t time = HAL_GetTick();
 		uint8_t tmp = 0;
-		do {
+		/*do {
 			HAL_UART_Receive(huart, &tmp, 1, 1);
 
 			if ((HAL_GetTick() - time) >= SI8900_TIMEOUT) {
@@ -89,13 +89,15 @@ bool si8900_read_channel(UART_HandleTypeDef *huart, SI8900_CHANNEL ch, uint16_t 
 				return false;
 			}
 		} while (tmp != conf);
-		error_unset(ERROR_ADC_TIMEOUT, 0);
+		error_unset(ERROR_ADC_TIMEOUT, 0);*/
 
-		uint8_t recv[2];
-		HAL_UART_Receive(huart, recv, 2, 1);
-		*voltage = si8900_convert_voltage(recv);
-
-		return true;
+		uint8_t recv[3];
+		if (HAL_UART_Receive(huart, recv, 3, 1) == HAL_OK) {
+			*voltage = si8900_convert_voltage(recv);
+			error_unset(ERROR_ADC_TIMEOUT, 0);
+			return true;
+		}
+		error_set(ERROR_ADC_TIMEOUT, 0, HAL_GetTick());
 	}
 	return false;
 }

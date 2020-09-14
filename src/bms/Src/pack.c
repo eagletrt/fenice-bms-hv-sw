@@ -69,6 +69,7 @@ void pack_update_voltages(SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart) {
 	if (si8900_read_channel(huart, SI8900_AIN0, &adc)) {
 		pd_set_adc_voltage(adc);
 	}
+	HAL_Delay(1);
 	if (si8900_read_channel(huart, SI8900_AIN1, &bus)) {
 		pd_set_bus_voltage(bus);
 	}
