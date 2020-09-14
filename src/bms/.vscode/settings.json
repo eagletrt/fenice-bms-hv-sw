@@ -53,5 +53,6 @@
 		"bitset": "c",
 		"algorithm": "c",
 		"ranges": "c"
-	}
+	},
+	"stm32-for-vscode.openOCDPath": "openocd"
 }
