@@ -24,7 +24,7 @@ bal_conf_t balancing;						 // TODO: Remove bal_conf_t struct (remove enable and
  */
 void pack_init() {
 	pd_set_bus_voltage(0);
-	pd_set_adc_voltage(0);
+	pd_set_internal_voltage(0);
 	pd_set_total_voltage(0);
 	pd_set_max_voltage(0);
 	pd_set_min_voltage(0);
@@ -64,10 +64,10 @@ void pack_update_voltages(SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart) {
 
 	ltc6813_read_voltages(hspi);
 
-	ADC_VOLTAGE_T adc;
+	ADC_VOLTAGE_T internal;
 	ADC_VOLTAGE_T bus;
-	if (si8900_read_channel(huart, SI8900_AIN0, &adc)) {
-		pd_set_adc_voltage(adc);
+	if (si8900_read_channel(huart, SI8900_AIN0, &internal)) {
+		pd_set_internal_voltage(internal);
 	}
 	HAL_Delay(1);
 	if (si8900_read_channel(huart, SI8900_AIN1, &bus)) {
