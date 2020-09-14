@@ -76,8 +76,8 @@ void pd_get_voltage_array(VOLTAGE_T *const array);
 ADC_VOLTAGE_T pd_set_bus_voltage(ADC_VOLTAGE_T bus_voltage);
 ADC_VOLTAGE_T pd_get_bus_voltage();
 
-ADC_VOLTAGE_T pd_set_adc_voltage(ADC_VOLTAGE_T adc_voltage);
-ADC_VOLTAGE_T pd_get_adc_voltage();
+ADC_VOLTAGE_T pd_set_internal_voltage(ADC_VOLTAGE_T adc_voltage);
+ADC_VOLTAGE_T pd_get_internal_voltage();
 
 TOTAL_VOLTAGE_T pd_set_total_voltage(TOTAL_VOLTAGE_T total_voltage);
 TOTAL_VOLTAGE_T pd_get_total_voltage();

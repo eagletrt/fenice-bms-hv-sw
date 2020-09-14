@@ -15,12 +15,12 @@
 #include "../../fenice_config.h"
 
 __PD_DEFINE(VOLTAGE_T, voltages)
-[PACK_CELL_COUNT];							 /*!< [mV * 10] Cell voltages */
-__PD_DEFINE(ADC_VOLTAGE_T, bus_voltage);	 /* [V * 100] Voltage outside the AIRs */
-__PD_DEFINE(ADC_VOLTAGE_T, adc_voltage);	 /* [V * 100] Voltage inside the AIRs */
-__PD_DEFINE(TOTAL_VOLTAGE_T, total_voltage); /*!< [mV * 10] Total pack voltage */
-__PD_DEFINE(VOLTAGE_T, max_voltage);		 /*!< [mV * 10] Maximum cell voltage */
-__PD_DEFINE(VOLTAGE_T, min_voltage);		 /*!< [mV * 10] Minimum cell voltage */
+[PACK_CELL_COUNT];							  /*!< [mV * 10] Cell voltages */
+__PD_DEFINE(ADC_VOLTAGE_T, bus_voltage);	  /* [V * 100] Voltage outside the AIRs */
+__PD_DEFINE(ADC_VOLTAGE_T, internal_voltage); /* [V * 100] Voltage inside the AIRs (pack voltage) */
+__PD_DEFINE(TOTAL_VOLTAGE_T, total_voltage);  /*!< [mV * 10] Total pack voltage (sum of all cells) */
+__PD_DEFINE(VOLTAGE_T, max_voltage);		  /*!< [mV * 10] Maximum cell voltage */
+__PD_DEFINE(VOLTAGE_T, min_voltage);		  /*!< [mV * 10] Minimum cell voltage */
 
 __PD_DEFINE(TEMPERATURE_T, temperatures)
 [PACK_TEMP_COUNT];							 /*!< [°C] */
@@ -58,14 +58,14 @@ ADC_VOLTAGE_T pd_get_bus_voltage() {
 	return (ADC_VOLTAGE_T)PD_bus_voltage.data;
 }
 
-// ADC Voltage
-ADC_VOLTAGE_T pd_set_adc_voltage(ADC_VOLTAGE_T adc_voltage) {
-	PD_adc_voltage.data = adc_voltage;
-	PD_adc_voltage.timestamp = HAL_GetTick();
-	return adc_voltage;
+// Internal Voltage
+ADC_VOLTAGE_T pd_set_internal_voltage(ADC_VOLTAGE_T internal_voltage) {
+	PD_internal_voltage.data = internal_voltage;
+	PD_internal_voltage.timestamp = HAL_GetTick();
+	return internal_voltage;
 }
-ADC_VOLTAGE_T pd_get_adc_voltage() {
-	return (ADC_VOLTAGE_T)PD_adc_voltage.data;
+ADC_VOLTAGE_T pd_get_internal_voltage() {
+	return (ADC_VOLTAGE_T)PD_internal_voltage.data;
 }
 
 // Total Voltage

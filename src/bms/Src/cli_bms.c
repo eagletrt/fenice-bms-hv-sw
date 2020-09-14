@@ -103,11 +103,11 @@ void cli_bms_init() {
 
 void _cli_volts(char *cmd, char *out) {
 	sprintf(out,
-			"bus.......%.2f V\r\nadc.......%.2f V\r\ntotal.....%.2f "
+			"bus.......%.2f V\r\ninternal..%.2f V\r\ntotal.....%.2f "
 			"V\r\nmax.......%.3f V\r\nmin.......%.3f V"
 			"\r\ndelta.....%.3f V\r\n",
 			(float)pd_get_bus_voltage() / 100,
-			(float)pd_get_adc_voltage() / 100,
+			(float)pd_get_internal_voltage() / 100,
 			(float)pd_get_total_voltage() / 10000,
 			(float)pd_get_max_voltage() / 10000,
 			(float)pd_get_min_voltage() / 10000,
@@ -163,7 +163,7 @@ void _cli_temps_all(char *cmd, char *out) {
 void _cli_status(char *cmd, char *out) {
 #define n_items 4
 
-	char *bal = bool_names[balancing.enable];
+	const char *bal = bool_names[balancing.enable];
 
 	char thresh[5] = {'\0'};
 	itoa((float)balancing.threshold / 10, thresh, 10);
@@ -172,7 +172,7 @@ void _cli_status(char *cmd, char *out) {
 	itoa(error_count(), er_count, 10);
 
 	// TODO: Fix this
-	char *values[n_items][2] = {
+	const char *values[n_items][2] = {
 		{"BMS state", state_names[fsm_bms.current_state]}, {"error count", er_count}, {"balancing", bal}, {"balancing threshold", thresh}};
 	//{"BMS state", (char *)fsm_bms.state_names[fsm_bms.current_state]}, {"error count", er_count}, {"balancing", bal}, {"balancing threshold", thresh}};
 
