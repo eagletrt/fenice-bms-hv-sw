@@ -40,10 +40,10 @@ void cli_init(cli_t *cli) {
 	cli->current_hist_index = 0;
 }
 
-uint8_t cli_clean(char *cmd) {
-	uint8_t cursor = 0;
+uint16_t cli_clean(char *cmd) {
+	uint16_t cursor = 0;
 
-	for (uint8_t i = 0; i < BUF_SIZE; i++) {
+	for (uint16_t i = 0; i < BUF_SIZE; i++) {
 		if (cmd[i] == '\b') {
 			// Check backspace
 			if (cursor > 0) {
@@ -67,6 +67,19 @@ uint8_t cli_clean(char *cmd) {
 	return cursor;
 }
 
+uint16_t _cli_get_args(char cmd[BUF_SIZE], char *argv[BUF_SIZE]) {
+	uint16_t argc = 0;
+	argv[argc] = cmd;
+
+	for (uint16_t i = 0; cmd[i] != '\0'; i++) {
+		if (cmd[i] == ' ') {
+			cmd[i] = '\0';
+			argv[++argc] = cmd + (i + 1);
+		}
+	}
+	return argc;
+}
+
 void cli_print(cli_t *cli, char *text, size_t length) {
 	HAL_UART_Transmit(cli->uart, (uint8_t *)text, length, 500);
 }
@@ -83,11 +96,11 @@ void cli_handle_escape(cli_t *cli) {
 
 		if (cli->current_command.buffer[cli->current_command.index] == 'A') {  // UP
 			direction = HIST_UP;
-			//HAL_UART_Transmit(cli->uart, (uint8_t *)"AAAAAA", 6, 10);
 		} else if (cli->current_command.buffer[cli->current_command.index] == 'B') {  // DOWN
 			direction = HIST_DOWN;
 		} else {
 			// Unknown escape sequence
+			cli->current_command.index -= 2;
 			return;
 		}
 
@@ -102,15 +115,17 @@ void cli_handle_escape(cli_t *cli) {
 		char new_buffer[BUF_SIZE] = {'\0'};
 		strcat(new_buffer, "\r");  // CR
 		if (hist->index < cli->current_command.index - 2) {
-			// If the current command is longer than the hsitory's we need to clear the screen
+			// If the current command is longer than the history's we need to clear the screen
 			sprintf(new_buffer + 1, "%-*c\r", cli->current_command.index, (uint8_t)' ');
 		}
 		strcat(new_buffer, cli_ps);
+
+		// TODO: Handle parameters separated by \0
 		strcat(new_buffer, hist->buffer);
 
 		memcpy(&(cli->current_command), hist, sizeof(buffer_t));
 
-		HAL_UART_Transmit(cli->uart, (uint8_t *)new_buffer, strlen(new_buffer), 500);
+		HAL_UART_Transmit_IT(cli->uart, (uint8_t *)new_buffer, strlen(new_buffer));
 	}
 }
 
@@ -132,13 +147,18 @@ void cli_loop(cli_t *cli) {
 		// Clean the buffer from backspaces
 		cli->current_command.index = cli_clean(cli->current_command.buffer);
 
+		char *argv[BUF_SIZE];
+		uint16_t argc = _cli_get_args(cli->current_command.buffer, argv);
+
 		// TODO: Make this better
 		char tx_buf[3000] = "?\r\n";
 
 		// Check which command corresponds with the buffer
-		for (uint8_t i = 0; i < cli->commands.count; i++) {
-			if (strncmp(cli->current_command.buffer, cli->commands.names[i], strlen(cli->commands.names[i])) == 0) {
-				cli->commands.functions[i](cli->current_command.buffer, tx_buf);
+		for (uint16_t i = 0; i < cli->cmds.count; i++) {
+			size_t len = strlen(cli->cmds.names[i]);
+
+			if (strcmp(argv[0], cli->cmds.names[i]) == 0) {
+				cli->cmds.functions[i](argc, argv, tx_buf);
 				break;
 			}
 		}
@@ -148,7 +168,6 @@ void cli_loop(cli_t *cli) {
 
 		// Check if last history entry is equal to the current
 		bool comp = false;
-
 		if (llist_get(cli->history, 1, (llist_node *)&last_buf) == LLIST_NODE_NOT_FOUND) {
 			comp = true;
 		} else if (strcmp(cli->current_command.buffer, last_buf->buffer) != 0) {
@@ -180,8 +199,8 @@ void cli_loop(cli_t *cli) {
 		//use if no void history node is used
 		//cli->current_hist_index = NULL;
 
-		HAL_UART_Transmit(cli->uart, (uint8_t *)tx_buf, strlen(tx_buf), 200);
-		HAL_UART_Transmit(cli->uart, (uint8_t *)cli_ps, PS_SIZE, 100);
+		strcat(tx_buf, cli_ps);
+		HAL_UART_Transmit_IT(cli->uart, (uint8_t *)tx_buf, strlen(tx_buf));
 	}
 }
 
