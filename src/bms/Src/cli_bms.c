@@ -22,15 +22,15 @@
 
 #define N_COMMANDS 9
 
-void _cli_volts(char *cmd, char *out);
-void _cli_volts_all(char *cmd, char *out);
-void _cli_temps(char *cmd, char *out);
-void _cli_temps_all(char *cmd, char *out);
-void _cli_status(char *cmd, char *out);
-void _cli_balance(char *cmd, char *out);
-void _cli_errors(char *cmd, char *out);
-void _cli_taba(char *cmd, char *out);
-void _cli_help(char *cmd, char *out);
+cli_command_func_t _cli_volts;
+cli_command_func_t _cli_volts_all;
+cli_command_func_t _cli_temps;
+cli_command_func_t _cli_temps_all;
+cli_command_func_t _cli_status;
+cli_command_func_t _cli_balance;
+cli_command_func_t _cli_errors;
+cli_command_func_t _cli_taba;
+cli_command_func_t _cli_help;
 
 const char *state_names[BMS_NUM_STATES] = {
 	[BMS_INIT] = "init",
@@ -75,7 +75,7 @@ char const *const feedback_names[FEEDBACK_N] = {
 	[FEEDBACK_TS_ON_POS] = "TS ON"};
 
 char *command_names[N_COMMANDS] = {
-	"volts", "volts all", "temps", "temps all", "status", "errors", "bal", "?", "\ta"};
+	"volt", "vall", "temp", "tall", "status", "errors", "bal", "?", "\ta"};
 
 cli_command_func_t *commands[N_COMMANDS] = {
 	&_cli_volts, &_cli_volts_all, &_cli_temps, &_cli_temps_all,
@@ -85,9 +85,9 @@ cli_t cli_bms;
 
 void cli_bms_init() {
 	cli_bms.uart = &huart2;
-	cli_bms.commands.functions = commands;
-	cli_bms.commands.names = command_names;
-	cli_bms.commands.count = N_COMMANDS;
+	cli_bms.cmds.functions = commands;
+	cli_bms.cmds.names = command_names;
+	cli_bms.cmds.count = N_COMMANDS;
 
 	char init[94];
 	sprintf(init,
@@ -101,7 +101,7 @@ void cli_bms_init() {
 	cli_print(&cli_bms, init, strlen(init));
 }
 
-void _cli_volts(char *cmd, char *out) {
+void _cli_volts(uint16_t argc, char **argv, char *out) {
 	sprintf(out,
 			"bus.......%.2f V\r\ninternal..%.2f V\r\ntotal.....%.2f "
 			"V\r\nmax.......%.3f V\r\nmin.......%.3f V"
@@ -114,7 +114,7 @@ void _cli_volts(char *cmd, char *out) {
 			(float)(pd_get_max_voltage() - pd_get_min_voltage()) / 10000);
 }
 
-void _cli_volts_all(char *cmd, char *out) {
+void _cli_volts_all(uint16_t argc, char **argv, char *out) {
 	out[0] = '\0';
 
 	for (uint8_t i = 0; i < PACK_CELL_COUNT; i++) {
@@ -131,7 +131,7 @@ void _cli_volts_all(char *cmd, char *out) {
 	sprintf(out + strlen(out), "\r\n");
 }
 
-void _cli_temps(char *cmd, char *out) {
+void _cli_temps(uint16_t argc, char **argv, char *out) {
 	sprintf(out,
 			"average.....%.1f C\r\nmax.........%2u "
 			"C\r\nmin.........%2u C\r\n"
@@ -141,12 +141,8 @@ void _cli_temps(char *cmd, char *out) {
 			pd_get_max_temperature() - pd_get_min_temperature());
 }
 
-void _cli_temps_all(char *cmd, char *out) {
+void _cli_temps_all(uint16_t argc, char **argv, char *out) {
 	out[0] = '\0';
-
-	// TODO: Update temperatures in main cycle
-	//uint8_t temps[PACK_TEMP_COUNT];
-	//pack_update_temperatures_all(data->hspi, temps);
 
 	for (uint8_t i = 0; i < PACK_TEMP_COUNT; i++) {
 		if (i % TEMP_SENSOR_COUNT == 0) {
@@ -160,7 +156,7 @@ void _cli_temps_all(char *cmd, char *out) {
 	sprintf(out + strlen(out), "\r\n");
 }
 
-void _cli_status(char *cmd, char *out) {
+void _cli_status(uint16_t argc, char **argv, char *out) {
 #define n_items 4
 
 	const char *bal = bool_names[balancing.enable];
@@ -184,22 +180,22 @@ void _cli_status(char *cmd, char *out) {
 	}
 }
 
-void _cli_balance(char *cmd, char *out) {
-	uint8_t cmd_len = strlen("bal");
-
-	if (strcmp(cmd + cmd_len, " tog") == 0) {
+void _cli_balance(uint16_t argc, char **argv, char *out) {
+	if (strcmp(argv[1], "tog") == 0) {
 		balancing.enable = !balancing.enable;
 
 		sprintf(out, "setting balancing to %u\r\n", balancing.enable);
-	} else if (strncmp(cmd + cmd_len, " thr", 4) == 0) {
-		balancing.threshold = atoi(cmd + cmd_len + 5) * 10;
+	} else if (strcmp(argv[1], "thr") == 0) {
+		balancing.threshold = atoi(argv[2]) * 10;
 
 		sprintf(out, "setting balancing threshold to %u mV\r\n",
 				balancing.threshold / 10);
+	} else {
+		sprintf(out, "Unknown parameter: %s\r\n", argv[1]);
 	}
 }
 
-void _cli_errors(char *cmd, char *out) {
+void _cli_errors(uint16_t argc, char **argv, char *out) {
 	uint16_t count = error_count();
 	error_t errors[count];
 	error_dump(errors);
@@ -216,7 +212,7 @@ void _cli_errors(char *cmd, char *out) {
 	}
 }
 
-void _cli_taba(char *cmd, char *out) {
+void _cli_taba(uint16_t argc, char **argv, char *out) {
 	sprintf(out,
 			" #######    #    ######     #    ######     #    ####### ####### ######  \r\n"
 			"    #      # #   #     #   # #   #     #   # #      #    #       #     # \r\n"
@@ -227,9 +223,9 @@ void _cli_taba(char *cmd, char *out) {
 			"    #    #     # ######  #     # #     # #     #    #    ####### ######  \r\n");
 }
 
-void _cli_help(char *cmd, char *out) {
+void _cli_help(uint16_t argc, char **argv, char *out) {
 	sprintf(out, "command list:\r\n");
 	for (uint8_t i = 0; i < N_COMMANDS - 1; i++) {
-		sprintf(out + strlen(out), "- %s\r\n", cli_bms.commands.names[i]);
+		sprintf(out + strlen(out), "- %s\r\n", cli_bms.cmds.names[i]);
 	}
 }

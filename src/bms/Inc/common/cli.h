@@ -21,7 +21,7 @@
 // TODO: Enforce this limit
 #define HISTORY_MAX_SIZE 100
 
-typedef void cli_command_func_t(char *cmd, char *out);
+typedef void cli_command_func_t(uint16_t argc, char **argv, char *out);
 
 typedef struct buffer {
 	uint8_t index;
@@ -48,7 +48,7 @@ typedef struct cli_t {
 	bool complete;	   // True if the current command has been \n'd
 	uint8_t escaping;  // index at which escaping started
 
-	commands_t commands;
+	commands_t cmds;
 } cli_t;
 
 static const char *bool_names[2] = {"false", "true"};
