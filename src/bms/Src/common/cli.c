@@ -25,7 +25,7 @@ void cli_buf_init(buffer_t *buf) {
 void cli_init(cli_t *cli) {
 	cli_buf_init(&cli->current_command);
 
-	llist_init(NULL, NULL);
+	cli->history = llist_init(NULL, NULL);
 
 	//the history always has a top void buffer (use case: when going down history this buffer will be used
 	//for ther partial command written before going into history)
@@ -72,7 +72,7 @@ void cli_print(cli_t *cli, char *text, size_t length) {
 }
 
 bool _cli_get_next_history_node(cli_t *cli, int8_t direction, llist_node *next) {
-	// If overflow on current_hist_index no problem, next beccomes NULL
+	// If overflow on current_hist_index no problem, next becomes NULL
 	return llist_get(cli->history, cli->current_hist_index + direction, next) == LLIST_SUCCESS;
 }
 
@@ -83,6 +83,7 @@ void cli_handle_escape(cli_t *cli) {
 
 		if (cli->current_command.buffer[cli->current_command.index] == 'A') {  // UP
 			direction = HIST_UP;
+			//HAL_UART_Transmit(cli->uart, (uint8_t *)"AAAAAA", 6, 10);
 		} else if (cli->current_command.buffer[cli->current_command.index] == 'B') {  // DOWN
 			direction = HIST_DOWN;
 		} else {
@@ -90,54 +91,24 @@ void cli_handle_escape(cli_t *cli) {
 			return;
 		}
 
-		buffer_t *content;
-		if (!_cli_get_next_history_node(cli, direction, (llist_node)&content)) {
+		buffer_t *hist;
+		if (!_cli_get_next_history_node(cli, direction, (llist_node)&hist)) {
 			// No history
 			return;
 		}
 
 		cli->current_hist_index += direction;
 
-		//-----------------------COMMENT OF THE YEAR------------------------//
-		//																	//
-		//																	//
-		//			 Naaaaaah, dovrebbe essere cosa da poco (lel)			//
-		//																	//
-		//																	//
-		//------------------------------------------------------------------//
-
-		// TODO: translate this
-		// si crea la stringa che elimina il vecchio comando stampato in seriale, in pratica si buttano tanti spazi quanti erano i caratteri del vecchio comando
-		//char eraser[BUF_SIZE];
-		//sprintf(eraser, "%-*c\r", cli->current_command.index + PS_SIZE, '\r');
-
-		////------------------------------------------------------------------//
-		////																	//
-		////				cosa e' cli_ps  il comando della history? 			//
-		//// 		è il pisellino che c'è all'inizio di ogni riga, il "> "		//
-		////																	//
-		////------------------------------------------------------------------//
-
-		//strcat(eraser, cli_ps);
-
-		////N.B. qui bisogna stare attenti perche' data e' un puntatore mentre current_command no quinndi
-		////se ci sono errori poterbbero essere qui
-		//memcpy(&(cli->current_command), (buffer_t *)content, sizeof(buffer_t));
-
-		//strcat(eraser, cli->current_command.buffer);
-
-		//HAL_UART_Transmit(cli->uart, (uint8_t *)eraser, strlen(eraser), 500);
-
-		memcpy(&(cli->current_command), content, sizeof(buffer_t));
-
-		char new_buffer[BUF_SIZE];
-		strcat(new_buffer, "\r");
-		strcat(new_buffer, cli_ps);
-		strcat(new_buffer, content->buffer);
-
-		if (content->index < cli->current_command.index) {
-			sprintf(new_buffer, "%-*c", cli->current_command.index - content->index, (uint8_t)' ');
+		char new_buffer[BUF_SIZE] = {'\0'};
+		strcat(new_buffer, "\r");  // CR
+		if (hist->index < cli->current_command.index - 2) {
+			// If the current command is longer than the hsitory's we need to clear the screen
+			sprintf(new_buffer + 1, "%-*c\r", cli->current_command.index, (uint8_t)' ');
 		}
+		strcat(new_buffer, cli_ps);
+		strcat(new_buffer, hist->buffer);
+
+		memcpy(&(cli->current_command), hist, sizeof(buffer_t));
 
 		HAL_UART_Transmit(cli->uart, (uint8_t *)new_buffer, strlen(new_buffer), 500);
 	}

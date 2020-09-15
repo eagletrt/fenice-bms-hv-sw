@@ -39,7 +39,7 @@ typedef struct cli_t {
 
 	char input_buf;	 // Input byte
 
-	llist *history;				  // stream (history)
+	llist history;				  // stream (history)
 	uint32_t current_hist_index;  // Currently "selected" history item
 
 	buffer_t current_command;
