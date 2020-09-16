@@ -121,7 +121,7 @@ void cli_handle_escape(cli_t *cli) {
 		strcat(new_buffer, cli_ps);
 
 		// TODO: Handle parameters separated by \0
-		strcat(new_buffer, hist->buffer);
+		strncat(new_buffer, hist->buffer, hist->index);
 
 		memcpy(&(cli->current_command), hist, sizeof(buffer_t));
 
@@ -147,6 +147,30 @@ void cli_loop(cli_t *cli) {
 		// Clean the buffer from backspaces
 		cli->current_command.index = cli_clean(cli->current_command.buffer);
 
+		{  // Save in history
+			buffer_t *last_buf = NULL;
+			llist_get(cli->history, 1, (llist_node *)&last_buf);
+			// Check if last history entry is equal to the current
+			bool comp = false;
+			if ((llist_get(cli->history, 1, (llist_node *)&last_buf) == LLIST_NODE_NOT_FOUND) || (strcmp(cli->current_command.buffer, last_buf->buffer) != 0)) {
+				comp = true;
+			}
+
+			if (cli->current_command.index > 0 && comp) {
+				// If the last command wasn't empty, we save it to history.
+
+				//the command is not directly added to the history but instead the first node on top
+				//is modified since this one is always empty (the purpose of this node is descirbed in cli_init)
+				memcpy(llist_get_head(cli->history), &cli->current_command, sizeof(buffer_t));
+
+				//after the node has been changed a new void node has to be placed on top of the history
+				buffer_t *top_history_virgin_buffer = (buffer_t *)malloc(sizeof(buffer_t));
+				cli_buf_init(top_history_virgin_buffer);
+
+				llist_push(cli->history, (llist_node)top_history_virgin_buffer);
+			}
+		}
+
 		char *argv[BUF_SIZE];
 		uint16_t argc = _cli_get_args(cli->current_command.buffer, argv);
 
@@ -162,36 +186,6 @@ void cli_loop(cli_t *cli) {
 				break;
 			}
 		}
-
-		buffer_t *last_buf = NULL;
-		llist_get(cli->history, 1, (llist_node *)&last_buf);
-
-		// Check if last history entry is equal to the current
-		bool comp = false;
-		if (llist_get(cli->history, 1, (llist_node *)&last_buf) == LLIST_NODE_NOT_FOUND) {
-			comp = true;
-		} else if (strcmp(cli->current_command.buffer, last_buf->buffer) != 0) {
-			comp = true;
-		}
-
-		if (cli->current_command.index > 0 && comp) {
-			// If the last command wasn't empty, we save it to history.
-
-			//the command is not directly added to the history but instead the first node on top
-			//is modified since this one is always empty (the purpose of this node is descirbed in cli_init)
-			memcpy(llist_get_head(cli->history), &cli->current_command, sizeof(buffer_t));
-
-			//after the node has been changed a new void node has to be placed on top of the history
-			buffer_t *top_history_virgin_buffer = (buffer_t *)malloc(sizeof(buffer_t));
-			cli_buf_init(top_history_virgin_buffer);
-
-			llist_push(cli->history, (llist_node)top_history_virgin_buffer);
-			//list_insert(&cli->history, &top_history_virgin_buffer, sizeof(buffer_t));
-
-			//old style, remove void_buffer insert in cli_init
-			//list_insert(&cli->history, &cli->current_command, sizeof(buffer_t));
-		}
-
 		// Prepare current_command for the next command
 		cli_buf_init(&cli->current_command);
 
