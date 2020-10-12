@@ -10,7 +10,10 @@
         "Inc",
         "Inc/common",
         "Inc/error",
-        "Inc/peripherals"
+        "Inc/peripherals",
+        "lib/cli",
+        "lib/fsm",
+        "lib/llist"
       ],
       "defines": [
         "STM32G474xx",

@@ -58,9 +58,6 @@ Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_uart.c \
 Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_uart_ex.c \
 Src/bal.c \
 Src/cli_bms.c \
-Src/common/cli.c \
-Src/common/fsm.c \
-Src/common/llist.c \
 Src/error/error.c \
 Src/error/error_list_ref.c \
 Src/fdcan.c \
@@ -77,7 +74,10 @@ Src/stm32g4xx_hal_msp.c \
 Src/stm32g4xx_it.c \
 Src/system_stm32g4xx.c \
 Src/tim.c \
-Src/usart.c
+Src/usart.c \
+lib/cli/cli.c \
+lib/fsm/fsm.c \
+lib/llist/llist.c
 
 
 CPP_SOURCES = \
@@ -147,9 +147,11 @@ C_INCLUDES =  \
 -IDrivers/STM32G4xx_HAL_Driver/Inc \
 -IDrivers/STM32G4xx_HAL_Driver/Inc/Legacy \
 -IInc \
--IInc/common \
 -IInc/error \
--IInc/peripherals
+-IInc/peripherals \
+-Ilib/cli \
+-Ilib/fsm \
+-Ilib/llist
 
 
 
