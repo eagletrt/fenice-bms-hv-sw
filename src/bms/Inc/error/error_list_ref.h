@@ -21,7 +21,7 @@
 #include <stdio.h>
 
 #include "../../../fenice_config.h"
-#include "common/llist.h"
+#include "../lib/llist/llist.h"
 #include "error/error.h"
 
 //#define ERROR_GET_REF(__ID__, __OFFSET__)

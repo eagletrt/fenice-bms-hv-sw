@@ -11,7 +11,7 @@
 #ifndef FSM_BMS_H
 #define FSM_BMS_H
 
-#include "common/fsm.h"
+#include "../lib/fsm/fsm.h"
 
 typedef enum {
 	BMS_INIT,

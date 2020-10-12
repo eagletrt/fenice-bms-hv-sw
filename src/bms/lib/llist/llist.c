@@ -7,7 +7,7 @@
  * @author	Simone Ruffini[simone.ruffini@tutanota.com]
  */
 
-#include "common/llist.h"
+#include "llist.h"
 
 #include <stdlib.h>
 #include <string.h>

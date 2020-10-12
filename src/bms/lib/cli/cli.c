@@ -8,7 +8,7 @@
  * @author	Simone Ruffini [simone.ruffini@studenti.unitn.it]
  */
 
-#include "common/cli.h"
+#include "cli.h"
 
 #include <stdio.h>
 #include <stdlib.h>

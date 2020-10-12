@@ -13,7 +13,7 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
-#include "common/llist.h"
+#include "../lib/llist/llist.h"
 
 #define error_toggle_check(condition, error_type, index) \
 	if ((condition)) {                                   \

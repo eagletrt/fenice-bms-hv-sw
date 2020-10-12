@@ -8,7 +8,7 @@
  * @author	Matteo Bonora [matteo.bonora@studenti.unitn.it]
  */
 
-#include "common/fsm.h"
+#include "fsm.h"
 
 void fsm_init(fsm *FSM) {
 	FSM->current_state = 0;	 //FSM->state_table[0];
