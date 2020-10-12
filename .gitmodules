@@ -1,3 +1,0 @@
-[submodule "src/bms/test/munit"]
-	path = src/bms/test/munit
-	url = https://github.com/nemequ/munit.git
