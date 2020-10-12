@@ -16,8 +16,10 @@
 
 #define CURRENT_ARRAY_LENGTH 512
 
-uint32_t adc_current[CURRENT_ARRAY_LENGTH];	 // TODO: move to pck_data and update DMA and generate getter no setter
-bal_conf_t balancing;						 // TODO: Remove bal_conf_t struct (remove enable and the rest has to be managed by the state machine with the eeprom too)
+uint32_t current_50[CURRENT_ARRAY_LENGTH];	 // TODO: move to pck_data and update DMA and generate getter no setter
+uint32_t current_300[CURRENT_ARRAY_LENGTH];	 // TODO: move to pck_data and update DMA and generate getter no setter
+
+bal_conf_t balancing;  // TODO: Remove bal_conf_t struct (remove enable and the rest has to be managed by the state machine with the eeprom too)
 /**
  * @brief	Initializes the pack
  *
@@ -110,29 +112,39 @@ void pack_update_all_temperatures(SPI_HandleTypeDef *hspi) {
 	ltc6813_read_all_temps(hspi);
 }
 
-//TODO: redo DMA and thenreqrite the function
+int32_t _mean(uint32_t values[], size_t size) {
+	int32_t sum = 0;
+	for (uint16_t i = 0; i < size; i++) {
+		sum += values[i];
+	}
+	return sum / size;
+}
+
+//TODO: redo DMA and then rewrite the function
 /**
  * @brief		Calculates the current exiting/entering the pack
  */
 void pack_update_current() {
-	CURRENT_T current = 0;
+	CURRENT_T current50 = 0;
+	CURRENT_T current300 = 0;
 
-	int32_t tmp = 0;
-	for (uint16_t i = 0; i < CURRENT_ARRAY_LENGTH; i++) {
-		tmp += adc_current[i];
-	}
-	tmp /= CURRENT_ARRAY_LENGTH;
+	int32_t adc50 = _mean(current_50, CURRENT_ARRAY_LENGTH);
+	int32_t adc300 = _mean(current_300, CURRENT_ARRAY_LENGTH);
 
 	// We calculate the input voltage
-	float in_volt = (((float)tmp * 3.3) / 4096);
+	float in_volt = (((float)adc50 * 3.3) / 4096);
+	current50 = ((in_volt - S160_OFFSET) / S160_50A_SENS) * 10;
 
-	// Check the current sensor datasheet for the correct formula
-	current = (int16_t)(-round((((in_volt - 2.048) * 200 / 1.25)) * 10));
-	current += 100;
+	in_volt = (((float)adc300 * 3.3) / 4096);
+	current300 = ((in_volt - S160_OFFSET) / S160_300A_SENS) * 10;
 
-	pd_set_current(current);
+	if (current300 >= 50) {
+		pd_set_current(current300);
+	} else {
+		pd_set_current(current50);
+	}
 
-	error_toggle_check(current > PACK_MAX_CURRENT, ERROR_OVER_CURRENT, 0);
+	error_toggle_check(current300 > PACK_MAX_CURRENT, ERROR_OVER_CURRENT, 0);
 }
 
 /**
