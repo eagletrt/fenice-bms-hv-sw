@@ -23,5 +23,6 @@
 		"limits": "c",
 		"valarray": "c",
 		"string.h": "c"
-	}
+	},
+	"stm32-for-vscode.openOCDPath": "openocd"
 }
