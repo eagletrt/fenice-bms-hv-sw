@@ -1,1 +1,11 @@
-!.vscode/
+Release/
+Debug/
+build/
+*.o
+*.elf
+*.bin
+*.hex
+*.map
+.settings/
+.mxproject
+.vscode/
