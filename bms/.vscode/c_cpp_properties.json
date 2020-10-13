@@ -1,0 +1,28 @@
+{
+  "configurations": [
+    {
+      "name": "STM32",
+      "includePath": [
+        "Drivers/CMSIS/Device/ST/STM32G4xx/Include",
+        "Drivers/CMSIS/Include",
+        "Drivers/STM32G4xx_HAL_Driver/Inc",
+        "Drivers/STM32G4xx_HAL_Driver/Inc/Legacy",
+        "Inc",
+        "Inc/common",
+        "Inc/error",
+        "Inc/peripherals",
+        "lib/cli",
+        "lib/fsm",
+        "lib/llist"
+      ],
+      "defines": [
+        "STM32G474xx",
+        "USE_HAL_DRIVER"
+      ],
+      "compilerPath": "/sbin/arm-none-eabi-gcc",
+      "cStandard": "c11",
+      "cppStandard": "c++11"
+    }
+  ],
+  "version": 4
+}
