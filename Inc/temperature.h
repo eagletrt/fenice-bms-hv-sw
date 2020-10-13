@@ -10,7 +10,7 @@
 #ifndef TEMPERATURE_H
 #define TEMPERATURE_H
 
-#include "../../fenice_config.h"
+#include "cellboard_config.h"
 #include "stm32f4xx_hal.h"
 
 typedef struct temperature {

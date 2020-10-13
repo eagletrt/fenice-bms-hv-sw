@@ -32,7 +32,7 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "../../fenice_config.h"
+#include "cellboard_config.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/

@@ -13,7 +13,7 @@
         "STM32F411xE",
         "USE_HAL_DRIVER"
       ],
-      "compilerPath": "/usr/bin/gcc",
+      "compilerPath": "/usr/bin/arm-none-eabi-gcc",
       "cStandard": "c11",
       "cppStandard": "c++11"
     }
