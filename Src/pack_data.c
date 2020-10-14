@@ -12,7 +12,7 @@
 
 #include <stm32g4xx_hal.h>
 
-#include "../../fenice_config.h"
+#include "mainboard_config.h"
 
 __PD_DEFINE(VOLTAGE_T, voltages)
 [PACK_CELL_COUNT];							  /*!< [mV * 10] Cell voltages */
