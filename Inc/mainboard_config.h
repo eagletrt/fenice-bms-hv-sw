@@ -1,13 +1,14 @@
 /**
- * @file		fenice_config.h
- * @brief		This file contains configuration settings for Chimera Evoluzione
+ * @file		mainboard_config.h
+ * @brief		This file contains configuration settings for fenice's mainboard 
  *
  * @date		Oct 07, 2019
- * @author	Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @author		Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @author		Simone Ruffini [simone.ruffini@tutanota.com]
  */
 
-#ifndef FENICE_CONFIG_H
-#define FENICE_CONFIG_H
+#ifndef MAINBOARD_CONFIG_H
+#define MAINBOARD_CONFIG_H
 
 #include <inttypes.h>
 
@@ -134,7 +135,7 @@ static const uint8_t TEMP_SENSOR_ADDRESS_CODING[TEMP_SENSORS_PER_STRIP] = {
 #define PRECHARGE_VOLTAGE_THRESHOLD 0.95
 
 /**
- * Feedback bit set bit position 
+ * Feedback bit set bit position
  */
 enum {
 	FEEDBACK_VREF_POS,
@@ -154,12 +155,12 @@ enum {
 	FEEDBACK_BMS_SHUTDOWN_POS,
 	FEEDBACK_TS_ON_POS,
 
-	//do not move FEEDBACK_N
+	// do not move FEEDBACK_N
 	FEEDBACK_N,
 };
 
 /**
- * Feedback bit sets 
+ * Feedback bit sets
  */
 #define FEEDBACK_NULL 0
 #define FEEDBACK_VREF ((FEEDBACK_T)1 << FEEDBACK_VREF_POS)
@@ -190,7 +191,7 @@ enum {
 // Sensitivity of the 50A sensor
 #define S160_50A_SENS 6.67
 
-//Sensitivity of the 300A sensor
+// Sensitivity of the 300A sensor
 #define S160_300A_SENS 40
 
 //===========================================================================
@@ -199,24 +200,24 @@ enum {
 
 /**
  * Max time to wait for the sensor to initialize (auto-baudrate detection)
-*/
+ */
 #define SI8900_INIT_TIMEOUT 1000
 
 /**
  * Max time to wait for a voltage reading
- * 
+ *
  * Keep it low, it will pause the main loop
-*/
+ */
 #define SI8900_TIMEOUT 5
 
 /**
  * Reference voltage of the ADC
-*/
+ */
 #define SI8900_VREF 3.33
 
 /*
  * If the cli should echo the input
-*/
+ */
 #define CLI_ECHO 1
 
 #endif /* CHIMERA_CONFIG_H_ */

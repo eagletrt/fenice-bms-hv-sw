@@ -14,7 +14,7 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
-#include "../../fenice_config.h"
+#include "mainboard_config.h"
 
 #define TOTAL_VOLTAGE_T uint32_t
 #define ADC_VOLTAGE_T uint16_t

@@ -11,9 +11,9 @@
 
 #include <inttypes.h>
 
-#include "../../fenice_config.h"
 #include "bal.h"
 #include "error/error.h"
+#include "mainboard_config.h"
 #include "pack_data.h"
 #include "peripherals/ltc6813_utils.h"
 

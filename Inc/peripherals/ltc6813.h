@@ -18,8 +18,8 @@
 #include <stdbool.h>
 #include <stm32g4xx_hal.h>
 
-#include "../../../fenice_config.h"
 #include "error/error.h"
+#include "mainboard_config.h"
 #include "peripherals/ltc6813_utils.h"
 
 /** @brief Table used to calculate the pec for messaging */

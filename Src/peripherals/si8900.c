@@ -13,8 +13,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../../../fenice_config.h"
 #include "error/error.h"
+#include "mainboard_config.h"
 #include "usart.h"
 
 bool si8900_ready = false;

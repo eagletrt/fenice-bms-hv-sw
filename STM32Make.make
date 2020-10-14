@@ -77,9 +77,7 @@ Src/tim.c \
 Src/usart.c \
 lib/cli/cli.c \
 lib/fsm/fsm.c \
-lib/llist/llist.c \
-lib/llist/test/main.c \
-lib/llist/test/test_list.c
+lib/llist/llist.c
 
 
 CPP_SOURCES = \
@@ -154,7 +152,8 @@ C_INCLUDES =  \
 -Ilib/cli \
 -Ilib/fsm \
 -Ilib/llist \
--Ilib/llist/test
+-Ilib/llist/test \
+-Ilib/llist/test/munit
 
 
 
