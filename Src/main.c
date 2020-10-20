@@ -158,7 +158,7 @@ int main(void) {
 		/* USER CODE END WHILE */
 
 		/* USER CODE BEGIN 3 */
-		fsm_run_state(&fsm_bms);
+		fsm_run(&fsm_bms);
 
 		check_timers();
 
