@@ -10,6 +10,7 @@
 
 #include "fsm_bms.h"
 
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -36,9 +37,8 @@ fsm fsm_bms;
 uint32_t timer_precharge = 0;
 
 void fsm_bms_init() {
-	fsm_init(&fsm_bms);
+	fsm_init(&fsm_bms, BMS_NUM_STATES);
 
-	fsm_bms.state_table = malloc(sizeof(state_function) * BMS_NUM_STATES);
 	fsm_bms.state_table[BMS_INIT] = &do_init;
 	fsm_bms.state_table[BMS_SET_TS_OFF] = &do_ts_off;
 	fsm_bms.state_table[BMS_IDLE] = &do_idle;
@@ -89,8 +89,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	if (htim == &htim_Err) {  //htim_Err is a #define to htim2 (barely a substition) so tim.h must be included
 		HAL_TIM_Base_Stop_IT(htim);
 
-		fsm_bms.future_state = BMS_TO_HALT;
-		fsm_run_state(&fsm_bms);
+		fsm_set_state(&fsm_bms, BMS_TO_HALT);
+		fsm_run(&fsm_bms);
 	}
 }
 

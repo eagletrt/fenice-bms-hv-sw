@@ -151,6 +151,7 @@ C_INCLUDES =  \
 -IInc/peripherals \
 -Ilib/cli \
 -Ilib/fsm \
+-Ilib/fsm/example \
 -Ilib/llist \
 -Ilib/llist/test \
 -Ilib/llist/test/munit
