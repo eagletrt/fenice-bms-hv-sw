@@ -1,0 +1,9 @@
+[submodule "src/lib/llist"]
+	path = src/lib/llist
+	url = git@github.com:eagletrt/llist.git
+[submodule "src/lib/cli"]
+	path = src/lib/cli
+	url = git@github.com:eagletrt/cli.git
+[submodule "src/lib/fsm"]
+	path = src/lib/fsm
+	url = git@github.com:eagletrt/fsm.git
