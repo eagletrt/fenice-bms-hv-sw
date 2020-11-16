@@ -4,8 +4,8 @@
  *
  * @date		Mar 29,2020
  * 
- * @author	Matteo Bonora [matteo.bonora@studenti.unitn.it]
- * @author	Simone Ruffini [simone.ruffini@studenti.unitn.it]
+ * @author		Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @author		Simone Ruffini [simone.ruffini@studenti.unitn.it]
  */
 
 #include "cli_bms.h"
