@@ -4,14 +4,14 @@
  *
  * @date		Mar 31, 2020
  * 
- * @author	Matteo Bonora [matteo.bonora@studenti.unitn.it]
- * @author	Simone Ruffini [simone.ruffini@studenti.unitn.it]
+ * @author		Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @author		Simone Ruffini [simone.ruffini@studenti.unitn.it]
  */
 
 #ifndef FSM_BMS_H
 #define FSM_BMS_H
 
-#include "../lib/fsm/fsm.h"
+#include <fsm.h>
 
 typedef enum {
 	BMS_INIT,
