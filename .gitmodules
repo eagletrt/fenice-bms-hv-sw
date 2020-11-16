@@ -1,3 +1,3 @@
 [submodule "lib/fsm"]
-	path = lib/fsm
+	path = src/lib/fsm
 	url = https://github.com/eagletrt/fsm.git
