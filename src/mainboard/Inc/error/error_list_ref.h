@@ -22,7 +22,7 @@
 
 #include "../lib/llist/llist.h"
 #include "error/error.h"
-#include "mainboard_config.h"
+#include "fenice_config.h"
 
 //#define ERROR_GET_REF(__ID__, __OFFSET__)
 //	(*((error_list_ref_array[__ID__]) + __OFFSET__))

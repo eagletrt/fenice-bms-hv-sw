@@ -4,13 +4,13 @@
  * temperature
  *
  * @date		Feb 03, 2020
- * @author	Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @author		Matteo Bonora [matteo.bonora@studenti.unitn.it]
  */
 
 #ifndef TEMPERATURE_H
 #define TEMPERATURE_H
 
-#include "cellboard_config.h"
+#include "fenice_config.h"
 #include "stm32f4xx_hal.h"
 
 typedef struct temperature {

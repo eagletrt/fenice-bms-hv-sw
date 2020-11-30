@@ -3,7 +3,7 @@
  * @brief		This file contains the functions to manage the battery pack
  *
  * @date		Apr 11, 2019
- * @author	Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @author      Matteo Bonora [matteo.bonora@studenti.unitn.it]
  */
 
 #ifndef PACK_H_
@@ -13,7 +13,7 @@
 
 #include "bal.h"
 #include "error/error.h"
-#include "mainboard_config.h"
+#include "fenice_config.h"
 #include "pack_data.h"
 #include "peripherals/ltc6813_utils.h"
 

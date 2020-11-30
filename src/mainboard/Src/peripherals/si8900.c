@@ -4,8 +4,8 @@
  * voltages
  *
  * @date		Gen 09, 2020
- * @author	Matteo Bonora [matteo.bonora@studenti.unitn.it]
- * @coauthor Simone Ruffini [simone.ruffini@tutanota.com]
+ * @author		Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @author		Simone Ruffini [simone.ruffini@tutanota.com]
  */
 
 #include "peripherals/si8900.h"
@@ -14,7 +14,7 @@
 #include <string.h>
 
 #include "error/error.h"
-#include "mainboard_config.h"
+#include "fenice_config.h"
 #include "usart.h"
 
 bool si8900_ready = false;

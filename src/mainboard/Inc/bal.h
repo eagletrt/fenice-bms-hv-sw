@@ -14,7 +14,7 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
-#include "mainboard_config.h"
+#include "fenice_config.h"
 
 #define NULL_INDEX 255
 
