@@ -22,7 +22,7 @@
 #include "cli_bms.h"
 #include "error/error.h"
 #include "fsm_bms.h"
-#include "mainboard_config.h"
+#include "fenice_config.h"
 #include "si8900.h"
 /* USER CODE END Includes */
 

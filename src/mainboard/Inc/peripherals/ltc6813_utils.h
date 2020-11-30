@@ -13,8 +13,8 @@
 #include <stm32g4xx_hal.h>
 
 #include "error/error.h"
+#include "fenice_config.h"
 #include "ltc6813.h"
-#include "mainboard_config.h"
 
 uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *hspi);
 void ltc6813_temp_set_register(SPI_HandleTypeDef *hspi, uint8_t address,

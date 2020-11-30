@@ -4,8 +4,8 @@
  *
  * @date		Mar 9, 2020
  * 
- * @author	Matteo Bonora [matteo.bonora@studenti.unitn.it]
- * @author	Simone Ruffini [simone.ruffini@studenti.unitn.it]
+ * @author		Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @author		Simone Ruffini [simone.ruffini@studenti.unitn.it]
  */
 
 #ifndef PACK_DATA_H
@@ -14,7 +14,7 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
-#include "mainboard_config.h"
+#include "fenice_config.h"
 
 #define TOTAL_VOLTAGE_T uint32_t
 #define ADC_VOLTAGE_T uint16_t

@@ -4,15 +4,15 @@
  *
  * @date		Mar 27,2020
  * 
- * @author	Matteo Bonora [matteo.bonora@studenti.unitn.it]
- * @author	Simone Ruffini [simone.ruffini@studenti.unitn.it]
+ * @author		Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @author		Simone Ruffini [simone.ruffini@studenti.unitn.it]
  */
 
 #include "pack_data.h"
 
 #include <stm32g4xx_hal.h>
 
-#include "mainboard_config.h"
+#include "fenice_config.h"
 
 __PD_DEFINE(VOLTAGE_T, voltages)
 [PACK_CELL_COUNT];							  /*!< [mV * 10] Cell voltages */
