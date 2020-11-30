@@ -11,8 +11,9 @@
 #define ERROR_H
 
 #include <inttypes.h>
-#include <llist.h>
 #include <stdbool.h>
+
+#include "llist.h"
 
 #define error_toggle_check(condition, error_type, index) \
 	if ((condition)) {                                   \

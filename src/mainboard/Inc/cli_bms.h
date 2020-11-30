@@ -11,7 +11,7 @@
 #ifndef CLI_BMS_H
 #define CLI_BMS_H
 
-#include <cli.h>
+#include "cli.h"
 
 extern cli_t cli_bms;
 
