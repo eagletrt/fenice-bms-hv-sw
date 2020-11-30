@@ -1,1 +1,1 @@
-/home/bonnee/src/eagle/fenice-bms-mainboard/src/mainboard/../fenice_config.h
+../../fenice_config.h
