@@ -3,17 +3,16 @@
  * @brief		This file contains the functions to handle errors.
  *
  * @date		May 1, 2019
- * @author	Matteo Bonora [matteo.bonora@studenti.unitn.it]
- * @author	Simone Ruffini[simone.ruffini@tutanota.com]
+ * @author		Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @author		Simone Ruffini[simone.ruffini@tutanota.com]
  */
 
 #ifndef ERROR_H
 #define ERROR_H
 
 #include <inttypes.h>
+#include <llist.h>
 #include <stdbool.h>
-
-#include "../lib/llist/llist.h"
 
 #define error_toggle_check(condition, error_type, index) \
 	if ((condition)) {                                   \
