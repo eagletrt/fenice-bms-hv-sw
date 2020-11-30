@@ -1,8 +1,8 @@
 /**
   ******************************************************************************
-  * File Name          : FDCAN.c
-  * Description        : This file provides code for the configuration
-  *                      of the FDCAN instances.
+  * @file    fdcan.c
+  * @brief   This file provides code for the configuration
+  *          of the FDCAN instances.
   ******************************************************************************
   * @attention
   *

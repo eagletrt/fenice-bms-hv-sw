@@ -11,7 +11,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
-#include "fdcan.h"
 #include "gpio.h"
 #include "spi.h"
 #include "tim.h"
@@ -21,8 +20,8 @@
 /* USER CODE BEGIN Includes */
 #include "cli_bms.h"
 #include "error/error.h"
-#include "fsm_bms.h"
 #include "fenice_config.h"
+#include "fsm_bms.h"
 #include "si8900.h"
 /* USER CODE END Includes */
 
