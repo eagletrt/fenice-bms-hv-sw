@@ -1,7 +1,7 @@
 /**
  * @file		error_list_ref.h
  * @brief		This file contains variables that reference node_t in error_list: error list reference/s
- * @deatails	This file is a "database" of all variables concerning errors.
+ * @details     This file is a "database" of all variables concerning errors.
 * 				<b>ERRORS ARE NOT CONTAINED IN THESE VARIABLES</b>
  * 				These variables reference positions in the error_list DatStruct.
  * 				Their main purpose is to give access in O(1) complexity to errors they are
@@ -20,7 +20,7 @@
 
 #include <stdio.h>
 
-#include "../lib/llist/llist.h"
+#include "../../lib/llist/llist.h"
 #include "error/error.h"
 #include "fenice_config.h"
 
