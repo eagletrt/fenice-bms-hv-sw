@@ -1,5 +1,3 @@
-Release/
-Debug/
 build/
 *.o
 *.elf
@@ -7,6 +5,7 @@ build/
 *.hex
 *.map
 .mxproject
-.vscode/*
-!.vscode/settings.json
-!.vscode/extensions.json
+
+**/.vscode/*
+!**/.vscode/settings.json
+!**/.vscode/extensions.json
