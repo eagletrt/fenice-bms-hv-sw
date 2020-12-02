@@ -143,7 +143,7 @@ int main(void) {
 	fsm_bms_init();
 	cli_bms_init();
 
-	if (si8900_init(&huart3)) {
+	if (si8900_init(&huart3, ADC_SIN_GPIO_Port, ADC_SIN_Pin)) {
 		cli_print(&cli_bms, "SI8900 INITIALIZED\r\n", 20);
 	} else {
 		cli_print(&cli_bms, "SI8900 ERROR\r\n", 14);

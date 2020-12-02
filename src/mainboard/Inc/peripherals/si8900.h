@@ -25,7 +25,7 @@ typedef enum {
 	SI8900_AIN2 = 2
 } SI8900_CHANNEL;
 
-bool si8900_init(UART_HandleTypeDef *hspi);
+bool si8900_init(UART_HandleTypeDef *huart, GPIO_TypeDef *reset_gpio, uint16_t reset_pin);
 bool si8900_read_channel(UART_HandleTypeDef *huart, SI8900_CHANNEL ch,
 						 uint16_t *voltage);
 void si8900_read_voltages(UART_HandleTypeDef *huart, uint16_t ain[3]);
