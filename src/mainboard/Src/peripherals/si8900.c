@@ -21,19 +21,27 @@ bool si8900_ready = false;
 
 /**
  * @brief		Initializes the ADC
- * @details	This function does the auto-baudrate detection initialization	function described
- * 					in si's datasheet: https://www.silabs.com/documents/public/application-notes/AN635.pdf
+ * @details		This function does the auto-baudrate detection initialization	function described
+ * 				in si's datasheet: https://www.silabs.com/documents/public/application-notes/AN635.pdf
+ * @warning		Make sure the default value of the reset pin is in a non-reset position for the Si8900
+ * 				E.G. In CubeMX, the GPIO Output Level is LOW for Fenice's mainboard v1.0.5 (pin Si890x reset on the schematic)
  * 
- * @param		huart	The UART configuration structure
- * @returns	whether the initialization ended successfully.
+ * @param		huart		The UART configuration structure
+ * @param		reset_gpio	GPIO group for the ADC reset pin
+ * @param		reset_pin	ADC reset pin number
+ * @returns		whether the initialization ended successfully.
  */
-bool si8900_init(UART_HandleTypeDef *huart) {
+bool si8900_init(UART_HandleTypeDef *huart, GPIO_TypeDef reset_gpio, uint16_t reset_pin) {
 	uint8_t recv = 0;
 	uint8_t tx = 0xAA;
 
 	bool timeout = false;
 	bool code_receive = false;
 	bool code_confirm = false;
+
+	HAL_GPIO_TogglePin(ADC_SIN_GPIO_Port, ADC_SIN_Pin);
+	HAL_Delay(1);
+	HAL_GPIO_TogglePin(ADC_SIN_GPIO_Port, ADC_SIN_Pin);
 
 	uint32_t time = HAL_GetTick();
 
