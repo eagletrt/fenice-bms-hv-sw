@@ -31,7 +31,7 @@ bool si8900_ready = false;
  * @param		reset_pin	ADC reset pin number
  * @returns		whether the initialization ended successfully.
  */
-bool si8900_init(UART_HandleTypeDef *huart, GPIO_TypeDef reset_gpio, uint16_t reset_pin) {
+bool si8900_init(UART_HandleTypeDef *huart, GPIO_TypeDef *reset_gpio, uint16_t reset_pin) {
 	uint8_t recv = 0;
 	uint8_t tx = 0xAA;
 
