@@ -1,9 +1,9 @@
 [submodule "src/mainboard/lib/llist"]
-	path = src/mainboard/lib/llist
+	path = mainboard/lib/llist
 	url = git@github.com:eagletrt/llist.git
 [submodule "src/mainboard/lib/fsm"]
-	path = src/mainboard/lib/fsm
+	path = mainboard/lib/fsm
 	url = git@github.com:eagletrt/fsm.git
 [submodule "src/mainboard/lib/cli"]
-	path = src/mainboard/lib/cli
+	path = mainboard/lib/cli
 	url = git@github.com:eagletrt/cli.git
