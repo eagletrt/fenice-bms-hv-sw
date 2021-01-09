@@ -19,7 +19,7 @@
 uint32_t current_50[CURRENT_ARRAY_LENGTH];	 // TODO: move to pck_data and update DMA and generate getter no setter
 uint32_t current_300[CURRENT_ARRAY_LENGTH];	 // TODO: move to pck_data and update DMA and generate getter no setter
 
-bal_conf_t balancing;  // TODO: Remove bal_conf_t struct (remove enable and the rest has to be managed by the state machine with the eeprom too)
+bal_handle balancing;  // TODO: Remove bal_conf_t struct (remove enable and the rest has to be managed by the state machine with the eeprom too)
 /**
  * @brief	Initializes the pack
  *
