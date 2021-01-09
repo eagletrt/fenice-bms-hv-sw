@@ -67,37 +67,30 @@ void _bubble_sort(uint8_t indexes[PACK_CELL_COUNT], uint16_t values[PACK_CELL_CO
 	}
 }
 
-uint8_t bal_compute_indexes(uint16_t volts[], uint8_t indexes[],
-							uint16_t threshold) {
-	static bool even = true;  // Whether to return even or odd cells
-
-	uint8_t indexes_left = PACK_CELL_COUNT;  // cells to check
+uint8_t bal_compute_indexes(uint16_t volts[], uint8_t indexes[], uint16_t threshold) {
+	uint8_t indexes_left = PACK_CELL_COUNT;	 // cells to check
 	uint8_t min_index = _min_index(volts, PACK_CELL_COUNT);
 
 	for (uint8_t i = 0; i < PACK_CELL_COUNT; i++) {
-		indexes[i] = i;  // Initialize indexes
+		indexes[i] = i;	 // Initialize indexes
 	}
 
 	// sort all indexes by voltage
 	_bubble_sort(indexes, volts, PACK_CELL_COUNT);
 
-	// mark indexes that represent values that are less than
-	// (minval + tresh)
 	for (uint8_t i = 0; i < PACK_CELL_COUNT; i++) {
-		if (volts[indexes[i]] < volts[min_index] + threshold) {
+		if (volts[indexes[i]] > volts[min_index] + threshold) {
+			// If current cell needs to be discahrged
+			if ((i == 0 || indexes[i - 1] == NULL_INDEX) && (i == PACK_CELL_COUNT - 1 || indexes[i + 1] != NULL_INDEX)) {
+				// If previous cell is NULL and next cell needs to be discharged, then set next to NULL
+				indexes[i + 1] = NULL_INDEX;
+				// We don't decrease indexes_left here because the cell still needs to be discharged.
+			}
+		} else {
+			// No need to balance
 			indexes_left--;
 			indexes[i] = NULL_INDEX;
 		}
-
-		if (indexes[i] % 2 == even) {
-			indexes[i] = NULL_INDEX;
-		}
-	}
-	even = !even;
-
-	// if all modules are balanced
-	if (indexes_left == 0) {
-		return 0;
 	}
 
 	return indexes_left;
