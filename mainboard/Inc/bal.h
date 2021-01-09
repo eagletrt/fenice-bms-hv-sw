@@ -18,13 +18,24 @@
 
 #define NULL_INDEX 255
 
-typedef struct bal_conf {
+/**
+ * @brief Balancing configuration handle
+ */
+typedef struct bal_handle {
 	bool enable;
 	uint16_t threshold;
 	uint8_t slot_time;
-} bal_conf_t;
+} bal_handle;
 
-void _bubble_sort(uint8_t indexes[PACK_CELL_COUNT], uint16_t values[PACK_CELL_COUNT], uint8_t length);
+/**
+ * @brief	Computes the cells' to balance
+ * 
+ * @param	volts		Array of cell voltages
+ * @param	indexes		Output array of indexes to be balanced
+ * @param	threshold	Balancing tolerance (voltage +/- threshold)
+ * 
+ * @returns	Number of cells that are not in indexes but still need to be discharged
+ */
 uint8_t bal_compute_indexes(uint16_t volts[PACK_CELL_COUNT], uint8_t indexes[PACK_CELL_COUNT], uint16_t threshold);
 
 #endif

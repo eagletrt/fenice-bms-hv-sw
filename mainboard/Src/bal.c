@@ -11,12 +11,18 @@
 #include <bal.h>
 #include <stdio.h>
 
+/**
+ * @brief swap two uint8's
+ */
 inline void _swap(uint8_t *val1, uint8_t *val2) {
 	uint8_t tmp = *val2;
 	*val2 = *val1;
 	*val1 = tmp;
 }
 
+/**
+ * @returns	The index of the maximum value of data
+ */
 uint8_t _max_index(uint16_t data[], size_t length) {
 	uint8_t max = 0;
 	for (uint8_t i = 0; i < length; i++) {
@@ -27,6 +33,9 @@ uint8_t _max_index(uint16_t data[], size_t length) {
 	return max;
 }
 
+/**
+ * @returns	The index of the minimum value of data
+ */
 uint8_t _min_index(uint16_t data[], size_t length) {
 	uint8_t min_value_index = 0;
 	for (uint8_t i = 0; i < length; i++) {
@@ -37,8 +46,15 @@ uint8_t _min_index(uint16_t data[], size_t length) {
 	return min_value_index;
 }
 
-void _bubble_sort(uint8_t indexes[PACK_CELL_COUNT],
-				  uint16_t values[PACK_CELL_COUNT], uint8_t length) {
+/**
+ * @brief	Sorts indexes
+ * 
+ * @param	indexes	Indexes to be sorted
+ * @param	values	Values to compare
+ * @param	length	Length of both arrays
+ */
+void _bubble_sort(uint8_t indexes[PACK_CELL_COUNT], uint16_t values[PACK_CELL_COUNT], uint8_t length) {
+	// TODO: Do we need to pass length? Can't it just be a local var?
 	while (length > 1) {
 		uint8_t newn = 0;
 		for (uint8_t i = 0; i < length - 1; i++) {
@@ -84,6 +100,5 @@ uint8_t bal_compute_indexes(uint16_t volts[], uint8_t indexes[],
 		return 0;
 	}
 
-	// return number of indexes to compute
 	return indexes_left;
 }
