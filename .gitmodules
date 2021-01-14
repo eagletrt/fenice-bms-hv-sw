@@ -7,3 +7,6 @@
 [submodule "mainboard/lib/cli"]
 	path = mainboard/lib/cli
 	url = git@github.com:eagletrt/cli.git
+[submodule "mainboard/test/munit"]
+	path = mainboard/test/munit
+	url = https://github.com/nemequ/munit.git
