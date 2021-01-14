@@ -1,8 +1,8 @@
 #include "test_bal.h"
 
+#include <bal.h>
 #include <stdio.h>
 
-#include "../Inc/bal.h"
 #include "test_volt_data.h"
 
 struct data {

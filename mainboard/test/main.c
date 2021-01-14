@@ -1,6 +1,7 @@
 #include "main.h"
 
-#include "munit/munit.h"
+#include <munit.h>
+
 #include "test_bal.h"
 #include "test_suites.h"
 

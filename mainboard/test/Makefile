@@ -3,7 +3,7 @@ INC_PARAMS:=$(addprefix -I, $(INC))
 vpath %.h $(INC)
 
 BUILD_DIR:=build
-EXECUTABLE:=test
+EXECUTABLE:=mainboard_test
 TARGET:=$(BUILD_DIR)/$(EXECUTABLE)
 
 CSRC:=main.c test_bal.c test_volt_data.c munit.c bal.c
@@ -22,7 +22,7 @@ all: $(TARGET) test
 
 test:
 	$(TARGET)
-	@gcov -jnk build/bal
+	@gcov -n build/bal
 
 $(BUILD_DIR):
 	mkdir -p $@
