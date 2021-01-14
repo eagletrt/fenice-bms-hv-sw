@@ -1,4 +1,4 @@
-#include "test_main.h"
+#include "main.h"
 
 #include "munit/munit.h"
 #include "test_bal.h"
