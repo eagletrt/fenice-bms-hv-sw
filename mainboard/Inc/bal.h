@@ -16,7 +16,7 @@
 
 #include "fenice_config.h"
 
-#define NULL_INDEX 255
+#define BAL_NULL_INDEX UINT8_MAX
 
 /**
  * @brief Balancing configuration handle

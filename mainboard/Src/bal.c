@@ -14,7 +14,7 @@
 /**
  * @brief swap two uint8's
  */
-inline void _swap(uint8_t *val1, uint8_t *val2) {
+void _swap(uint8_t *val1, uint8_t *val2) {
 	uint8_t tmp = *val2;
 	*val2 = *val1;
 	*val1 = tmp;
@@ -81,15 +81,15 @@ uint8_t bal_compute_indexes(uint16_t volts[], uint8_t indexes[], uint16_t thresh
 	for (uint8_t i = 0; i < PACK_CELL_COUNT; i++) {
 		if (volts[indexes[i]] > volts[min_index] + threshold) {
 			// If current cell needs to be discahrged
-			if ((i == 0 || indexes[i - 1] == NULL_INDEX) && (i == PACK_CELL_COUNT - 1 || indexes[i + 1] != NULL_INDEX)) {
+			if ((i == 0 || indexes[i - 1] == BAL_NULL_INDEX) && (i == PACK_CELL_COUNT - 1 || indexes[i + 1] != BAL_NULL_INDEX)) {
 				// If previous cell is NULL and next cell needs to be discharged, then set next to NULL
-				indexes[i + 1] = NULL_INDEX;
+				indexes[i + 1] = BAL_NULL_INDEX;
 				// We don't decrease indexes_left here because the cell still needs to be discharged.
 			}
 		} else {
 			// No need to balance
 			indexes_left--;
-			indexes[i] = NULL_INDEX;
+			indexes[i] = BAL_NULL_INDEX;
 		}
 	}
 
