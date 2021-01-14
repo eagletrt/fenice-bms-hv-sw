@@ -1,8 +1,6 @@
 #include "test_volt_data.h"
 
 #include <munit.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 #include "fenice_config.h"
 
