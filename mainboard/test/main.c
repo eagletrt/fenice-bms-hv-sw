@@ -11,7 +11,7 @@ int main(int argc, char* argv[]) {
 		"",
 		NULL,
 		main_suite,
-		1,
+		1000,
 		MUNIT_SUITE_OPTION_NONE,
 	};
 	return munit_suite_main(&mainsuite, NULL, argc, argv);
