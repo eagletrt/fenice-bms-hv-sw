@@ -17,7 +17,7 @@
 #include "pack_data.h"
 #include "peripherals/ltc6813_utils.h"
 
-extern bal_conf_t balancing;  // TODO: Remove bal_conf_t struct (remove enable and the rest has to be managed by the state machine with the eeprom too)
+extern bal_handle balancing;  // TODO: Remove bal_conf_t struct (remove enable and the rest has to be managed by the state machine with the eeprom too)
 
 void pack_init();
 

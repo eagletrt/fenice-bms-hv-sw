@@ -1,0 +1,19 @@
+name: test-mainboard
+
+on:
+  push:
+    branches: [ sw-master, sw-develop ]
+  pull_request:
+    branches: [ sw-develop ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2 
+      with:
+        submodules: recursive 
+    - name: make
+      run: make -C mainboard/test
