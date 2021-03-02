@@ -10,3 +10,6 @@
 [submodule "mainboard/test/munit"]
 	path = mainboard/test/munit
 	url = https://github.com/nemequ/munit.git
+[submodule "mainboard/lib/can"]
+	path = mainboard/lib/can
+	url = git@github.com:eagletrt/fenice-can-cicd.git
