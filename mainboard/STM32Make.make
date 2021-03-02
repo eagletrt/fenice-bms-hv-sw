@@ -149,6 +149,8 @@ C_INCLUDES =  \
 -IInc \
 -IInc/error \
 -IInc/peripherals \
+-Ilib/can/flatbuf-generator/out/primary \
+-Ilib/can/includes-generator/out/primary \
 -Ilib/cli \
 -Ilib/fsm \
 -Ilib/fsm/example \
