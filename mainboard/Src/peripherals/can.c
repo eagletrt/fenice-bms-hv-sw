@@ -45,7 +45,23 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 		// New message
 
 		if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rx_header, rx_data) != HAL_OK) {
-			errroroororor
+			error_set(ERROR_CAN, 0, HAL_GetTick());
+			return;
+		}
+		error_unset(ERROR_CAN, 0);
+
+		if (rx_header.Identifier == SET_TS_STATUS) {
+			SET_TS_STATUS_struct_t status = SET_TS_STATUS_from_root(rx_data);
+			uint8_t status = SET_TS_STATUS_ts_status_set((void *)rx_data);
+
+			switch (status) {
+				case Ts_Status_Set_OFF:
+					//tsoff
+					break;
+				case Ts_Status_Set_ON:
+					//tson
+					break;
+			}
 		}
 	}
 }
