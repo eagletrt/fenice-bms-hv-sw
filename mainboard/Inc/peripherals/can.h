@@ -8,8 +8,8 @@
 
 #pragma once
 
+#include <../../lib/can/flatbuf-generator/Primary/flatcc/schema_builder.h>
+#include <../../lib/can/includes-generator/Primary/ids.h>
 #include <fdcan.h>
-#include <ids.h>
-#include <schema_builder.h>
 
 HAL_StatusTypeDef can_send(uint16_t id);

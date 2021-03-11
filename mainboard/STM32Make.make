@@ -75,6 +75,12 @@ Src/stm32g4xx_it.c \
 Src/system_stm32g4xx.c \
 Src/tim.c \
 Src/usart.c \
+lib/can/flatbuf-generator/Primary/flatcc/flatcc/runtime/builder.c \
+lib/can/flatbuf-generator/Primary/flatcc/flatcc/runtime/emitter.c \
+lib/can/flatbuf-generator/Primary/flatcc/flatcc/runtime/json_parser.c \
+lib/can/flatbuf-generator/Primary/flatcc/flatcc/runtime/json_printer.c \
+lib/can/flatbuf-generator/Primary/flatcc/flatcc/runtime/refmap.c \
+lib/can/flatbuf-generator/Primary/flatcc/flatcc/runtime/verifier.c \
 lib/cli/cli.c \
 lib/fsm/fsm.c \
 lib/llist/llist.c
@@ -149,8 +155,14 @@ C_INCLUDES =  \
 -IInc \
 -IInc/error \
 -IInc/peripherals \
--Ilib/can/flatbuf-generator/out/primary \
--Ilib/can/includes-generator/out/primary \
+-Ilib/can/flatbuf-generator/BMSinternal/flatcc \
+-Ilib/can/flatbuf-generator/Primary/flatcc \
+-Ilib/can/flatbuf-generator/Primary/flatcc/flatcc \
+-Ilib/can/flatbuf-generator/Primary/flatcc/flatcc/portable \
+-Ilib/can/flatbuf-generator/Primary/flatcc/flatcc/reflection \
+-Ilib/can/flatbuf-generator/Primary/flatcc/flatcc/support \
+-Ilib/can/includes-generator/BMSinternal \
+-Ilib/can/includes-generator/Primary \
 -Ilib/cli \
 -Ilib/fsm \
 -Ilib/fsm/example \
@@ -216,7 +228,7 @@ $(BUILD_DIR)/%.o: %.s Makefile | $(BUILD_DIR)
 	$(AS) -c $(CFLAGS) $< -o $@
 
 $(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) Makefile
-	$(CC) $(OBJECTS) $(LDFLAGS) -o $@
+	$(CXX) $(OBJECTS) $(LDFLAGS) -o $@
 	$(SZ) $@
 
 $(BUILD_DIR)/%.hex: $(BUILD_DIR)/%.elf | $(BUILD_DIR)

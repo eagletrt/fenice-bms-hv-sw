@@ -13,3 +13,4 @@
 [submodule "mainboard/lib/can"]
 	path = mainboard/lib/can
 	url = git@github.com:eagletrt/fenice-can-cicd.git
+	branch = build
