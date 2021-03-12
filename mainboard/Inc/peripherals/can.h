@@ -12,4 +12,5 @@
 #include <../../lib/can/includes-generator/Primary/ids.h>
 #include <fdcan.h>
 
+void can_init();
 HAL_StatusTypeDef can_send(uint16_t id);

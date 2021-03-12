@@ -155,7 +155,6 @@ C_INCLUDES =  \
 -IInc \
 -IInc/error \
 -IInc/peripherals \
--Ilib/can/flatbuf-generator/BMSinternal/flatcc \
 -Ilib/can/flatbuf-generator/Primary/flatcc \
 -Ilib/can/flatbuf-generator/Primary/flatcc/flatcc \
 -Ilib/can/flatbuf-generator/Primary/flatcc/flatcc/portable \
@@ -228,7 +227,7 @@ $(BUILD_DIR)/%.o: %.s Makefile | $(BUILD_DIR)
 	$(AS) -c $(CFLAGS) $< -o $@
 
 $(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) Makefile
-	$(CXX) $(OBJECTS) $(LDFLAGS) -o $@
+	$(CC) $(OBJECTS) $(LDFLAGS) -o $@
 	$(SZ) $@
 
 $(BUILD_DIR)/%.hex: $(BUILD_DIR)/%.elf | $(BUILD_DIR)

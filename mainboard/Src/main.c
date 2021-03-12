@@ -23,6 +23,7 @@
 #include "fdcan.h"
 #include "fenice_config.h"
 #include "fsm_bms.h"
+#include "peripherals/can.h"
 #include "si8900.h"
 /* USER CODE END Includes */
 
@@ -69,6 +70,7 @@ void check_timers() {
 		timer_temps = tick;
 
 		read_temps();
+		can_send(HV_CURRENT);
 	}
 
 	// Read and send voltages and current
@@ -76,6 +78,7 @@ void check_timers() {
 		timer_volts = tick;
 
 		read_volts();
+		can_send(HV_VOLTAGE);
 	}
 
 	if (tick - timer_bal >= BAL_CYCLE_LENGTH + 5000) {
@@ -139,10 +142,13 @@ int main(void) {
 	MX_NVIC_Init();
 	/* USER CODE BEGIN 2 */
 	FDCAN1_Init();
+	HAL_FDCAN_ActivateNotification(&hfdcan1, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0);
+	HAL_FDCAN_Start(&hfdcan1);
 
 	error_init();
 	fsm_bms_init();
 	cli_bms_init();
+	can_init();
 
 	if (si8900_init(&huart3, ADC_SIN_GPIO_Port, ADC_SIN_Pin)) {
 		cli_print(&cli_bms, "SI8900 INITIALIZED\r\n", 20);
