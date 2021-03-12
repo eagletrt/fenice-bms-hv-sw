@@ -10,37 +10,52 @@
 
 #include "pack.h"
 
-static flatcc_builder_t builder, *B;
+FDCAN_TxHeaderTypeDef tx_header;
 
 void can_init() {
-	flatcc_builder_init(B);
-	B = &builder;
+	tx_header.BitRateSwitch = FDCAN_BRS_OFF;
+	tx_header.FDFormat = FDCAN_CLASSIC_CAN;
+	tx_header.IdType = FDCAN_STANDARD_ID;
+	tx_header.MessageMarker = 0;
+	tx_header.TxEventFifoControl = FDCAN_STORE_TX_EVENTS;
+	tx_header.TxFrameType = FDCAN_DATA_FRAME;
+	tx_header.ErrorStateIndicator = FDCAN_ESI_PASSIVE;
 }
 
 HAL_StatusTypeDef can_send(uint16_t id) {
-	FDCAN_TxHeaderTypeDef tx_header;
+	flatcc_builder_t builder;
+	flatcc_builder_t *B = &builder;
+	flatcc_builder_init(B);
 
 	switch (id) {
 		case HV_VOLTAGE:
 
-			//HV_VOLTAGE_create(B, ...data... );
+			HV_VOLTAGE_create(B, 42000, 41900, 38000, 37500);
 
 			break;
 		case HV_CURRENT:
+			HV_CURRENT_create(B, 2000, 69);	 // nice
 			break;
 
 		default:
 			return HAL_ERROR;
 	}
-
-	tx_header.Identifier = id;
-
 	size_t size;
 	uint8_t *buf = flatcc_builder_finalize_buffer(B, &size);
 
-	HAL_StatusTypeDef status = HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan1, &tx_header, buf);
+	tx_header.Identifier = id;
+	tx_header.DataLength = size << 16;	// Only valid for classic can frames
 
+	HAL_StatusTypeDef status = HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan1, &tx_header, buf);
+	if (status != HAL_OK) {
+		error_set(ERROR_CAN, 0, HAL_GetTick());
+	} else {
+		error_unset(ERROR_CAN, 0);
+	}
+
+	free(buf);
 	flatcc_builder_reset(B);
+	flatcc_builder_clear(B);
 	return status;
 }
 
@@ -51,10 +66,10 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 		FDCAN_RxHeaderTypeDef rx_header;
 
 		if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rx_header, rx_data) != HAL_OK) {
-			error_set(ERROR_CAN, 0, HAL_GetTick());
+			error_set(ERROR_CAN, 1, HAL_GetTick());
 			return;
 		}
-		error_unset(ERROR_CAN, 0);
+		error_unset(ERROR_CAN, 1);
 
 		if (rx_header.Identifier == SET_TS_STATUS) {
 			uint8_t status = SET_TS_STATUS_ts_status_set((void *)rx_data);
