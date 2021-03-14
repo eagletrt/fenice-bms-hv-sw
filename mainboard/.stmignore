@@ -2,3 +2,7 @@
 #Use standard .ignore (e.g .gitignore) glob patters
 test/
 example/
+
+# can-cicd stuff
+external/
+BMSinternal/

@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <../../lib/can/flatbuf-generator/Primary/flatcc/schema_builder.h>
+#include <../../lib/can/flatbuf-generator/Primary/c/schema_builder.h>
 #include <../../lib/can/includes-generator/Primary/ids.h>
 #include <fdcan.h>
 
