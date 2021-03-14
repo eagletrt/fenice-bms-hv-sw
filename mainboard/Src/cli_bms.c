@@ -212,9 +212,8 @@ void _cli_errors(uint16_t argc, char **argv, char *out) {
 	sprintf(out, "total %u\r\n", count);
 	for (uint16_t i = 0; i < count; i++) {
 		sprintf(out + strlen(out),
-				"\r\n"
-				"id..........%u (%s)\r\n"
-				"timestamp...%lu (%lums ago)\r\n"
+				"\r\ntype........%s\r\n"
+				"timestamp...T+%lu (%lums ago)\r\n"
 				"offset......%u\r\n"
 				"state.......%u\r\n",
 				errors[i].id, error_names[errors[i].id], errors[i].timestamp, now - errors[i].timestamp, errors[i].offset, errors[i].state);
