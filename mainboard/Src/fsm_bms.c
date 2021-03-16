@@ -137,7 +137,7 @@ uint16_t do_precharge(fsm *FSM) {
 
 	if (HAL_GetTick() - timer_precharge < PRECHARGE_TIMEOUT) {
 		// TODO: move this in precharge_end
-		if (pd_get_bus_voltage() >= pd_get_internal_voltage() * PRECHARGE_VOLTAGE_THRESHOLD) {
+		if (pack_get_bus_voltage() >= pack_get_int_voltage() * PRECHARGE_VOLTAGE_THRESHOLD) {
 			pack_set_precharge_end();
 			return_state = BMS_PRECHARGE_END;
 

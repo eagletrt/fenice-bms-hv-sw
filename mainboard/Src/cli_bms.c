@@ -17,7 +17,6 @@
 #include "bal.h"
 #include "error/error.h"
 #include "fsm_bms.h"
-#include "pack_data.h"
 #include "usart.h"
 
 #define N_COMMANDS 9
@@ -102,16 +101,17 @@ void cli_bms_init() {
 }
 
 void _cli_volts(uint16_t argc, char **argv, char *out) {
+	voltage_t max = pack_get_max_voltage();
+	voltage_t min = pack_get_min_voltage();
 	sprintf(out,
-			"bus.......%.2f V\r\ninternal..%.2f V\r\ntotal.....%.2f "
+			"bus.......%.2f V\r\ninternal..%.2f V\r\n"
 			"V\r\nmax.......%.3f V\r\nmin.......%.3f V"
 			"\r\ndelta.....%.3f V\r\n",
-			(float)pd_get_bus_voltage() / 100,
-			(float)pd_get_internal_voltage() / 100,
-			(float)pd_get_total_voltage() / 10000,
-			(float)pd_get_max_voltage() / 10000,
-			(float)pd_get_min_voltage() / 10000,
-			(float)(pd_get_max_voltage() - pd_get_min_voltage()) / 10000);
+			(float)pack_get_bus_voltage() / 100,
+			(float)pack_get_int_voltage() / 100,
+			(float)max / 10000,
+			(float)min / 10000,
+			(float)(max - min) / 10000);
 }
 
 void _cli_volts_all(uint16_t argc, char **argv, char *out) {
@@ -125,7 +125,7 @@ void _cli_volts_all(uint16_t argc, char **argv, char *out) {
 		}
 
 		sprintf(out + strlen(out), "[%3u %-.3fv] ", i,
-				(float)pd_get_voltage(i) / 10000);
+				(float)pack_get_voltages()[i] / 10000);
 	}
 
 	sprintf(out + strlen(out), "\r\n");
@@ -136,9 +136,9 @@ void _cli_temps(uint16_t argc, char **argv, char *out) {
 			"average.....%.1f C\r\nmax.........%2u "
 			"C\r\nmin.........%2u C\r\n"
 			"delta.......%2u C\r\n",
-			(float)pd_get_avg_temperature() / 10, pd_get_max_temperature(),
-			pd_get_min_temperature(),
-			pd_get_max_temperature() - pd_get_min_temperature());
+			(float)pack_get_mean_temperature() / 10, pack_get_max_temperature(),
+			pack_get_min_temperature(),
+			pack_get_max_temperature() - pack_get_min_temperature());
 }
 
 void _cli_temps_all(uint16_t argc, char **argv, char *out) {
@@ -150,7 +150,7 @@ void _cli_temps_all(uint16_t argc, char **argv, char *out) {
 		} else if (i % (TEMP_SENSOR_COUNT / 2) == 0 && i > 0) {
 			sprintf(out + strlen(out), "\r\n%-3s", "");
 		}
-		sprintf(out + strlen(out), "[%3u %2uc] ", i, pd_get_temperature(i));
+		sprintf(out + strlen(out), "[%3u %2uc] ", i, pack_get_temperatures()[i]);
 	}
 
 	sprintf(out + strlen(out), "\r\n");
@@ -158,6 +158,8 @@ void _cli_temps_all(uint16_t argc, char **argv, char *out) {
 
 void _cli_status(uint16_t argc, char **argv, char *out) {
 #define n_items 4
+
+	bal_handle balancing = pack_get_balancing();
 
 	const char *bal = bool_names[balancing.enable];
 
@@ -181,6 +183,7 @@ void _cli_status(uint16_t argc, char **argv, char *out) {
 }
 
 void _cli_balance(uint16_t argc, char **argv, char *out) {
+	bal_handle balancing = pack_get_balancing();
 	if (strcmp(argv[1], "tog") == 0) {
 		balancing.enable = !balancing.enable;
 

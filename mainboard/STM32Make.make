@@ -61,11 +61,11 @@ Src/cli_bms.c \
 Src/error/error.c \
 Src/error/error_list_ref.c \
 Src/fdcan.c \
+Src/feedback.c \
 Src/fsm_bms.c \
 Src/gpio.c \
 Src/main.c \
 Src/pack.c \
-Src/pack_data.c \
 Src/peripherals/ltc6813.c \
 Src/peripherals/ltc6813_utils.c \
 Src/peripherals/si8900.c \

@@ -20,6 +20,7 @@
 /* USER CODE BEGIN Includes */
 #include "cli_bms.h"
 #include "error/error.h"
+#include "fdcan.h"
 #include "fenice_config.h"
 #include "fsm_bms.h"
 #include "si8900.h"
