@@ -27,7 +27,7 @@ void ltc6813_disable_cs(SPI_HandleTypeDef *spi, GPIO_TypeDef *gpio,
 }
 
 /**
- * @brief		Starts the LTC6813 ADC voltage conversion
+ * @brief	Starts the LTC6813 ADC voltage conversion
  * @details	According to the datasheet, this command should take 2,335µs.
  * 					ADCV Command syntax:
  *
@@ -37,8 +37,8 @@ void ltc6813_disable_cs(SPI_HandleTypeDef *spi, GPIO_TypeDef *gpio,
  * 					 Address |    | |     |
  * 					  (BRD)      Speed   DCP
  *
- * @param		spi		The spi configuration structure
- * @param		dcp		false to read voltages; true to read temperatures
+ * @param	spi		The spi configuration structure
+ * @param	dcp		false to read voltages; true to read temperatures
  */
 void _ltc6813_adcv(SPI_HandleTypeDef *spi, bool dcp) {
 	uint8_t cmd[4];
@@ -58,12 +58,11 @@ void _ltc6813_adcv(SPI_HandleTypeDef *spi, bool dcp) {
 }
 
 /**
- * @brief		Enable or disable the temperature measurement through
- *balancing
+ * @brief	Enable or disable the temperature measurement through balancing
  * @details	Since it's not possible to read the temperatures from adiacent
- * 					cells at the same time, We split the measurement into
- *two times, read odd cells, and then even ones. To write configuration you
- *have to send 2 consecutive commands:
+ * 			cells at the same time, We split the measurement into two times,
+ * 			read odd cells, and then even ones. To write configuration you
+ *			have to send 2 consecutive commands:
  *
  *					WRCFG:
  * 					1     CMD0    8     CMD1      16      32
@@ -81,16 +80,14 @@ void _ltc6813_adcv(SPI_HandleTypeDef *spi, bool dcp) {
  *					|- - - - - - -|- - - - - - - -|- ... -|
  *					1 0 0 1 0 1 0 1 0 0 0 0 0 0 1 0  PEC	<- For odd cells
  *					              or
- *					0 1 0 0 1 0 1 0 0 0 0 0 0 0 0 1  PEC	<- For even
- *cells
+ *					0 1 0 0 1 0 1 0 0 0 0 0 0 0 0 1  PEC	<- For even cells
  *
- * @param		hspi			The SPI configuration structure
- * @param		start_bal	whether to start temperature measurement
- * @param		even			Indicates whether we're reading odd or even
- *cells
+ * @param	hspi		The SPI configuration structure
+ * @param	start_bal	whether to start temperature measurement
+ * @param	even		Indicates whether we're reading odd or even cells
  */
-// TODO: remove this function
 void _ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool start_bal, bool even) {
+	// TODO: remove this function
 	uint8_t wrcfg[4];
 	uint8_t cfgr[8];
 
@@ -229,12 +226,6 @@ void ltc6813_wakeup_idle(SPI_HandleTypeDef *hspi) {
 	ltc6813_disable_cs(hspi, CS_LTC_GPIO_Port, CS_LTC_Pin);
 }
 
-/**
- * @brief		This function is used to calculate the PEC value
- *
- * @param		len		Length of the data array
- * @param		data	Array of data
- */
 uint16_t ltc6813_pec15(uint8_t len, uint8_t data[]) {
 	uint16_t remainder, address;
 	remainder = 16;	 // PEC seed

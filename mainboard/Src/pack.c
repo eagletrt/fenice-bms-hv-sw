@@ -1,8 +1,8 @@
 /**
- * @file		pack.c
- * @brief		This file contains the functions to manage the battery pack
+ * @file	pack.c
+ * @brief	This file contains the functions to manage the battery pack
  *
- * @date		Apr 11, 2019
+ * @date	Apr 11, 2019
  * @author	Matteo Bonora [matteo.bonora@studenti.unitn.it]
  */
 
@@ -68,14 +68,6 @@ void pack_init() {
 	GPIO_CONFIG = GPIO_I2C_MODE;
 }
 
-/**
- * @brief		Polls all the LTCs and the SI8900 ADC for voltages
- * @details	This function should take 10~11ms to fully execute
- *
- * @param		hspi				The SPI configuration structure
- * @param		huart 			The UART configuration structure
- * @returns	The index of the last updated cell
- */
 void pack_update_voltages(SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart) {
 	_ltc6813_adcv(hspi, 0);	 // TODO: remove this?
 
@@ -103,12 +95,6 @@ void pack_update_voltages(SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart) {
 	cells.int_voltage = max(internal, sum);	 // TODO: is this a good thing?
 }
 
-/**
- * @brief		Gets quick temperature stats from the cellboards
- * @details	
- *
- * @param		hspi			The SPI configuration structure
- */
 void pack_update_temperatures(SPI_HandleTypeDef *hspi) {
 	uint8_t max[LTC6813_COUNT * 2];
 	uint8_t min[LTC6813_COUNT * 2];
@@ -145,9 +131,6 @@ int32_t _mean(uint32_t values[], size_t size) {
 }
 
 //TODO: redo DMA and then rewrite the function
-/**
- * @brief		Calculates the current exiting/entering the pack
- */
 void pack_update_current() {
 	current_t current50 = 0;
 	current_t current300 = 0;
@@ -171,10 +154,6 @@ void pack_update_current() {
 	error_toggle_check(current300 > PACK_MAX_CURRENT, ERROR_OVER_CURRENT, 0);
 }
 
-/**
- * @brief		Updates the pack's voltage stats
- * @details		It updates *_voltage variables with the data of the pack
- */
 void pack_update_voltage_stats(voltage_t *total, voltage_t *maxv, voltage_t *minv) {
 	uint32_t tot_voltage = 0;
 	voltage_t max_voltage = cells.voltages[0];
@@ -193,10 +172,6 @@ void pack_update_voltage_stats(voltage_t *total, voltage_t *maxv, voltage_t *min
 	*minv = min(min_voltage, max_voltage);
 }
 
-/**
- * @brief		Updates the pack's temperature stats
- * @details	It updates *_temperature variables with the data of the pack
- */
 void pack_update_temperature_stats() {
 	uint32_t avg_temperature = 0;
 	temperature_t max_temperature = 0;
