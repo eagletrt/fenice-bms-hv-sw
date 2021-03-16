@@ -6,4 +6,8 @@
     "cortex-debug.armToolchainPath": "",
     "stm32-for-vscode.openOCDPath": "openocd",
     "todo-tree.tree.scanMode": "workspace only",
+    "files.associations": {
+        "error.h": "c",
+        "error_list_ref.h": "c"
+    },
 }

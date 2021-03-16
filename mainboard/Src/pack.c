@@ -8,7 +8,6 @@
 
 #include "pack.h"
 
-#include <math.h>
 #include <stdbool.h>
 #include <stm32g4xx_hal.h>
 #include <string.h>
@@ -16,6 +15,13 @@
 #include "feedback.h"
 #include "peripherals/si8900.h"
 #define CURRENT_ARRAY_LENGTH 512
+
+#ifndef max
+#define max(a, b) ((a) > (b) ? (a) : (b))
+#endif
+#ifndef min
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#endif
 
 typedef struct {
 	voltage_t bus_voltage;
@@ -56,9 +62,7 @@ void pack_init() {
 		cells.temperatures[i] = 0;
 	}
 
-	balancing.enable = false;
-	balancing.threshold = BAL_MAX_VOLTAGE_THRESHOLD;
-	balancing.slot_time = 2;
+	bal_init(&balancing);
 
 	// LTC6813 GPIO configuration
 	GPIO_CONFIG = GPIO_I2C_MODE;
@@ -73,7 +77,7 @@ void pack_init() {
  * @returns	The index of the last updated cell
  */
 void pack_update_voltages(SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart) {
-	_ltc6813_adcv(hspi, 0);
+	_ltc6813_adcv(hspi, 0);	 // TODO: remove this?
 
 	ltc6813_read_voltages(hspi, cells.voltages);
 
@@ -87,7 +91,16 @@ void pack_update_voltages(SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart) {
 		cells.bus_voltage = bus;
 	}
 
-	pack_update_voltage_stats();
+	voltage_t sum = 0;
+	pack_update_voltage_stats(&sum, &(cells.max_voltage), &(cells.min_voltage));
+
+	// Check if difference between readings from the ADC and LTCs is greater than 5V
+	if (max(internal, sum) - min(internal, sum) > 5 * 100) {
+		error_set(ERROR_INT_VOLTAGE_MISMATCH, 0, HAL_GetTick());
+	} else {
+		error_unset(ERROR_INT_VOLTAGE_MISMATCH, 0);
+	}
+	cells.int_voltage = max(internal, sum);	 // TODO: is this a good thing?
 }
 
 /**
@@ -110,8 +123,8 @@ void pack_update_temperatures(SPI_HandleTypeDef *hspi) {
 		avg_temp += max[i * 2] + max[i * 2 + 1];
 		avg_temp += min[i * 2] + min[i * 2 + 1];
 
-		max_temp = fmax(max[i * 2], max_temp);
-		min_temp = fmin(min[i * 2], min_temp);
+		max_temp = max(max[i * 2], max_temp);
+		min_temp = min(min[i * 2], min_temp);
 	}
 
 	cells.mean_temperature = ((float)avg_temp / (LTC6813_COUNT * 4)) * 10;
@@ -160,24 +173,24 @@ void pack_update_current() {
 
 /**
  * @brief		Updates the pack's voltage stats
- * @details	It updates *_voltage variables with the data of the pack
+ * @details		It updates *_voltage variables with the data of the pack
  */
-void pack_update_voltage_stats() {
+void pack_update_voltage_stats(voltage_t *total, voltage_t *maxv, voltage_t *minv) {
 	uint32_t tot_voltage = 0;
 	voltage_t max_voltage = cells.voltages[0];
 	voltage_t min_voltage = UINT16_MAX;
 
-	for (uint16_t i = 0; i < PACK_CELL_COUNT; i++) {
+	for (size_t i = 0; i < PACK_CELL_COUNT; i++) {
 		voltage_t tmp_voltage = cells.voltages[i];
 		tot_voltage += (uint32_t)tmp_voltage;
 
-		max_voltage = fmax(max_voltage, tmp_voltage);
-		min_voltage = fmin(min_voltage, tmp_voltage);
+		max_voltage = max(max_voltage, tmp_voltage);
+		min_voltage = min(min_voltage, tmp_voltage);
 	}
 
-	cells.int_voltage = tot_voltage;  // TODO: check against si8900 internal voltage
-	cells.max_voltage = max_voltage;
-	cells.min_voltage = fmin(min_voltage, max_voltage);
+	*total = (voltage_t)(tot_voltage / 100);
+	*maxv = max_voltage;
+	*minv = min(min_voltage, max_voltage);
 }
 
 /**
@@ -194,13 +207,13 @@ void pack_update_temperature_stats() {
 
 		avg_temperature += (uint32_t)tmp_temperature;
 
-		max_temperature = fmax(max_temperature, tmp_temperature);
-		min_temperature = fmin(min_temperature, tmp_temperature);
+		max_temperature = max(max_temperature, tmp_temperature);
+		min_temperature = min(min_temperature, tmp_temperature);
 	}
 
 	cells.mean_temperature = (temperature_t)(avg_temperature / TEMP_SENSOR_COUNT);
 	cells.max_temperature = max_temperature;
-	cells.min_temperature = fmin(min_temperature, max_temperature);
+	cells.min_temperature = min(min_temperature, max_temperature);
 }
 
 bool pack_balance_cells(SPI_HandleTypeDef *hspi) {

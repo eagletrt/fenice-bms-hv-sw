@@ -67,6 +67,12 @@ void _bubble_sort(uint8_t indexes[PACK_CELL_COUNT], uint16_t values[PACK_CELL_CO
 	}
 }
 
+void bal_init(bal_handle *bal) {
+	bal->enable = false;
+	bal->slot_time = BAL_MAX_VOLTAGE_THRESHOLD;
+	bal->threshold = 2;
+}
+
 uint8_t bal_compute_indexes(uint16_t volts[], uint8_t indexes[], uint16_t threshold) {
 	uint8_t indexes_left = PACK_CELL_COUNT;	 // cells to check
 	uint8_t min_index = _min_index(volts, PACK_CELL_COUNT);

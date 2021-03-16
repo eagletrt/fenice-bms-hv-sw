@@ -27,6 +27,8 @@ typedef struct bal_handle {
 	uint8_t slot_time;
 } bal_handle;
 
+void bal_init(bal_handle *bal);
+
 /**
  * @brief	Computes the cells' to balance
  * 

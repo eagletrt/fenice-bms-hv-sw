@@ -15,7 +15,7 @@
 feedback_t feedback;
 
 void feedback_read(feedback_t fb_mask) {
-	//initialize the pd_feedback value to 0 on the mask bits;
+	//initialize the feedback value to 0 on the mask bits;
 	feedback &= (~fb_mask);
 	for (uint8_t i = 0; i < FEEDBACK_N; ++i) {
 		if ((1U << i) & fb_mask) {
