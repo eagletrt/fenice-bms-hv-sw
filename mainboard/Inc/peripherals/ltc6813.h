@@ -124,8 +124,16 @@ void ltc6813_enable_cs(SPI_HandleTypeDef *spi, GPIO_TypeDef *gpio,
 void ltc6813_disable_cs(SPI_HandleTypeDef *spi, GPIO_TypeDef *gpio,
 						uint16_t pin);
 void ltc6813_wakeup_idle(SPI_HandleTypeDef *hspi);
+
+/**
+ * @brief		This function is used to calculate the PEC value
+ *
+ * @param		len		Length of the data array
+ * @param		data	Array of data
+ */
 uint16_t ltc6813_pec15(uint8_t len, uint8_t data[]);
 
+// TODO: THESE ARE PRIVATE!!
 void _ltc6813_adcv(SPI_HandleTypeDef *hspi, bool DCP);
 void _ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool start, bool parity);
 

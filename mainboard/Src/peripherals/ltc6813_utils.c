@@ -25,20 +25,6 @@ enum ltc6813_i2c_ctrl {
 	I2C_MASTER_NACK_STOP = 0b00001001
 };
 
-/**
- * @brief		Polls all the registers of the LTC6813 and updates the cell
- * array
- * @details	It executes multiple rdcv requests to the LTCs and saves the values
- * 					in the voltage variable of the CELL_Ts.
- *
- * 					1     CMD0    8     CMD1      16      32
- * 					|- - - - - - -|- - - - - - - -|- ... -|
- * 					1 0 0 0 0 0 0 0 0 0 0 0 X X X X  PEC
- * 					 Address |             |  Reg  |
- * 					  (BRD)
- *
- * @param		spi		The SPI configuration structure
- */
 size_t ltc6813_read_voltages(SPI_HandleTypeDef *hspi, voltage_t *volts) {
 	uint8_t cmd[4];
 	uint16_t cmd_pec;
@@ -140,13 +126,6 @@ void ltc6813_temp_get(SPI_HandleTypeDef *hspi, uint8_t address) {
 	ltc6813_wrcomm_i2c(hspi, comm);
 }
 
-/**
- * @brief		This function is used to fetch the temperatures.
- *
- * @param		hspi		The SPI configuration structure
- * @param		ltc			The array of LTC6813 configurations
- * @param		temps		The array of temperatures
- */
 void ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, temperature_t max[2],
 							   temperature_t min[2]) {
 	uint8_t recv[8 * LTC6813_COUNT] = {0};
@@ -209,12 +188,6 @@ void ltc6813_read_all_temps(SPI_HandleTypeDef *hspi, temperature_t *temps) {
 	}
 }
 
-/**
- * @brief		Checks that voltage is between its thresholds.
- *
- * @param		volts		The voltage
- * @param		error		The error return code
- */
 void ltc6813_check_voltage(uint16_t volts, uint8_t index) {
 	if (volts < CELL_MIN_VOLTAGE) {
 		error_set(ERROR_CELL_UNDER_VOLTAGE, index, HAL_GetTick());
@@ -229,12 +202,6 @@ void ltc6813_check_voltage(uint16_t volts, uint8_t index) {
 	}
 }
 
-/**
- * @brief		Checks that temperature is between its thresholds.
- *
- * @param		temp		The temperature
- * @param		error		The error return code
- */
 void ltc6813_check_temperature(uint16_t temps, uint8_t index) {
 	if (temps >= CELL_MAX_TEMPERATURE) {
 		error_set(ERROR_CELL_OVER_TEMPERATURE, index, HAL_GetTick());
@@ -284,14 +251,6 @@ void ltc6813_set_balancing(SPI_HandleTypeDef *hspi, uint8_t *indexes,
 	ltc6813_wrcfg(hspi, false, cfgbr);
 }
 
-/**
- * @brief	This function is used to convert the 2 byte raw data from the
- * 				LTC68xx to a 16 bit unsigned integer
- *
- * @param 	v_data	Raw data bytes
- *
- * @retval	Voltage [mV]
- */
 uint16_t ltc6813_convert_voltage(uint8_t v_data[]) {
 	return v_data[0] + (v_data[1] << 8);
 }
