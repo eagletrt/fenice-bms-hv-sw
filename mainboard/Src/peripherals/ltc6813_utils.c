@@ -12,7 +12,6 @@
 #include <math.h>
 
 #include "main.h"
-#include "pack_data.h"
 
 enum ltc6813_i2c_ctrl {
 	I2C_READ = 1,
@@ -40,7 +39,7 @@ enum ltc6813_i2c_ctrl {
  *
  * @param		spi		The SPI configuration structure
  */
-uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *hspi) {
+size_t ltc6813_read_voltages(SPI_HandleTypeDef *hspi, voltage_t *volts) {
 	uint8_t cmd[4];
 	uint16_t cmd_pec;
 	uint8_t data[8 * LTC6813_COUNT];
@@ -87,9 +86,8 @@ uint8_t ltc6813_read_voltages(SPI_HandleTypeDef *hspi) {
 					// offset by register (3 slots) + offset by ltc (18 slots) + cell
 					uint16_t index = (reg * LTC6813_REG_CELL_COUNT) + (ltc * LTC6813_CELL_COUNT) + cell;
 
-					// (size of value) * cell
-					VOLTAGE_T v = pd_set_voltage(index, ltc6813_convert_voltage(&data[2 * cell]));
-					ltc6813_check_voltage(v, index);
+					volts[index] = ltc6813_convert_voltage(&data[sizeof(voltage_t) * cell]);
+					ltc6813_check_voltage(volts[index], index);
 
 					count++;
 				}
@@ -149,8 +147,8 @@ void ltc6813_temp_get(SPI_HandleTypeDef *hspi, uint8_t address) {
  * @param		ltc			The array of LTC6813 configurations
  * @param		temps		The array of temperatures
  */
-void ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, uint8_t max[2],
-							   uint8_t min[2]) {
+void ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, temperature_t max[2],
+							   temperature_t min[2]) {
 	uint8_t recv[8 * LTC6813_COUNT] = {0};
 
 	ltc6813_wakeup_idle(hspi);
@@ -180,7 +178,7 @@ void ltc6813_read_temperatures(SPI_HandleTypeDef *hspi, uint8_t max[2],
 	}
 }
 
-void ltc6813_read_all_temps(SPI_HandleTypeDef *hspi) {
+void ltc6813_read_all_temps(SPI_HandleTypeDef *hspi, temperature_t *temps) {
 	uint8_t count = 0;
 	ltc6813_wakeup_idle(hspi);
 
@@ -203,10 +201,10 @@ void ltc6813_read_all_temps(SPI_HandleTypeDef *hspi) {
 			uint8_t d1 = (recv[2 + base_index] << 4) | (recv[3 + base_index] >> 4);
 			uint8_t d2 = (recv[4 + base_index] << 4) | (recv[5 + base_index] >> 4);
 
-			pd_set_temperature(count++, d0 >> 2);
-			pd_set_temperature(count++, (d0 & 0b00000011) << 4 | d1 >> 4);
-			pd_set_temperature(count++, (d1 & 0b00001111) << 2 | d2 >> 6);
-			pd_set_temperature(count++, d2 & 0b00111111);
+			temps[count++] = d0 >> 2;
+			temps[count++] = (d0 & 0b00000011) << 4 | d1 >> 4;
+			temps[count++] = (d1 & 0b00001111) << 2 | d2 >> 6;
+			temps[count++] = d2 & 0b00111111;
 		}
 	}
 }
@@ -297,13 +295,3 @@ void ltc6813_set_balancing(SPI_HandleTypeDef *hspi, uint8_t *indexes,
 uint16_t ltc6813_convert_voltage(uint8_t v_data[]) {
 	return v_data[0] + (v_data[1] << 8);
 }
-
-/**
- * @brief		This function converts a voltage data from the zener sensor
- * 					to a temperature
- *
- * @param		volt	Voltage [mV]
- *
- * @retval	Temperature [C°]
- */
-uint8_t ltc6813_convert_temp(uint8_t temp) { return temp; }

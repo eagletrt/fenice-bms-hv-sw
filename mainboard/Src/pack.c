@@ -11,38 +11,49 @@
 #include <math.h>
 #include <stdbool.h>
 #include <stm32g4xx_hal.h>
+#include <string.h>
 
+#include "feedback.h"
 #include "peripherals/si8900.h"
-
 #define CURRENT_ARRAY_LENGTH 512
+
+typedef struct {
+	voltage_t bus_voltage;
+	voltage_t int_voltage;
+
+	voltage_t voltages[PACK_CELL_COUNT];
+	voltage_t max_voltage;
+	voltage_t min_voltage;
+
+	temperature_t temperatures[PACK_TEMP_COUNT];
+	temperature_t max_temperature;
+	temperature_t min_temperature;
+	temperature_t mean_temperature;
+
+} cells_t;
 
 uint32_t current_50[CURRENT_ARRAY_LENGTH];	 // TODO: move to pck_data and update DMA and generate getter no setter
 uint32_t current_300[CURRENT_ARRAY_LENGTH];	 // TODO: move to pck_data and update DMA and generate getter no setter
 
+cells_t cells;
 bal_handle balancing;  // TODO: Remove bal_conf_t struct (remove enable and the rest has to be managed by the state machine with the eeprom too)
+current_t current;
+
 /**
  * @brief	Initializes the pack
  *
  */
 void pack_init() {
-	pd_set_bus_voltage(0);
-	pd_set_internal_voltage(0);
-	pd_set_total_voltage(0);
-	pd_set_max_voltage(0);
-	pd_set_min_voltage(0);
-	pd_set_avg_temperature(0);
-	pd_set_max_temperature(0);
-	pd_set_min_temperature(0);
+	cells.bus_voltage = 0;
+	cells.int_voltage = 0;
+	current = 0;
 
-	pd_set_current(0);
-
-	pd_feedback = 0;
-	for (uint8_t i = 0; i < PACK_CELL_COUNT; i++) {
-		pd_set_voltage(i, 0);
+	for (size_t i = 0; i < PACK_CELL_COUNT; i++) {
+		cells.voltages[i] = 0;
 	}
 
-	for (uint8_t i = 0; i < TEMP_SENSOR_COUNT * LTC6813_COUNT; i++) {
-		pd_set_temperature(i, 0);
+	for (size_t i = 0; i < PACK_TEMP_COUNT; i++) {
+		cells.temperatures[i] = 0;
 	}
 
 	balancing.enable = false;
@@ -64,16 +75,16 @@ void pack_init() {
 void pack_update_voltages(SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart) {
 	_ltc6813_adcv(hspi, 0);
 
-	ltc6813_read_voltages(hspi);
+	ltc6813_read_voltages(hspi, cells.voltages);
 
-	ADC_VOLTAGE_T internal;
-	ADC_VOLTAGE_T bus;
+	voltage_t internal;
+	voltage_t bus;
 	if (si8900_read_channel(huart, SI8900_AIN0, &internal)) {
-		pd_set_internal_voltage(internal);
+		cells.int_voltage = internal;
 	}
-	HAL_Delay(0);
+	HAL_Delay(0);  // TODO: this sucks
 	if (si8900_read_channel(huart, SI8900_AIN1, &bus)) {
-		pd_set_bus_voltage(bus);
+		cells.bus_voltage = bus;
 	}
 
 	pack_update_voltage_stats();
@@ -91,9 +102,9 @@ void pack_update_temperatures(SPI_HandleTypeDef *hspi) {
 
 	ltc6813_read_temperatures(hspi, max, min);
 
-	TEMPERATURE_T avg_temp = 0;
-	TEMPERATURE_T max_temp = 0;
-	TEMPERATURE_T min_temp = UINT8_MAX;
+	temperature_t avg_temp = 0;
+	temperature_t max_temp = 0;
+	temperature_t min_temp = UINT8_MAX;
 
 	for (uint8_t i = 0; i < LTC6813_COUNT; i++) {
 		avg_temp += max[i * 2] + max[i * 2 + 1];
@@ -103,13 +114,13 @@ void pack_update_temperatures(SPI_HandleTypeDef *hspi) {
 		min_temp = fmin(min[i * 2], min_temp);
 	}
 
-	pd_set_avg_temperature(((float)avg_temp / (LTC6813_COUNT * 4)) * 10);
-	pd_set_max_temperature(max_temp);
-	pd_set_min_temperature(min_temp);
+	cells.mean_temperature = ((float)avg_temp / (LTC6813_COUNT * 4)) * 10;
+	cells.max_temperature = max_temp;
+	cells.min_temperature = min_temp;
 }
 
 void pack_update_all_temperatures(SPI_HandleTypeDef *hspi) {
-	ltc6813_read_all_temps(hspi);
+	ltc6813_read_all_temps(hspi, cells.temperatures);
 }
 
 int32_t _mean(uint32_t values[], size_t size) {
@@ -125,8 +136,8 @@ int32_t _mean(uint32_t values[], size_t size) {
  * @brief		Calculates the current exiting/entering the pack
  */
 void pack_update_current() {
-	CURRENT_T current50 = 0;
-	CURRENT_T current300 = 0;
+	current_t current50 = 0;
+	current_t current300 = 0;
 
 	int32_t adc50 = _mean(current_50, CURRENT_ARRAY_LENGTH);
 	int32_t adc300 = _mean(current_300, CURRENT_ARRAY_LENGTH);
@@ -139,9 +150,9 @@ void pack_update_current() {
 	current300 = ((in_volt - S160_OFFSET) / S160_300A_SENS) * 10;
 
 	if (current300 >= 50) {
-		pd_set_current(current300);
+		current = current300;
 	} else {
-		pd_set_current(current50);
+		current = current50;
 	}
 
 	error_toggle_check(current300 > PACK_MAX_CURRENT, ERROR_OVER_CURRENT, 0);
@@ -153,20 +164,20 @@ void pack_update_current() {
  */
 void pack_update_voltage_stats() {
 	uint32_t tot_voltage = 0;
-	VOLTAGE_T max_voltage = pd_get_voltage(0);
-	VOLTAGE_T min_voltage = UINT16_MAX;
+	voltage_t max_voltage = cells.voltages[0];
+	voltage_t min_voltage = UINT16_MAX;
 
 	for (uint16_t i = 0; i < PACK_CELL_COUNT; i++) {
-		VOLTAGE_T tmp_voltage = pd_get_voltage(i);
+		voltage_t tmp_voltage = cells.voltages[i];
 		tot_voltage += (uint32_t)tmp_voltage;
 
 		max_voltage = fmax(max_voltage, tmp_voltage);
 		min_voltage = fmin(min_voltage, tmp_voltage);
 	}
 
-	pd_set_total_voltage(tot_voltage);
-	pd_set_max_voltage(max_voltage);
-	pd_set_min_voltage(fmin(min_voltage, max_voltage));
+	cells.int_voltage = tot_voltage;  // TODO: check against si8900 internal voltage
+	cells.max_voltage = max_voltage;
+	cells.min_voltage = fmin(min_voltage, max_voltage);
 }
 
 /**
@@ -175,11 +186,11 @@ void pack_update_voltage_stats() {
  */
 void pack_update_temperature_stats() {
 	uint32_t avg_temperature = 0;
-	TEMPERATURE_T max_temperature = 0;
-	TEMPERATURE_T min_temperature = UINT8_MAX;
+	temperature_t max_temperature = 0;
+	temperature_t min_temperature = UINT8_MAX;
 
 	for (uint16_t i = 0; i < TEMP_SENSOR_COUNT; i++) {
-		TEMPERATURE_T tmp_temperature = pd_get_temperature(i);
+		temperature_t tmp_temperature = cells.temperatures[i];
 
 		avg_temperature += (uint32_t)tmp_temperature;
 
@@ -187,9 +198,9 @@ void pack_update_temperature_stats() {
 		min_temperature = fmin(min_temperature, tmp_temperature);
 	}
 
-	pd_set_avg_temperature((TEMPERATURE_T)(avg_temperature / TEMP_SENSOR_COUNT));
-	pd_set_max_temperature(max_temperature);
-	pd_set_min_temperature(fmin(min_temperature, max_temperature));
+	cells.mean_temperature = (temperature_t)(avg_temperature / TEMP_SENSOR_COUNT);
+	cells.max_temperature = max_temperature;
+	cells.min_temperature = fmin(min_temperature, max_temperature);
 }
 
 bool pack_balance_cells(SPI_HandleTypeDef *hspi) {
@@ -197,10 +208,9 @@ bool pack_balance_cells(SPI_HandleTypeDef *hspi) {
 	if (balancing.enable) {
 		uint8_t indexes[PACK_CELL_COUNT];
 
-		VOLTAGE_T voltages[PACK_CELL_COUNT];
+		voltage_t voltages[PACK_CELL_COUNT];
 
-		// makes a copy off all cell voltages
-		pd_get_voltage_array(voltages);
+		memcpy(voltages, cells.voltages, PACK_CELL_COUNT);
 
 		size_t len = bal_compute_indexes(voltages, indexes, balancing.threshold);
 
@@ -214,40 +224,12 @@ bool pack_balance_cells(SPI_HandleTypeDef *hspi) {
 	return false;
 }
 
-void pack_read_feedback(FEEDBACK_T fb_mask) {
-	//initialize the pd_feedback value to 0 on the mask bits;
-	pd_feedback &= (~fb_mask);
-	for (uint8_t i = 0; i < FEEDBACK_N; ++i) {
-		if ((1U << i) & fb_mask) {
-			HAL_GPIO_WritePin(MUX_A0_GPIO_Port, MUX_A0_Pin, (i & 0b00000001));
-			HAL_GPIO_WritePin(MUX_A1_GPIO_Port, MUX_A1_Pin, (i & 0b00000010));
-			HAL_GPIO_WritePin(MUX_A2_GPIO_Port, MUX_A2_Pin, (i & 0b00000100));
-			HAL_GPIO_WritePin(MUX_A3_GPIO_Port, MUX_A3_Pin, (i & 0b00001000));
-
-			pd_feedback |= (HAL_GPIO_ReadPin(ANALOG_DATA_GPIO_Port, ANALOG_DATA_Pin) << i);
-		}
-	}
-}
-
-bool pack_feedback_check(FEEDBACK_T fb_check_mask, FEEDBACK_T fb_value, error_id error_id) {
-	//remove not used bit with the mask and find the ones that differ with the xor
-	uint16_t difference = (fb_check_mask & pd_feedback) ^ fb_value;
-
-	for (uint8_t i = 0; i < FEEDBACK_N; i++) {
-		if (fb_check_mask & (1U << i)) {
-			error_toggle_check(difference & (1 << i), error_id, i);
-		}
-	}
-
-	return pd_feedback == fb_value;
-}
-
 bool pack_set_ts_off() {
 	//Switch off airs
 	HAL_GPIO_WritePin(TS_ON_GPIO_Port, TS_ON_Pin, GPIO_PIN_RESET);
 
-	pack_read_feedback(FEEDBACK_TS_OFF_MASK);
-	pack_feedback_check(FEEDBACK_TS_OFF_MASK, FEEDBACK_TS_OFF_VAL, ERROR_FEEDBACK_HARD);
+	feedback_read(FEEDBACK_TS_OFF_MASK);
+	feedback_check(FEEDBACK_TS_OFF_MASK, FEEDBACK_TS_OFF_VAL, ERROR_FEEDBACK_HARD);
 
 	// TODO: return something meaningful, or void
 	return true;
@@ -258,8 +240,8 @@ bool pack_set_pc_start() {
 	HAL_GPIO_WritePin(TS_ON_GPIO_Port, TS_ON_Pin, GPIO_PIN_SET);
 
 	// Check feedback
-	pack_read_feedback(FEEDBACK_TO_PRECHARGE_MASK);
-	pack_feedback_check(FEEDBACK_TO_PRECHARGE_MASK, FEEDBACK_TO_PRECHARGE_VAL, ERROR_FEEDBACK_HARD);
+	feedback_read(FEEDBACK_TO_PRECHARGE_MASK);
+	feedback_check(FEEDBACK_TO_PRECHARGE_MASK, FEEDBACK_TO_PRECHARGE_VAL, ERROR_FEEDBACK_HARD);
 
 	// TODO: return something meaningful, or void
 	return true;
@@ -272,27 +254,51 @@ bool pack_set_precharge_end() {
 	HAL_GPIO_WritePin(PC_ENDED_GPIO_Port, PC_ENDED_Pin, GPIO_PIN_RESET);
 
 	// Check feedback
-	pack_read_feedback(FEEDBACK_ON_MASK);
-	return pack_feedback_check(FEEDBACK_ON_MASK, FEEDBACK_ON_VAL, ERROR_FEEDBACK_HARD);
+	feedback_read(FEEDBACK_ON_MASK);
+	return feedback_check(FEEDBACK_ON_MASK, FEEDBACK_ON_VAL, ERROR_FEEDBACK_HARD);
 }
 
-// //this ckeck is performed during ON state and from PRECHARGE TO ON
-// bool pack_feedback_check_on() {
-// 	uint16_t difference = pd_feedback ^ FEEDBACK_ON;
+voltage_t *pack_get_voltages() {
+	return cells.voltages;
+}
 
-// 	for (uint8_t i = 0; i < FEEDBACK_N; i++) {
-// 		error_toggle_check(difference & (1 << i), ERROR_FEEDBACK_HARD, i);
-// 	}
+voltage_t pack_get_max_voltage() {
+	return cells.max_voltage;
+}
 
-// 	return pd_feedback == FEEDBACK_ON;
-// }
+voltage_t pack_get_min_voltage() {
+	return cells.min_voltage;
+}
 
-// bool pack_feedback_check_charge() {
-// 	uint16_t difference = pd_feedback ^ FEEDBACK_CHARGE;
+voltage_t pack_get_bus_voltage() {
+	return cells.bus_voltage;
+}
 
-// 	for (uint8_t i = 0; i < FEEDBACK_N; i++) {
-// 		error_toggle_check(difference & (1 << i), ERROR_FEEDBACK_HARD, i);
-// 	}
+voltage_t pack_get_int_voltage() {
+	return cells.int_voltage;
+}
 
-// 	return pd_feedback == FEEDBACK_CHARGE;
-// }
+temperature_t *pack_get_temperatures() {
+	return cells.temperatures;
+}
+
+temperature_t pack_get_max_temperature() {
+	return cells.max_temperature;
+}
+
+temperature_t pack_get_min_temperature() {
+	return cells.min_temperature;
+}
+
+temperature_t pack_get_mean_temperature() {
+	return cells.mean_temperature;
+}
+
+current_t pack_get_current() {
+	return current;
+}
+
+bal_handle pack_get_balancing() {
+	// TODO: don't return the handle, create getters for each parameter
+	return balancing;
+}

@@ -5,4 +5,5 @@
     "stm32-for-vscode.armToolchainPath": "",
     "cortex-debug.armToolchainPath": "",
     "stm32-for-vscode.openOCDPath": "openocd",
+    "todo-tree.tree.scanMode": "workspace only",
 }
