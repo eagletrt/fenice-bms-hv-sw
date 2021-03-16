@@ -28,8 +28,8 @@ cli_command_func_t _cli_temps_all;
 cli_command_func_t _cli_status;
 cli_command_func_t _cli_balance;
 cli_command_func_t _cli_errors;
-cli_command_func_t _cli_taba;
 cli_command_func_t _cli_help;
+cli_command_func_t _cli_taba;
 
 const char *state_names[BMS_NUM_STATES] = {
 	[BMS_INIT] = "init",
@@ -52,6 +52,7 @@ const char *error_names[ERROR_NUM_ERRORS] = {
 	[ERROR_CAN] = "CAN",
 	[ERROR_ADC_INIT] = "adc init",
 	[ERROR_ADC_TIMEOUT] = "adc timeout",
+	[ERROR_INT_VOLTAGE_MISMATCH] = "internal voltage mismatch",
 	[ERROR_FEEDBACK_HARD] = "soft feedback",
 	[ERROR_FEEDBACK_SOFT] = "hard feedback"};
 
@@ -104,11 +105,15 @@ void _cli_volts(uint16_t argc, char **argv, char *out) {
 	voltage_t max = pack_get_max_voltage();
 	voltage_t min = pack_get_min_voltage();
 	sprintf(out,
-			"bus.......%.2f V\r\ninternal..%.2f V\r\n"
-			"V\r\nmax.......%.3f V\r\nmin.......%.3f V"
-			"\r\ndelta.....%.3f V\r\n",
+			"bus.......%.2f V\r\n"
+			"internal..%.2f V\r\n"
+			"average...%.2f V\r\n"
+			"max.......%.3f V\r\n"
+			"min.......%.3f V\r\n"
+			"delta.....%.3f V\r\n",
 			(float)pack_get_bus_voltage() / 100,
 			(float)pack_get_int_voltage() / 100,
+			(float)pack_get_int_voltage() / PACK_CELL_COUNT / 100,
 			(float)max / 10000,
 			(float)min / 10000,
 			(float)(max - min) / 10000);
@@ -207,11 +212,12 @@ void _cli_errors(uint16_t argc, char **argv, char *out) {
 	sprintf(out, "total %u\r\n", count);
 	for (uint16_t i = 0; i < count; i++) {
 		sprintf(out + strlen(out),
-				"\r\ntype........%s\r\n"
+				"\r\n"
+				"id..........%u (%s)\r\n"
 				"timestamp...%lu (%lums ago)\r\n"
 				"offset......%u\r\n"
 				"state.......%u\r\n",
-				error_names[errors[i].id], errors[i].timestamp, now - errors[i].timestamp, errors[i].offset, errors[i].state);
+				errors[i].id, error_names[errors[i].id], errors[i].timestamp, now - errors[i].timestamp, errors[i].offset, errors[i].state);
 	}
 }
 

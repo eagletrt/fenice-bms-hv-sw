@@ -39,6 +39,7 @@ llist_node error_list_ref_ltc[LTC6813_COUNT] = {NULL};
 llist_node error_list_ref_can[1] = {NULL};
 llist_node error_adc_init[1] = {NULL};
 llist_node error_adc_timeout[1] = {NULL};
+llist_node error_int_voltage_mismatch[1] = {NULL};
 llist_node error_feedback_hard[1] = {NULL};
 llist_node error_feedback_soft[1] = {NULL};
 
@@ -51,6 +52,7 @@ llist_node *const error_list_ref_array[ERROR_NUM_ERRORS] = {
 	[ERROR_CAN] = error_list_ref_can,
 	[ERROR_ADC_INIT] = error_adc_init,
 	[ERROR_ADC_TIMEOUT] = error_adc_timeout,
+	[ERROR_INT_VOLTAGE_MISMATCH] = error_int_voltage_mismatch,
 	[ERROR_FEEDBACK_HARD] = error_feedback_hard,
 	[ERROR_FEEDBACK_SOFT] = error_feedback_soft,
 };
