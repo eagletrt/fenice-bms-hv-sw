@@ -62,7 +62,7 @@ HAL_StatusTypeDef can_send(uint16_t id) {
 }
 
 void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs) {
-	if (RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) {
+	if (hfdcan->Instance == FDCAN1 && RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) {
 		// New message
 		uint8_t rx_data[8] = {'\0'};
 		FDCAN_RxHeaderTypeDef rx_header;
