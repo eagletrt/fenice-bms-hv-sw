@@ -70,7 +70,7 @@ void check_timers() {
 		timer_temps = tick;
 
 		read_temps();
-		can_send(HV_CURRENT);
+		can_send(ID_HV_CURRENT);
 	}
 
 	// Read and send voltages and current
@@ -78,7 +78,7 @@ void check_timers() {
 		timer_volts = tick;
 
 		read_volts();
-		can_send(HV_VOLTAGE);
+		can_send(ID_HV_VOLTAGE);
 	}
 
 	if (tick - timer_bal >= BAL_CYCLE_LENGTH + 5000) {

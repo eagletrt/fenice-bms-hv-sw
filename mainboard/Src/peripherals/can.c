@@ -28,12 +28,12 @@ HAL_StatusTypeDef can_send(uint16_t id) {
 	flatcc_builder_init(B);
 
 	switch (id) {
-		case HV_VOLTAGE:
+		case ID_HV_VOLTAGE:
 
 			HV_VOLTAGE_create(B, 42000, 41900, 38000, 37500);
 
 			break;
-		case HV_CURRENT:
+		case ID_HV_CURRENT:
 			HV_CURRENT_create(B, 2000, 69);	 // nice
 			break;
 
@@ -42,6 +42,8 @@ HAL_StatusTypeDef can_send(uint16_t id) {
 	}
 	size_t size;
 	uint8_t *buf = flatcc_builder_finalize_buffer(B, &size);
+	uint8_t buffer[8];
+	memcpy(buffer, buf, 8);
 
 	tx_header.Identifier = id;
 	tx_header.DataLength = size << 16;	// Only valid for classic can frames
@@ -71,7 +73,7 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 		}
 		error_unset(ERROR_CAN, 1);
 
-		if (rx_header.Identifier == SET_TS_STATUS) {
+		if (rx_header.Identifier == ID_SET_TS_STATUS) {
 			uint8_t status = SET_TS_STATUS_ts_status_set((void *)rx_data);
 
 			switch (status) {
