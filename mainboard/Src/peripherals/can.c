@@ -23,41 +23,27 @@ void can_init() {
 }
 
 HAL_StatusTypeDef can_send(uint16_t id) {
-	flatcc_builder_t builder;
-	flatcc_builder_t *B = &builder;
-	flatcc_builder_init(B);
-
-	switch (id) {
-		case ID_HV_VOLTAGE:
-
-			HV_VOLTAGE_create(B, 42000, 41900, 38000, 37500);
-
-			break;
-		case ID_HV_CURRENT:
-			HV_CURRENT_create(B, 2000, 69);	 // nice
-			break;
-
-		default:
-			return HAL_ERROR;
-	}
-	size_t size;
-	uint8_t *buf = flatcc_builder_finalize_buffer(B, &size);
 	uint8_t buffer[8];
-	memcpy(buffer, buf, 8);
+	if (id == ID_HV_VOLTAGE) {
+		Primary_HV_VOLTAGE voltage = {.bus_voltage = 42069, .pack_voltage = 42069, .max_cell_voltage = 4000, .min_cell_voltage = 3900};
+		serialize_Primary_HV_VOLTAGE(&voltage, buffer, 8);
+	} else if (id == ID_HV_CURRENT) {
+		Primary_HV_CURRENT current = {.current = 690, .power = 120};
+		serialize_Primary_HV_CURRENT(&current, buffer, 8);
+	} else {
+		return HAL_ERROR;
+	}
 
 	tx_header.Identifier = id;
-	tx_header.DataLength = size << 16;	// Only valid for classic can frames
+	tx_header.DataLength = sizeof(Primary_HV_VOLTAGE) << 16;  // Only valid for classic can frames
 
-	HAL_StatusTypeDef status = HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan1, &tx_header, buf);
+	HAL_StatusTypeDef status = HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan1, &tx_header, buffer);
 	if (status != HAL_OK) {
 		error_set(ERROR_CAN, 0, HAL_GetTick());
 	} else {
 		error_unset(ERROR_CAN, 0);
 	}
 
-	free(buf);
-	flatcc_builder_reset(B);
-	flatcc_builder_clear(B);
 	return status;
 }
 
@@ -73,14 +59,25 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 		}
 		error_unset(ERROR_CAN, 1);
 
-		if (rx_header.Identifier == ID_SET_TS_STATUS) {
-			uint8_t status = SET_TS_STATUS_ts_status_set((void *)rx_data);
+		size_t len = rx_header.DataLength >> 16;
 
-			switch (status) {
-				case Ts_Status_Set_OFF:
+		if (rx_header.Identifier == ID_HV_VOLTAGE) {
+			Primary_HV_VOLTAGE voltage;
+			deserialize_Primary_HV_VOLTAGE(rx_data, len, &voltage);
+
+		} else if (rx_header.Identifier == ID_HV_CURRENT) {
+			Primary_HV_CURRENT current;
+			deserialize_Primary_HV_CURRENT(rx_data, len, &current);
+
+		} else if (rx_header.Identifier == ID_SET_TS_STATUS) {
+			Primary_TS_STATUS ts_status;
+			deserialize_Primary_TS_STATUS(rx_data, len, &ts_status);
+
+			switch (ts_status.ts_status) {
+				case Primary_Ts_Status_Set_OFF:
 					//tsoff
 					break;
-				case Ts_Status_Set_ON:
+				case Primary_Ts_Status_Set_ON:
 					//tson
 					break;
 			}
