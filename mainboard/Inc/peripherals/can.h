@@ -10,8 +10,8 @@
 
 #include <fdcan.h>
 
-#include "../../lib/can/flatbuf-generator/Primary/c/schema_builder.h"
 #include "../../lib/can/includes-generator/Primary/ids.h"
+#include "../../lib/can/naked-generator/Primary/c/Primary.h"
 
 void can_init();
 HAL_StatusTypeDef can_send(uint16_t id);
