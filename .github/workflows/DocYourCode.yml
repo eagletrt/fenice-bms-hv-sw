@@ -3,7 +3,7 @@ name: Documentation
 on: [push]
 
 jobs:
-  test:
+  docs:
     runs-on: ubuntu-latest
 
     steps:
@@ -14,7 +14,7 @@ jobs:
         author: E-Agle TRT         # project author
         project: Fenice BMS HV     # project name
         rootfile: Software            # project title
-        folders: ./mainboard/Inc ./mainboard/Src ./cellboard/Src ./cellboard/Inc
+        folders: ../mainboard/Inc ../mainboard/Src ../cellboard/Src ../cellboard/Inc
         version: 1.0.0             # project version
         release: 1.0.0             # project release
         language: c                # language used
