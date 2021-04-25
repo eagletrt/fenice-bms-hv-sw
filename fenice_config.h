@@ -33,7 +33,7 @@
 /**
  * Number of daisy chained LTCs
  */
-#define LTC6813_COUNT 1
+#define LTC6813_COUNT 6
 
 /**
  * Number of cells a single IC controls. Refer to cell_distribution for
