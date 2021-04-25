@@ -81,8 +81,8 @@ lib/can/external/flatcc/runtime/json_parser.c \
 lib/can/external/flatcc/runtime/json_printer.c \
 lib/can/external/flatcc/runtime/refmap.c \
 lib/can/external/flatcc/runtime/verifier.c \
-lib/can/naked-generator/Primary/c/Primary.c \
-lib/can/naked-generator/Secondary/c/Secondary.c \
+lib/can/naked_generator/Primary/c/Primary.c \
+lib/can/naked_generator/Secondary/c/Secondary.c \
 lib/cli/cli.c \
 lib/fsm/fsm.c \
 lib/llist/llist.c
@@ -161,15 +161,15 @@ C_INCLUDES =  \
 -Ilib/can/external/flatcc/portable \
 -Ilib/can/external/flatcc/reflection \
 -Ilib/can/external/flatcc/support \
--Ilib/can/flatbuf-generator/BMSinternal/c \
--Ilib/can/flatbuf-generator/Primary/c \
--Ilib/can/flatbuf-generator/Secondary/c \
--Ilib/can/includes-generator/BMSinternal \
--Ilib/can/includes-generator/Primary \
--Ilib/can/includes-generator/Secondary \
--Ilib/can/naked-generator/BMSinternal/c \
--Ilib/can/naked-generator/Primary/c \
--Ilib/can/naked-generator/Secondary/c \
+-Ilib/can/flatbuf_generator/BMSinternal/c \
+-Ilib/can/flatbuf_generator/Primary/c \
+-Ilib/can/flatbuf_generator/Secondary/c \
+-Ilib/can/includes_generator/BMSinternal \
+-Ilib/can/includes_generator/Primary \
+-Ilib/can/includes_generator/Secondary \
+-Ilib/can/naked_generator/BMSinternal/c \
+-Ilib/can/naked_generator/Primary/c \
+-Ilib/can/naked_generator/Secondary/c \
 -Ilib/cli \
 -Ilib/fsm \
 -Ilib/fsm/example \

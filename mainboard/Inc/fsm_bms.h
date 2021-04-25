@@ -31,4 +31,7 @@ extern fsm fsm_bms;
 
 void fsm_bms_init();
 
+void fsm_bms_ts_off_handler();
+void fsm_bms_ts_on_handler();
+
 #endif

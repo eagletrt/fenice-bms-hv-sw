@@ -53,8 +53,8 @@ const char *error_names[ERROR_NUM_ERRORS] = {
 	[ERROR_ADC_INIT] = "adc init",
 	[ERROR_ADC_TIMEOUT] = "adc timeout",
 	[ERROR_INT_VOLTAGE_MISMATCH] = "internal voltage mismatch",
-	[ERROR_FEEDBACK_HARD] = "soft feedback",
-	[ERROR_FEEDBACK_SOFT] = "hard feedback"};
+	[ERROR_FEEDBACK_HARD] = "hard feedback",
+	[ERROR_FEEDBACK_SOFT] = "soft feedback"};
 
 char const *const feedback_names[FEEDBACK_N] = {
 	[FEEDBACK_VREF_POS] = "VREF",

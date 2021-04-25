@@ -18,6 +18,7 @@
 #include "error.h"
 #include "main.h"
 #include "pack.h"
+#include "peripherals/can.h"
 #include "tim.h"
 
 //------------------------------Declarations------------------------------------------
@@ -94,6 +95,35 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	}
 }
 
+/*
+	Event Handlers
+*/
+void fsm_bms_ts_off_handler() {
+	switch (fsm_get_state(&fsm_bms)) {
+		case BMS_PRECHARGE_START:
+		case BMS_PRECHARGE:
+		case BMS_PRECHARGE_END:
+		case BMS_RUN:
+		case BMS_CHARGE:
+			fsm_set_state(&fsm_bms, BMS_SET_TS_OFF);
+			break;
+		default:
+			can_send(ID_TS_STATUS);
+			break;
+	}
+}
+
+void fsm_bms_ts_on_handler() {
+	switch (fsm_get_state(&fsm_bms)) {
+		case BMS_IDLE:
+			fsm_set_state(&fsm_bms, BMS_PRECHARGE_START);
+			break;
+		default:
+			can_send(ID_TS_STATUS);
+			break;
+	}
+}
+
 uint16_t do_init(fsm *FSM) {
 	pack_init();
 	return BMS_IDLE;
@@ -102,30 +132,18 @@ uint16_t do_init(fsm *FSM) {
 uint16_t do_ts_off(fsm *FSM) {
 	pack_set_ts_off();
 
-	// can_send(&hcan, CAN_ID_BMS, CAN_MSG_TS_OFF, 8);
+	can_send(ID_TS_STATUS);
 	return BMS_IDLE;
 }
 
 uint16_t do_idle(fsm *FSM) {
-	// Check CAN
-	//if (data->can_rx.StdId == CAN_ID_ECU) {
-	//	if (data->can_rx.Data[0] == CAN_IN_TS_ON) {
-	// 	TS On message received
-	//		if (pack_feedback_check(FEEDBACK_IDLE_TS_ON_TRIGGER_MASK,FEEDBACK_IDLE_TS_ON_TRIGGER_VALUE,ERROR_FEEDBACK_HARD)) {
-	//			return BMS_PRECHARGE;
-	//		}
-	//	}
-	//}
+	// Zzz
 
-	// Do state-specific stuff
-
-	// Return
 	return BMS_IDLE;
 }
 
 uint16_t do_precharge_start(fsm *FSM) {
 	// Precharge
-	// bms_precharge_start(&data->bms);
 	pack_set_pc_start();
 	timer_precharge = HAL_GetTick();
 
@@ -138,12 +156,7 @@ uint16_t do_precharge(fsm *FSM) {
 	if (HAL_GetTick() - timer_precharge < PRECHARGE_TIMEOUT) {
 		// TODO: move this in precharge_end
 		if (pack_get_bus_voltage() >= pack_get_int_voltage() * PRECHARGE_VOLTAGE_THRESHOLD) {
-			pack_set_precharge_end();
-			return_state = BMS_PRECHARGE_END;
-
-			if (HAL_GPIO_ReadPin(CHARGE_GPIO_Port, CHARGE_Pin)) {
-				return_state = BMS_CHARGE;
-			}
+			return BMS_PRECHARGE_END;
 		}
 	} else {
 		// If the precharge takes too long, we shut down and start from idle
@@ -172,20 +185,15 @@ uint16_t do_precharge(fsm *FSM) {
 }
 
 uint16_t do_precharge_end(fsm *FSM) {
-	// bms_precharge_end(&data->bms);
-	// HAL_CAN_ConfigFilter(&hcan, &CAN_FILTER_NORMAL);
-	// can_send(&hcan, CAN_ID_BMS, CAN_MSG_TS_ON, 8);
+	pack_set_precharge_end();
 
+	if (HAL_GPIO_ReadPin(CHARGE_GPIO_Port, CHARGE_Pin)) {
+		return BMS_CHARGE;
+	}
 	return BMS_RUN;
 }
 
 uint16_t do_run(fsm *FSM) {
-	// if (data->can_rx.StdId == CAN_ID_ECU) {
-	// 	if (data->can_rx.Data[0] == CAN_IN_TS_OFF) {
-	// 		return BMS_IDLE;
-	// 	}
-	// }
-
 	return BMS_RUN;
 }
 
@@ -196,6 +204,7 @@ uint16_t do_charge(fsm *FSM) {
 uint16_t do_to_halt(fsm *FSM) {
 	// bms_set_ts_off(&data->bms);
 	// bms_set_fault(&data->bms);
+	pack_set_ts_off();
 
 	// can_send_error(&hcan, data->error, data->error_index, &data->pack);
 	return BMS_HALT;
