@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "cli_bms.h"
 #include "error.h"
 #include "main.h"
 #include "pack.h"
@@ -99,6 +100,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	Event Handlers
 */
 void fsm_bms_ts_off_handler() {
+	cli_bms_debug("FSM: got TS OFF event", 22);
 	switch (fsm_get_state(&fsm_bms)) {
 		case BMS_PRECHARGE_START:
 		case BMS_PRECHARGE:
@@ -114,6 +116,7 @@ void fsm_bms_ts_off_handler() {
 }
 
 void fsm_bms_ts_on_handler() {
+	cli_bms_debug("CAN: got TS ON event", 22);
 	switch (fsm_get_state(&fsm_bms)) {
 		case BMS_IDLE:
 			fsm_set_state(&fsm_bms, BMS_PRECHARGE_START);

@@ -8,6 +8,7 @@
 
 #include "can.h"
 
+#include "cli_bms.h"
 #include "fsm_bms.h"
 #include "pack.h"
 
@@ -41,8 +42,11 @@ HAL_StatusTypeDef can_send(uint16_t id) {
 	HAL_StatusTypeDef status = HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan1, &tx_header, buffer);
 	if (status != HAL_OK) {
 		error_set(ERROR_CAN, 0, HAL_GetTick());
+		cli_bms_debug("CAN: Error sending message", 27);
+
 	} else {
 		error_unset(ERROR_CAN, 0);
+		cli_bms_debug("CAN: Sent message", 18);
 	}
 
 	return status;
@@ -56,6 +60,7 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 
 		if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rx_header, rx_data) != HAL_OK) {
 			error_set(ERROR_CAN, 1, HAL_GetTick());
+			cli_bms_debug("CAN: Error receiving message", 29);
 			return;
 		}
 		error_unset(ERROR_CAN, 1);

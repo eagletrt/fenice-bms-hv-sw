@@ -8,6 +8,9 @@
     "todo-tree.tree.scanMode": "workspace only",
     "files.associations": {
         "error.h": "c",
-        "error_list_ref.h": "c"
+        "error_list_ref.h": "c",
+        "bal.h": "c",
+        "fsm_bms.h": "c",
+        "usart.h": "c"
     },
 }
