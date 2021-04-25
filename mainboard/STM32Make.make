@@ -66,6 +66,7 @@ Src/fsm_bms.c \
 Src/gpio.c \
 Src/main.c \
 Src/pack.c \
+Src/peripherals/can.c \
 Src/peripherals/ltc6813.c \
 Src/peripherals/ltc6813_utils.c \
 Src/peripherals/si8900.c \

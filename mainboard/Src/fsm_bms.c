@@ -154,7 +154,6 @@ uint16_t do_precharge(fsm *FSM) {
 	bms_states return_state = BMS_PRECHARGE;
 
 	if (HAL_GetTick() - timer_precharge < PRECHARGE_TIMEOUT) {
-		// TODO: move this in precharge_end
 		if (pack_get_bus_voltage() >= pack_get_int_voltage() * PRECHARGE_VOLTAGE_THRESHOLD) {
 			return BMS_PRECHARGE_END;
 		}
@@ -164,24 +163,6 @@ uint16_t do_precharge(fsm *FSM) {
 	}
 
 	return return_state;
-
-	/*
-	if (pd_get_bus_voltage() >= pd_get_adc_voltage() * PRECHARGE_VOLTAGE_THRESHOLD) {
-		pack_set_precharge_end();
-
-		if (HAL_GPIO_ReadPin(CHARGE_GPIO_Port, CHARGE_Pin)) {
-			return_state = BMS_CHARGE;
-		}
-		return BMS_RUN;
-	}
-
-	if (HAL_GetTick() - timer_precharge >= PRECHARGE_TIMEOUT) {
-		// TODO: set some sort of error
-		return BMS_IDLE;
-
-		return BMS_CHARGE;
-	}
-	*/
 }
 
 uint16_t do_precharge_end(fsm *FSM) {

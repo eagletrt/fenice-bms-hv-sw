@@ -212,7 +212,7 @@ void _cli_errors(uint16_t argc, char **argv, char *out) {
 	sprintf(out, "total %u\r\n", count);
 	for (uint16_t i = 0; i < count; i++) {
 		sprintf(out + strlen(out),
-				"\r\ntype........%s\r\n"
+				"\r\nid..........%i (%s)\r\n"
 				"timestamp...T+%lu (%lums ago)\r\n"
 				"offset......%u\r\n"
 				"state.......%u\r\n",
