@@ -17,4 +17,9 @@ extern cli_t cli_bms;
 
 void cli_bms_init();
 
+/**
+ * @brief Print messages in the cli if dmesg is enabled
+ */
+void cli_bms_debug(char *text, size_t length);
+
 #endif

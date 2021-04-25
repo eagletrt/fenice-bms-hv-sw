@@ -19,7 +19,7 @@
 #include "fsm_bms.h"
 #include "usart.h"
 
-#define N_COMMANDS 9
+#define N_COMMANDS 8
 
 cli_command_func_t _cli_volts;
 cli_command_func_t _cli_volts_all;
@@ -28,6 +28,7 @@ cli_command_func_t _cli_temps_all;
 cli_command_func_t _cli_status;
 cli_command_func_t _cli_balance;
 cli_command_func_t _cli_errors;
+cli_command_func_t _cli_dmesg;
 cli_command_func_t _cli_help;
 cli_command_func_t _cli_taba;
 
@@ -75,13 +76,13 @@ char const *const feedback_names[FEEDBACK_N] = {
 	[FEEDBACK_TS_ON_POS] = "TS ON"};
 
 char *command_names[N_COMMANDS] = {
-	"volt", "vall", "temp", "tall", "status", "errors", "bal", "?", "\ta"};
+	"volt", "temp", "status", "errors", "bal", "dmesg", "?", "\ta"};
 
 cli_command_func_t *commands[N_COMMANDS] = {
-	&_cli_volts, &_cli_volts_all, &_cli_temps, &_cli_temps_all,
-	&_cli_status, &_cli_errors, &_cli_balance, &_cli_help, &_cli_taba};
+	&_cli_volts, &_cli_temps, &_cli_status, &_cli_errors, &_cli_balance, &_cli_dmesg, &_cli_help, &_cli_taba};
 
 cli_t cli_bms;
+bool dmesg_ena = false;
 
 void cli_bms_init() {
 	cli_bms.uart = &huart2;
@@ -101,22 +102,43 @@ void cli_bms_init() {
 	cli_print(&cli_bms, init, strlen(init));
 }
 
+void cli_bms_debug(char *text, size_t length) {
+	if (dmesg_ena) {
+		char out[3000] = {'\0'};
+		// add prefix
+		sprintf(out, "[%014lu] ", HAL_GetTick());
+
+		strcat(out, text);
+		length += strlen(out);
+
+		// add suffix
+		sprintf(out + length, "\r\n");
+		length += 2;
+
+		cli_print(&cli_bms, out, length);
+	}
+}
+
 void _cli_volts(uint16_t argc, char **argv, char *out) {
-	voltage_t max = pack_get_max_voltage();
-	voltage_t min = pack_get_min_voltage();
-	sprintf(out,
-			"bus.......%.2f V\r\n"
-			"internal..%.2f V\r\n"
-			"average...%.2f V\r\n"
-			"max.......%.3f V\r\n"
-			"min.......%.3f V\r\n"
-			"delta.....%.3f V\r\n",
-			(float)pack_get_bus_voltage() / 100,
-			(float)pack_get_int_voltage() / 100,
-			(float)pack_get_int_voltage() / PACK_CELL_COUNT / 100,
-			(float)max / 10000,
-			(float)min / 10000,
-			(float)(max - min) / 10000);
+	if (strcmp(argv[1], "all") == 0) {
+		_cli_volts_all(argc, &argv[1], out);
+	} else {
+		voltage_t max = pack_get_max_voltage();
+		voltage_t min = pack_get_min_voltage();
+		sprintf(out,
+				"bus.......%.2f V\r\n"
+				"internal..%.2f V\r\n"
+				"average...%.2f V\r\n"
+				"max.......%.3f V\r\n"
+				"min.......%.3f V\r\n"
+				"delta.....%.3f V\r\n",
+				(float)pack_get_bus_voltage() / 100,
+				(float)pack_get_int_voltage() / 100,
+				(float)pack_get_int_voltage() / PACK_CELL_COUNT / 100,
+				(float)max / 10000,
+				(float)min / 10000,
+				(float)(max - min) / 10000);
+	}
 }
 
 void _cli_volts_all(uint16_t argc, char **argv, char *out) {
@@ -137,13 +159,17 @@ void _cli_volts_all(uint16_t argc, char **argv, char *out) {
 }
 
 void _cli_temps(uint16_t argc, char **argv, char *out) {
-	sprintf(out,
-			"average.....%.1f C\r\nmax.........%2u "
-			"C\r\nmin.........%2u C\r\n"
-			"delta.......%2u C\r\n",
-			(float)pack_get_mean_temperature() / 10, pack_get_max_temperature(),
-			pack_get_min_temperature(),
-			pack_get_max_temperature() - pack_get_min_temperature());
+	if (strcmp(argv[1], "all") == 0) {
+		_cli_temps_all(argc, &argv[1], out);
+	} else {
+		sprintf(out,
+				"average.....%.1f C\r\nmax.........%2u "
+				"C\r\nmin.........%2u C\r\n"
+				"delta.......%2u C\r\n",
+				(float)pack_get_mean_temperature() / 10, pack_get_max_temperature(),
+				pack_get_min_temperature(),
+				pack_get_max_temperature() - pack_get_min_temperature());
+	}
 }
 
 void _cli_temps_all(uint16_t argc, char **argv, char *out) {
@@ -218,6 +244,11 @@ void _cli_errors(uint16_t argc, char **argv, char *out) {
 				"state.......%u\r\n",
 				errors[i].id, error_names[errors[i].id], errors[i].timestamp, now - errors[i].timestamp, errors[i].offset, errors[i].state);
 	}
+}
+
+void _cli_dmesg(uint16_t argc, char **argv, char *out) {
+	dmesg_ena = !dmesg_ena;
+	sprintf(out, "dmesg output is %s\r\n", dmesg_ena ? "enabled" : "disabled");
 }
 
 void _cli_taba(uint16_t argc, char **argv, char *out) {
