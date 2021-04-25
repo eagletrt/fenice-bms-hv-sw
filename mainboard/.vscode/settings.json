@@ -11,6 +11,10 @@
         "error_list_ref.h": "c",
         "bal.h": "c",
         "fsm_bms.h": "c",
-        "usart.h": "c"
+        "usart.h": "c",
+        "can.h": "c",
+        "pack.h": "c",
+        "main.h": "c",
+        "fenice_config.h": "c"
     },
 }

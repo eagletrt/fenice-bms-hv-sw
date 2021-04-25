@@ -19,7 +19,8 @@
 #include "fsm_bms.h"
 #include "usart.h"
 
-#define N_COMMANDS 8
+// TODO: don't count manually
+#define N_COMMANDS 9
 
 cli_command_func_t _cli_volts;
 cli_command_func_t _cli_volts_all;
@@ -29,6 +30,7 @@ cli_command_func_t _cli_status;
 cli_command_func_t _cli_balance;
 cli_command_func_t _cli_errors;
 cli_command_func_t _cli_dmesg;
+cli_command_func_t _cli_reset;
 cli_command_func_t _cli_help;
 cli_command_func_t _cli_taba;
 
@@ -76,10 +78,10 @@ char const *const feedback_names[FEEDBACK_N] = {
 	[FEEDBACK_TS_ON_POS] = "TS ON"};
 
 char *command_names[N_COMMANDS] = {
-	"volt", "temp", "status", "errors", "bal", "dmesg", "?", "\ta"};
+	"volt", "temp", "status", "errors", "bal", "dmesg", "reset", "?", "\ta"};
 
 cli_command_func_t *commands[N_COMMANDS] = {
-	&_cli_volts, &_cli_temps, &_cli_status, &_cli_errors, &_cli_balance, &_cli_dmesg, &_cli_help, &_cli_taba};
+	&_cli_volts, &_cli_temps, &_cli_status, &_cli_errors, &_cli_balance, &_cli_dmesg, &_cli_reset, &_cli_help, &_cli_taba};
 
 cli_t cli_bms;
 bool dmesg_ena = false;
@@ -106,7 +108,7 @@ void cli_bms_debug(char *text, size_t length) {
 	if (dmesg_ena) {
 		char out[3000] = {'\0'};
 		// add prefix
-		sprintf(out, "[%014lu] ", HAL_GetTick());
+		sprintf(out, "[%.3f] ", (double)HAL_GetTick() / 1000);
 
 		strcat(out, text);
 		length += strlen(out);
@@ -120,9 +122,7 @@ void cli_bms_debug(char *text, size_t length) {
 }
 
 void _cli_volts(uint16_t argc, char **argv, char *out) {
-	if (strcmp(argv[1], "all") == 0) {
-		_cli_volts_all(argc, &argv[1], out);
-	} else {
+	if (strcmp(argv[1], "") == 0) {
 		voltage_t max = pack_get_max_voltage();
 		voltage_t min = pack_get_min_voltage();
 		sprintf(out,
@@ -138,6 +138,10 @@ void _cli_volts(uint16_t argc, char **argv, char *out) {
 				(float)max / 10000,
 				(float)min / 10000,
 				(float)(max - min) / 10000);
+	} else if (strcmp(argv[1], "all") == 0) {
+		_cli_volts_all(argc, &argv[1], out);
+	} else {
+		sprintf(out, "Unknown parameter: %s\r\n", argv[1]);
 	}
 }
 
@@ -159,9 +163,7 @@ void _cli_volts_all(uint16_t argc, char **argv, char *out) {
 }
 
 void _cli_temps(uint16_t argc, char **argv, char *out) {
-	if (strcmp(argv[1], "all") == 0) {
-		_cli_temps_all(argc, &argv[1], out);
-	} else {
+	if (strcmp(argv[1], "") == 0) {
 		sprintf(out,
 				"average.....%.1f C\r\nmax.........%2u "
 				"C\r\nmin.........%2u C\r\n"
@@ -169,6 +171,10 @@ void _cli_temps(uint16_t argc, char **argv, char *out) {
 				(float)pack_get_mean_temperature() / 10, pack_get_max_temperature(),
 				pack_get_min_temperature(),
 				pack_get_max_temperature() - pack_get_min_temperature());
+	} else if (strcmp(argv[1], "all") == 0) {
+		_cli_temps_all(argc, &argv[1], out);
+	} else {
+		sprintf(out, "Unknown parameter: %s\r\n", argv[1]);
 	}
 }
 
@@ -249,6 +255,10 @@ void _cli_errors(uint16_t argc, char **argv, char *out) {
 void _cli_dmesg(uint16_t argc, char **argv, char *out) {
 	dmesg_ena = !dmesg_ena;
 	sprintf(out, "dmesg output is %s\r\n", dmesg_ena ? "enabled" : "disabled");
+}
+
+void _cli_reset(uint16_t argc, char **argv, char *out) {
+	HAL_NVIC_SystemReset();
 }
 
 void _cli_taba(uint16_t argc, char **argv, char *out) {
