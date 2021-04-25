@@ -81,6 +81,7 @@ lib/can/external/flatcc/runtime/json_parser.c \
 lib/can/external/flatcc/runtime/json_printer.c \
 lib/can/external/flatcc/runtime/refmap.c \
 lib/can/external/flatcc/runtime/verifier.c \
+lib/can/naked_generator/BMSinternal/c/BMSinternal.c \
 lib/can/naked_generator/Primary/c/Primary.c \
 lib/can/naked_generator/Secondary/c/Secondary.c \
 lib/cli/cli.c \
