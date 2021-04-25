@@ -63,18 +63,30 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 		size_t len = rx_header.DataLength >> 16;
 
 		if (rx_header.Identifier == ID_SET_TS_STATUS) {
-			Primary_TS_STATUS ts_status;
-			deserialize_Primary_TS_STATUS(rx_data, len, &ts_status);
+			Primary_SET_TS_STATUS ts_status;
+			deserialize_Primary_SET_TS_STATUS(rx_data, len, &ts_status);
 
-			switch (ts_status.ts_status) {
+			switch (ts_status.ts_status_set) {
 				case Primary_Ts_Status_Set_OFF:
 					fsm_bms_ts_off_handler();
 					break;
 				case Primary_Ts_Status_Set_ON:
 					fsm_bms_ts_on_handler();
 					break;
+			}
+		}
+		if (rx_header.Identifier == ID_SET_CHG_STATUS) {
+			Primary_SET_CHG_STATUS chg_status;
+			deserialize_Primary_SET_CHG_STATUS(rx_data, len, &chg_status);
 
-				default:
+			switch (chg_status.status) {
+				case Primary_Status_CHG_OFF:
+					break;
+				case Primary_Status_CHG_TC:
+					break;
+				case Primary_Status_CHG_CC:
+					break;
+				case Primary_Status_CHG_CV:
 					break;
 			}
 		}
