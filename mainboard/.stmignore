@@ -1,7 +1,5 @@
 #files that should be ignored by the STM32 For VSCode extension.
 #Use standard .ignore (e.g .gitignore) glob patters
 test/
+test.c
 example/
-
-# can-cicd stuff
-BMSinternal/
