@@ -8,6 +8,7 @@
 
 #include "can.h"
 
+#include "fsm_bms.h"
 #include "pack.h"
 
 FDCAN_TxHeaderTypeDef tx_header;
@@ -23,13 +24,13 @@ void can_init() {
 }
 
 HAL_StatusTypeDef can_send(uint16_t id) {
-	uint8_t buffer[8];
+	uint8_t buffer[CAN_MAX_PAYLOAD_LENGTH];
 	if (id == ID_HV_VOLTAGE) {
-		Primary_HV_VOLTAGE voltage = {.bus_voltage = 42069, .pack_voltage = 42069, .max_cell_voltage = 4000, .min_cell_voltage = 3900};
-		serialize_Primary_HV_VOLTAGE(&voltage, buffer, 8);
+		serialize_Primary_HV_VOLTAGE(42069, 42069, 4000, 3900, buffer, CAN_MAX_PAYLOAD_LENGTH);
 	} else if (id == ID_HV_CURRENT) {
-		Primary_HV_CURRENT current = {.current = 690, .power = 120};
-		serialize_Primary_HV_CURRENT(&current, buffer, 8);
+		serialize_Primary_HV_CURRENT(690, 120, buffer, CAN_MAX_PAYLOAD_LENGTH);
+	} else if (id == ID_TS_STATUS) {
+		serialize_Primary_TS_STATUS(Primary_Ts_Status_ON, buffer, CAN_MAX_PAYLOAD_LENGTH);
 	} else {
 		return HAL_ERROR;
 	}
@@ -61,24 +62,19 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 
 		size_t len = rx_header.DataLength >> 16;
 
-		if (rx_header.Identifier == ID_HV_VOLTAGE) {
-			Primary_HV_VOLTAGE voltage;
-			deserialize_Primary_HV_VOLTAGE(rx_data, len, &voltage);
-
-		} else if (rx_header.Identifier == ID_HV_CURRENT) {
-			Primary_HV_CURRENT current;
-			deserialize_Primary_HV_CURRENT(rx_data, len, &current);
-
-		} else if (rx_header.Identifier == ID_SET_TS_STATUS) {
+		if (rx_header.Identifier == ID_SET_TS_STATUS) {
 			Primary_TS_STATUS ts_status;
 			deserialize_Primary_TS_STATUS(rx_data, len, &ts_status);
 
 			switch (ts_status.ts_status) {
 				case Primary_Ts_Status_Set_OFF:
-					//tsoff
+					fsm_bms_ts_off_handler();
 					break;
 				case Primary_Ts_Status_Set_ON:
-					//tson
+					fsm_bms_ts_on_handler();
+					break;
+
+				default:
 					break;
 			}
 		}

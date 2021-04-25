@@ -217,10 +217,7 @@ bool pack_set_ts_off() {
 	HAL_GPIO_WritePin(TS_ON_GPIO_Port, TS_ON_Pin, GPIO_PIN_RESET);
 
 	feedback_read(FEEDBACK_TS_OFF_MASK);
-	feedback_check(FEEDBACK_TS_OFF_MASK, FEEDBACK_TS_OFF_VAL, ERROR_FEEDBACK_HARD);
-
-	// TODO: return something meaningful, or void
-	return true;
+	return feedback_check(FEEDBACK_TS_OFF_MASK, FEEDBACK_TS_OFF_VAL, ERROR_FEEDBACK_HARD);
 }
 
 bool pack_set_pc_start() {
@@ -229,10 +226,7 @@ bool pack_set_pc_start() {
 
 	// Check feedback
 	feedback_read(FEEDBACK_TO_PRECHARGE_MASK);
-	feedback_check(FEEDBACK_TO_PRECHARGE_MASK, FEEDBACK_TO_PRECHARGE_VAL, ERROR_FEEDBACK_HARD);
-
-	// TODO: return something meaningful, or void
-	return true;
+	return feedback_check(FEEDBACK_TO_PRECHARGE_MASK, FEEDBACK_TO_PRECHARGE_VAL, ERROR_FEEDBACK_HARD);
 }
 
 bool pack_set_precharge_end() {
