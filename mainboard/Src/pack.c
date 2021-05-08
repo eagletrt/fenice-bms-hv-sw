@@ -280,6 +280,11 @@ current_t pack_get_current() {
 	return current;
 }
 
+int16_t pack_get_power() {
+	// TODO: fix units
+	return current * cells.int_voltage;
+}
+
 bal_handle pack_get_balancing() {
 	// TODO: don't return the handle, create getters for each parameter
 	return balancing;

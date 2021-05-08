@@ -67,4 +67,5 @@ temperature_t pack_get_max_temperature();
 temperature_t pack_get_min_temperature();
 temperature_t pack_get_mean_temperature();
 current_t pack_get_current();
+int16_t pack_get_power();
 bal_handle pack_get_balancing();

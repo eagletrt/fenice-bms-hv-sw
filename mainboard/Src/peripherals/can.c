@@ -27,9 +27,9 @@ void can_init() {
 HAL_StatusTypeDef can_send(uint16_t id) {
 	uint8_t buffer[CAN_MAX_PAYLOAD_LENGTH];
 	if (id == ID_HV_VOLTAGE) {
-		serialize_Primary_HV_VOLTAGE(42069, 42069, 4000, 3900, buffer, CAN_MAX_PAYLOAD_LENGTH);
+		serialize_Primary_HV_VOLTAGE(pack_get_int_voltage(), pack_get_bus_voltage(), pack_get_max_voltage(), pack_get_min_voltage(), buffer, CAN_MAX_PAYLOAD_LENGTH);
 	} else if (id == ID_HV_CURRENT) {
-		serialize_Primary_HV_CURRENT(690, 120, buffer, CAN_MAX_PAYLOAD_LENGTH);
+		serialize_Primary_HV_CURRENT(pack_get_current(), pack_get_power(), buffer, CAN_MAX_PAYLOAD_LENGTH);
 	} else if (id == ID_TS_STATUS) {
 		serialize_Primary_TS_STATUS(Primary_Ts_Status_ON, buffer, CAN_MAX_PAYLOAD_LENGTH);
 	} else {
@@ -39,7 +39,8 @@ HAL_StatusTypeDef can_send(uint16_t id) {
 	tx_header.Identifier = id;
 	tx_header.DataLength = sizeof(Primary_HV_VOLTAGE) << 16;  // Only valid for classic can frames
 
-	HAL_StatusTypeDef status = HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan1, &tx_header, buffer);
+	HAL_StatusTypeDef status =
+		HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan1, &tx_header, buffer);
 	if (status != HAL_OK) {
 		error_set(ERROR_CAN, 0, HAL_GetTick());
 		cli_bms_debug("CAN: Error sending message", 27);
@@ -73,10 +74,10 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 
 			switch (ts_status.ts_status_set) {
 				case Primary_Ts_Status_Set_OFF:
-					fsm_bms_ts_off_handler();
+					fsm_handle_event(&fsm_bms, BMS_SET_TS_OFF);
 					break;
 				case Primary_Ts_Status_Set_ON:
-					fsm_bms_ts_on_handler();
+					fsm_handle_event(&fsm_bms, BMS_PRECHARGE_START);
 					break;
 			}
 		}
