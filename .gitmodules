@@ -1,12 +1,3 @@
-[submodule "mainboard/lib/llist"]
-	path = mainboard/lib/llist
-	url = git@github.com:eagletrt/llist.git
-[submodule "mainboard/lib/fsm"]
-	path = mainboard/lib/fsm
-	url = git@github.com:eagletrt/fsm.git
-[submodule "mainboard/lib/cli"]
-	path = mainboard/lib/cli
-	url = git@github.com:eagletrt/cli.git
 [submodule "mainboard/test/munit"]
 	path = mainboard/test/munit
 	url = https://github.com/nemequ/munit.git
@@ -17,3 +8,4 @@
 [submodule "mainboard/lib/micro-libs"]
 	path = mainboard/lib/micro-libs
 	url = git@github.com:eagletrt/micro-libs.git
+	branch = priority-queue

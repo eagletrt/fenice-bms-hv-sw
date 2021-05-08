@@ -77,12 +77,6 @@ Src/stm32g4xx_it.c \
 Src/system_stm32g4xx.c \
 Src/tim.c \
 Src/usart.c \
-lib/can/external/flatcc/runtime/builder.c \
-lib/can/external/flatcc/runtime/emitter.c \
-lib/can/external/flatcc/runtime/json_parser.c \
-lib/can/external/flatcc/runtime/json_printer.c \
-lib/can/external/flatcc/runtime/refmap.c \
-lib/can/external/flatcc/runtime/verifier.c \
 lib/can/naked_generator/BMSinternal/c/BMSinternal.c \
 lib/can/naked_generator/Primary/c/Primary.c \
 lib/can/naked_generator/Secondary/c/Secondary.c \
@@ -163,13 +157,6 @@ C_INCLUDES =  \
 -IInc \
 -IInc/error \
 -IInc/peripherals \
--Ilib/can/external/flatcc \
--Ilib/can/external/flatcc/portable \
--Ilib/can/external/flatcc/reflection \
--Ilib/can/external/flatcc/support \
--Ilib/can/flatbuf_generator/BMSinternal/c \
--Ilib/can/flatbuf_generator/Primary/c \
--Ilib/can/flatbuf_generator/Secondary/c \
 -Ilib/can/includes_generator/BMSinternal \
 -Ilib/can/includes_generator/Primary \
 -Ilib/can/includes_generator/Secondary \
