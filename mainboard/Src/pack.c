@@ -42,7 +42,6 @@ uint32_t current_50[CURRENT_ARRAY_LENGTH];	 // TODO: move to pck_data and update
 uint32_t current_300[CURRENT_ARRAY_LENGTH];	 // TODO: move to pck_data and update DMA and generate getter no setter
 
 cells_t cells;
-bal_handle balancing;  // TODO: Remove bal_conf_t struct (remove enable and the rest has to be managed by the state machine with the eeprom too)
 current_t current;
 
 /**
@@ -61,8 +60,6 @@ void pack_init() {
 	for (size_t i = 0; i < PACK_TEMP_COUNT; i++) {
 		cells.temperatures[i] = 0;
 	}
-
-	bal_init(&balancing);
 
 	// LTC6813 GPIO configuration
 	GPIO_CONFIG = GPIO_I2C_MODE;
@@ -191,27 +188,6 @@ void pack_update_temperature_stats() {
 	cells.min_temperature = min(min_temperature, max_temperature);
 }
 
-bool pack_balance_cells(SPI_HandleTypeDef *hspi) {
-	// TODO: Improve logging
-	if (balancing.enable) {
-		uint8_t indexes[PACK_CELL_COUNT];
-
-		voltage_t voltages[PACK_CELL_COUNT];
-
-		memcpy(voltages, cells.voltages, PACK_CELL_COUNT);
-
-		size_t len = bal_compute_indexes(voltages, indexes, balancing.threshold);
-
-		if (len > 0) {
-			ltc6813_set_balancing(hspi, indexes, balancing.slot_time);
-			return true;
-		}
-
-		balancing.enable = false;
-	}
-	return false;
-}
-
 bool pack_set_ts_off() {
 	//Switch off airs
 	HAL_GPIO_WritePin(TS_ON_GPIO_Port, TS_ON_Pin, GPIO_PIN_RESET);
@@ -283,9 +259,4 @@ current_t pack_get_current() {
 int16_t pack_get_power() {
 	// TODO: fix units
 	return current * cells.int_voltage;
-}
-
-bal_handle pack_get_balancing() {
-	// TODO: don't return the handle, create getters for each parameter
-	return balancing;
 }

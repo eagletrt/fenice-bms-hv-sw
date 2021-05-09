@@ -21,23 +21,21 @@
 /**
  * @brief Balancing configuration handle
  */
-typedef struct bal_handle {
-	bool enable;
+typedef struct bal_config {
 	uint16_t threshold;
-	uint8_t slot_time;
-} bal_handle;
+	uint32_t slot_time;
+} bal_config;
 
-void bal_init(bal_handle *bal);
+extern bal_config bal;
 
 /**
  * @brief	Computes the cells' to balance
  * 
  * @param	volts		Array of cell voltages
- * @param	indexes		Output array of indexes to be balanced
  * @param	threshold	Balancing tolerance (voltage +/- threshold)
+ * @param	indexes		Output array of indexes to be balanced
  * 
  * @returns	Number of cells that are not in indexes but still need to be discharged
  */
-uint8_t bal_compute_indexes(uint16_t volts[PACK_CELL_COUNT], uint8_t indexes[PACK_CELL_COUNT], uint16_t threshold);
-
+uint16_t bal_compute_indexes(uint16_t volts[], uint16_t threshold, uint16_t indexes[]);
 #endif

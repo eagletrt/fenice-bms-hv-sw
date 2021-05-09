@@ -18,6 +18,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "bal_fsm.h"
 #include "cli_bms.h"
 #include "config.h"
 #include "error/error.h"
@@ -54,7 +55,6 @@ m95256_t eeprom;
 
 uint32_t timer_volts = 0;
 uint32_t timer_temps = 0;
-uint32_t timer_bal = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -83,11 +83,6 @@ void check_timers() {
 
 		read_volts();
 		can_send(ID_HV_VOLTAGE);
-	}
-
-	if (tick - timer_bal >= BAL_CYCLE_LENGTH + 5000) {
-		timer_bal = tick;
-		pack_balance_cells(&hspi1);
 	}
 }
 
@@ -156,6 +151,7 @@ int main(void) {
 
 	error_init();
 	fsm_bms_init();
+	bal_fsm_init();
 	cli_bms_init();
 	can_init();
 
@@ -174,6 +170,7 @@ int main(void) {
 
 		/* USER CODE BEGIN 3 */
 		fsm_run(&fsm_bms);
+		fsm_run(&bal_fsm);
 
 		check_timers();
 

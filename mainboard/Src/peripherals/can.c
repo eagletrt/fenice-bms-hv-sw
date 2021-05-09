@@ -47,7 +47,7 @@ HAL_StatusTypeDef can_send(uint16_t id) {
 
 	} else {
 		error_unset(ERROR_CAN, 0);
-		cli_bms_debug("CAN: Sent message", 18);
+		//cli_bms_debug("CAN: Sent message", 18);
 	}
 
 	return status;
