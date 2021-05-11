@@ -12,23 +12,19 @@
 
 #include <stddef.h>
 
-bal_config bal;
-
-/**
- * @brief swap two uint8's
- */
-void _swap(uint16_t *val1, uint16_t *val2) {
-	uint16_t tmp = *val2;
-	*val2 = *val1;
-	*val1 = tmp;
-}
+#ifndef max
+#define max(a, b) ((a) > (b) ? (a) : (b))
+#endif
+#ifndef min
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#endif
 
 /**
  * @returns	The index of the maximum value of data
  */
-uint8_t _max_index(uint16_t data[], size_t length) {
+uint8_t _max_index(uint16_t data[], size_t count) {
 	uint8_t max = 0;
-	for (uint8_t i = 0; i < length; i++) {
+	for (uint8_t i = 0; i < count; i++) {
 		if (data[i] > data[max])
 			max = i;
 	}
@@ -39,9 +35,9 @@ uint8_t _max_index(uint16_t data[], size_t length) {
 /**
  * @returns	The index of the minimum value of data
  */
-uint8_t _min_index(uint16_t data[], size_t length) {
-	uint8_t min_value_index = 0;
-	for (uint8_t i = 0; i < length; i++) {
+uint16_t _min_index(voltage_t data[], size_t count) {
+	uint16_t min_value_index = 0;
+	for (uint16_t i = 0; i < count; i++) {
 		if (data[i] < data[min_value_index])
 			min_value_index = i;
 	}
@@ -50,51 +46,88 @@ uint8_t _min_index(uint16_t data[], size_t length) {
 }
 
 /**
- * @brief	Sorts indexes
+ * @brief Reconstructs the solution given the dynamic programming array
  * 
- * @param	indexes	Indexes to be sorted
- * @param	values	Values to compare
- * @param	length	Length of both arrays
+ * @param	DP	dynamic programming work array
+ * @param	i	length of DP
+ * @param	out	output array
+ * @param	out_index	length of output (initialize to 0 please)
  */
-void _bubble_sort(uint16_t indexes[PACK_CELL_COUNT], uint16_t values[PACK_CELL_COUNT], size_t length) {
-	// TODO: Do we need to pass length? Can't it just be a local var?
-	while (length > 1) {
-		uint16_t newn = 0;
-		for (uint16_t i = 0; i < length - 1; i++) {
-			if (values[indexes[i]] < values[indexes[i + 1]]) {
-				_swap(&indexes[i], &indexes[i + 1]);
-				newn = i;
-			}
+void _bal_hateville_solution(uint16_t DP[], uint16_t i, uint16_t out[], uint16_t *out_index) {
+	if (i == 0) {
+		return;
+	} else if (i == 1) {
+		if (DP[1] > 0) {
+			out[(*out_index)++] = 0;
 		}
-		length = newn;
+		return;
+	} else if (DP[i] == DP[i - 1]) {
+		_bal_hateville_solution(DP, i - 1, out, out_index);
+		return;
+	} else {
+		_bal_hateville_solution(DP, i - 2, out, out_index);
+		out[(*out_index)++] = i - 1;
+
+		return;
 	}
 }
 
-uint16_t bal_compute_indexes(uint16_t volts[], uint16_t threshold, uint16_t indexes[]) {
-	uint16_t indexes_left = PACK_CELL_COUNT;  // cells to check
-	uint16_t min_index = _min_index(volts, PACK_CELL_COUNT);
+/**
+ * @brief Hateville problem solver with Dynamic Programming (https://disi.unitn.it/~montreso/asd/handouts/13-pd1.pdf#Outline0.3)
+ * 
+ * @details	Explanation of this algorithm by the one and only Alberto Montresor ❤️ (https://youtu.be/rrQ300wySmc)
+ * 
+ * @param	D			Input data
+ * @param	count		Input size
+ * @param	solution	Output data
+ * 
+ * @returns	length of the solution array
+ */
+uint16_t _bal_hateville(uint16_t D[], uint16_t count, uint16_t solution[]) {
+	uint16_t DP[count + 1];
 
-	for (uint16_t i = 0; i < PACK_CELL_COUNT; i++) {
-		indexes[i] = i;	 // Initialize indexes
+	DP[0] = 0;
+	DP[1] = D[0];
+
+	for (uint16_t i = 2; i < count + 1; i++) {
+		DP[i] = max(DP[i - 1], DP[i - 2] + D[i - 1]);
 	}
 
-	// sort all indexes by voltage
-	_bubble_sort(indexes, volts, PACK_CELL_COUNT);
+	uint16_t out_index = 0;
+	_bal_hateville_solution(DP, count, solution, &out_index);
+	return out_index;
+}
 
-	for (uint16_t i = 0; i < PACK_CELL_COUNT; i++) {
-		if (volts[indexes[i]] > volts[min_index] + threshold) {
-			// If current cell needs to be discahrged
-			if ((i == 0 || indexes[i - 1] == BAL_NULL_INDEX) && (i == PACK_CELL_COUNT - 1 || indexes[i + 1] != BAL_NULL_INDEX)) {
-				// If previous cell is NULL and next cell needs to be discharged, then set next to NULL
-				indexes[i + 1] = BAL_NULL_INDEX;
-				// We don't decrease indexes_left here because the cell still needs to be discharged.
-			}
-		} else {
-			// No need to balance
-			indexes_left--;
-			indexes[i] = BAL_NULL_INDEX;
+/* @section Public functions */
+
+uint16_t bal_get_cells_to_discharge(voltage_t volts[], uint16_t count, voltage_t threshold, uint16_t cells[]) {
+	voltage_t imbalance[count];
+
+	uint16_t len = bal_compute_imbalance(volts, count, threshold, imbalance);
+	if (len == 0) {
+		return false;
+	}
+
+	return bal_exclude_neighbors(imbalance, len, cells);
+}
+
+uint16_t bal_compute_imbalance(voltage_t volts[], uint16_t count, voltage_t threshold, uint16_t cells[]) {
+	uint16_t indexes = 0;
+	uint16_t min_index = _min_index(volts, count);
+
+	for (uint16_t i = 0; i < count; i++) {
+		cells[i] = max(0, volts[i] - (volts[min_index] + threshold));
+		if (cells[i] > 0) {
+			indexes++;
 		}
 	}
+	return indexes;
+}
 
-	return indexes_left;
+uint16_t bal_exclude_neighbors(uint16_t data[], uint16_t count, uint16_t cells[]) {
+	for (uint16_t i = 0; i < PACK_CELL_COUNT; i++) {
+		cells[i] = BAL_NULL_INDEX;
+	}
+
+	return _bal_hateville(data, PACK_CELL_COUNT, cells);
 }

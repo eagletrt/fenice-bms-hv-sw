@@ -17,48 +17,76 @@
 
 fsm bal_fsm;
 
-uint32_t discharge_start = 0;
-uint16_t indexes[PACK_CELL_COUNT];
+uint16_t threshold = BAL_MAX_VOLTAGE_THRESHOLD;
+uint32_t cycle_length = BAL_CYCLE_LENGTH;
 
+uint32_t discharge_start = 0;
+
+uint16_t trans_stop(fsm* FSM);
 uint16_t do_off(fsm* FSM);
 uint16_t do_compute(fsm* FSM);
 uint16_t do_discharge(fsm* FSM);
+uint16_t do_cooldown(fsm* FSM);
+
+uint16_t bal_get_threshold() {
+	return threshold;
+}
+
+void bal_set_threshold(uint16_t thresh) {
+	threshold = thresh;
+}
 
 void bal_fsm_init() {
-	bal.slot_time = BAL_CYCLE_LENGTH;
-	bal.threshold = BAL_MAX_VOLTAGE_THRESHOLD;
-
 	fsm_init(&bal_fsm, BAL_NUM_STATES);
 
 	bal_fsm.state_table[BAL_OFF][BAL_OFF] = &do_off;
-	bal_fsm.state_table[BAL_OFF][BAL_COMPUTING] = &do_compute;
-	bal_fsm.state_table[BAL_COMPUTING][BAL_DISCHARGING] = &do_discharge;
-	bal_fsm.state_table[BAL_COMPUTING][BAL_OFF] = &do_off;
-	bal_fsm.state_table[BAL_DISCHARGING][BAL_DISCHARGING] = &do_discharge;
-	bal_fsm.state_table[BAL_DISCHARGING][BAL_OFF] = &do_off;
-	bal_fsm.state_table[BAL_DISCHARGING][BAL_COMPUTING] = &do_compute;
+	bal_fsm.state_table[BAL_OFF][BAL_COMPUTE] = &do_compute;
+
+	bal_fsm.state_table[BAL_COMPUTE][BAL_DISCHARGE] = &do_discharge;
+	bal_fsm.state_table[BAL_COMPUTE][BAL_OFF] = &trans_stop;
+
+	bal_fsm.state_table[BAL_DISCHARGE][BAL_DISCHARGE] = &do_discharge;
+	bal_fsm.state_table[BAL_DISCHARGE][BAL_COMPUTE] = &do_compute;
+	bal_fsm.state_table[BAL_DISCHARGE][BAL_OFF] = &trans_stop;
+
+	bal_fsm.state_table[BAL_COOLDOWN][BAL_COOLDOWN] = &do_cooldown;
+	bal_fsm.state_table[BAL_COOLDOWN][BAL_COMPUTE] = &do_compute;
+	bal_fsm.state_table[BAL_COOLDOWN][BAL_OFF] = &trans_stop;
 }
 
+uint16_t trans_stop(fsm* FSM) {
+	uint16_t cells[PACK_CELL_COUNT] = {0};
+	ltc6813_set_balancing(&LTC6813_PERIPHERAL, cells, 0);
+	return BAL_OFF;
+}
 uint16_t do_off(fsm* FSM) {
 	return BAL_OFF;
 }
 
 uint16_t do_compute(fsm* FSM) {
-	size_t len = bal_compute_indexes(pack_get_voltages(), bal.threshold, indexes);
+	uint16_t cells[PACK_CELL_COUNT];
 
-	if (len > 0) {
-		ltc6813_set_balancing(&LTC6813_PERIPHERAL, indexes, bal.slot_time);
+	if (bal_get_cells_to_discharge(pack_get_voltages(), PACK_CELL_COUNT, threshold, cells) != 0) {
+		ltc6813_set_balancing(&LTC6813_PERIPHERAL, cells, cycle_length);
 		discharge_start = HAL_GetTick();
+
 		cli_bms_debug("Discharging cells", 18);
-		return BAL_DISCHARGING;
+		return BAL_DISCHARGE;
 	}
-	cli_bms_debug("Nothing to balance", 19);
+	cli_bms_debug("Non si può fare meglio di così.", 34);
 	return BAL_OFF;
 }
 
 uint16_t do_discharge(fsm* FSM) {
-	if (discharge_start - HAL_GetTick() >= bal.slot_time) {
-		return BAL_COMPUTING;
+	if (discharge_start - HAL_GetTick() >= cycle_length) {
+		return BAL_COOLDOWN;
 	}
-	return BAL_DISCHARGING;
+	return BAL_DISCHARGE;
+}
+
+uint16_t do_cooldown(fsm* FSM) {
+	if (discharge_start - HAL_GetTick() >= cycle_length + BAL_COOLDOWN_DELAY) {
+		return BAL_COMPUTE;
+	}
+	return BAL_COOLDOWN;
 }

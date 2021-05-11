@@ -15,12 +15,16 @@
 
 enum {
 	BAL_OFF,
-	BAL_COMPUTING,
-	BAL_DISCHARGING,
+	BAL_COMPUTE,
+	BAL_DISCHARGE,
+	BAL_COOLDOWN,
 	BAL_NUM_STATES
 };
 
 extern fsm bal_fsm;
+
+uint16_t bal_get_threshold();
+void bal_set_threshold(uint16_t thresh);
 
 void bal_fsm_init();
 

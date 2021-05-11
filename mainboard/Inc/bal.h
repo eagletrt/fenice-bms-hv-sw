@@ -19,23 +19,39 @@
 #define BAL_NULL_INDEX UINT8_MAX
 
 /**
- * @brief Balancing configuration handle
- */
-typedef struct bal_config {
-	uint16_t threshold;
-	uint32_t slot_time;
-} bal_config;
-
-extern bal_config bal;
-
-/**
- * @brief	Computes the cells' to balance
+ * @brief   Wrapper function around bal_compute_imbalance and bal_exclude_neighbors
  * 
  * @param	volts		Array of cell voltages
- * @param	threshold	Balancing tolerance (voltage +/- threshold)
+ * @param	count		Size of `volts`
+ * @param	threshold	Balancing tolerance (voltage + threshold)
  * @param	indexes		Output array of indexes to be balanced
+ * @param	cells		array of cell's indexes that need to be discharged
  * 
- * @returns	Number of cells that are not in indexes but still need to be discharged
+ * @returns amount of cells to be discharged
  */
-uint16_t bal_compute_indexes(uint16_t volts[], uint16_t threshold, uint16_t indexes[]);
+uint16_t bal_get_cells_to_discharge(voltage_t volts[], uint16_t count, voltage_t threshold, uint16_t cells[]);
+
+/**
+ * @brief	Computes the cells with voltage exceeding the given threshold + lowest cell voltage
+ * 
+ * @param	volts		Array of cell voltages
+ * @param	count		Size of `volts`
+ * @param	threshold	Balancing tolerance (voltage + threshold)
+ * @param	indexes		Output array of indexes to be balanced
+ * @param	cells		array of cell's indexes that need to be discharged
+ * 
+ * @returns amount of cells to be discharged
+ */
+uint16_t bal_compute_imbalance(voltage_t volts[], uint16_t count, voltage_t threshold, uint16_t cells[]);
+
+/**
+ * @brief	Exclude adjacent cells to work around an hardware limitation on Fenice
+ * 
+ * @param	indexes		output array of cell's indexes that need to be discharged
+ * @param	count		amount of voltages
+ * @param	cells		output array of cell's indexes that need to be discharged
+ * 
+ * @returns	amount of cells to be discharged
+ */
+uint16_t bal_exclude_neighbors(uint16_t indexes[], uint16_t count, uint16_t cells[]);
 #endif

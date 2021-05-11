@@ -232,8 +232,7 @@ void ltc6813_set_dcc(uint16_t indexes[], uint8_t cfgar[8], uint8_t cfgbr[8]) {
 	}
 }
 
-void ltc6813_set_balancing(SPI_HandleTypeDef *hspi, uint16_t *indexes,
-						   int dcto) {
+void ltc6813_set_balancing(SPI_HandleTypeDef *hspi, uint16_t *indexes, int dcto) {
 	uint8_t cfgar[LTC6813_COUNT][8] = {0};
 	uint8_t cfgbr[LTC6813_COUNT][8] = {0};
 
