@@ -140,6 +140,13 @@ static const uint8_t TEMP_SENSOR_ADDRESS_CODING[TEMP_SENSORS_PER_STRIP] = {
  */
 #define BAL_CYCLE_LENGTH 120000
 
+/**
+ *  How much to wait for voltages to stabilize after a balancing cycle [ms]
+ */
+#define BAL_COOLDOWN_DELAY 5000
+
+// @section Pre-charge
+
 #define PRECHARGE_TIMEOUT 10000
 #define PRECHARGE_VOLTAGE_THRESHOLD 0.95
 

@@ -49,8 +49,8 @@ const char *bms_state_names[BMS_NUM_STATES] = {
 
 const char *bal_state_names[BAL_NUM_STATES] = {
 	[BAL_OFF] = "off",
-	[BAL_COMPUTING] = "computing",
-	[BAL_DISCHARGING] = "discharging"};
+	[BAL_COMPUTE] = "computing",
+	[BAL_DISCHARGE] = "discharging"};
 
 const char *
 	error_names[ERROR_NUM_ERRORS] = {
@@ -203,7 +203,7 @@ void _cli_status(uint16_t argc, char **argv, char *out) {
 #define n_items 3
 
 	char thresh[5] = {'\0'};
-	itoa((float)bal.threshold / 10, thresh, 10);
+	itoa((float)bal_get_threshold() / 10, thresh, 10);
 
 	char er_count[3] = {'\0'};
 	itoa(error_count(), er_count, 10);
@@ -224,28 +224,23 @@ void _cli_status(uint16_t argc, char **argv, char *out) {
 }
 
 void _cli_balance(uint16_t argc, char **argv, char *out) {
-	if (strcmp(argv[1], "tog") == 0) {
-		if (fsm_get_state(&bal_fsm) == BAL_OFF) {
-			fsm_handle_event(&bal_fsm, BAL_COMPUTING);
-			sprintf(out, "enabling balancing\r\n");
-		} else {
-			fsm_handle_event(&bal_fsm, BAL_OFF);
-			sprintf(out, "disabling balancing\r\n");
-		}
-
+	if (strcmp(argv[1], "on") == 0) {
+		fsm_handle_event(&bal_fsm, BAL_COMPUTE);
+		sprintf(out, "enabling balancing\r\n");
+	} else if (strcmp(argv[1], "off") == 0) {
+		fsm_handle_event(&bal_fsm, BAL_OFF);
+		sprintf(out, "disabling balancing\r\n");
 	} else if (strcmp(argv[1], "thr") == 0) {
 		if (argv[2] != NULL) {
-			bal.threshold = atoi(argv[2]) * 10;
-
-			sprintf(out, "setting balancing threshold to %u mV\r\n", bal.threshold / 10);
-		} else {
-			sprintf(out, "balancing threshold is %u mV\r\n", bal.threshold / 10);
+			bal_set_threshold(atoi(argv[2]) * 10);
 		}
+		sprintf(out, "balancing threshold is %u mV\r\n", bal_get_threshold() / 10);
 	} else {
 		sprintf(out,
 				"Unknown parameter: %s\r\n\n"
 				"valid parameters:\r\n"
-				"- tog\r\n"
+				"- on\r\n"
+				"- off\r\n"
 				"- thr <millivolts>\r\n",
 				argv[1]);
 	}

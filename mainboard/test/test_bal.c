@@ -6,12 +6,12 @@
 #include "test_volt_data.h"
 
 struct data {
-	bal_config conf;
 	uint16_t threshold;
 	uint16_t voltages[PACK_CELL_COUNT];
 };
 
-#define BAL_TEST_DELTA 20
+#define BAL_TEST_DELTA 10
+#define COUNT_MAX 50
 
 void* bal_setup_balanced(const MunitParameter params[], void* user_data) {
 	struct data* tmp = malloc(sizeof(struct data));
@@ -37,14 +37,14 @@ void tear_down(void* fixture) {
  * @brief Fakes a balancing cycle by randomly decreasing cell voltages.
  */
 uint16_t balance(struct data* data, uint16_t max_count) {
-	uint16_t indexes[PACK_CELL_COUNT];
-
+	uint16_t cells[PACK_CELL_COUNT] = {0};
 	// set a maximum count to prevent killer loops
-	while (max_count > 0 && bal_compute_indexes(data->voltages, data->threshold, indexes)) {
+	while (max_count > 0 && bal_get_cells_to_discharge(data->voltages, PACK_CELL_COUNT, data->threshold, cells) > 0) {
 		max_count--;
-		for (size_t i = 0; i < PACK_CELL_COUNT; i++) {
-			if (indexes[i] != BAL_NULL_INDEX) {
-				data->voltages[indexes[i]] -= munit_rand_int_range(1, 3);
+
+		for (uint16_t i = 0; i < PACK_CELL_COUNT; i++) {
+			if (cells[i] != BAL_NULL_INDEX) {
+				data->voltages[cells[i]] -= munit_rand_int_range(1, 3);
 			}
 		}
 	}
@@ -61,15 +61,14 @@ MunitResult test_balanced(const MunitParameter params[], void* user_data_or_fixt
 	uint16_t min = volt_min(data->voltages);
 	uint16_t max = volt_max(data->voltages);
 
-	const uint16_t max_count = 50;
-	uint16_t count = balance(data, max_count);
+	uint16_t count = balance(data, COUNT_MAX);
 
 	uint16_t new_min = volt_min(data->voltages);
 	uint16_t new_max = volt_max(data->voltages);
 
+	munit_assert_uint16(count, ==, COUNT_MAX);
 	munit_assert_uint16(max, ==, new_max);
 	munit_assert_uint16(min, ==, new_min);
-	munit_assert_uint16(count, ==, max_count);
 
 	return MUNIT_OK;
 }
@@ -82,17 +81,16 @@ MunitResult test_unbalanced(const MunitParameter params[], void* user_data_or_fi
 
 	uint16_t min = volt_min(data->voltages);
 
-	const uint16_t max_count = 50;
-	uint16_t count = balance(data, max_count);
+	uint16_t count = balance(data, COUNT_MAX);
 
 	uint16_t new_min = volt_min(data->voltages);
 	uint16_t new_max = volt_max(data->voltages);
 
-	// check that cells are actually balanced
-	munit_assert_uint16(new_max - new_min, <=, data->threshold);
-
 	// have we exceeded the maximum number of cycles?
 	munit_assert_uint16(count, >, 0);
+
+	// check that cells are actually balanced
+	munit_assert_uint16(new_max - new_min, <=, data->threshold);
 
 	// minimum voltage should'n have changed
 	munit_assert_uint16(min, ==, new_min);
@@ -101,14 +99,9 @@ MunitResult test_unbalanced(const MunitParameter params[], void* user_data_or_fi
 }
 
 MunitTest test_bal_tests[] = {
-	{(char*)"/unbalanced", test_balanced, bal_setup_balanced, tear_down, MUNIT_TEST_OPTION_NONE, NULL},
-	{(char*)"/balanced", test_unbalanced, bal_setup_unbalanced, tear_down, MUNIT_TEST_OPTION_NONE, NULL},
+	{(char*)"/balanced", test_balanced, bal_setup_balanced, tear_down, MUNIT_TEST_OPTION_NONE, NULL},
+	{(char*)"/unbalanced", test_unbalanced, bal_setup_unbalanced, tear_down, MUNIT_TEST_OPTION_NONE, NULL},
 
 	{NULL, NULL, NULL, MUNIT_TEST_OPTION_NONE, MUNIT_SUITE_OPTION_NONE}};
 
-MunitSuite test_bal_suite = {
-	"/balancing",
-	test_bal_tests,
-	NULL,
-	1,
-	MUNIT_SUITE_OPTION_NONE};
+MunitSuite test_bal_suite = {"/balancing", test_bal_tests, NULL, 1, MUNIT_SUITE_OPTION_NONE};

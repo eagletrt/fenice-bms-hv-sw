@@ -134,8 +134,7 @@ void _ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool start_bal, bool even) {
 	_ltc6813_adcv(hspi, start_bal);
 }
 
-void ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool is_a,
-				   uint8_t cfgr[LTC6813_COUNT][8]) {
+void ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool is_a, uint8_t cfgr[LTC6813_COUNT][8]) {
 	uint8_t cmd[4] = {0};
 
 	if (is_a) {
