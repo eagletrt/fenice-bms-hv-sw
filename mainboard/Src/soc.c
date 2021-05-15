@@ -44,6 +44,6 @@ void soc_sample_current(soc_t handle, current_t current, voltage_t voltage, uint
 }
 
 double soc_get_total_consumption(soc_t handle) {
-	// 1 J = 1/3600s Wh
+	// 1 J = 1/3600s [Wh]
 	return (double)handle->joule / 3600000;
 }

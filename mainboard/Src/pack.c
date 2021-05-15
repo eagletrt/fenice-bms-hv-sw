@@ -14,6 +14,7 @@
 
 #include "feedback.h"
 #include "peripherals/si8900.h"
+#include "soc.h"
 #define CURRENT_ARRAY_LENGTH 512
 
 #ifndef max
@@ -41,6 +42,7 @@ typedef struct {
 uint32_t current_50[CURRENT_ARRAY_LENGTH];	 // TODO: move to pck_data and update DMA and generate getter no setter
 uint32_t current_300[CURRENT_ARRAY_LENGTH];	 // TODO: move to pck_data and update DMA and generate getter no setter
 
+soc_t soc_total;
 cells_t cells;
 bal_handle balancing;  // TODO: Remove bal_conf_t struct (remove enable and the rest has to be managed by the state machine with the eeprom too)
 current_t current;
@@ -62,6 +64,7 @@ void pack_init() {
 		cells.temperatures[i] = 0;
 	}
 
+	soc_init(soc_total);
 	bal_init(&balancing);
 
 	// LTC6813 GPIO configuration
@@ -151,7 +154,9 @@ void pack_update_current() {
 		current = current50;
 	}
 
-	error_toggle_check(current300 > PACK_MAX_CURRENT, ERROR_OVER_CURRENT, 0);
+	soc_sample_current(soc_total, current, pack_get_int_voltage(), HAL_GetTick());
+
+	error_toggle_check(current > PACK_MAX_CURRENT, ERROR_OVER_CURRENT, 0);
 }
 
 void pack_update_voltage_stats(voltage_t *total, voltage_t *maxv, voltage_t *minv) {
