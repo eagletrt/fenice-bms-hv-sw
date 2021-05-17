@@ -70,6 +70,7 @@ Src/pack.c \
 Src/peripherals/can.c \
 Src/peripherals/ltc6813.c \
 Src/peripherals/ltc6813_utils.c \
+Src/peripherals/m95256.c \
 Src/peripherals/si8900.c \
 Src/soc.c \
 Src/spi.c \
