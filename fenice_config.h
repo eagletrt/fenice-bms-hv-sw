@@ -18,6 +18,8 @@
 
 #define htim_Err htim2
 
+#define spi_eeprom hspi2
+
 /**
  * Maximum can payload. for CAN 2.0A is 8 bytes
  */

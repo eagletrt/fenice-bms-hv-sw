@@ -23,6 +23,7 @@
 #include "fdcan.h"
 #include "fenice_config.h"
 #include "fsm_bms.h"
+#include "m95256.h"
 #include "peripherals/can.h"
 #include "si8900.h"
 /* USER CODE END Includes */
@@ -47,6 +48,8 @@
 
 /* USER CODE BEGIN PV */
 DMA_HandleTypeDef hdma_adc1;
+
+m95256_t eeprom;
 
 uint32_t timer_volts = 0;
 uint32_t timer_temps = 0;
@@ -149,6 +152,7 @@ int main(void) {
 	fsm_bms_init();
 	cli_bms_init();
 	can_init();
+	m95256_init(&eeprom, &spi_eeprom, CS_EEPROM_GPIO_Port, CS_EEPROM_Pin);
 
 	if (si8900_init(&huart3, ADC_SIN_GPIO_Port, ADC_SIN_Pin)) {
 		cli_print(&cli_bms, "SI8900 INITIALIZED\r\n", 20);
