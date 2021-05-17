@@ -69,7 +69,6 @@ Src/pack.c \
 Src/peripherals/can.c \
 Src/peripherals/ltc6813.c \
 Src/peripherals/ltc6813_utils.c \
-Src/peripherals/m95256.c \
 Src/peripherals/si8900.c \
 Src/spi.c \
 Src/stm32g4xx_hal_msp.c \
@@ -88,7 +87,8 @@ lib/can/naked_generator/Primary/c/Primary.c \
 lib/can/naked_generator/Secondary/c/Secondary.c \
 lib/micro-libs/cli/cli.c \
 lib/micro-libs/fsm/fsm.c \
-lib/micro-libs/llist/llist.c
+lib/micro-libs/llist/llist.c \
+lib/micro-libs/m95256/m95256.c
 
 
 CPP_SOURCES = \
@@ -107,7 +107,7 @@ PREFIX = arm-none-eabi-
 POSTFIX = "
 # The gcc compiler bin path can be either defined in make command via GCC_PATH variable (> make GCC_PATH=xxx)
 # either it can be added to the PATH environment variable.
-
+GCC_PATH="/usr/bin
 ifdef GCC_PATH
 CXX = $(GCC_PATH)/$(PREFIX)g++$(POSTFIX)
 CC = $(GCC_PATH)/$(PREFIX)gcc$(POSTFIX)
@@ -173,7 +173,8 @@ C_INCLUDES =  \
 -Ilib/can/naked_generator/Secondary/c \
 -Ilib/micro-libs/cli \
 -Ilib/micro-libs/fsm \
--Ilib/micro-libs/llist
+-Ilib/micro-libs/llist \
+-Ilib/micro-libs/m95256
 
 
 
