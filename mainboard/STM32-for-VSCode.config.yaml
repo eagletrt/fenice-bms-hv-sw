@@ -63,6 +63,7 @@ includeDirectories:
   - lib/micro-libs/priority-queue/**
   - lib/micro-libs/fsm/**
   - lib/micro-libs/cli/**
+  - lib/micro-libs/m95256/**
 
 
 # Files that should be included in the compilation.
@@ -77,6 +78,7 @@ sourceFiles:
   - lib/micro-libs/priority-queue/**
   - lib/micro-libs/fsm/**
   - lib/micro-libs/cli/**
+  - lib/micro-libs/m95256/**
 
 
 # When no makefile is present it will show a warning pop-up.

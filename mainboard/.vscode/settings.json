@@ -2,8 +2,8 @@
     "C_Cpp.default.cStandard": "c11",
     "C_Cpp.clang_format_fallbackStyle": "{BasedOnStyle: Google, UseTab: true, IndentWidth: 4, TabWidth: 4, ColumnLimit: 0, AllowShortIfStatementsOnASingleLine: false}",
     "stm32-for-vscode.makePath": "make",
-    "stm32-for-vscode.armToolchainPath": "",
-    "cortex-debug.armToolchainPath": "",
+    "stm32-for-vscode.armToolchainPath": "/usr/bin",
+    "cortex-debug.armToolchainPath": "/usr/bin",
     "stm32-for-vscode.openOCDPath": "openocd",
     "todo-tree.tree.scanMode": "workspace only",
     "files.associations": {
