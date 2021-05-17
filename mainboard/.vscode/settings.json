@@ -17,4 +17,5 @@
         "main.h": "c",
         "fenice_config.h": "c"
     },
+    "cortex-debug.openocdPath": "openocd",
 }

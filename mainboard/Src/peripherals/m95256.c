@@ -20,6 +20,8 @@
 
 #include "m95256.h"
 
+#include <stdlib.h>
+
 struct m95256 {
 	SPI_HandleTypeDef* spi;
 	GPIO_TypeDef* cs_gpio;
@@ -37,10 +39,15 @@ uint8_t RxBuffer[EEPROM_BUFFER_SIZE] = {0x00};
  * @param cs_gpio Pointer to the GPIO struct for the chip select pin
  * @param cs_pin Chip select pin number
  */
-void m95256_INIT(m95256_t eeprom, SPI_HandleTypeDef* hspi, GPIO_TypeDef* cs_gpio, uint16_t cs_pin) {
-	eeprom->spi = hspi;
-	eeprom->cs_gpio = cs_gpio;
-	eeprom->cs_pin = cs_pin;
+void m95256_init(m95256_t* eeprom, SPI_HandleTypeDef* hspi, GPIO_TypeDef* cs_gpio, uint16_t cs_pin) {
+	*eeprom = malloc(sizeof(struct m95256));
+	(*eeprom)->spi = hspi;
+	(*eeprom)->cs_gpio = cs_gpio;
+	(*eeprom)->cs_pin = cs_pin;
+}
+
+void m95256_deinit(m95256_t* eeprom) {
+	free(*eeprom);
 }
 
 /**

@@ -39,7 +39,8 @@ typedef enum {
 	EEPROM_STATUS_ERROR
 } EepromOperations;
 
-void m95256_INIT(m95256_t eeprom, SPI_HandleTypeDef* hspi, GPIO_TypeDef* cs_gpio, uint16_t cs_pin);
+void m95256_init(m95256_t* eeprom, SPI_HandleTypeDef* hspi, GPIO_TypeDef* cs_gpio, uint16_t cs_pin);
+void m95256_deinit(m95256_t* eeprom);
 EepromOperations m95256_WriteBuffer(m95256_t eeprom, uint8_t* pBuffer, uint16_t WriteAddr, uint16_t NumByteToWrite);
 EepromOperations m95256_WritePage(m95256_t eeprom, uint8_t* pBuffer, uint16_t WriteAddr, uint16_t NumByteToWrite);
 EepromOperations m95256_ReadBuffer(m95256_t eeprom, uint8_t* pBuffer, uint16_t ReadAddr, uint16_t NumByteToRead);

@@ -52,14 +52,14 @@ void read_temps();
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define ANALOG_DATA_Pin GPIO_PIN_13
-#define ANALOG_DATA_GPIO_Port GPIOC
+#define CS_EEPROM_Pin GPIO_PIN_13
+#define CS_EEPROM_GPIO_Port GPIOC
 #define IP_LOW_Pin GPIO_PIN_14
 #define IP_LOW_GPIO_Port GPIOC
 #define IP_HIGH_Pin GPIO_PIN_15
 #define IP_HIGH_GPIO_Port GPIOC
-#define CS_EEPROM_Pin GPIO_PIN_0
-#define CS_EEPROM_GPIO_Port GPIOF
+#define ANALOG_DATA_Pin GPIO_PIN_0
+#define ANALOG_DATA_GPIO_Port GPIOF
 #define CARD_INSERT_Pin GPIO_PIN_1
 #define CARD_INSERT_GPIO_Port GPIOF
 #define MUX_A2_Pin GPIO_PIN_0

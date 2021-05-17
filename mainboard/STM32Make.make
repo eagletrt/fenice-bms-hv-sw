@@ -88,8 +88,7 @@ lib/can/naked_generator/Primary/c/Primary.c \
 lib/can/naked_generator/Secondary/c/Secondary.c \
 lib/micro-libs/cli/cli.c \
 lib/micro-libs/fsm/fsm.c \
-lib/micro-libs/llist/llist.c \
-lib/micro-libs/priority-queue/priority_queue.c
+lib/micro-libs/llist/llist.c
 
 
 CPP_SOURCES = \
@@ -108,7 +107,7 @@ PREFIX = arm-none-eabi-
 POSTFIX = "
 # The gcc compiler bin path can be either defined in make command via GCC_PATH variable (> make GCC_PATH=xxx)
 # either it can be added to the PATH environment variable.
-GCC_PATH="/usr/bin
+
 ifdef GCC_PATH
 CXX = $(GCC_PATH)/$(PREFIX)g++$(POSTFIX)
 CC = $(GCC_PATH)/$(PREFIX)gcc$(POSTFIX)
@@ -166,9 +165,6 @@ C_INCLUDES =  \
 -Ilib/can/external/flatcc/portable \
 -Ilib/can/external/flatcc/reflection \
 -Ilib/can/external/flatcc/support \
--Ilib/can/flatbuf_generator/BMSinternal/c \
--Ilib/can/flatbuf_generator/Primary/c \
--Ilib/can/flatbuf_generator/Secondary/c \
 -Ilib/can/includes_generator/BMSinternal \
 -Ilib/can/includes_generator/Primary \
 -Ilib/can/includes_generator/Secondary \
@@ -177,8 +173,7 @@ C_INCLUDES =  \
 -Ilib/can/naked_generator/Secondary/c \
 -Ilib/micro-libs/cli \
 -Ilib/micro-libs/fsm \
--Ilib/micro-libs/llist \
--Ilib/micro-libs/priority-queue
+-Ilib/micro-libs/llist
 
 
 
@@ -257,13 +252,13 @@ $(BUILD_DIR):
 # flash
 #######################################
 flash: $(BUILD_DIR)/$(TARGET).elf
-	"/usr/bin/openocd" -f ./openocd.cfg -c "program $(BUILD_DIR)/$(TARGET).elf verify reset exit"
+	"openocd" -f ./openocd.cfg -c "program $(BUILD_DIR)/$(TARGET).elf verify reset exit"
 
 #######################################
 # erase
 #######################################
 erase: $(BUILD_DIR)/$(TARGET).elf
-	"/usr/bin/openocd" -f ./openocd.cfg -c "init; reset halt; stm32g4x mass_erase 0; exit"
+	"openocd" -f ./openocd.cfg -c "init; reset halt; stm32g4x mass_erase 0; exit"
 
 #######################################
 # clean up
