@@ -91,7 +91,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	if (htim == &htim_Err) {  //htim_Err is a #define to htim2 (barely a substition) so tim.h must be included
 		HAL_TIM_Base_Stop_IT(htim);
 
-		fsm_set_state(&fsm_bms, BMS_TO_HALT);
+		fsm_handle_event(&fsm_bms, BMS_TO_HALT);
 		fsm_run(&fsm_bms);
 	}
 }
@@ -107,7 +107,7 @@ void fsm_bms_ts_off_handler() {
 		case BMS_PRECHARGE_END:
 		case BMS_RUN:
 		case BMS_CHARGE:
-			fsm_set_state(&fsm_bms, BMS_SET_TS_OFF);
+			fsm_handle_event(&fsm_bms, BMS_SET_TS_OFF);
 			break;
 		default:
 			can_send(ID_TS_STATUS);
@@ -119,7 +119,7 @@ void fsm_bms_ts_on_handler() {
 	cli_bms_debug("CAN: got TS ON event", 22);
 	switch (fsm_get_state(&fsm_bms)) {
 		case BMS_IDLE:
-			fsm_set_state(&fsm_bms, BMS_PRECHARGE_START);
+			fsm_handle_event(&fsm_bms, BMS_PRECHARGE_START);
 			break;
 		default:
 			can_send(ID_TS_STATUS);
