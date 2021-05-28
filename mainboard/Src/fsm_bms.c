@@ -35,13 +35,11 @@ uint16_t do_to_halt(fsm *FSM);
 uint16_t do_halt(fsm *FSM);
 
 fsm fsm_bms;
-PQ_QueueTypeDef event_queue;
 
 uint32_t timer_precharge = 0;
 
 void fsm_bms_init() {
   fsm_init(&fsm_bms, BMS_NUM_STATES);
-  PQ_init(&event_queue, 1);
 
   for (uint16_t i = 0; i < BMS_NUM_STATES; i++) {
     fsm_bms.state_table[i][BMS_TO_HALT] = &do_to_halt;
