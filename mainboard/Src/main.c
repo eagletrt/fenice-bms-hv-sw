@@ -19,6 +19,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "cli_bms.h"
+#include "config.h"
 #include "error/error.h"
 #include "fdcan.h"
 #include "fenice_config.h"
@@ -148,11 +149,14 @@ int main(void) {
 	HAL_FDCAN_ActivateNotification(&hfdcan1, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0);
 	HAL_FDCAN_Start(&hfdcan1);
 
+	m95256_init(&eeprom, &spi_eeprom, CS_EEPROM_GPIO_Port, CS_EEPROM_Pin);
+
+	config_load();
+
 	error_init();
 	fsm_bms_init();
 	cli_bms_init();
 	can_init();
-	m95256_init(&eeprom, &spi_eeprom, CS_EEPROM_GPIO_Port, CS_EEPROM_Pin);
 
 	if (si8900_init(&huart3, ADC_SIN_GPIO_Port, ADC_SIN_Pin)) {
 		cli_print(&cli_bms, "SI8900 INITIALIZED\r\n", 20);
