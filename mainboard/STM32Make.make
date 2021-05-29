@@ -58,6 +58,7 @@ Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_uart.c \
 Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_uart_ex.c \
 Src/bal.c \
 Src/cli_bms.c \
+Src/config.c \
 Src/error/error.c \
 Src/error/error_list_ref.c \
 Src/fdcan.c \
@@ -88,7 +89,8 @@ lib/can/naked_generator/Secondary/c/Secondary.c \
 lib/micro-libs/cli/cli.c \
 lib/micro-libs/fsm/fsm.c \
 lib/micro-libs/llist/llist.c \
-lib/micro-libs/m95256/m95256.c
+lib/micro-libs/m95256/m95256.c \
+lib/micro-libs/priority-queue/priority_queue.c
 
 
 CPP_SOURCES = \
@@ -165,6 +167,9 @@ C_INCLUDES =  \
 -Ilib/can/external/flatcc/portable \
 -Ilib/can/external/flatcc/reflection \
 -Ilib/can/external/flatcc/support \
+-Ilib/can/flatbuf_generator/BMSinternal/c \
+-Ilib/can/flatbuf_generator/Primary/c \
+-Ilib/can/flatbuf_generator/Secondary/c \
 -Ilib/can/includes_generator/BMSinternal \
 -Ilib/can/includes_generator/Primary \
 -Ilib/can/includes_generator/Secondary \
@@ -174,7 +179,8 @@ C_INCLUDES =  \
 -Ilib/micro-libs/cli \
 -Ilib/micro-libs/fsm \
 -Ilib/micro-libs/llist \
--Ilib/micro-libs/m95256
+-Ilib/micro-libs/m95256 \
+-Ilib/micro-libs/priority-queue
 
 
 
