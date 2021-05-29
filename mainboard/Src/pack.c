@@ -9,10 +9,11 @@
 #include "pack.h"
 
 #include <stdbool.h>
-#include <stm32g4xx_hal.h>
 #include <string.h>
 
+#include "config.h"
 #include "feedback.h"
+#include "main.h"
 #include "peripherals/si8900.h"
 #include "soc.h"
 #define CURRENT_ARRAY_LENGTH 512
@@ -43,6 +44,8 @@ uint32_t current_50[CURRENT_ARRAY_LENGTH];	 // TODO: move to pck_data and update
 uint32_t current_300[CURRENT_ARRAY_LENGTH];	 // TODO: move to pck_data and update DMA and generate getter no setter
 
 soc_t soc_total;
+soc_t soc_last_charge;
+
 cells_t cells;
 bal_handle balancing;  // TODO: Remove bal_conf_t struct (remove enable and the rest has to be managed by the state machine with the eeprom too)
 current_t current;
@@ -64,7 +67,12 @@ void pack_init() {
 		cells.temperatures[i] = 0;
 	}
 
-	soc_init(soc_total);
+	config_t config;
+	config_get(&config);
+
+	soc_load(soc_total, config.total_coulomb, config.total_joule, HAL_GetTick());
+	soc_load(soc_last_charge, config.partial_coulomb, config.partial_joule, HAL_GetTick());
+
 	bal_init(&balancing);
 
 	// LTC6813 GPIO configuration
@@ -155,6 +163,7 @@ void pack_update_current() {
 	}
 
 	soc_sample_current(soc_total, current, pack_get_int_voltage(), HAL_GetTick());
+	soc_sample_current(soc_last_charge, current, pack_get_int_voltage(), HAL_GetTick());
 
 	error_toggle_check(current > PACK_MAX_CURRENT, ERROR_OVER_CURRENT, 0);
 }
@@ -215,6 +224,22 @@ bool pack_balance_cells(SPI_HandleTypeDef *hspi) {
 		balancing.enable = false;
 	}
 	return false;
+}
+
+void pack_reset_soc() {
+	soc_reset_count(soc_last_charge, HAL_GetTick());
+}
+
+double pack_get_soc() {
+	return (soc_get_total_consumption(soc_last_charge) / ((double)PACK_ENERGY_NOMINAL / 10) * 100) * 100;
+}
+
+double pack_get_energy_total() {
+	return soc_get_total_consumption(soc_total);
+}
+
+double pack_get_energy_last_charge() {
+	return soc_get_total_consumption(soc_last_charge);
 }
 
 bool pack_set_ts_off() {

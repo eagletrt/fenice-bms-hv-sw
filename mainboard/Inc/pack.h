@@ -53,6 +53,11 @@ void pack_update_voltage_stats();
 void pack_update_temperature_stats();
 bool pack_balance_cells(SPI_HandleTypeDef *hspi);
 
+void pack_reset_soc();
+double pack_get_soc();
+double pack_get_energy_total();
+double pack_get_energy_last_charge();
+
 bool pack_set_ts_off();
 bool pack_set_pc_start();
 bool pack_set_precharge_end();

@@ -19,7 +19,6 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "cli_bms.h"
-#include "config.h"
 #include "error/error.h"
 #include "fdcan.h"
 #include "fenice_config.h"

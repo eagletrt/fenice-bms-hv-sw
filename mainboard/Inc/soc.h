@@ -26,11 +26,23 @@ typedef struct soc* soc_t;
 void soc_init(soc_t handle);
 
 /**
+ * @brief Loads saved values and resets timer
+ */
+void soc_load(soc_t handle, uint32_t coulomb, uint32_t joule, uint32_t time);
+
+/**
  * @brief Resets integration time to a given timestamp.
  * 
  * @details Useful for resetting count when the battery is turned on
  */
 void soc_reset_time(soc_t handle, uint32_t time);
+
+/**
+ * @brief Resets all recorded values along with integration timestamp
+ * 
+ * @details Used when battery is fully charged or when consumption restricted to a certain period is wanted. 
+ */
+void soc_reset_count(soc_t handle, uint32_t time);
 
 /**
  * @brief   Updates coulomb and joule counting with given data

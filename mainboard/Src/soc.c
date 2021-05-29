@@ -9,6 +9,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "soc.h"
 
+#include <string.h>
+
 #include "pack.h"
 /* Private typedef -----------------------------------------------------------*/
 struct soc {
@@ -24,13 +26,23 @@ struct soc {
 /* Exported functions --------------------------------------------------------*/
 
 void soc_init(soc_t handle) {
-	handle->last_sample = 0;
-	handle->coulomb = 0;
-	handle->joule = 0;
+	soc_reset_count(handle, 0);
+}
+
+void soc_load(soc_t handle, uint32_t coulomb, uint32_t joule, uint32_t time) {
+	handle->coulomb = coulomb;
+	handle->joule = joule;
+	soc_reset_time(handle, time);
 }
 
 void soc_reset_time(soc_t handle, uint32_t time) {
 	handle->last_sample = time;
+}
+
+void soc_reset_count(soc_t handle, uint32_t time) {
+	handle->coulomb = 0;
+	handle->joule = 0;
+	soc_reset_time(handle, time);
 }
 
 void soc_sample_current(soc_t handle, current_t current, voltage_t voltage, uint32_t time) {

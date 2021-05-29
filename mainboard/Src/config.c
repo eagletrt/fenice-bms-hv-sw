@@ -13,6 +13,10 @@
 
 #include "m95256.h"
 
+const config_t config_default = {
+	CONFIG_VERSION,
+	0, 0};
+
 m95256_t memory;
 config_t config = config_default;
 
