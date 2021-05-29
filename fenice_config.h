@@ -126,6 +126,16 @@ static const uint8_t TEMP_SENSOR_ADDRESS_CODING[TEMP_SENSORS_PER_STRIP] = {
  */
 #define CELL_MAX_TEMPERATURE 6000
 
+/**
+ * Cell nominal energy (Wh * 10)
+ */
+#define CELL_ENERGY_NOMINAL 576
+
+/**
+ * Pack nominal energy (Wh * 10)
+ */
+#define PACK_ENERGY_NOMINAL (CELL_ENERGY_NOMINAL * PACK_CELL_COUNT)
+
 // @section Balancing
 
 /**

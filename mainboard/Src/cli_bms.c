@@ -17,10 +17,11 @@
 #include "bal.h"
 #include "error/error.h"
 #include "fsm_bms.h"
+#include "pack.h"
 #include "usart.h"
 
 // TODO: don't count manually
-#define N_COMMANDS 9
+#define N_COMMANDS 10
 
 cli_command_func_t _cli_volts;
 cli_command_func_t _cli_volts_all;
@@ -28,6 +29,7 @@ cli_command_func_t _cli_temps;
 cli_command_func_t _cli_temps_all;
 cli_command_func_t _cli_status;
 cli_command_func_t _cli_balance;
+cli_command_func_t _cli_soc;
 cli_command_func_t _cli_errors;
 cli_command_func_t _cli_dmesg;
 cli_command_func_t _cli_reset;
@@ -78,10 +80,10 @@ char const *const feedback_names[FEEDBACK_N] = {
 	[FEEDBACK_TS_ON_POS] = "TS ON"};
 
 char *command_names[N_COMMANDS] = {
-	"volt", "temp", "status", "errors", "bal", "dmesg", "reset", "?", "\ta"};
+	"volt", "temp", "status", "errors", "bal", "soc", "dmesg", "reset", "?", "\ta"};
 
 cli_command_func_t *commands[N_COMMANDS] = {
-	&_cli_volts, &_cli_temps, &_cli_status, &_cli_errors, &_cli_balance, &_cli_dmesg, &_cli_reset, &_cli_help, &_cli_taba};
+	&_cli_volts, &_cli_temps, &_cli_status, &_cli_errors, &_cli_balance, &_cli_soc, &_cli_dmesg, &_cli_reset, &_cli_help, &_cli_taba};
 
 cli_t cli_bms;
 bool dmesg_ena = false;
@@ -232,6 +234,17 @@ void _cli_balance(uint16_t argc, char **argv, char *out) {
 				balancing.threshold / 10);
 	} else {
 		sprintf(out, "Unknown parameter: %s\r\n", argv[1]);
+	}
+}
+void _cli_soc(uint16_t argc, char **argv, char *out) {
+	if (strcmp(argv[1], "reset")) {
+		pack_reset_soc();
+	} else {
+		sprintf(out,
+				"SoC: %f\r\n"
+				"Energy: %f\r\n"
+				"Energy total: %f\r\n",
+				pack_get_soc(), pack_get_energy_last_charge(), pack_get_energy_total());
 	}
 }
 
