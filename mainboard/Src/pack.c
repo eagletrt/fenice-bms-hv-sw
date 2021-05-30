@@ -70,8 +70,10 @@ void pack_init() {
 	config_t config;
 	config_get(&config);
 
-	soc_load(soc_total, config.total_coulomb, config.total_joule, HAL_GetTick());
-	soc_load(soc_last_charge, config.partial_coulomb, config.partial_joule, HAL_GetTick());
+	soc_init(&soc_total);
+	soc_init(&soc_last_charge);
+	soc_load(soc_total, config.total_joule, HAL_GetTick());
+	soc_load(soc_last_charge, config.charge_joule, HAL_GetTick());
 
 	bal_init(&balancing);
 
@@ -84,8 +86,8 @@ void pack_update_voltages(SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart) {
 
 	ltc6813_read_voltages(hspi, cells.voltages);
 
-	voltage_t internal;
-	voltage_t bus;
+	voltage_t internal = 0;
+	voltage_t bus = 0;
 	if (si8900_read_channel(huart, SI8900_AIN0, &internal)) {
 		cells.int_voltage = internal;
 	}
@@ -162,8 +164,16 @@ void pack_update_current() {
 		current = current50;
 	}
 
+	config_t c;
+	config_get(&c);
+
 	soc_sample_current(soc_total, current, pack_get_int_voltage(), HAL_GetTick());
 	soc_sample_current(soc_last_charge, current, pack_get_int_voltage(), HAL_GetTick());
+
+	c.charge_joule = soc_get_joule(soc_last_charge);
+
+	c.total_joule = soc_get_joule(soc_total);
+	config_set(&c);
 
 	error_toggle_check(current > PACK_MAX_CURRENT, ERROR_OVER_CURRENT, 0);
 }
@@ -231,15 +241,15 @@ void pack_reset_soc() {
 }
 
 double pack_get_soc() {
-	return (soc_get_total_consumption(soc_last_charge) / ((double)PACK_ENERGY_NOMINAL / 10) * 100) * 100;
+	return soc_get_wh(soc_last_charge) / ((double)PACK_ENERGY_NOMINAL / 10) * 100;
 }
 
 double pack_get_energy_total() {
-	return soc_get_total_consumption(soc_total);
+	return soc_get_wh(soc_total);
 }
 
 double pack_get_energy_last_charge() {
-	return soc_get_total_consumption(soc_last_charge);
+	return soc_get_wh(soc_last_charge);
 }
 
 bool pack_set_ts_off() {

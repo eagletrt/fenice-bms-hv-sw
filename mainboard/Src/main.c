@@ -19,6 +19,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "cli_bms.h"
+#include "config.h"
 #include "error/error.h"
 #include "fdcan.h"
 #include "fenice_config.h"
@@ -37,6 +38,7 @@
 /* USER CODE BEGIN PD */
 #define TEMPS_READ_INTERVAL 40
 #define VOLTS_READ_INTERVAL 20
+#define CONFIG_WRITE_INTERVAL 5000
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -54,6 +56,7 @@ m95256_t eeprom;
 uint32_t timer_volts = 0;
 uint32_t timer_temps = 0;
 uint32_t timer_bal = 0;
+uint32_t timer_config = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -87,6 +90,11 @@ void check_timers() {
 	if (tick - timer_bal >= BAL_CYCLE_LENGTH + 5000) {
 		timer_bal = tick;
 		pack_balance_cells(&hspi1);
+	}
+
+	if (tick - timer_config >= CONFIG_WRITE_INTERVAL) {
+		timer_config = tick;
+		config_write(eeprom);
 	}
 }
 
@@ -148,20 +156,22 @@ int main(void) {
 	HAL_FDCAN_ActivateNotification(&hfdcan1, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0);
 	HAL_FDCAN_Start(&hfdcan1);
 
+	// Load config from eeprom
 	m95256_init(&eeprom, &spi_eeprom, CS_EEPROM_GPIO_Port, CS_EEPROM_Pin);
+	config_load(eeprom);
 
-	config_load();
-
-	error_init();
-	fsm_bms_init();
+	// Initialize logging, errors and can
 	cli_bms_init();
+	error_init();
 	can_init();
-
 	if (si8900_init(&huart3, ADC_SIN_GPIO_Port, ADC_SIN_Pin)) {
 		cli_print(&cli_bms, "SI8900 INITIALIZED\r\n", 20);
 	} else {
 		cli_print(&cli_bms, "SI8900 ERROR\r\n", 14);
 	}
+
+	pack_init();
+	fsm_bms_init();
 
 	/* USER CODE END 2 */
 
@@ -171,7 +181,7 @@ int main(void) {
 		/* USER CODE END WHILE */
 
 		/* USER CODE BEGIN 3 */
-		fsm_run(&fsm_bms);
+		//fsm_run(&fsm_bms);
 
 		check_timers();
 

@@ -4,6 +4,13 @@
     "stm32-for-vscode.makePath": "make",
     "stm32-for-vscode.openOCDPath": "openocd",
     "todo-tree.tree.scanMode": "workspace only",
-    "cortex-debug.openocdPath": "/usr/bin/openocd",
+    "cortex-debug.openocdPath": "openocd",
     "cortex-debug.armToolchainPath": "/usr/bin",
+    "files.associations": {
+        "config.h": "c",
+        "inttypes.h": "c",
+        "soc.h": "c",
+        "m95256.h": "c",
+        "fenice_config.h": "c"
+    },
 }

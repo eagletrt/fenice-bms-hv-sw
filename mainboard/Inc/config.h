@@ -12,6 +12,7 @@
 #include <inttypes.h>
 
 #include "bal.h"
+#include "m95256.h"
 #include "soc.h"
 
 #define CONFIG_ADDRESS 0x00
@@ -21,17 +22,16 @@
 struct config {
 	uint32_t version;
 
-	uint32_t total_coulomb;
-	uint32_t total_joule;
-	uint32_t partial_coulomb;
-	uint32_t partial_joule;
+	double total_joule;
+	double charge_joule;
 };
 typedef struct config config_t;
 
 extern const config_t config_default;
 
-bool config_write(config_t *config);
-bool config_load();
+bool config_write(m95256_t memory);
+bool config_load(m95256_t memory);
 void config_get(config_t *config);
+void config_set(config_t *config);
 
 #endif
