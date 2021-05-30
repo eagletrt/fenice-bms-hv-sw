@@ -237,13 +237,14 @@ void _cli_balance(uint16_t argc, char **argv, char *out) {
 	}
 }
 void _cli_soc(uint16_t argc, char **argv, char *out) {
-	if (strcmp(argv[1], "reset")) {
+	if (strcmp(argv[1], "reset") == 0) {
 		pack_reset_soc();
+		sprintf(out, "Resetting energy meter\r\n");
 	} else {
 		sprintf(out,
-				"SoC: %f\r\n"
-				"Energy: %f\r\n"
-				"Energy total: %f\r\n",
+				"SoC: %.2f %%\r\n"
+				"Energy: %.1f Wh\r\n"
+				"Energy total: %.1f Wh\r\n",
 				pack_get_soc(), pack_get_energy_last_charge(), pack_get_energy_total());
 	}
 }

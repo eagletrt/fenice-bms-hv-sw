@@ -23,12 +23,12 @@ typedef struct soc* soc_t;
 /**
  * @brief Initializes soc instance
  */
-void soc_init(soc_t handle);
+void soc_init(soc_t* handle);
 
 /**
  * @brief Loads saved values and resets timer
  */
-void soc_load(soc_t handle, uint32_t coulomb, uint32_t joule, uint32_t time);
+void soc_load(soc_t handle, uint32_t joule, uint32_t time);
 
 /**
  * @brief Resets integration time to a given timestamp.
@@ -54,7 +54,8 @@ void soc_sample_current(soc_t handle, current_t current, voltage_t voltage, uint
  * 
  * @returns the consumption in Wh
  */
-double soc_get_total_consumption(soc_t handle);
+double soc_get_wh(soc_t handle);
+double soc_get_joule(soc_t handle);
 
 /* Private types -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
