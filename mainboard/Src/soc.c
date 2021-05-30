@@ -12,7 +12,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "pack.h"
 /* Private typedef -----------------------------------------------------------*/
 struct soc {
 	uint32_t last_sample;
@@ -29,6 +28,10 @@ struct soc {
 void soc_init(soc_t* handle) {
 	*handle = malloc(sizeof(struct soc));
 	soc_reset_count(*handle, 0);
+}
+
+void soc_deinit(soc_t* handle) {
+	free(*handle);
 }
 
 void soc_load(soc_t handle, uint32_t joule, uint32_t time) {

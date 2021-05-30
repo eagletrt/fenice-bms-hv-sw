@@ -25,6 +25,8 @@ typedef struct soc* soc_t;
  */
 void soc_init(soc_t* handle);
 
+void soc_deinit(soc_t* handle);
+
 /**
  * @brief Loads saved values and resets timer
  */
