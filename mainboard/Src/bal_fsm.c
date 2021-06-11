@@ -40,12 +40,12 @@ uint16_t do_discharge(fsm *FSM);
 uint16_t do_cooldown(fsm *FSM);
 
 voltage_t bal_get_threshold() {
-    return *(voltage_t *)config_get(&config);
+    return *(voltage_t *)config_get(config);
 }
 
 void bal_set_threshold(uint16_t thresh) {
-    config_set(&config, &thresh);
-    config_write(&config);
+    config_set(config, &thresh);
+    config_write(config);
 }
 
 void bal_fsm_init() {
