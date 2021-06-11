@@ -7,25 +7,27 @@
  * @author		Matteo Bonora [matteo.bonora@studenti.unitn.it]
  */
 
-#ifndef CONFIG_H
-#define CONFIG_H
+#ifndef _CONFIG_H_
+#define _CONFIG_H_
+#include "bal.h"
+#include "m95256.h"
+
 #include <inttypes.h>
 
-#include "bal.h"
-
-#define CONFIG_ADDRESS 0x00
-
-#define CONFIG_VERSION 0x01
-
 struct config {
-	uint32_t version;
+    uint8_t version;
+    uint16_t address;
+    size_t size;
+    void *data;
 };
-typedef struct config config_t;
-const config_t config_default = {
-	CONFIG_VERSION};
 
+typedef struct config config_t;
+
+bool config_init(config_t *config, uint16_t address, void *default_data, size_t size);
 bool config_write(config_t *config);
-bool config_load();
-void config_get(config_t *config);
+bool config_read(config_t *config);
+
+void *config_get(config_t *config);
+void config_set(config_t *config, void *data);
 
 #endif

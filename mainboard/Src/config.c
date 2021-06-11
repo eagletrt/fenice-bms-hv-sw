@@ -9,22 +9,39 @@
 
 #include "config.h"
 
+#include "fenice_config.h"
+#include "main.h"
+#include "spi.h"
+
 #include <string.h>
+m95256_t eeprom;
 
-#include "m95256.h"
+bool config_init(config_t *config, uint16_t address, void *default_data, size_t size) {
+    config->address = address;
+    config->size    = size;
+    m95256_init(&eeprom, &spi_eeprom, CS_EEPROM_GPIO_Port, CS_EEPROM_Pin);
 
-m95256_t memory;
-config_t config = config_default;
+    config_read(config);
+    if (((uint8_t *)config->data)[0] != ((uint8_t *)default_data)[0]) {
+        // Data in memory is gibberish
+        memcpy(config->data, default_data, size);
+        return false;
+    }
+    return true;
+}
+
+bool config_read(config_t *config) {
+    return m95256_ReadBuffer(eeprom, (uint8_t *)&config->data, config->address, config->size) == EEPROM_STATUS_COMPLETE;
+}
 
 bool config_write(config_t *config) {
-	return m95256_WriteBuffer(memory, (uint8_t *)config, CONFIG_ADDRESS, sizeof(*config)) == EEPROM_STATUS_COMPLETE;
+    return m95256_WriteBuffer(eeprom, (uint8_t *)config->data, config->address, config->size) == EEPROM_STATUS_COMPLETE;
 }
 
-bool config_load() {
-	m95256_ReadBuffer(memory, (uint8_t *)&config, CONFIG_ADDRESS, sizeof(config));
-	return config.version == CONFIG_VERSION;
+void *config_get(config_t *config) {
+    return config->data;
 }
 
-void config_get(config_t *config) {
-	memcpy(&config, config, sizeof(config));
+void config_set(config_t *config, void *data) {
+    memcpy(config->data, data, config->size);
 }
