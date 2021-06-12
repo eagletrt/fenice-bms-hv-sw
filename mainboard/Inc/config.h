@@ -9,7 +9,6 @@
 
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
-#include "bal.h"
 #include "m95256.h"
 
 #include <inttypes.h>
