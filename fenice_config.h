@@ -94,8 +94,7 @@
  * The address pin coding for each sensor in a strip. The LSB must be changed
  * from [0-2] to differentiate between each strip.
  */
-static const uint8_t TEMP_SENSOR_ADDRESS_CODING[TEMP_SENSORS_PER_STRIP] = {
-	000, 100, 010, 110, 020, 120};
+static const uint8_t TEMP_SENSOR_ADDRESS_CODING[TEMP_SENSORS_PER_STRIP] = {000, 100, 010, 110, 020, 120};
 
 //===========================================================================
 //================================ Pack Settings ============================
@@ -120,8 +119,8 @@ static const uint8_t TEMP_SENSOR_ADDRESS_CODING[TEMP_SENSORS_PER_STRIP] = {
  * Cell's limit voltages (mV * 10)
  */
 #define CELL_WARN_VOLTAGE 28000
-#define CELL_MIN_VOLTAGE 25000
-#define CELL_MAX_VOLTAGE 42250
+#define CELL_MIN_VOLTAGE  25000
+#define CELL_MAX_VOLTAGE  42250
 
 /**
  * Maximum cell temperature (°C * 100)
@@ -143,7 +142,7 @@ static const uint8_t TEMP_SENSOR_ADDRESS_CODING[TEMP_SENSORS_PER_STRIP] = {
 /**
  *  Maximum voltage delta between cells (mV * 10)
  */
-#define BAL_MAX_VOLTAGE_THRESHOLD 100
+#define BAL_MAX_VOLTAGE_THRESHOLD 1000
 
 /**
  *  How much does a balancing cycle last (ms)
@@ -157,7 +156,7 @@ static const uint8_t TEMP_SENSOR_ADDRESS_CODING[TEMP_SENSORS_PER_STRIP] = {
 
 // @section Pre-charge
 
-#define PRECHARGE_TIMEOUT 10000
+#define PRECHARGE_TIMEOUT           10000
 #define PRECHARGE_VOLTAGE_THRESHOLD 0.95
 
 typedef uint16_t voltage_t;
@@ -168,48 +167,48 @@ typedef int16_t current_t;
  * Feedback bit set bit position 
  */
 enum {
-	FEEDBACK_VREF_POS,
-	FEEDBACK_FROM_TSMS_POS,
-	FEEDBACK_TO_TSMS_POS,
-	FEEDBACK_FROM_SHUTDOWN_POS,
-	FEEDBACK_LATCH_IMD_POS,
-	FEEDBACK_LATCH_BMS_POS,
-	FEEDBACK_IMD_FAULT_POS,
-	FEEDBACK_BMS_FAULT_POS,
-	FEEDBACK_TSAL_HV_POS,
-	FEEDBACK_AIR_POSITIVE_POS,
-	FEEDBACK_AIR_NEGATIVE_POS,
-	FEEDBACK_PC_END_POS,
-	FEEDBACK_RELAY_LV_POS,
-	FEEDBACK_IMD_SHUTDOWN_POS,
-	FEEDBACK_BMS_SHUTDOWN_POS,
-	FEEDBACK_TS_ON_POS,
+    FEEDBACK_VREF_POS,
+    FEEDBACK_FROM_TSMS_POS,
+    FEEDBACK_TO_TSMS_POS,
+    FEEDBACK_FROM_SHUTDOWN_POS,
+    FEEDBACK_LATCH_IMD_POS,
+    FEEDBACK_LATCH_BMS_POS,
+    FEEDBACK_IMD_FAULT_POS,
+    FEEDBACK_BMS_FAULT_POS,
+    FEEDBACK_TSAL_HV_POS,
+    FEEDBACK_AIR_POSITIVE_POS,
+    FEEDBACK_AIR_NEGATIVE_POS,
+    FEEDBACK_PC_END_POS,
+    FEEDBACK_RELAY_LV_POS,
+    FEEDBACK_IMD_SHUTDOWN_POS,
+    FEEDBACK_BMS_SHUTDOWN_POS,
+    FEEDBACK_TS_ON_POS,
 
-	//do not move FEEDBACK_N
-	FEEDBACK_N,
+    //do not move FEEDBACK_N
+    FEEDBACK_N,
 };
 
 /**
  * Feedback bit sets 
  */
-#define FEEDBACK_NULL 0
-#define FEEDBACK_VREF ((feedback_t)1 << FEEDBACK_VREF_POS)
-#define FEEDBACK_FROM_TSMS ((feedback_t)1 << FEEDBACK_FROM_TSMS_POS)
-#define FEEDBACK_TO_TSMS ((feedback_t)1 << FEEDBACK_TO_TSMS_POS)
+#define FEEDBACK_NULL          0
+#define FEEDBACK_VREF          ((feedback_t)1 << FEEDBACK_VREF_POS)
+#define FEEDBACK_FROM_TSMS     ((feedback_t)1 << FEEDBACK_FROM_TSMS_POS)
+#define FEEDBACK_TO_TSMS       ((feedback_t)1 << FEEDBACK_TO_TSMS_POS)
 #define FEEDBACK_FROM_SHUTDOWN ((feedback_t)1 << FEEDBACK_FROM_SHUTDOWN_POS)
-#define FEEDBACK_LATCH_IMD ((feedback_t)1 << FEEDBACK_LATCH_IMD_POS)
-#define FEEDBACK_LATCH_BMS ((feedback_t)1 << FEEDBACK_LATCH_BMS_POS)
-#define FEEDBACK_IMD_FAULT ((feedback_t)1 << FEEDBACK_IMD_FAULT_POS)
-#define FEEDBACK_BMS_FAULT ((feedback_t)1 << FEEDBACK_BMS_FAULT_POS)
-#define FEEDBACK_TSAL_HV ((feedback_t)1 << FEEDBACK_TSAL_HV_POS)
-#define FEEDBACK_AIR_POSITIVE ((feedback_t)1 << FEEDBACK_AIR_POSITIVE_POS)
-#define FEEDBACK_AIR_NEGATIVE ((feedback_t)1 << FEEDBACK_AIR_NEGATIVE_POS)
-#define FEEDBACK_PC_END ((feedback_t)1 << FEEDBACK_PC_END_POS)
-#define FEEDBACK_RELAY_LV ((feedback_t)1 << FEEDBACK_RELAY_LV_POS)
-#define FEEDBACK_IMD_SHUTDOWN ((feedback_t)1 << FEEDBACK_IMD_SHUTDOWN_POS)
-#define FEEDBACK_BMS_SHUTDOWN ((feedback_t)1 << FEEDBACK_BMS_SHUTDOWN_POS)
-#define FEEDBACK_TS_ON ((feedback_t)1 << FEEDBACK_TS_ON_POS)
-#define FEEDBACK_ALL (feedback_t)(((feedback_t)1 << FEEDBACK_N) - 1)
+#define FEEDBACK_LATCH_IMD     ((feedback_t)1 << FEEDBACK_LATCH_IMD_POS)
+#define FEEDBACK_LATCH_BMS     ((feedback_t)1 << FEEDBACK_LATCH_BMS_POS)
+#define FEEDBACK_IMD_FAULT     ((feedback_t)1 << FEEDBACK_IMD_FAULT_POS)
+#define FEEDBACK_BMS_FAULT     ((feedback_t)1 << FEEDBACK_BMS_FAULT_POS)
+#define FEEDBACK_TSAL_HV       ((feedback_t)1 << FEEDBACK_TSAL_HV_POS)
+#define FEEDBACK_AIR_POSITIVE  ((feedback_t)1 << FEEDBACK_AIR_POSITIVE_POS)
+#define FEEDBACK_AIR_NEGATIVE  ((feedback_t)1 << FEEDBACK_AIR_NEGATIVE_POS)
+#define FEEDBACK_PC_END        ((feedback_t)1 << FEEDBACK_PC_END_POS)
+#define FEEDBACK_RELAY_LV      ((feedback_t)1 << FEEDBACK_RELAY_LV_POS)
+#define FEEDBACK_IMD_SHUTDOWN  ((feedback_t)1 << FEEDBACK_IMD_SHUTDOWN_POS)
+#define FEEDBACK_BMS_SHUTDOWN  ((feedback_t)1 << FEEDBACK_BMS_SHUTDOWN_POS)
+#define FEEDBACK_TS_ON         ((feedback_t)1 << FEEDBACK_TS_ON_POS)
+#define FEEDBACK_ALL           (feedback_t)(((feedback_t)1 << FEEDBACK_N) - 1)
 
 //===========================================================================
 //=========================== S160 current transducer =======================
