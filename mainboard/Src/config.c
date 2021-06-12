@@ -25,7 +25,9 @@ struct config {
 static m95256_t eeprom = NULL;
 
 bool config_init(config_t *config, uint16_t address, void *default_data, size_t size) {
-    *config            = (config_t)malloc(sizeof(struct config));
+    *config         = (config_t)malloc(sizeof(struct config));
+    (*config)->data = malloc(size);
+
     (*config)->address = address;
     (*config)->size    = size;
     (*config)->dirty   = false;
@@ -34,18 +36,35 @@ bool config_init(config_t *config, uint16_t address, void *default_data, size_t 
         m95256_init(&eeprom, &spi_eeprom, CS_EEPROM_GPIO_Port, CS_EEPROM_Pin);
     }
 
-    config_read(*config);
-    if (((uint8_t *)(*config)->data)[0] != ((uint8_t *)default_data)[0]) {
-        // Data in memory is gibberish
+    if (config_read(*config)) {
+        if (((uint8_t *)(*config)->data)[0] == ((uint8_t *)default_data)[0]) {
+            return true;
+        }
+        // Data in eeprom is gibberish
         memcpy((*config)->data, default_data, size);
         (*config)->dirty = true;
+
         return false;
     }
-    return true;
+    // TODO: trigger warning?
+    return false;
+}
+
+void config_deinit(config_t config) {
+    free(config->data);
+    free(config);
 }
 
 bool config_read(config_t config) {
-    return m95256_ReadBuffer(eeprom, (uint8_t *)&config->data, config->address, config->size) == EEPROM_STATUS_COMPLETE;
+    uint8_t tmpdata[config->size];
+
+    if (m95256_ReadBuffer(eeprom, tmpdata, config->address, config->size) == EEPROM_STATUS_COMPLETE) {
+        memcpy(config->data, tmpdata, config->size);
+        config->dirty = false;
+        return true;
+    }
+
+    return false;
 }
 
 bool config_write(config_t config) {
