@@ -27,7 +27,6 @@ bal_params bal_params_default = {CONF_VER, BAL_MAX_VOLTAGE_THRESHOLD};
 
 fsm bal_fsm;
 config_t config;
-bal_params bal_conf_params;
 
 uint32_t cycle_length = BAL_CYCLE_LENGTH;
 
@@ -40,11 +39,14 @@ uint16_t do_discharge(fsm *FSM);
 uint16_t do_cooldown(fsm *FSM);
 
 voltage_t bal_get_threshold() {
-    return *(voltage_t *)config_get(config);
+    return ((bal_params *)config_get(config))->threshold;
 }
 
 void bal_set_threshold(uint16_t thresh) {
-    config_set(config, &thresh);
+    bal_params params = *(bal_params *)config_get(config);
+    params.threshold  = thresh;
+
+    config_set(config, &params);
     config_write(config);
 }
 

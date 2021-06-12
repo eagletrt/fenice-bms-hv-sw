@@ -251,7 +251,10 @@ void _cli_balance(uint16_t argc, char **argv, char *out) {
         sprintf(out, "disabling balancing\r\n");
     } else if (strcmp(argv[1], "thr") == 0) {
         if (argv[2] != NULL) {
-            bal_set_threshold(atoi(argv[2]) * 10);
+            voltage_t thresh = atoi(argv[2]) * 10;
+            if (thresh <= BAL_MAX_VOLTAGE_THRESHOLD) {
+                bal_set_threshold(thresh);
+            }
         }
         sprintf(out, "balancing threshold is %u mV\r\n", bal_get_threshold() / 10);
     } else {
