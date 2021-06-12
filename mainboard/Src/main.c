@@ -53,6 +53,7 @@ DMA_HandleTypeDef hdma_adc1;
 
 uint32_t timer_volts = 0;
 uint32_t timer_temps = 0;
+uint32_t timer_bal   = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -140,20 +141,22 @@ int main(void) {
     /* USER CODE BEGIN 2 */
 
     FDCAN1_Init();
+    can_init();
     HAL_FDCAN_ActivateNotification(&hfdcan1, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0);
     HAL_FDCAN_Start(&hfdcan1);
 
-    error_init();
-    fsm_bms_init();
-    bal_fsm_init();
     cli_bms_init();
-    can_init();
+    error_init();
 
     if (si8900_init(&huart3, ADC_SIN_GPIO_Port, ADC_SIN_Pin)) {
         cli_print(&cli_bms, "SI8900 INITIALIZED\r\n", 20);
     } else {
         cli_print(&cli_bms, "SI8900 ERROR\r\n", 14);
     }
+
+    pack_init();
+    bal_fsm_init();
+    fsm_bms_init();
 
     /* USER CODE END 2 */
 
@@ -163,8 +166,8 @@ int main(void) {
         /* USER CODE END WHILE */
 
         /* USER CODE BEGIN 3 */
-		fsm_run(&fsm_bms);
-		fsm_run(&bal_fsm);
+        fsm_run(&fsm_bms);
+        fsm_run(&bal_fsm);
 
         check_timers();
 

@@ -32,7 +32,7 @@
 #define LTC6813_PERIPHERAL hspi1
 
 // Set to 1 to emulate the LTC daisy chain
-#define LTC6813_EMU 0
+#define LTC6813_EMU 1
 
 /**
  * Number of daisy chained LTCs
@@ -127,6 +127,16 @@ static const uint8_t TEMP_SENSOR_ADDRESS_CODING[TEMP_SENSORS_PER_STRIP] = {
  * Maximum cell temperature (°C * 100)
  */
 #define CELL_MAX_TEMPERATURE 6000
+
+/**
+ * Cell nominal energy (Wh * 10)
+ */
+#define CELL_ENERGY_NOMINAL 576
+
+/**
+ * Pack nominal energy (Wh * 10)
+ */
+#define PACK_ENERGY_NOMINAL (CELL_ENERGY_NOMINAL * PACK_CELL_COUNT)
 
 // @section Balancing
 
