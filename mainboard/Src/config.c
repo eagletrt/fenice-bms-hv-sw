@@ -10,7 +10,6 @@
 #include "config.h"
 
 #include "fenice_config.h"
-#include "main.h"
 #include "spi.h"
 
 #include <stdlib.h>
