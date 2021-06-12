@@ -72,6 +72,7 @@ Src/peripherals/can.c \
 Src/peripherals/ltc6813.c \
 Src/peripherals/ltc6813_utils.c \
 Src/peripherals/si8900.c \
+Src/soc.c \
 Src/spi.c \
 Src/stm32g4xx_hal_msp.c \
 Src/stm32g4xx_it.c \
