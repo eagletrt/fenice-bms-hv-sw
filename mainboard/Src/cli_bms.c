@@ -11,8 +11,8 @@
 #include "cli_bms.h"
 
 #include "bal_fsm.h"
+#include "bms_fsm.h"
 #include "error/error.h"
-#include "fsm_bms.h"
 #include "pack.h"
 #include "soc.h"
 #include "usart.h"
@@ -38,23 +38,14 @@ cli_command_func_t _cli_reset;
 cli_command_func_t _cli_help;
 cli_command_func_t _cli_taba;
 
-const char *bms_state_names[BMS_NUM_STATES] = {
-    [BMS_INIT]            = "init",
-    [BMS_SET_TS_OFF]      = "ts off",
-    [BMS_IDLE]            = "idle",
-    [BMS_PRECHARGE_START] = "precharge start",
-    [BMS_PRECHARGE_WAIT]  = "precharge wait",
-    [BMS_PRECHARGE_END]   = "precharge end",
-    [BMS_RUN]             = "run",
-    [BMS_CHARGE]          = "charge",
-    [BMS_TO_HALT]         = "to halt",
-    [BMS_HALT]            = "halt"};
+const char *bms_state_names[BMS_NUM_STATES] =
+    {[BMS_IDLE] = "idle", [BMS_PRECHARGE] = "precharge", [BMS_ON] = "run", [BMS_HALT] = "halt"};
 
 const char *bal_state_names[BAL_NUM_STATES] =
-    {[BAL_OFF] = "off", [BAL_COMPUTE] = "computing", [BAL_DISCHARGE] = "discharging"};
+    {[BAL_OFF] = "off", [BAL_COMPUTE] = "computing", [BAL_DISCHARGE] = "discharging", [BAL_COOLDOWN] = "cooldown"};
 
 const char *error_names[ERROR_NUM_ERRORS] = {
-    [ERROR_LTC_PEC_ERROR]         = "LTC PEC mismatch",
+    [ERROR_LTC_PEC]               = "LTC PEC mismatch",
     [ERROR_CELL_UNDER_VOLTAGE]    = "under-voltage",
     [ERROR_CELL_OVER_VOLTAGE]     = "over-voltage",
     [ERROR_CELL_OVER_TEMPERATURE] = "over-temperature",
@@ -63,8 +54,7 @@ const char *error_names[ERROR_NUM_ERRORS] = {
     [ERROR_ADC_INIT]              = "adc init",
     [ERROR_ADC_TIMEOUT]           = "adc timeout",
     [ERROR_INT_VOLTAGE_MISMATCH]  = "internal voltage mismatch",
-    [ERROR_FEEDBACK_HARD]         = "hard feedback",
-    [ERROR_FEEDBACK_SOFT]         = "soft feedback"};
+    [ERROR_FEEDBACK]              = "feedback"};
 
 char const *const feedback_names[FEEDBACK_N] = {
     [FEEDBACK_VREF_POS]          = "VREF",
@@ -225,9 +215,9 @@ void _cli_status(uint16_t argc, char **argv, char *out) {
 
     // TODO: Fix this
     const char *values[n_items][2] = {
-        {"BMS state", bms_state_names[fsm_bms.current_state]},
+        {"BMS state", bms_state_names[fsm_get_state(bms.fsm)]},
         {"error count", er_count},
-        {"balancing state", bal_state_names[fsm_get_state(&bal_fsm)]}};
+        {"balancing state", bal_state_names[fsm_get_state(bal.fsm)]}};
     //{"BMS state", (char *)fsm_bms.state_names[fsm_bms.current_state]}, {"error
     // count", er_count}, {"balancing", bal}, {"balancing threshold", thresh}};
 
@@ -244,10 +234,10 @@ void _cli_status(uint16_t argc, char **argv, char *out) {
 
 void _cli_balance(uint16_t argc, char **argv, char *out) {
     if (strcmp(argv[1], "on") == 0) {
-        fsm_handle_event(&bal_fsm, BAL_COMPUTE);
+        fsm_catch_event(bal.fsm, EV_BAL_START);
         sprintf(out, "enabling balancing\r\n");
     } else if (strcmp(argv[1], "off") == 0) {
-        fsm_handle_event(&bal_fsm, BAL_OFF);
+        fsm_catch_event(bal.fsm, EV_BAL_STOP);
         sprintf(out, "disabling balancing\r\n");
     } else if (strcmp(argv[1], "thr") == 0) {
         if (argv[2] != NULL) {
@@ -297,22 +287,22 @@ void _cli_errors(uint16_t argc, char **argv, char *out) {
             "\r\nid..........%i (%s)\r\n"
             "timestamp...T+%lu (%lums ago)\r\n"
             "offset......%u\r\n"
-            "state.......%u\r\n",
+            "state.......%s\r\n",
             errors[i].id,
             error_names[errors[i].id],
             errors[i].timestamp,
             now - errors[i].timestamp,
             errors[i].offset,
-            errors[i].state);
+            errors[i].state == STATE_WARNING ? "warning" : "fatal");
     }
 }
 
 void _cli_ts(uint16_t argc, char **argv, char *out) {
     if (strcmp(argv[1], "on") == 0) {
-        fsm_handle_event(&fsm_bms, BMS_PRECHARGE_WAIT);
+        fsm_catch_event(bms.fsm, BMS_EV_TS_ON);
         sprintf(out, "triggered TS ON event\r\n");
     } else if (strcmp(argv[1], "off") == 0) {
-        fsm_handle_event(&fsm_bms, BMS_SET_TS_OFF);
+        fsm_catch_event(bms.fsm, BMS_EV_TS_OFF);
         sprintf(out, "triggered TS OFF event\r\n");
     } else {
         sprintf(

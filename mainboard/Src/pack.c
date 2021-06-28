@@ -21,7 +21,7 @@
 
 #define SOC_WRITE_INTERVAL 5000
 #define SOC_VERSION        0x01
-#define SOC_ADDR           0x55
+#define SOC_ADDR           0x30
 
 #ifndef max
 #define max(a, b) ((a) > (b) ? (a) : (b))
@@ -187,7 +187,7 @@ void pack_update_current() {
 
     if (HAL_GetTick() - soc_timer >= SOC_WRITE_INTERVAL) {
         soc_timer = HAL_GetTick();
-        config_write(soc_config);
+        //config_write(soc_config);
     }
 
     error_toggle_check(current > PACK_MAX_CURRENT, ERROR_OVER_CURRENT, 0);
@@ -251,7 +251,7 @@ bool pack_set_ts_off() {
     HAL_GPIO_WritePin(TS_ON_GPIO_Port, TS_ON_Pin, GPIO_PIN_RESET);
 
     feedback_read(FEEDBACK_TS_OFF_MASK);
-    return feedback_check(FEEDBACK_TS_OFF_MASK, FEEDBACK_TS_OFF_VAL, ERROR_FEEDBACK_HARD);
+    return feedback_check(FEEDBACK_TS_OFF_MASK, FEEDBACK_TS_OFF_VAL, ERROR_FEEDBACK);
 }
 
 bool pack_set_pc_start() {
@@ -260,18 +260,16 @@ bool pack_set_pc_start() {
 
     // Check feedback
     feedback_read(FEEDBACK_TO_PRECHARGE_MASK);
-    return feedback_check(FEEDBACK_TO_PRECHARGE_MASK, FEEDBACK_TO_PRECHARGE_VAL, ERROR_FEEDBACK_HARD);
+    return feedback_check(FEEDBACK_TO_PRECHARGE_MASK, FEEDBACK_TO_PRECHARGE_VAL, ERROR_FEEDBACK);
 }
 
 bool pack_set_precharge_end() {
     //switch on AIR+
     HAL_GPIO_WritePin(PC_ENDED_GPIO_Port, PC_ENDED_Pin, GPIO_PIN_SET);
-    HAL_Delay(10);  // non so quanto debba essere. In chimera con 1ms si triggerava però boh
-    HAL_GPIO_WritePin(PC_ENDED_GPIO_Port, PC_ENDED_Pin, GPIO_PIN_RESET);
 
     // Check feedback
     feedback_read(FEEDBACK_ON_MASK);
-    return feedback_check(FEEDBACK_ON_MASK, FEEDBACK_ON_VAL, ERROR_FEEDBACK_HARD);
+    return feedback_check(FEEDBACK_ON_MASK, FEEDBACK_ON_VAL, ERROR_FEEDBACK);
 }
 
 voltage_t *pack_get_voltages() {

@@ -10,18 +10,18 @@
 #ifndef ERROR_H
 #define ERROR_H
 
-#include <inttypes.h>
-#include <stdbool.h>
-
 #include "../../lib/can/naked_generator/Primary/c/Primary.h"
 #include "llist.h"
 
-#define error_toggle_check(condition, error_type, index)                       \
-  if ((condition)) {                                                           \
-    error_set((error_type), (index), HAL_GetTick());                           \
-  } else {                                                                     \
-    error_unset((error_type), (index));                                        \
-  }
+#include <inttypes.h>
+#include <stdbool.h>
+
+#define error_toggle_check(condition, error_type, index) \
+    if ((condition)) {                                   \
+        error_set((error_type), (index), HAL_GetTick()); \
+    } else {                                             \
+        error_unset((error_type), (index));              \
+    }
 
 /**
  * @brief	Error type definitions
@@ -31,31 +31,25 @@
  * link the error to the reference in the error_reference array.
  */
 typedef enum {
-  ERROR_LTC_PEC_ERROR,
+    ERROR_LTC_PEC,
 
-  ERROR_CELL_UNDER_VOLTAGE,
-  ERROR_CELL_OVER_VOLTAGE,
-  ERROR_CELL_OVER_TEMPERATURE,
+    ERROR_CELL_UNDER_VOLTAGE,
+    ERROR_CELL_OVER_VOLTAGE,
+    ERROR_CELL_OVER_TEMPERATURE,
 
-  ERROR_OVER_CURRENT,
-  ERROR_CAN,
+    ERROR_OVER_CURRENT,
+    ERROR_CAN,
 
-  ERROR_ADC_INIT,
-  ERROR_ADC_TIMEOUT,
-  ERROR_INT_VOLTAGE_MISMATCH,
+    ERROR_ADC_INIT,
+    ERROR_ADC_TIMEOUT,
+    ERROR_INT_VOLTAGE_MISMATCH,
 
-  ERROR_FEEDBACK_HARD,
-  ERROR_FEEDBACK_SOFT,
+    ERROR_FEEDBACK,
 
-  ERROR_NUM_ERRORS
+    ERROR_NUM_ERRORS
 } error_id;
 
-typedef enum {
-  SOFT = UINT32_MAX,
-  SHORT = 500,
-  REGULAR = 1000,
-  INSTANT = 0
-} error_timeout;
+typedef enum { SOFT = UINT32_MAX, SHORT = 500, REGULAR = 1000, INSTANT = 0 } error_timeout;
 
 /**
  * @brief an error is active when it enters the error list (ERROR_ACTIVE)
@@ -63,22 +57,24 @@ typedef enum {
  * an error becomes inactive
  **/
 
-typedef enum { ERROR_ACTIVE, ERROR_FATAL } error_state;
+typedef enum { STATE_WARNING, STATE_FATAL } error_state;
 
 /** @brief	Defines an error instance */
 typedef struct {
-  error_id id;    /* Defines the type of error */
-  uint8_t offset; /* Identifies different instances of a type */
-  error_state state;
-  uint32_t timestamp; /* Last time the error activated */
+    error_id id;    /* Defines the type of error */
+    uint8_t offset; /* Identifies different instances of a type */
+    error_state state;
+    uint32_t timestamp; /* Last time the error activated */
 } error_t;
 
 extern llist er_list;
 
 void error_init();
-void error_init_error(error_t *error, error_id id, uint8_t offset,
-                      uint32_t timestamp);
+void error_init_error(error_t *error, error_id id, uint8_t offset, uint32_t timestamp);
 bool error_set(error_id type, uint8_t offset, uint32_t now);
+error_t *error_get_top();
+bool error_set_fatal(error_t *error);
+
 bool error_unset(error_id type, uint8_t offset);
 
 uint8_t error_count();

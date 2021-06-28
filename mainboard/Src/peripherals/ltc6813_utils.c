@@ -65,7 +65,7 @@ size_t ltc6813_read_voltages(SPI_HandleTypeDef *hspi, voltage_t *volts) {
 
 		for (uint8_t ltc = 0; ltc < LTC6813_COUNT; ltc++) {
 			if (ltc6813_pec15(6, data) == (uint16_t)(data[6] * 256 + data[7])) {
-				error_unset(ERROR_LTC_PEC_ERROR, ltc);
+				error_unset(ERROR_LTC_PEC, ltc);
 
 				// For every cell in the register
 				for (uint8_t cell = 0; cell < LTC6813_REG_CELL_COUNT; cell++) {
@@ -78,7 +78,7 @@ size_t ltc6813_read_voltages(SPI_HandleTypeDef *hspi, voltage_t *volts) {
 					count++;
 				}
 			} else {
-				error_set(ERROR_LTC_PEC_ERROR, ltc, HAL_GetTick());
+				error_set(ERROR_LTC_PEC, ltc, HAL_GetTick());
 			}
 		}
 	}
