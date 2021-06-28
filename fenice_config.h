@@ -16,7 +16,9 @@
 //=================================== General ===============================
 //===========================================================================
 
-#define htim_Err htim2
+#define htim_err   htim3
+#define htim_bms   htim2
+#define htim_super htim4
 
 #define spi_eeprom hspi2
 
@@ -156,7 +158,8 @@ static const uint8_t TEMP_SENSOR_ADDRESS_CODING[TEMP_SENSORS_PER_STRIP] = {000, 
 
 // @section Pre-charge
 
-#define PRECHARGE_TIMEOUT           10000
+#define PRECHARGE_TIMEOUT           10000U
+#define PRECHARGE_CHECK_INTERVAL    100U
 #define PRECHARGE_VOLTAGE_THRESHOLD 0.95
 
 typedef uint16_t voltage_t;
@@ -230,7 +233,7 @@ enum {
 /**
  * Max time to wait for the sensor to initialize (auto-baudrate detection)
 */
-#define SI8900_INIT_TIMEOUT 1000
+#define SI8900_INIT_TIMEOUT 400
 
 /**
  * Max time to wait for a voltage reading

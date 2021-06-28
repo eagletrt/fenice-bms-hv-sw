@@ -58,14 +58,11 @@ void MX_GPIO_Init(void)
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, MUX_A2_Pin|MUX_A3_Pin|CS_LTC_Pin|BMS_FAULT_Pin
-                          |TS_ON_Pin|PC_ENDED_Pin, GPIO_PIN_RESET);
+                          |TS_ON_Pin|PC_ENDED_Pin|HOLD_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, ADC_SIN_Pin|MUX_A1_Pin|MUX_A0_Pin|CS_SD_Pin
                           |LED_2_Pin|LED_1_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(HOLD_GPIO_Port, HOLD_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin : PtPin */
   GPIO_InitStruct.Pin = CS_EEPROM_Pin;

@@ -19,15 +19,16 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "bal_fsm.h"
+#include "bms_fsm.h"
 #include "cli_bms.h"
 #include "config.h"
 #include "error/error.h"
 #include "fdcan.h"
 #include "fenice_config.h"
-#include "fsm_bms.h"
 #include "m95256.h"
 #include "peripherals/can.h"
 #include "si8900.h"
+#include "super_fsm.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -37,8 +38,6 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define TEMPS_READ_INTERVAL 40
-#define VOLTS_READ_INTERVAL 20
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -51,9 +50,8 @@
 /* USER CODE BEGIN PV */
 DMA_HandleTypeDef hdma_adc1;
 
-uint32_t timer_volts = 0;
-uint32_t timer_temps = 0;
-uint32_t timer_bal   = 0;
+fsm super_fsm;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -65,42 +63,7 @@ static void MX_NVIC_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-void check_timers() {
-    uint32_t tick = HAL_GetTick();
 
-    // Read and send temperatures
-    if (tick - timer_temps >= TEMPS_READ_INTERVAL) {
-        timer_temps = tick;
-
-        read_temps();
-        can_send(ID_HV_CURRENT);
-    }
-
-    // Read and send voltages and current
-    if (tick - timer_volts >= VOLTS_READ_INTERVAL) {
-        timer_volts = tick;
-
-        read_volts();
-        can_send(ID_HV_VOLTAGE);
-    }
-}
-
-/**
- * @brief Runs all the checks mandated by the rules
- * @details It runs voltage and current measurements
- */
-void read_volts() {
-    // Voltages
-    pack_update_voltages(&hspi1, &huart3);
-
-    // Current
-    pack_update_current();
-}
-
-void read_temps() {
-    // Temperatures
-    pack_update_temperatures(&hspi1);
-}
 /* USER CODE END 0 */
 
 /**
@@ -135,6 +98,8 @@ int main(void) {
     MX_USART2_UART_Init();
     MX_USART3_UART_Init();
     MX_TIM2_Init();
+    MX_TIM3_Init();
+    MX_TIM4_Init();
 
     /* Initialize interrupts */
     MX_NVIC_Init();
@@ -148,15 +113,12 @@ int main(void) {
     cli_bms_init();
     error_init();
 
-    if (si8900_init(&huart3, ADC_SIN_GPIO_Port, ADC_SIN_Pin)) {
-        cli_print(&cli_bms, "SI8900 INITIALIZED\r\n", 20);
-    } else {
-        cli_print(&cli_bms, "SI8900 ERROR\r\n", 14);
-    }
+    si8900_init(&huart3, ADC_SIN_GPIO_Port, ADC_SIN_Pin);
 
     pack_init();
     bal_fsm_init();
-    fsm_bms_init();
+    bms_fsm_init();
+    super_fsm_init();
 
     /* USER CODE END 2 */
 
@@ -166,10 +128,7 @@ int main(void) {
         /* USER CODE END WHILE */
 
         /* USER CODE BEGIN 3 */
-        fsm_run(&fsm_bms);
-        fsm_run(&bal_fsm);
-
-        check_timers();
+        fsm_run(super_fsm);
 
         cli_loop(&cli_bms);
     }

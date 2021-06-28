@@ -58,13 +58,13 @@ Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_uart.c \
 Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_uart_ex.c \
 Src/bal.c \
 Src/bal_fsm.c \
+Src/bms_fsm.c \
 Src/cli_bms.c \
 Src/config.c \
 Src/error/error.c \
 Src/error/error_list_ref.c \
 Src/fdcan.c \
 Src/feedback.c \
-Src/fsm_bms.c \
 Src/gpio.c \
 Src/main.c \
 Src/pack.c \
@@ -76,6 +76,7 @@ Src/soc.c \
 Src/spi.c \
 Src/stm32g4xx_hal_msp.c \
 Src/stm32g4xx_it.c \
+Src/super_fsm.c \
 Src/system_stm32g4xx.c \
 Src/tim.c \
 Src/usart.c \
@@ -182,12 +183,14 @@ ifeq ($(DEBUG), 1)
 CFLAGS += -g -gdwarf-2
 endif
 
+# Add additional flags
+CFLAGS += 
+ASFLAGS += -specs=nosys.specs 
+CXXFLAGS = 
+CXXFLAGS += -feliminate-unused-debug-types
 
 # Generate dependency information
 CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
-
-CXXFLAGS?=
-CXXFLAGS += -feliminate-unused-debug-types
 
 #######################################
 # LDFLAGS
