@@ -1,8 +1,13 @@
 {
-    "C_Cpp.default.cStandard": "c11",
-    "C_Cpp.clang_format_fallbackStyle": "{BasedOnStyle: Google, UseTab: true, IndentWidth: 4, TabWidth: 4, ColumnLimit: 0, AllowShortIfStatementsOnASingleLine: false}",
-    "stm32-for-vscode.makePath": "make",
-    "stm32-for-vscode.armToolchainPath": "",
-    "cortex-debug.armToolchainPath": "",
-    "stm32-for-vscode.openOCDPath": "openocd",
+	"cortex-debug.armToolchainPath": "/usr/bin",
+	"cortex-debug.openocdPath": "/usr/bin/openocd",
+	"files.associations": {
+		"main.h": "c",
+		"ltc6813_utils.h": "c",
+		"math.h": "c",
+		"ltc6813.h": "c",
+		"spi.h": "c",
+		"adctemp.h": "c",
+		"temp.h": "c"
+	}
 }
