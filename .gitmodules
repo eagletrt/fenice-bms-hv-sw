@@ -9,3 +9,10 @@
 	path = mainboard/lib/micro-libs
 	url = git@github.com:eagletrt/micro-libs.git
 	branch = priority-queue
+[submodule "cellboard/Core/Lib/micro-libs"]
+	path = cellboard/Core/Lib/micro-libs
+	url = git@github.com:eagletrt/micro-libs.git
+[submodule "cellboard/Core/Lib/can-cicd"]
+	path = cellboard/Core/Lib/can-cicd
+	url = git@github.com:eagletrt/can-cicd.git
+	branch = build

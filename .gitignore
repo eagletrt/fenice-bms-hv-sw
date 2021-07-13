@@ -8,3 +8,4 @@ build/
 
 **/.vscode/*
 !**/.vscode/extensions.json
+Backup/
