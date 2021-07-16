@@ -108,18 +108,20 @@ ADCTEMP_StateTypeDef ADCTEMP_is_Busy(I2C_HandleTypeDef *interface, uint8_t addre
    \param I2C interface
    \param ADC address (ADCTEMP_CELL_*_ADR)
    \param number of ADC input from 0 to 6 or ADCTEMP_INTERNAL_TEMP
-   \return ADC data
+   \param out ADC data
+   \return status
 */
-uint16_t ADCTEMP_read_Raw(I2C_HandleTypeDef *interface, uint8_t address, uint8_t sensor);
+ADCTEMP_StateTypeDef ADCTEMP_read_Raw(I2C_HandleTypeDef *interface, uint8_t address, uint8_t sensor, uint16_t *out);
 
 /*!
    \brief temperature from ADC from the selected channel
    \param I2C interface
    \param ADC address (ADCTEMP_CELL_*_ADR)
    \param number of ADC input from 0 to 6 or ADCTEMP_INTERNAL_TEMP
-   \return temperature in Celsius degrees
+   \param temp temperature in Celsius degrees
+   \return status
 */
-float ADCTEMP_read_Temp(I2C_HandleTypeDef *interface, uint8_t address, uint8_t sensor);
+ADCTEMP_StateTypeDef ADCTEMP_read_Temp(I2C_HandleTypeDef *interface, uint8_t address, uint8_t sensor, float *temp);
 
 /*!
    \brief set upper limit of ADC input value that activate interrupt
