@@ -86,14 +86,18 @@ ADCTEMP_StateTypeDef ADCTEMP_is_Busy(I2C_HandleTypeDef *interface, uint8_t addre
         return ADCTEMP_STATE_OK;
 }
 
-uint16_t ADCTEMP_read_Raw(I2C_HandleTypeDef *interface, uint8_t address, uint8_t sensor) {
-    uint8_t Buffer[2];
-    HAL_I2C_Mem_Read(interface, address, sensor + 0x20U, 1U, (uint8_t *)Buffer, 2U, 10U);
+ADCTEMP_StateTypeDef ADCTEMP_read_Raw(I2C_HandleTypeDef *interface, uint8_t address, uint8_t sensor, uint16_t *out) {
+    uint8_t Buffer[2] = {0};
+    if (HAL_I2C_Mem_Read(interface, address, sensor + 0x20U, 1U, (uint8_t *)Buffer, 2U, 10U) != HAL_OK) {
+        return ADCTEMP_STATE_ERROR;
+    }
 
     if (sensor == ADCTEMP_INTERNAL_TEMP_REG)
-        return (((int16_t)((int8_t)Buffer[0])) << 1) + (((uint16_t)Buffer[1]) >> 7);
+        *out = (((int16_t)((int8_t)Buffer[0])) << 1) + (((uint16_t)Buffer[1]) >> 7);
     else
-        return (((uint16_t)Buffer[0]) << 4) + (((uint16_t)Buffer[1]) >> 4);
+        *out = (((uint16_t)Buffer[0]) << 4) + (((uint16_t)Buffer[1]) >> 4);
+
+    return ADCTEMP_STATE_OK;
 }
 
 //conversion formula constants see jupyter-notebook file
@@ -104,22 +108,27 @@ uint16_t ADCTEMP_read_Raw(I2C_HandleTypeDef *interface, uint8_t address, uint8_t
 #define ADCTEMP_CONST_d -6.014808784849526e-09
 #define ADCTEMP_CONST_e 3.012146376392016e-13
 
-float ADCTEMP_read_Temp(I2C_HandleTypeDef *interface, uint8_t address, uint8_t sensor) {
-    uint16_t rawData = ADCTEMP_read_Raw(interface, address, sensor);
+ADCTEMP_StateTypeDef ADCTEMP_read_Temp(I2C_HandleTypeDef *interface, uint8_t address, uint8_t sensor, float *temp) {
+    uint16_t rawData           = 0;
+    ADCTEMP_StateTypeDef state = ADCTEMP_read_Raw(interface, address, sensor, &rawData);
+    if (state != ADCTEMP_STATE_OK) {
+        return state;
+    }
 
     //internal termperature conversion
     if (sensor == ADCTEMP_INTERNAL_TEMP_REG) {
-        return (int16_t)rawData * 0.5;
+        *temp = (((int16_t)rawData) * 0.5F);
     } else {
         //conversion formula see jupyter-notebook file
         float val  = rawData * 1.0;
         float val2 = val * val;
         float val3 = val2 * val;
         float val4 = val2 * val2;
-        return (
-            ADCTEMP_CONST_a + ADCTEMP_CONST_b * val + ADCTEMP_CONST_c * val2 + ADCTEMP_CONST_d * val3 +
-            ADCTEMP_CONST_e * val4);
+        *temp =
+            (float)(ADCTEMP_CONST_a + ADCTEMP_CONST_b * val + ADCTEMP_CONST_c * val2 + ADCTEMP_CONST_d * val3 + ADCTEMP_CONST_e * val4);
     }
+
+    return ADCTEMP_STATE_OK;
 }
 
 void ADCTEMP_set_Upper_Limit(I2C_HandleTypeDef *interface, uint8_t address, uint8_t sensor, uint8_t limit) {

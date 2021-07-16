@@ -11,11 +11,19 @@
 
 #include <inttypes.h>
 
-#define ERROR_SET(e)   (errors = errors | (1 << e))
-#define ERROR_UNSET(e) (errors = errors & (~(1 << e)))
-#define ERROR_GET(e)   ((errors & (1 << e)) != 0)
+#define ERROR_SET(e)   (errors = errors | (1 << (e)))
+#define ERROR_UNSET(e) (errors = errors & (~(1 << (e))))
+#define ERROR_GET(e)   ((errors & (1 << (e))) != 0)
 
-typedef enum { ERROR_LTC_COMM, ERROR_TEMP_COMM } error_types;
+typedef enum {
+    ERROR_LTC_COMM = 0,
+    ERROR_TEMP_COMM_0,
+    ERROR_TEMP_COMM_1,
+    ERROR_TEMP_COMM_2,
+    ERROR_TEMP_COMM_3,
+    ERROR_TEMP_COMM_4,
+    ERROR_TEMP_COMM_5,
+} error_types;
 
 extern uint16_t errors;
 
