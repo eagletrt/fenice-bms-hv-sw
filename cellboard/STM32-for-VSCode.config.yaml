@@ -56,11 +56,10 @@ libraryDirectories: []
 # Do mind that double stars are reserved in yaml
 # these should be escaped with a: \ or the name should be in double quotes e.g. "**.test.**"
 excludes: 
-  - "**/Examples/**"
-  - "**/examples/**"
-  - "**/Example/**"
-  - "**/example/**"
-  - "**_template.*"
+  - "**/[Ee]xamples/**"
+  - "**/[Ee]xample/**"
+  - "**/*[Tt]est*/**"
+  - "**/*[Tt]est*"
 
 
 # Include directories (directories containing .h or .hpp files)
@@ -70,6 +69,8 @@ includeDirectories:
   - Core/Inc/**
   - Core/Lib/micro-libs/m95256/**
   - Core/Lib/micro-libs/fsm/**
+  - Core/Lib/can-cicd/naked_generator/**
+  - Core/Lib/can-cicd/includes_generator/bms/**
 
 
 # Files that should be included in the compilation.
@@ -82,6 +83,8 @@ sourceFiles:
   - Core/Src/**
   - Core/Lib/micro-libs/m95256/**
   - Core/Lib/micro-libs/fsm/**
+  - Core/Lib/can-cicd/naked_generator/**
+  - Core/Lib/can-cicd/includes_generator/**
 
 
 # When no makefile is present it will show a warning pop-up.
