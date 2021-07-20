@@ -36,6 +36,9 @@ BUILD_DIR = build
 ######################################
 # C sources
 C_SOURCES =  \
+Core/Lib/can-cicd/naked_generator/Primary/c/Primary.c \
+Core/Lib/can-cicd/naked_generator/Secondary/c/Secondary.c \
+Core/Lib/can-cicd/naked_generator/bms/c/bms.c \
 Core/Lib/micro-libs/fsm/fsm.c \
 Core/Lib/micro-libs/m95256/m95256.c \
 Core/Src/bal_fsm.c \
@@ -55,6 +58,7 @@ Core/Src/system_stm32l4xx.c \
 Core/Src/temp.c \
 Core/Src/tim.c \
 Core/Src/usart.c \
+Core/Src/volt.c \
 Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal.c \
 Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_can.c \
 Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_cortex.c \
@@ -144,6 +148,10 @@ AS_INCLUDES = \
 C_INCLUDES =  \
 -ICore/Inc \
 -ICore/Inc/peripherals \
+-ICore/Lib/can-cicd/includes_generator/bms \
+-ICore/Lib/can-cicd/naked_generator/Primary/c \
+-ICore/Lib/can-cicd/naked_generator/Secondary/c \
+-ICore/Lib/can-cicd/naked_generator/bms/c \
 -ICore/Lib/micro-libs/fsm \
 -ICore/Lib/micro-libs/m95256 \
 -IDrivers/CMSIS/Device/ST/STM32L4xx/Include \

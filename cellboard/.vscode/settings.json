@@ -8,6 +8,13 @@
 		"ltc6813.h": "c",
 		"spi.h": "c",
 		"adctemp.h": "c",
-		"temp.h": "c"
+		"temp.h": "c",
+		"bal_fsm.h": "c",
+		"cellboard_config.h": "c",
+		"can.h": "c",
+		"can_comms.h": "c",
+		"ids.h": "c",
+		"bms.h": "c",
+		"cmath": "c"
 	}
 }

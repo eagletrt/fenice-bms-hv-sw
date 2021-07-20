@@ -9,6 +9,7 @@
 
 #include "bal_fsm.h"
 
+#include "can_comms.h"
 #include "ltc6813_utils.h"
 #include "main.h"
 #include "spi.h"
@@ -20,10 +21,11 @@ void off_handler(fsm handle, uint8_t event);
 void compute_entry(fsm handle);
 void discharge_entry(fsm handle);
 void discharge_handler(fsm handle, uint8_t event);
+void transition_callback(fsm handle);
 
 void bal_fsm_init() {
     bal.cycle_length = BAL_CYCLE_LENGTH;
-    bal.fsm          = fsm_init(BAL_NUM_STATES, BAL_EV_NUM);
+    bal.fsm          = fsm_init(BAL_NUM_STATES, BAL_EV_NUM, transition_callback);
 
     fsm_state state;
 
@@ -41,6 +43,10 @@ void bal_fsm_init() {
     state.entry   = discharge_entry;
     state.exit    = NULL;
     fsm_set_state(bal.fsm, BAL_DISCHARGE, &state);
+}
+
+void transition_callback(fsm handle) {
+    can_send(ID_BOARD_STATUS);
 }
 
 void off_entry(fsm handle) {
