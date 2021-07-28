@@ -128,6 +128,25 @@ int main(void) {
 
     bal_fsm_init();
 
+    CAN_FilterTypeDef filter;
+    filter.FilterMode       = CAN_FILTERMODE_IDMASK;
+    filter.FilterIdLow      = 0 << 5;                 // Take all ids from 0
+    filter.FilterIdHigh     = ((1U << 11) - 1) << 5;  // to 2^11 - 1
+    filter.FilterMaskIdHigh = 0 << 5;                 // Don't care on can id bits
+    filter.FilterMaskIdLow  = 0 << 5;                 // Don't care on can id bits
+    /* HAL considers IdLow and IdHigh not as just the ID of the can message but
+        as the combination of: 
+        STDID + RTR + IDE + 4 most significant bits of EXTID
+    */
+    filter.FilterFIFOAssignment = CAN_FILTER_FIFO0;
+    filter.FilterBank           = 0;
+    filter.FilterScale          = CAN_FILTERSCALE_16BIT;
+    filter.FilterActivation     = ENABLE;
+
+    HAL_CAN_ConfigFilter(&BMS_CAN, &filter);
+    HAL_CAN_ActivateNotification(&BMS_CAN, CAN_IT_ERROR);
+    HAL_CAN_Start(&BMS_CAN);
+
     /* USER CODE END 2 */
 
     /* Infinite loop */
@@ -144,15 +163,15 @@ int main(void) {
             volt_read();
 
             can_send(ID_VOLTAGES_0);
-            HAL_Delay(1);
+            CAN_WAIT(&BMS_CAN, HAL_GetTick());
             can_send(ID_VOLTAGES_1);
-            HAL_Delay(1);
+            CAN_WAIT(&BMS_CAN, HAL_GetTick());
             can_send(ID_VOLTAGES_2);
-            HAL_Delay(1);
+            CAN_WAIT(&BMS_CAN, HAL_GetTick());
             can_send(ID_VOLTAGES_3);
-            HAL_Delay(1);
+            CAN_WAIT(&BMS_CAN, HAL_GetTick());
             can_send(ID_VOLTAGES_4);
-            HAL_Delay(1);
+            CAN_WAIT(&BMS_CAN, HAL_GetTick());
             can_send(ID_VOLTAGES_5);
 
             //char buf[5000] = {'\0'};
@@ -194,22 +213,27 @@ void SystemClock_Config(void) {
     /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-    RCC_OscInitStruct.OscillatorType      = RCC_OSCILLATORTYPE_HSI;
-    RCC_OscInitStruct.HSIState            = RCC_HSI_ON;
-    RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-    RCC_OscInitStruct.PLL.PLLState        = RCC_PLL_NONE;
+    RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+    RCC_OscInitStruct.HSEState       = RCC_HSE_BYPASS;
+    RCC_OscInitStruct.PLL.PLLState   = RCC_PLL_ON;
+    RCC_OscInitStruct.PLL.PLLSource  = RCC_PLLSOURCE_HSE;
+    RCC_OscInitStruct.PLL.PLLM       = 1;
+    RCC_OscInitStruct.PLL.PLLN       = 40;
+    RCC_OscInitStruct.PLL.PLLP       = RCC_PLLP_DIV7;
+    RCC_OscInitStruct.PLL.PLLQ       = RCC_PLLQ_DIV2;
+    RCC_OscInitStruct.PLL.PLLR       = RCC_PLLR_DIV4;
     if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
         Error_Handler();
     }
     /** Initializes the CPU, AHB and APB buses clocks
   */
     RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
-    RCC_ClkInitStruct.SYSCLKSource   = RCC_SYSCLKSOURCE_HSI;
+    RCC_ClkInitStruct.SYSCLKSource   = RCC_SYSCLKSOURCE_PLLCLK;
     RCC_ClkInitStruct.AHBCLKDivider  = RCC_SYSCLK_DIV1;
     RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
     RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-    if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK) {
+    if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) != HAL_OK) {
         Error_Handler();
     }
     PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART1 | RCC_PERIPHCLK_I2C1;

@@ -51,7 +51,7 @@ void transition_callback(fsm handle) {
 
 void off_entry(fsm handle) {
     uint16_t cells[PACK_CELL_COUNT] = {0};
-    ltc6813_set_balancing(&LTC6813_SPI, cells, 0);
+    ltc6813_set_balancing(&LTC6813_SPI, cells, PACK_CELL_COUNT, 0);
 }
 
 void off_handler(fsm handle, uint8_t event) {
@@ -72,8 +72,8 @@ void compute_entry(fsm handle) {
 }
 
 void discharge_entry(fsm handle) {
-    ltc6813_set_balancing(&LTC6813_SPI, bal.cells, bal.cycle_length);
-    bal.discharge_time = HAL_GetTick();
+    //ltc6813_set_balancing(&LTC6813_SPI, bal.cells, bal.cycle_length);
+    //bal.discharge_time = HAL_GetTick();
     //cli_bms_debug("Discharging cells", 18);
 }
 

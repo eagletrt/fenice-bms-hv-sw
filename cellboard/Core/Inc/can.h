@@ -35,6 +35,13 @@ extern CAN_HandleTypeDef hcan1;
 
 /* USER CODE BEGIN Private defines */
 #define BMS_CAN hcan1
+
+#define CAN_WAIT(C, T)                                                                                  \
+    {                                                                                                   \
+        while (HAL_GetTick() - T > 10 &&                                                                \
+               HAL_CAN_IsTxMessagePending(C, CAN_TX_MAILBOX0 | CAN_TX_MAILBOX1 | CAN_TX_MAILBOX2) == 1) \
+            ;                                                                                           \
+    }
 /* USER CODE END Private defines */
 
 void MX_CAN1_Init(void);

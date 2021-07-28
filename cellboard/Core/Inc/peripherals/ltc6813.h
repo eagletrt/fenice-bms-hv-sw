@@ -9,11 +9,6 @@
 #ifndef LTC6813_H
 #define LTC6813_H
 
-#define GPIO_CFGAR_MASK 0b11111000
-#define GPIO_I2C_MODE   0b11000000
-#define GPIO_VOID       0b00000000
-#define GPIO_CFGAR_POS  0
-
 #include "cellboard_config.h"
 #include "error.h"
 #include "peripherals/ltc6813_utils.h"
@@ -69,31 +64,60 @@ static const uint16_t dcc[CELLBOARD_CELL_COUNT] = {
     0b00000010   // DCCC18
 };
 
+#define RDCV_CMD_REG_A 0b0100
+#define RDCV_CMD_REG_B 0b0110
+#define RDCV_CMD_REG_C 0b1000
+#define RDCV_CMD_REG_D 0b1010
+#define RDCV_CMD_REG_E 0b1001
+#define RDCV_CMD_REG_F 0b1011
+
 /**
  * @brief rdcv command registers
  * @details As defined in the LTC6813 datasheet, theese are the bits to access
  * 			the six different registers of the LTC
  */
 static const uint8_t rdcv_cmd[LTC6813_REG_COUNT] = {
-    0b0100,  // A
-    0b0110,  // B
-    0b1000,  // C
-    0b1010,  // D
-    0b1001,  // E
-    0b1011,  // F
+    RDCV_CMD_REG_A,
+    RDCV_CMD_REG_B,
+    RDCV_CMD_REG_C,
+    RDCV_CMD_REG_D,
+    RDCV_CMD_REG_E,
+    RDCV_CMD_REG_F,
+};
+
+/**
+ * @brief Discharge time out value
+ * 
+ */
+enum {
+    DCTO_DISABLED = 0,
+    DCTO_30S,
+    DCTO_1M,
+    DCTO_2M,
+    DCTO_3M,
+    DCTO_4M,
+    DCTO_10M,
+    DCTO_15M,
+    DCTO_20M,
+    DCTO_30M,
+    DCTO_40M,
+    DCTO_60M,
+    DCTO_75M,
+    DCTO_90M,
+    DCTO_120M
 };
 
 /**
  * @brief Time to discharge the cell
  * 
- * @details Maps dcto memory value to millis
+ * @details Maps dcto memory value to milliseconds
  */
-static const uint32_t dcto[16] = {
+static const uint32_t DCTO_TO_MILLIS[16] = {
     0,        // disabled
     30000,    // 30 sec
     60000,    // 1 min
-    120000,   // 2 ...
-    180000,   // 3
+    120000,   // 2 min
+    180000,   // 3 ...
     240000,   // 4
     300000,   // 5
     600000,   // 10
@@ -107,12 +131,18 @@ static const uint32_t dcto[16] = {
     7200000   // 120
 };
 
+typedef enum { WRCFGA = 0, WRCFGB = 1 } wrcfg_register;
+
 extern uint8_t GPIO_CONFIG;  // GPIO CONFIG
+
+void ltc6813_adcv(SPI_HandleTypeDef *spi);
 
 void ltc6813_enable_cs(SPI_HandleTypeDef *spi);
 void ltc6813_disable_cs(SPI_HandleTypeDef *spi);
+
 void ltc6813_wakeup_idle(SPI_HandleTypeDef *hspi);
 
+void ltc6813_wrcfg(SPI_HandleTypeDef *hspi, wrcfg_register reg, uint8_t cfgr[8]);
 /**
  * @brief		This function is used to calculate the PEC value
  *
@@ -120,17 +150,5 @@ void ltc6813_wakeup_idle(SPI_HandleTypeDef *hspi);
  * @param		data	Array of data
  */
 uint16_t ltc6813_pec15(uint8_t len, uint8_t data[]);
-
-// TODO: THESE ARE PRIVATE!!
-void _ltc6813_adcv(SPI_HandleTypeDef *hspi, bool DCP);
-void _ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool start, bool parity);
-
-void ltc6813_wrcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t data[8]);
-void ltc6813_wrcomm_i2c_w(SPI_HandleTypeDef *hspi, uint8_t address, uint8_t *data);
-void ltc6813_wrcomm_i2c_r(SPI_HandleTypeDef *hspi, uint8_t address);
-void ltc6813_stcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t length);
-bool ltc6813_rdcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t data[8]);
-
-void ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool is_a, uint8_t cfgr[const CELLBOARD_COUNT][8]);
 
 #endif /* LTC6813_H_ */

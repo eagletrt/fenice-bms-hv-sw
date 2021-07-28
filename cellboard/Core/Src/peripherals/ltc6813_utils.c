@@ -79,7 +79,6 @@ size_t ltc6813_read_voltages(SPI_HandleTypeDef *hspi, voltage_t *volts) {
                 count++;
             }
         } else {
-            // TODO: send error
             ERROR_SET(ERROR_LTC_COMM);
         }
         //}
@@ -88,44 +87,41 @@ size_t ltc6813_read_voltages(SPI_HandleTypeDef *hspi, voltage_t *volts) {
     return count;
 }
 
-void ltc6813_set_dcc(uint16_t indexes[], uint8_t cfgar[8], uint8_t cfgbr[8]) {
-    for (uint16_t i = 0; i < PACK_CELL_COUNT; i++) {
+void ltc6813_build_dcc(uint16_t indexes[], uint16_t size, uint8_t cfgar[8], uint8_t cfgbr[8]) {
+    for (uint16_t i = 0; i < size; i++) {
         if (indexes[i] < 8) {
-            cfgar[4] += dcc[indexes[i]];
+            cfgar[4] |= dcc[indexes[i]];
         } else if (indexes[i] >= 8 && indexes[i] < 12) {
-            cfgar[5] += dcc[indexes[i]];
+            cfgar[5] |= dcc[indexes[i]];
         } else if (indexes[i] >= 12 && indexes[i] < 16) {
-            cfgbr[0] += dcc[indexes[i]];
+            cfgbr[0] |= dcc[indexes[i]];
         } else if (indexes[i] >= 16 && indexes[i] < 18) {
-            cfgbr[1] += dcc[indexes[i]];
+            cfgbr[1] |= dcc[indexes[i]];
         }
-
-        uint16_t pec = ltc6813_pec15(6, cfgar);
-        cfgar[6]     = (uint8_t)(pec >> 8);
-        cfgar[7]     = (uint8_t)(pec);
-
-        pec      = ltc6813_pec15(6, cfgbr);
-        cfgbr[6] = (uint8_t)(pec >> 8);
-        cfgbr[7] = (uint8_t)(pec);
     }
+
+    uint16_t pec = ltc6813_pec15(6, cfgar);
+    cfgar[6]     = (uint8_t)(pec >> 8);
+    cfgar[7]     = (uint8_t)(pec);
+
+    pec      = ltc6813_pec15(6, cfgbr);
+    cfgbr[6] = (uint8_t)(pec >> 8);
+    cfgbr[7] = (uint8_t)(pec);
 }
 
-void ltc6813_set_balancing(SPI_HandleTypeDef *hspi, uint16_t *indexes, int dcto) {
-    uint8_t cfgar[CELLBOARD_COUNT][8] = {0};
-    uint8_t cfgbr[CELLBOARD_COUNT][8] = {0};
+void ltc6813_set_balancing(SPI_HandleTypeDef *hspi, uint16_t *indexes, uint16_t size, int dcto) {
+    uint8_t cfgar[8] = {0};
+    uint8_t cfgbr[8] = {0};
 
-    for (uint16_t i = 0; i < CELLBOARD_COUNT; i++) {
-        // cfgbr[i][1] += 0b00001000; // set DTMEN
-        cfgar[i][0] += 0b00000010;  // set DTEN
-        cfgar[i][5] += dcto << 4;   // Set timer
+    // cfgbr[i][1] += 0b00001000; // set DTMEN
+    cfgar[0] += 0b00000010;  // set DTEN
+    cfgar[5] += dcto << 4;   // Set timer
+    ltc6813_build_dcc(indexes, size, cfgar, cfgbr);
 
-        // For each LTC we set the correct cfgr
-        ltc6813_set_dcc(indexes, cfgar[i], cfgbr[i]);
-    }
     ltc6813_wakeup_idle(hspi);
 
-    ltc6813_wrcfg(hspi, true, cfgar);
-    ltc6813_wrcfg(hspi, false, cfgbr);
+    ltc6813_wrcfg(hspi, WRCFGA, cfgar);
+    ltc6813_wrcfg(hspi, WRCFGB, cfgbr);
 }
 
 uint16_t ltc6813_convert_voltage(uint8_t v_data[]) {

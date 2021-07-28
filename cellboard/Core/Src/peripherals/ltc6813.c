@@ -10,8 +10,6 @@
 
 #include "main.h"
 
-uint8_t GPIO_CONFIG;
-
 void ltc6813_enable_cs(SPI_HandleTypeDef *spi) {
     HAL_GPIO_WritePin(LTC_CS_GPIO_Port, LTC_CS_Pin, GPIO_PIN_RESET);
     while (spi->State != HAL_SPI_STATE_READY)
@@ -38,11 +36,11 @@ void ltc6813_disable_cs(SPI_HandleTypeDef *spi) {
  * @param	spi		The spi configuration structure
  * @param	dcp		false to read voltages; true to read temperatures
  */
-void _ltc6813_adcv(SPI_HandleTypeDef *spi, bool dcp) {
+void ltc6813_adcv(SPI_HandleTypeDef *spi) {
     uint8_t cmd[4];
     uint16_t cmd_pec;
     cmd[0]  = (uint8_t)0b00000011;
-    cmd[1]  = (uint8_t)0b01100000 | dcp << 4;
+    cmd[1]  = (uint8_t)0b01100000;
     cmd_pec = ltc6813_pec15(2, cmd);
     cmd[2]  = (uint8_t)(cmd_pec >> 8);
     cmd[3]  = (uint8_t)(cmd_pec);
@@ -50,96 +48,16 @@ void _ltc6813_adcv(SPI_HandleTypeDef *spi, bool dcp) {
     ltc6813_wakeup_idle(spi);
 
     ltc6813_enable_cs(spi);
-
     HAL_SPI_Transmit(spi, cmd, 4, 100);
-
     ltc6813_disable_cs(spi);
 }
 
-/**
- * @brief	Enable or disable the temperature measurement through balancing
- * @details	Since it's not possible to read the temperatures from adiacent
- * 			cells at the same time, We split the measurement into two times,
- * 			read odd cells, and then even ones. To write configuration you
- *			have to send 2 consecutive commands:
- *
- *					WRCFG:
- * 					0     CMD0    7     CMD1      15      31
- * 					|- - - - - - -|- - - - - - - -|- ... -|
- * 					0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1  PEC
- *
- *					CFGR:
- * 					0             7               15
- * 					|- - - - - - -|- - - - - - - -|
- * 					0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
- * 					16            23              31
- * 					|- - - - - - -|- - - - - - - -|
- * 					0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
- *					32            39              47      63
- *					|- - - - - - -|- - - - - - - -|- ... -|
- *					1 0 0 1 0 1 0 1 0 0 0 0 0 0 1 0  PEC	<- For odd cells
- *					              or
- *					0 1 0 0 1 0 1 0 0 0 0 0 0 0 0 1  PEC	<- For even cells
- *
- * @param	hspi		The SPI configuration structure
- * @param	start_bal	whether to start temperature measurement
- * @param	even		Indicates whether we're reading odd or even cells
- */
-void _ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool start_bal, bool even) {
-    // TODO: remove this function
-    uint8_t wrcfg[4];
-    uint8_t cfgr[8];
-
-    uint16_t cmd_pec;
-
-    wrcfg[0] = 0x00;
-    wrcfg[1] = 0x01;
-    cmd_pec  = ltc6813_pec15(2, wrcfg);
-    wrcfg[2] = (uint8_t)(cmd_pec >> 8);
-    wrcfg[3] = (uint8_t)(cmd_pec);
-
-    cfgr[0] = 0x00;
-    cfgr[1] = 0x00;
-    cfgr[2] = 0x00;
-    cfgr[3] = 0x00;
-
-    if (start_bal) {
-        if (even) {
-            // Command to balance cells (in order) 8,5,3,1 and 10
-            cfgr[4] = 0b10010101;
-            cfgr[5] = 0b00000010;
-        } else {
-            // Command to balance cells (in order) 7,4,2 and 9
-            cfgr[4] = 0b01001010;
-            // First 4 bits are for DCT0 and should remain 0
-            cfgr[5] = 0b00000001;
-        }
-    } else {
-        cfgr[4] = 0x00;
-        cfgr[5] = 0x00;
-    }
-    cmd_pec = ltc6813_pec15(6, cfgr);
-    cfgr[6] = (uint8_t)(cmd_pec >> 8);
-    cfgr[7] = (uint8_t)(cmd_pec);
-
-    ltc6813_wakeup_idle(hspi);
-
-    ltc6813_enable_cs(hspi);
-    HAL_SPI_Transmit(hspi, wrcfg, 4, 100);
-    HAL_SPI_Transmit(hspi, cfgr, 8, 100);
-    ltc6813_disable_cs(hspi);
-
-    // TODO: remove this
-    _ltc6813_adcv(hspi, start_bal);
-}
-
-void ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool is_a, uint8_t cfgr[CELLBOARD_COUNT][8]) {
+void ltc6813_wrcfg(SPI_HandleTypeDef *hspi, wrcfg_register reg, uint8_t cfgr[8]) {
     uint8_t cmd[4] = {0};
 
-    if (is_a) {
-        // WRCFGA
+    if (reg == WRCFGA) {
         cmd[1] = 1;
-    } else {
+    } else if (reg == WRCFGB) {
         // WRCFGB
         cmd[1] = 0b00100100;
     }
@@ -151,60 +69,10 @@ void ltc6813_wrcfg(SPI_HandleTypeDef *hspi, bool is_a, uint8_t cfgr[CELLBOARD_CO
     ltc6813_enable_cs(hspi);
     HAL_SPI_Transmit(hspi, cmd, 4, 100);
 
-    for (uint8_t i = 0; i < CELLBOARD_COUNT; i++) {
-        // set the configuration for the #i ltc on the chain
-        // GPIO configs are equal for all ltcs
-        cfgr[i][GPIO_CFGAR_POS] = GPIO_CONFIG + ((!GPIO_CFGAR_MASK) | cfgr[i][GPIO_CFGAR_POS]);
-        HAL_SPI_Transmit(hspi, cfgr[i], 8, 100);
-    }
-
-    ltc6813_disable_cs(hspi);
-}
-
-void ltc6813_wrcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t data[8]) {
-    uint8_t cmd[4]   = {0b00000111, 0b00100001};  // WRCOMM
-    uint16_t cmd_pec = ltc6813_pec15(2, cmd);
-    cmd[2]           = (uint8_t)(cmd_pec >> 8);
-    cmd[3]           = (uint8_t)(cmd_pec);
-
-    ltc6813_enable_cs(hspi);
-    HAL_SPI_Transmit(hspi, cmd, 4, 100);
-    HAL_SPI_Transmit(hspi, data, 8, 100);
-    ltc6813_disable_cs(hspi);
-}
-
-bool ltc6813_rdcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t data[8]) {
-    uint8_t cmd[4] = {0b00000111, 0b00100010};  // RDCOMM
-
-    uint16_t cmd_pec = ltc6813_pec15(2, cmd);
-    cmd[2]           = (uint8_t)(cmd_pec >> 8);
-    cmd[3]           = (uint8_t)(cmd_pec);
-
-    ltc6813_enable_cs(hspi);
-    HAL_SPI_Transmit(hspi, cmd, 4, 100);
-    HAL_SPI_Receive(hspi, data, 8, 100);
-    ltc6813_disable_cs(hspi);
-
-    if (ltc6813_pec15(6, data) == (uint16_t)(data[6] * 256 + data[7])) {
-        return true;
-    }
-    return false;
-}
-
-void ltc6813_stcomm_i2c(SPI_HandleTypeDef *hspi, uint8_t length) {
-    uint8_t cmd[4] = {0b00000111, 0b00100011};  // STCOMM
-
-    uint16_t cmd_pec = ltc6813_pec15(2, cmd);
-    cmd[2]           = (uint8_t)(cmd_pec >> 8);
-    cmd[3]           = (uint8_t)(cmd_pec);
-
-    ltc6813_enable_cs(hspi);
-
-    HAL_SPI_Transmit(hspi, cmd, 4, 100);
-    for (uint8_t i = 0; i < 3 * length; i++) {
-        HAL_SPI_Transmit(hspi, (uint8_t *)0xFF, 1, 20);
-    }
-
+    // set the configuration for the #i ltc on the chain
+    // GPIO configs are equal for all ltcs
+    //cfgr[GPIO_CFGAR_POS] = GPIO_CONFIG + ((!GPIO_CFGAR_MASK) | cfgr[GPIO_CFGAR_POS]);
+    HAL_SPI_Transmit(hspi, cfgr, 8, 100);
     ltc6813_disable_cs(hspi);
 }
 
@@ -219,7 +87,6 @@ void ltc6813_wakeup_idle(SPI_HandleTypeDef *hspi) {
     ltc6813_enable_cs(hspi);
 
     HAL_SPI_Transmit(hspi, &data, 1, 1);
-    //HAL_Delay(1);
 
     ltc6813_disable_cs(hspi);
 }
