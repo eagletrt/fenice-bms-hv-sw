@@ -23,6 +23,7 @@ void can_send(uint16_t id) {
     uint8_t buffer[CAN_MAX_PAYLOAD_LENGTH];
 
     tx_header.StdId = id;
+    tx_header.IDE   = CAN_ID_STD;
 
     if (id == ID_BOARD_STATUS) {
         bms_balancing_status state = BAL_OFF;
@@ -46,7 +47,6 @@ void can_send(uint16_t id) {
             temp_serialize(temp_get_average()),
             temp_serialize(temp_get_max()),
             temp_serialize(temp_get_min()));
-
     } else if (id == ID_VOLTAGES_0) {
         tx_header.DLC = serialize_bms_VOLTAGES_0(buffer, cellboard_index, voltages[0], voltages[1], voltages[2]);
     } else if (id == ID_VOLTAGES_1) {
@@ -61,6 +61,10 @@ void can_send(uint16_t id) {
         tx_header.DLC = serialize_bms_VOLTAGES_5(buffer, cellboard_index, voltages[15], voltages[16], voltages[17]);
     }
 
-    uint32_t mailbox = 0;  // ??
-    HAL_CAN_AddTxMessage(&BMS_CAN, &tx_header, buffer, &mailbox);
+    uint32_t mailbox = 0;
+    if (HAL_CAN_AddTxMessage(&BMS_CAN, &tx_header, buffer, &mailbox) == HAL_OK) {
+        ERROR_UNSET(ERROR_CAN);
+    } else {
+        ERROR_SET(ERROR_CAN);
+    }
 }

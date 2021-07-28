@@ -16,7 +16,8 @@
 #define ERROR_GET(e)   ((errors & (1 << (e))) != 0)
 
 typedef enum {
-    ERROR_LTC_COMM = 0,
+    ERROR_CAN = 0,
+    ERROR_LTC_COMM,
     ERROR_TEMP_COMM_0,
     ERROR_TEMP_COMM_1,
     ERROR_TEMP_COMM_2,

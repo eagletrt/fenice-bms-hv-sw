@@ -45,8 +45,8 @@ size_t ltc6813_read_voltages(SPI_HandleTypeDef *hspi, voltage_t *volts);
 // */
 //void ltc6813_check_temperature(uint16_t temps, uint8_t index);
 
-void ltc6813_set_dcc(uint16_t indexes[], uint8_t cfgar[8], uint8_t cfgbr[8]);
-void ltc6813_set_balancing(SPI_HandleTypeDef *hspi, uint16_t *indexes, int dcto);
+void ltc6813_build_dcc(uint16_t indexes[], uint16_t size, uint8_t cfgar[8], uint8_t cfgbr[8]);
+void ltc6813_set_balancing(SPI_HandleTypeDef *hspi, uint16_t *indexes, uint16_t size, int dcto);
 
 /**
  * @brief	This function is used to convert the 2 byte raw data from the LTC68xx to a 16 bit unsigned integer

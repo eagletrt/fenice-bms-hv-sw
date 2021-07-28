@@ -13,7 +13,7 @@
 voltage_t voltages[CELLBOARD_CELL_COUNT] = {0};
 
 void volt_start_measure() {
-    _ltc6813_adcv(&LTC6813_SPI, 0);
+    ltc6813_adcv(&LTC6813_SPI);
 }
 
 void volt_read() {
