@@ -11,19 +11,14 @@
 #ifndef SI8902_H
 #define SI8902_H
 
-#include <inttypes.h>
-#include <stdbool.h>
-#include <stm32g4xx_hal.h>
-
 #include "main.h"
 
-static const uint8_t si8900_cnfg_0 = 0b11000011;
+#include <inttypes.h>
+#include <stdbool.h>
 
-typedef enum {
-	SI8900_AIN0 = 0,
-	SI8900_AIN1 = 1,
-	SI8900_AIN2 = 2
-} SI8900_CHANNEL;
+static const uint8_t si8900_cnfg_0 = 0b11001011;
+
+typedef enum { SI8900_AIN0 = 0, SI8900_AIN1 = 1, SI8900_AIN2 = 2 } SI8900_CHANNEL;
 
 /**
  * @brief		Initializes the ADC
@@ -48,8 +43,7 @@ bool si8900_init(UART_HandleTypeDef *huart, GPIO_TypeDef *reset_gpio, uint16_t r
  * 
  * @returns whether the reading succeded
  */
-bool si8900_read_channel(UART_HandleTypeDef *huart, SI8900_CHANNEL ch,
-						 uint16_t *voltage);
+bool si8900_read_channel(UART_HandleTypeDef *huart, SI8900_CHANNEL ch, uint16_t *voltage);
 
 /**
  * @brief	Computes the voltage from ADC_H and ADC_L bytes
