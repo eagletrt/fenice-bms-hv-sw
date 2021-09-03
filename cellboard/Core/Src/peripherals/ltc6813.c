@@ -12,8 +12,8 @@
 
 void ltc6813_enable_cs(SPI_HandleTypeDef *spi) {
     HAL_GPIO_WritePin(LTC_CS_GPIO_Port, LTC_CS_Pin, GPIO_PIN_RESET);
-    while (spi->State != HAL_SPI_STATE_READY)
-        ;
+    while (spi->State != HAL_SPI_STATE_READY) {
+    }
 }
 
 void ltc6813_disable_cs(SPI_HandleTypeDef *spi) {

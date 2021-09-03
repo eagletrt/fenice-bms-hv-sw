@@ -15,3 +15,10 @@ extern voltage_t voltages[CELLBOARD_CELL_COUNT];
 
 void volt_start_measure();
 void volt_read();
+
+/**
+ * @brief Returns the lower-voltage cell
+ * 
+ * @return uint16_t The index of the lower-voltage cell
+ */
+uint16_t volt_get_min();

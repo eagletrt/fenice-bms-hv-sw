@@ -74,17 +74,17 @@
 /**
  *  Maximum voltage delta between cells (mV * 10)
  */
-#define BAL_MAX_VOLTAGE_THRESHOLD 1000
+#define BAL_MAX_VOLTAGE_THRESHOLD 500
 
 /**
  *  How much does a balancing cycle last (ms)
  */
-#define BAL_CYCLE_LENGTH 120000
+#define BAL_CYCLE_LENGTH 30000
 
 /**
  *  How much to wait for voltages to stabilize after a balancing cycle [ms]
  */
-#define BAL_COOLDOWN_DELAY 5000
+#define BAL_COOLDOWN_DELAY 8000
 
 // @section Pre-charge
 

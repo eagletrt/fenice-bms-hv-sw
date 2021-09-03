@@ -9,10 +9,12 @@
 
 #include "bal_fsm.h"
 
+#include "bal.h"
 #include "can_comms.h"
 #include "ltc6813_utils.h"
 #include "main.h"
 #include "spi.h"
+#include "volt.h"
 
 bal_fsm bal;
 
@@ -24,7 +26,7 @@ void discharge_handler(fsm handle, uint8_t event);
 void transition_callback(fsm handle);
 
 void bal_fsm_init() {
-    bal.cycle_length = BAL_CYCLE_LENGTH;
+    bal.cycle_length = DCTO_30S;
     bal.fsm          = fsm_init(BAL_NUM_STATES, BAL_EV_NUM, transition_callback);
 
     fsm_state state;
@@ -51,6 +53,8 @@ void transition_callback(fsm handle) {
 
 void off_entry(fsm handle) {
     uint16_t cells[PACK_CELL_COUNT] = {0};
+    bal.cells_length                = 0;
+
     ltc6813_set_balancing(&LTC6813_SPI, cells, PACK_CELL_COUNT, 0);
 }
 
@@ -63,17 +67,19 @@ void off_handler(fsm handle, uint8_t event) {
 }
 
 void compute_entry(fsm handle) {
-    //if (bal_get_cells_to_discharge(pack_get_voltages(), PACK_CELL_COUNT, bal_get_threshold(), bal.cells) != 0) {
-    //    fsm_transition(handle, BAL_DISCHARGE);
-    //    return;
-    //}
+    bal.cells_length = bal_get_cells_to_discharge(voltages, PACK_CELL_COUNT, BAL_MAX_VOLTAGE_THRESHOLD, bal.cells);
+
+    if (bal.cells_length != 0) {
+        fsm_transition(handle, BAL_DISCHARGE);
+        return;
+    }
     //cli_bms_debug("Non si può fare meglio di così.", 34);
     fsm_transition(handle, BAL_OFF);
 }
 
 void discharge_entry(fsm handle) {
-    //ltc6813_set_balancing(&LTC6813_SPI, bal.cells, bal.cycle_length);
-    //bal.discharge_time = HAL_GetTick();
+    ltc6813_set_balancing(&LTC6813_SPI, bal.cells, bal.cells_length, bal.cycle_length);
+    bal.discharge_time = HAL_GetTick();
     //cli_bms_debug("Discharging cells", 18);
 }
 
@@ -85,11 +91,12 @@ void discharge_handler(fsm handle, uint8_t event) {
             break;
         case EV_BAL_CHECK_TIMER:
             // TODO: use timers or something
-            //if (bal.discharge_time - HAL_GetTick() >= bal.cycle_length) {
-            //    fsm_transition(handle, BAL_OFF);
-            //} else {
-            //    fsm_catch_event(handle, EV_BAL_CHECK_TIMER);
-            //}
+            if (HAL_GetTick() - bal.discharge_time >= DCTO_TO_MILLIS[bal.cycle_length]) {
+                bal.cells_length = 0;
+            }
+            if (HAL_GetTick() - bal.discharge_time >= DCTO_TO_MILLIS[bal.cycle_length] + BAL_COOLDOWN_DELAY) {
+                fsm_transition(handle, BAL_COMPUTE);
+            }
 
             break;
     }

@@ -19,3 +19,14 @@ void volt_start_measure() {
 void volt_read() {
     ltc6813_read_voltages(&LTC6813_SPI, voltages);
 }
+
+uint16_t volt_get_min() {
+    uint16_t min = 0;
+    for (uint16_t i = 0; i < CELLBOARD_CELL_COUNT; i++) {
+        if (voltages[i] < voltages[min]) {
+            min = i;
+        }
+    }
+
+    return min;
+}
