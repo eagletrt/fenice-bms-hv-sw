@@ -42,10 +42,13 @@ size_t ltc6813_read_voltages(SPI_HandleTypeDef *hspi, voltage_t *volts) {
         ltc6813_wakeup_idle(hspi);
 
         ltc6813_enable_cs(hspi);
-        if (HAL_SPI_Transmit(hspi, cmd, 4, 100) != HAL_OK) {
+        if (HAL_SPI_Transmit(hspi, cmd, 4, 10) != HAL_OK) {
             // goto End;
         }
-        HAL_SPI_Receive(hspi, data, LTC6813_REG_CELL_COUNT * 2 + 2, 400);
+        while (hspi->State != HAL_SPI_STATE_READY)
+            ;
+        HAL_Delay(1);
+        HAL_SPI_Receive(hspi, data, LTC6813_REG_CELL_COUNT * 2 + 2, 100);
 
         ltc6813_disable_cs(hspi);
 
