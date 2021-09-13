@@ -10,7 +10,6 @@
 
 #include "config.h"
 #include "feedback.h"
-#include "main.h"
 #include "peripherals/si8900.h"
 #include "soc.h"
 
@@ -83,32 +82,28 @@ void pack_init() {
 
     soc_init(&soc_total);
     soc_init(&soc_last_charge);
-    config_init(&soc_config, SOC_ADDR, &soc_params_default, sizeof(soc_params));
+    //config_init(&soc_config, SOC_ADDR, &soc_params_default, sizeof(soc_params));
 
-    soc_load(soc_total, ((soc_params *)config_get(soc_config))->total_joule, HAL_GetTick());
-    soc_load(soc_last_charge, ((soc_params *)config_get(soc_config))->charge_joule, HAL_GetTick());
-
-    // LTC6813 GPIO configuration
-    GPIO_CONFIG = GPIO_I2C_MODE;
+    //soc_load(soc_total, ((soc_params *)config_get(soc_config))->total_joule, HAL_GetTick());
+    //soc_load(soc_last_charge, ((soc_params *)config_get(soc_config))->charge_joule, HAL_GetTick());
 }
 
-void pack_update_voltages(SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart) {
-    _ltc6813_adcv(hspi, 0);  // TODO: remove this?
-
-    ltc6813_read_voltages(hspi, cells.voltages);
-
+void pack_update_voltages(UART_HandleTypeDef *huart) {
     voltage_t internal = 0;
     voltage_t bus      = 0;
+    voltage_t sum      = 0;
+
     if (si8900_read_channel(huart, SI8900_AIN0, &internal)) {
         cells.int_voltage = internal;
     }
-    HAL_Delay(0);  // TODO: this sucks
+    HAL_Delay(2);  // TODO: this sucks
     if (si8900_read_channel(huart, SI8900_AIN1, &bus)) {
         cells.bus_voltage = bus;
     }
 
-    voltage_t sum = 0;
-    pack_update_voltage_stats(&sum, &(cells.max_voltage), &(cells.min_voltage));
+    for (uint16_t i = 0; i < PACK_CELL_COUNT; i++) {
+        sum += cells.voltages[i];
+    }
 
     // Check if difference between readings from the ADC and LTCs is greater than 5V
     if (max(internal, sum) - min(internal, sum) > 5 * 100) {
@@ -117,33 +112,6 @@ void pack_update_voltages(SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart) {
         error_unset(ERROR_INT_VOLTAGE_MISMATCH, 0);
     }
     cells.int_voltage = max(internal, sum);  // TODO: is this a good thing?
-}
-
-void pack_update_temperatures(SPI_HandleTypeDef *hspi) {
-    uint8_t max[LTC6813_COUNT * 2];
-    uint8_t min[LTC6813_COUNT * 2];
-
-    ltc6813_read_temperatures(hspi, max, min);
-
-    temperature_t avg_temp = 0;
-    temperature_t max_temp = 0;
-    temperature_t min_temp = UINT8_MAX;
-
-    for (uint8_t i = 0; i < LTC6813_COUNT; i++) {
-        avg_temp += max[i * 2] + max[i * 2 + 1];
-        avg_temp += min[i * 2] + min[i * 2 + 1];
-
-        max_temp = max(max[i * 2], max_temp);
-        min_temp = min(min[i * 2], min_temp);
-    }
-
-    cells.mean_temperature = ((float)avg_temp / (LTC6813_COUNT * 4)) * 10;
-    cells.max_temperature  = max_temp;
-    cells.min_temperature  = min_temp;
-}
-
-void pack_update_all_temperatures(SPI_HandleTypeDef *hspi) {
-    ltc6813_read_all_temps(hspi, cells.temperatures);
 }
 
 int32_t _mean(uint32_t values[], size_t size) {
@@ -175,7 +143,7 @@ void pack_update_current() {
         current = current50;
     }
 
-    soc_params params = *(soc_params *)config_get(soc_config);
+    soc_params params;  //= *(soc_params *)config_get(soc_config);
 
     soc_sample_current(soc_total, current, pack_get_int_voltage(), HAL_GetTick());
     soc_sample_current(soc_last_charge, current, pack_get_int_voltage(), HAL_GetTick());
@@ -183,7 +151,7 @@ void pack_update_current() {
     params.charge_joule = soc_get_joule(soc_last_charge);
 
     params.total_joule = soc_get_joule(soc_total);
-    config_set(soc_config, &params);
+    //config_set(soc_config, &params);
 
     if (HAL_GetTick() - soc_timer >= SOC_WRITE_INTERVAL) {
         soc_timer = HAL_GetTick();
@@ -265,7 +233,7 @@ bool pack_set_pc_start() {
 
 bool pack_set_precharge_end() {
     //switch on AIR+
-    HAL_GPIO_WritePin(PC_ENDED_GPIO_Port, PC_ENDED_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(AIRP_OFF_GPIO_Port, AIRP_OFF_Pin, GPIO_PIN_RESET);
 
     // Check feedback
     feedback_read(FEEDBACK_ON_MASK);

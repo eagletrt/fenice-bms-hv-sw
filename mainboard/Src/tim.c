@@ -43,9 +43,9 @@ void MX_TIM2_Init(void) {
 
     /* USER CODE END TIM2_Init 1 */
     htim2.Instance               = TIM2;
-    htim2.Init.Prescaler         = 16999;
+    htim2.Init.Prescaler         = 8999;
     htim2.Init.CounterMode       = TIM_COUNTERMODE_UP;
-    htim2.Init.Period            = 4.294967295E9;
+    htim2.Init.Period            = 0xFFFFFFFF;
     htim2.Init.ClockDivision     = TIM_CLOCKDIVISION_DIV1;
     htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
     if (HAL_TIM_Base_Init(&htim2) != HAL_OK) {
@@ -70,7 +70,7 @@ void MX_TIM2_Init(void) {
     if (HAL_TIM_OC_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_1) != HAL_OK) {
         Error_Handler();
     }
-    sConfigOC.Pulse = 100000;
+    sConfigOC.Pulse = 10000;
     if (HAL_TIM_OC_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_2) != HAL_OK) {
         Error_Handler();
     }
@@ -99,7 +99,7 @@ void MX_TIM3_Init(void) {
 
     /* USER CODE END TIM3_Init 1 */
     htim3.Instance               = TIM3;
-    htim3.Init.Prescaler         = 16999;
+    htim3.Init.Prescaler         = 8999;
     htim3.Init.CounterMode       = TIM_COUNTERMODE_UP;
     htim3.Init.Period            = 65535;
     htim3.Init.ClockDivision     = TIM_CLOCKDIVISION_DIV1;
@@ -123,7 +123,7 @@ void MX_TIM3_Init(void) {
         Error_Handler();
     }
     sConfigOC.OCMode     = TIM_OCMODE_TIMING;
-    sConfigOC.Pulse      = 10000;
+    sConfigOC.Pulse      = 1000;
     sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
     sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
     if (HAL_TIM_OC_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_1) != HAL_OK) {
@@ -147,7 +147,7 @@ void MX_TIM4_Init(void) {
 
     /* USER CODE END TIM4_Init 1 */
     htim4.Instance               = TIM4;
-    htim4.Init.Prescaler         = 16999;
+    htim4.Init.Prescaler         = 8999;
     htim4.Init.CounterMode       = TIM_COUNTERMODE_UP;
     htim4.Init.Period            = 65535;
     htim4.Init.ClockDivision     = TIM_CLOCKDIVISION_DIV1;
@@ -270,7 +270,9 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef *tim_baseHandle) {
 void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim) {
     uint32_t pulse;
     if (htim->Instance == htim_err.Instance) {
-        fsm_catch_event(bms.fsm, BMS_EV_HALT);
+        HAL_GPIO_WritePin(GPIO1_GPIO_Port, GPIO1_Pin, GPIO_PIN_RESET);
+        //fsm_trigger_event(bms.fsm, BMS_EV_HALT);
+        fsm_transition(bms.fsm, BMS_HALT);
         error_set_fatal(error_get_top());
     }
     if (htim->Instance == htim_bms.Instance) {
@@ -279,10 +281,10 @@ void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim) {
                 pulse = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
                 __HAL_TIM_SET_COMPARE(htim, TIM_CHANNEL_1, (pulse + PRECHARGE_CHECK_INTERVAL * 10U));
 
-                fsm_catch_event(bms.fsm, BMS_EV_PRECHARGE_CHECK);
+                fsm_trigger_event(bms.fsm, BMS_EV_PRECHARGE_CHECK);
                 break;
             case HAL_TIM_ACTIVE_CHANNEL_2:
-                fsm_catch_event(bms.fsm, BMS_EV_PRECHARGE_TIMEOUT);
+                fsm_trigger_event(bms.fsm, BMS_EV_PRECHARGE_TIMEOUT);
                 break;
             default:
                 break;
@@ -294,13 +296,13 @@ void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim) {
                 pulse = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
                 __HAL_TIM_SET_COMPARE(htim, TIM_CHANNEL_1, (pulse + VOLTS_READ_INTERVAL * 10));
 
-                fsm_catch_event(super_fsm, SUPER_EV_MEASURE_VOLTS);
+                fsm_trigger_event(super_fsm, SUPER_EV_MEASURE_VOLTS);
                 break;
             case HAL_TIM_ACTIVE_CHANNEL_2:
                 pulse = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_2);
                 __HAL_TIM_SET_COMPARE(htim, TIM_CHANNEL_2, (pulse + TEMPS_READ_INTERVAL * 10));
 
-                fsm_catch_event(super_fsm, SUPER_EV_MEASURE_TEMPS);
+                //fsm_trigger_event(super_fsm, SUPER_EV_MEASURE_TEMPS);
                 break;
             default:
                 break;

@@ -13,16 +13,16 @@ language: C
 optimization: Og
 
 # MCU settings
-targetMCU: stm32g4x
+targetMCU: stm32f4x
 cpu: -mcpu=cortex-m4
 fpu: -mfpu=fpv4-sp-d16
 floatAbi: -mfloat-abi=hard
-ldscript: STM32G474CETx_FLASH.ld # linker script
+ldscript: STM32F446RETx_FLASH.ld # linker script
 
 # Compiler definitions. The -D prefix for the compiler will be automatically added.
 cDefinitions: 
   - USE_HAL_DRIVER
-  - STM32G474xx
+  - STM32F446xx
 
 cxxDefinitions: []
 asDefinitions: []

@@ -33,7 +33,7 @@ bool config_init(config_t *config, uint16_t address, void *default_data, size_t 
     (*config)->dirty   = false;
 
     if (eeprom == NULL) {
-        m95256_init(&eeprom, &spi_eeprom, CS_EEPROM_GPIO_Port, CS_EEPROM_Pin);
+        m95256_init(&eeprom, &spi_eeprom, EEPROM_CS_GPIO_Port, EEPROM_CS_Pin);
     }
 
     if (config_read(*config)) {

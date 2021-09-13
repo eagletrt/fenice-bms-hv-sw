@@ -14,7 +14,7 @@
 #include "error.h"
 #include "main.h"
 #include "pack.h"
-#include "peripherals/can.h"
+#include "peripherals/can_comm.h"
 #include "tim.h"
 
 #include <inttypes.h>
@@ -23,21 +23,21 @@
 
 //------------------------------Declarations------------------------------------------
 void idle_entry(fsm FSM);
-event_result idle_handler(fsm FSM, uint8_t event);
+void idle_handler(fsm FSM, uint8_t event);
 void idle_exit(fsm FSM);
 void precharge_entry(fsm FSM);
-event_result precharge_handler(fsm FSM, uint8_t event);
+void precharge_handler(fsm FSM, uint8_t event);
 void precharge_exit(fsm FSM);
 void on_entry(fsm FSM);
-event_result on_handler(fsm FSM, uint8_t event);
+void on_handler(fsm FSM, uint8_t event);
 void bms_on_exit(fsm FSM);
 void halt_entry(fsm FSM);
-event_result halt_handler(fsm FSM, uint8_t event);
+void halt_handler(fsm FSM, uint8_t event);
 
 bms_fsm bms;
 
 void bms_fsm_init() {
-    bms.fsm = fsm_init(BMS_NUM_STATES, BMS_EV_NUM);
+    bms.fsm = fsm_init(BMS_NUM_STATES, BMS_EV_NUM, NULL);
 
     fsm_state state;
     state.handler = idle_handler;
@@ -70,18 +70,15 @@ void idle_entry(fsm FSM) {
     can_send(ID_TS_STATUS);
 }
 
-event_result idle_handler(fsm FSM, uint8_t event) {
+void idle_handler(fsm FSM, uint8_t event) {
     switch (event) {
         case BMS_EV_TS_ON:
             fsm_transition(FSM, BMS_PRECHARGE);
-            return EVENT_HANDLED;
             break;
         case BMS_EV_HALT:
             fsm_transition(FSM, BMS_HALT);
-            return EVENT_HANDLED;
             break;
     }
-    return EVENT_UNKNOWN;
 }
 
 void idle_exit(fsm FSM) {
@@ -101,14 +98,13 @@ void precharge_entry(fsm FSM) {
     cli_bms_debug("Precharge entryed", 18);
 }
 
-event_result precharge_handler(fsm FSM, uint8_t event) {
+void precharge_handler(fsm FSM, uint8_t event) {
     switch (event) {
         case BMS_EV_PRECHARGE_TIMEOUT:
             cli_bms_debug("Precharge timeout", 18);
             // send timeout warning
         case BMS_EV_TS_OFF:
             fsm_transition(FSM, BMS_IDLE);
-            return EVENT_HANDLED;
             break;
 
         case BMS_EV_PRECHARGE_CHECK:
@@ -120,14 +116,11 @@ event_result precharge_handler(fsm FSM, uint8_t event) {
                 fsm_transition(bms.fsm, BMS_ON);
                 cli_bms_debug("Precharge ok", 18);
             }
-            return EVENT_HANDLED;
             break;
         case BMS_EV_HALT:
             fsm_transition(FSM, BMS_HALT);
-            return EVENT_HANDLED;
             break;
     }
-    return EVENT_UNKNOWN;
 }
 
 void precharge_exit(fsm FSM) {
@@ -142,18 +135,15 @@ void on_entry(fsm FSM) {
     }
 }
 
-event_result on_handler(fsm FSM, uint8_t event) {
+void on_handler(fsm FSM, uint8_t event) {
     switch (event) {
         case BMS_EV_TS_OFF:
             fsm_transition(FSM, BMS_IDLE);
-            return EVENT_HANDLED;
             break;
         case BMS_EV_HALT:
             fsm_transition(FSM, BMS_HALT);
-            return EVENT_HANDLED;
             break;
     }
-    return EVENT_UNKNOWN;
 }
 
 void bms_on_exit(fsm FSM) {
@@ -162,11 +152,17 @@ void bms_on_exit(fsm FSM) {
 void halt_entry(fsm FSM) {
     pack_set_ts_off();
     // bms_set_fault(&data->bms);
+    HAL_GPIO_WritePin(BMS_FAULT_GPIO_Port, BMS_FAULT_Pin, GPIO_PIN_RESET);
 
-    // can_send_error(&hcan, data->error, data->error_index, &data->pack);
-    cli_bms_debug("HALT", 5);
+    HAL_GPIO_WritePin(GPIO4_GPIO_Port, GPIO4_Pin, GPIO_PIN_SET);
+    //can_send_error(&hcan, data->error, data->error_index, &data->pack);
+    //cli_bms_debug("HALT", 5);
 }
 
-event_result halt_handler(fsm FSM, uint8_t event) {
-    return EVENT_HANDLED;
+void halt_handler(fsm FSM, uint8_t event) {
+    switch (event) {
+        case BMS_EV_NO_ERRORS:
+            fsm_transition(FSM, BMS_IDLE);
+            break;
+    }
 }

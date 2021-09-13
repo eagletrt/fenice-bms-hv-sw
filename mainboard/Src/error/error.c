@@ -11,6 +11,9 @@
 #include "error/error_list_ref.h"
 #include "tim.h"
 
+//TODO: bad
+#include "bms_fsm.h"
+
 #include <stdlib.h>
 #ifndef max
 #define max(a, b) ((a) > (b) ? (a) : (b))
@@ -24,16 +27,19 @@
  * 	- 1s for temperatures
  */
 const error_timeout error_timeouts[ERROR_NUM_ERRORS] = {
-    [ERROR_LTC_PEC]               = SOFT,
+    [ERROR_CELL_LOW_VOLTAGE]      = SOFT,
     [ERROR_CELL_UNDER_VOLTAGE]    = 500,
     [ERROR_CELL_OVER_VOLTAGE]     = 500,
+    [ERROR_CELL_HIGH_TEMPERATURE] = SOFT,
     [ERROR_CELL_OVER_TEMPERATURE] = 1000,
     [ERROR_OVER_CURRENT]          = 500,
     [ERROR_CAN]                   = 1000,
     [ERROR_ADC_INIT]              = SOFT,
     [ERROR_ADC_TIMEOUT]           = SOFT,
     [ERROR_INT_VOLTAGE_MISMATCH]  = SOFT,
-    [ERROR_FEEDBACK]              = SOFT};
+    [ERROR_CELLBOARD_COMM]        = 500,
+    [ERROR_CELLBOARD_INTERNAL]    = 500,
+    [ERROR_FEEDBACK]              = 500};
 
 llist er_list = NULL;
 
@@ -65,17 +71,21 @@ int8_t error_compare(llist_node a, llist_node b) {
 
 bool error_set_timer(error_t *error) {
     HAL_TIM_Base_Stop_IT(&htim_err);
+    HAL_TIM_OC_Stop_IT(&htim_err, TIM_CHANNEL_1);
+    HAL_GPIO_WritePin(GPIO1_GPIO_Port, GPIO1_Pin, GPIO_PIN_RESET);
 
     if (error != NULL && error->state == STATE_WARNING && error_timeouts[error->id] < SOFT) {
         // Set counter period register to the delta
-        //htim_Err.Instance->ARR = min(UINT16_MAX, get_timeout_delta(error) * 10 - 1);
-        htim_err.Instance->CCR1 = get_timeout_delta(error) * 10;
-        //htim2.Instance->CCR1   = 0;
-        //htim2.Instance->CCR1 = htim2.Instance->ARR;
         HAL_TIM_Base_Start_IT(&htim_err);
         HAL_TIM_OC_Start_IT(&htim_err, TIM_CHANNEL_1);
 
+        volatile uint16_t delta = (get_timeout_delta(error) * 10U);
+        uint16_t pulse          = HAL_TIM_ReadCapturedValue(&htim_err, TIM_CHANNEL_1);
+        __HAL_TIM_SET_COMPARE(&htim_err, TIM_CHANNEL_1, pulse + delta);
+        HAL_GPIO_WritePin(GPIO1_GPIO_Port, GPIO1_Pin, GPIO_PIN_SET);
+
         return true;
+    } else {
     }
 
     return false;
@@ -127,9 +137,8 @@ bool error_set(error_id id, uint8_t offset, uint32_t timestamp) {
             return false;
         }
 
-        //ERROR_GET_REF(id, offset) = (llist_node)error;
         (*error_list_ref_array_element(id, offset)) = (llist_node)error;
-        //error_list_ref_array[id][offset] = (llist_node)error;
+
         // Re-set timer if first in list
         if (error_equals(llist_get_head(er_list), error)) {
             error_set_timer(error);
@@ -184,17 +193,36 @@ bool error_unset(error_id id, uint8_t offset) {
         //ERROR_GET_REF(id, offset) = NULL;
         (*error_list_ref_array_element(id, offset)) = NULL;
         //error_list_ref_array[id][offset] = NULL;
+
+        // TODO: bad
+        if (error_get_fatal() == 0) {
+            fsm_trigger_event(bms.fsm, BMS_EV_NO_ERRORS);
+        }
         return true;
     }
 
     return false;
 }
 
+size_t error_get_fatal() {
+    size_t count = error_count();
+    error_t errors[count];
+    error_dump(errors);
+
+    size_t fatal = 0;
+    for (size_t i = 0; i < count; i++) {
+        if (errors[i].state == STATE_FATAL) {
+            fatal++;
+        }
+    }
+
+    return fatal;
+}
+
 /**
  * @returns	The number of currently running errors
  */
-// TODO: Remove
-uint8_t error_count() {
+size_t error_count() {
     return llist_size(er_list);
 }
 
