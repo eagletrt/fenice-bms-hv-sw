@@ -11,9 +11,6 @@
 #include "error/error_list_ref.h"
 #include "tim.h"
 
-//TODO: bad
-#include "bms_fsm.h"
-
 #include <stdlib.h>
 #ifndef max
 #define max(a, b) ((a) > (b) ? (a) : (b))
@@ -39,7 +36,8 @@ const error_timeout error_timeouts[ERROR_NUM_ERRORS] = {
     [ERROR_INT_VOLTAGE_MISMATCH]  = SOFT,
     [ERROR_CELLBOARD_COMM]        = 500,
     [ERROR_CELLBOARD_INTERNAL]    = 500,
-    [ERROR_FEEDBACK]              = 500};
+    [ERROR_FEEDBACK]              = 500,
+    [ERROR_EEPROM_COMM]           = SOFT};
 
 llist er_list = NULL;
 
@@ -167,7 +165,7 @@ bool error_set_fatal(error_t *error) {
  * 
  * @returns	whether the error has been unset
  */
-bool error_unset(error_id id, uint8_t offset) {
+bool error_reset(error_id id, uint8_t offset) {
     if (*error_list_ref_array_element(id, offset) != NULL) {
         error_t *error = (error_t *)(*error_list_ref_array_element(id, offset));
 
@@ -194,10 +192,6 @@ bool error_unset(error_id id, uint8_t offset) {
         (*error_list_ref_array_element(id, offset)) = NULL;
         //error_list_ref_array[id][offset] = NULL;
 
-        // TODO: bad
-        if (error_get_fatal() == 0) {
-            fsm_trigger_event(bms.fsm, BMS_EV_NO_ERRORS);
-        }
         return true;
     }
 

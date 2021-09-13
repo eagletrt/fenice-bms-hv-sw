@@ -9,9 +9,7 @@
 #pragma once
 
 #include "../Primary/ids.h"
-//#include "../lib/can/includes_generator/bms/ids.h"
 #include "../../Primary/c/Primary.h"
-//#include "../lib/can/naked_generator/bms/c/bms.h"
 #include "can.h"
 
 void can_init();

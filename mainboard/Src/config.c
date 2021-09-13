@@ -9,6 +9,7 @@
 
 #include "config.h"
 
+#include "error.h"
 #include "fenice_config.h"
 #include "spi.h"
 
@@ -37,6 +38,7 @@ bool config_init(config_t *config, uint16_t address, void *default_data, size_t 
     }
 
     if (config_read(*config)) {
+        error_reset(ERROR_EEPROM_COMM, 0);
         if (((uint8_t *)(*config)->data)[0] == ((uint8_t *)default_data)[0]) {
             return true;
         }
@@ -46,7 +48,7 @@ bool config_init(config_t *config, uint16_t address, void *default_data, size_t 
 
         return false;
     }
-    // TODO: trigger warning?
+    error_set(ERROR_EEPROM_COMM, 0, HAL_GetTick());
     return false;
 }
 
@@ -59,11 +61,13 @@ bool config_read(config_t config) {
     uint8_t tmpdata[config->size];
 
     if (m95256_ReadBuffer(eeprom, tmpdata, config->address, config->size) == EEPROM_STATUS_COMPLETE) {
+        error_reset(ERROR_EEPROM_COMM, 0);
         memcpy(config->data, tmpdata, config->size);
         config->dirty = false;
         return true;
     }
 
+    error_set(ERROR_EEPROM_COMM, 0, HAL_GetTick());
     return false;
 }
 
@@ -73,8 +77,12 @@ bool config_write(config_t config) {
             EEPROM_STATUS_COMPLETE) {
             config->dirty = false;
             return true;
+        } else {
+            error_set(ERROR_EEPROM_COMM, 0, HAL_GetTick());
+            return false;
         }
     }
+    error_reset(ERROR_EEPROM_COMM, 0);
     return true;
 }
 

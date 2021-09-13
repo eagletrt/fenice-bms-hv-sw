@@ -20,7 +20,7 @@
     if ((condition)) {                                   \
         error_set((error_type), (index), HAL_GetTick()); \
     } else {                                             \
-        error_unset((error_type), (index));              \
+        error_reset((error_type), (index));              \
     }
 
 /**
@@ -48,6 +48,8 @@ typedef enum {
     ERROR_CELLBOARD_INTERNAL,
 
     ERROR_FEEDBACK,
+
+    ERROR_EEPROM_COMM,
 
     ERROR_NUM_ERRORS
 } __attribute__((__packed__)) error_id;
@@ -78,7 +80,7 @@ bool error_set(error_id type, uint8_t offset, uint32_t now);
 error_t *error_get_top();
 bool error_set_fatal(error_t *error);
 
-bool error_unset(error_id type, uint8_t offset);
+bool error_reset(error_id type, uint8_t offset);
 
 size_t error_get_fatal();
 size_t error_count();
