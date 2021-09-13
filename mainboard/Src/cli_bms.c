@@ -50,12 +50,13 @@ const char *error_names[ERROR_NUM_ERRORS] = {
     [ERROR_CELL_OVER_TEMPERATURE] = "over-temperature",
     [ERROR_OVER_CURRENT]          = "over-current",
     [ERROR_CAN]                   = "CAN",
-    [ERROR_ADC_INIT]              = "adc init",
-    [ERROR_ADC_TIMEOUT]           = "adc timeout",
+    [ERROR_ADC_INIT]              = "ADC init",
+    [ERROR_ADC_TIMEOUT]           = "ADC timeout",
     [ERROR_INT_VOLTAGE_MISMATCH]  = "internal voltage mismatch",
     [ERROR_CELLBOARD_COMM]        = "cellboard communication",
     [ERROR_CELLBOARD_INTERNAL]    = "cellboard internal",
-    [ERROR_FEEDBACK]              = "feedback"};
+    [ERROR_FEEDBACK]              = "feedback",
+    [ERROR_EEPROM_COMM]           = "EEPROM communication"};
 
 char const *const feedback_names[FEEDBACK_N] = {
     [FEEDBACK_VREF_POS]          = "VREF",

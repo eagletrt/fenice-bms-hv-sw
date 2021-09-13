@@ -45,6 +45,7 @@ llist_node error_int_voltage_mismatch[1]            = {NULL};
 llist_node error_cellboard_comm[LTC6813_COUNT]      = {NULL};
 llist_node error_cellboard_internal[LTC6813_COUNT]  = {NULL};
 llist_node error_feedback[1]                        = {NULL};
+llist_node error_eeprom_comm[1]                     = {NULL};
 
 llist_node *const error_list_ref_array[ERROR_NUM_ERRORS] = {
     [ERROR_CELL_LOW_VOLTAGE]      = error_list_ref_low_voltages,
@@ -59,7 +60,8 @@ llist_node *const error_list_ref_array[ERROR_NUM_ERRORS] = {
     [ERROR_INT_VOLTAGE_MISMATCH]  = error_int_voltage_mismatch,
     [ERROR_CELLBOARD_COMM]        = error_cellboard_comm,
     [ERROR_CELLBOARD_INTERNAL]    = error_cellboard_internal,
-    [ERROR_FEEDBACK]              = error_feedback};
+    [ERROR_FEEDBACK]              = error_feedback,
+    [ERROR_EEPROM_COMM]           = error_eeprom_comm};
 
 /**
  * @brief Returns the cell memory position of error_list_ref_array

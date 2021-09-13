@@ -82,10 +82,10 @@ void pack_init() {
 
     soc_init(&soc_total);
     soc_init(&soc_last_charge);
-    //config_init(&soc_config, SOC_ADDR, &soc_params_default, sizeof(soc_params));
+    config_init(&soc_config, SOC_ADDR, &soc_params_default, sizeof(soc_params));
 
-    //soc_load(soc_total, ((soc_params *)config_get(soc_config))->total_joule, HAL_GetTick());
-    //soc_load(soc_last_charge, ((soc_params *)config_get(soc_config))->charge_joule, HAL_GetTick());
+    soc_load(soc_total, ((soc_params *)config_get(soc_config))->total_joule, HAL_GetTick());
+    soc_load(soc_last_charge, ((soc_params *)config_get(soc_config))->charge_joule, HAL_GetTick());
 }
 
 void pack_update_voltages(UART_HandleTypeDef *huart) {
@@ -109,7 +109,7 @@ void pack_update_voltages(UART_HandleTypeDef *huart) {
     if (max(internal, sum) - min(internal, sum) > 5 * 100) {
         error_set(ERROR_INT_VOLTAGE_MISMATCH, 0, HAL_GetTick());
     } else {
-        error_unset(ERROR_INT_VOLTAGE_MISMATCH, 0);
+        error_reset(ERROR_INT_VOLTAGE_MISMATCH, 0);
     }
     cells.int_voltage = max(internal, sum);  // TODO: is this a good thing?
 }
@@ -143,7 +143,7 @@ void pack_update_current() {
         current = current50;
     }
 
-    soc_params params;  //= *(soc_params *)config_get(soc_config);
+    soc_params params = *(soc_params *)config_get(soc_config);
 
     soc_sample_current(soc_total, current, pack_get_int_voltage(), HAL_GetTick());
     soc_sample_current(soc_last_charge, current, pack_get_int_voltage(), HAL_GetTick());
@@ -151,11 +151,11 @@ void pack_update_current() {
     params.charge_joule = soc_get_joule(soc_last_charge);
 
     params.total_joule = soc_get_joule(soc_total);
-    //config_set(soc_config, &params);
+    config_set(soc_config, &params);
 
     if (HAL_GetTick() - soc_timer >= SOC_WRITE_INTERVAL) {
         soc_timer = HAL_GetTick();
-        //config_write(soc_config);
+        config_write(soc_config);
     }
 
     error_toggle_check(current > PACK_MAX_CURRENT, ERROR_OVER_CURRENT, 0);

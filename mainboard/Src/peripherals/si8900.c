@@ -56,7 +56,7 @@ bool si8900_init(UART_HandleTypeDef *huart, GPIO_TypeDef *reset_gpio, uint16_t r
         error_set(ERROR_ADC_INIT, 0, HAL_GetTick());
         return false;
     }
-    error_unset(ERROR_ADC_INIT, 0);
+    error_reset(ERROR_ADC_INIT, 0);
     return true;
 }
 
@@ -79,7 +79,7 @@ bool si8900_read_channel(UART_HandleTypeDef *huart, SI8900_CHANNEL ch, uint16_t 
         HAL_UART_Receive(huart, data, 2, 1);
         *voltage = si8900_convert_voltage(data);
 
-        error_unset(ERROR_ADC_TIMEOUT, 0);
+        error_reset(ERROR_ADC_TIMEOUT, 0);
         return true;
     }
     return false;

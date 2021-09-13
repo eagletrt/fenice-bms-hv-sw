@@ -44,7 +44,7 @@ HAL_StatusTypeDef can_send(uint16_t id) {
         cli_bms_debug("CAN: Error sending message", 27);
 
     } else {
-        error_unset(ERROR_CAN, 0);
+        error_reset(ERROR_CAN, 0);
     }
 
     return status;
@@ -63,7 +63,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
     }
 
     if (hcan->Instance == CAR_CAN.Instance) {
-        error_unset(ERROR_CAN, 1);
+        error_reset(ERROR_CAN, 1);
 
         //size_t len = rx_header.DLC >> 16;
         //uint8_t len = rx_header.DLC;
