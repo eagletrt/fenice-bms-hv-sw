@@ -17,8 +17,8 @@
 #define VOLTS_READ_INTERVAL 20
 #define TEMPS_READ_INTERVAL 200
 
-typedef enum { SUPER_BMS, SUPER_MEASURE_VOLTS, SUPER_MEASURE_TEMPS, SUPER_NUM_STATES } super_states;
-typedef enum { SUPER_EV_MEASURE_VOLTS, SUPER_EV_MEASURE_TEMPS, SUPER_EV_BMS, SUPER_EV_NUM } super_events;
+typedef enum { SUPER_BMS, SUPER_MEASURE_VOLTS, SUPER_NUM_STATES } super_states;
+typedef enum { SUPER_EV_MEASURE_VOLTS, SUPER_EV_BMS, SUPER_EV_NUM } super_events;
 
 extern fsm super_fsm;
 

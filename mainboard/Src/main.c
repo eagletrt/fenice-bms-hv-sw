@@ -11,6 +11,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
+#include "adc.h"
+#include "can.h"
 #include "gpio.h"
 #include "spi.h"
 #include "tim.h"
@@ -23,10 +25,9 @@
 #include "cli_bms.h"
 #include "config.h"
 #include "error/error.h"
-#include "fdcan.h"
 #include "fenice_config.h"
 #include "m95256.h"
-#include "peripherals/can.h"
+#include "peripherals/can_comm.h"
 #include "si8900.h"
 #include "super_fsm.h"
 /* USER CODE END Includes */
@@ -56,7 +57,6 @@ fsm super_fsm;
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-static void MX_NVIC_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -93,27 +93,35 @@ int main(void) {
 
     /* Initialize all configured peripherals */
     MX_GPIO_Init();
-    MX_SPI1_Init();
-    MX_SPI2_Init();
-    MX_USART2_UART_Init();
     MX_USART3_UART_Init();
+    MX_ADC1_Init();
+    MX_CAN1_Init();
+    MX_CAN2_Init();
+    MX_SPI2_Init();
     MX_TIM2_Init();
     MX_TIM3_Init();
     MX_TIM4_Init();
-
-    /* Initialize interrupts */
-    MX_NVIC_Init();
+    MX_USART1_UART_Init();
     /* USER CODE BEGIN 2 */
+    HAL_GPIO_WritePin(EEPROM_HOLD_GPIO_Port, EEPROM_HOLD_Pin, GPIO_PIN_SET);
 
-    FDCAN1_Init();
+    // Blink
+    HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_SET);
+    HAL_Delay(200);
+    HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_RESET);
+    HAL_Delay(200);
+    HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_SET);
+    HAL_Delay(200);
+    HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_RESET);
+    HAL_Delay(200);
+    HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_SET);
+
     can_init();
-    HAL_FDCAN_ActivateNotification(&hfdcan1, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0);
-    HAL_FDCAN_Start(&hfdcan1);
 
     cli_bms_init();
     error_init();
 
-    si8900_init(&huart3, ADC_SIN_GPIO_Port, ADC_SIN_Pin);
+    si8900_init(&SI8900_UART, ADC_SIN_GPIO_Port, ADC_SIN_Pin);
 
     pack_init();
     bal_fsm_init();
@@ -141,13 +149,13 @@ int main(void) {
   * @retval None
   */
 void SystemClock_Config(void) {
-    RCC_OscInitTypeDef RCC_OscInitStruct   = {0};
-    RCC_ClkInitTypeDef RCC_ClkInitStruct   = {0};
-    RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
+    RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+    RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
     /** Configure the main internal regulator output voltage
   */
-    HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1_BOOST);
+    __HAL_RCC_PWR_CLK_ENABLE();
+    __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
     /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
@@ -156,12 +164,17 @@ void SystemClock_Config(void) {
     RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
     RCC_OscInitStruct.PLL.PLLState        = RCC_PLL_ON;
     RCC_OscInitStruct.PLL.PLLSource       = RCC_PLLSOURCE_HSI;
-    RCC_OscInitStruct.PLL.PLLM            = RCC_PLLM_DIV4;
-    RCC_OscInitStruct.PLL.PLLN            = 85;
+    RCC_OscInitStruct.PLL.PLLM            = 8;
+    RCC_OscInitStruct.PLL.PLLN            = 180;
     RCC_OscInitStruct.PLL.PLLP            = RCC_PLLP_DIV2;
-    RCC_OscInitStruct.PLL.PLLQ            = RCC_PLLQ_DIV2;
-    RCC_OscInitStruct.PLL.PLLR            = RCC_PLLR_DIV2;
+    RCC_OscInitStruct.PLL.PLLQ            = 2;
+    RCC_OscInitStruct.PLL.PLLR            = 2;
     if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
+        Error_Handler();
+    }
+    /** Activate the Over-Drive mode
+  */
+    if (HAL_PWREx_EnableOverDrive() != HAL_OK) {
         Error_Handler();
     }
     /** Initializes the CPU, AHB and APB buses clocks
@@ -169,37 +182,12 @@ void SystemClock_Config(void) {
     RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
     RCC_ClkInitStruct.SYSCLKSource   = RCC_SYSCLKSOURCE_PLLCLK;
     RCC_ClkInitStruct.AHBCLKDivider  = RCC_SYSCLK_DIV1;
-    RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
-    RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+    RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
+    RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
 
-    if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) != HAL_OK) {
+    if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK) {
         Error_Handler();
     }
-    /** Initializes the peripherals clocks
-  */
-    PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2 | RCC_PERIPHCLK_USART3 | RCC_PERIPHCLK_FDCAN;
-    PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
-    PeriphClkInit.Usart3ClockSelection = RCC_USART3CLKSOURCE_PCLK1;
-    PeriphClkInit.FdcanClockSelection  = RCC_FDCANCLKSOURCE_PLL;
-    if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK) {
-        Error_Handler();
-    }
-}
-
-/**
-  * @brief NVIC Configuration.
-  * @retval None
-  */
-static void MX_NVIC_Init(void) {
-    /* FDCAN1_IT0_IRQn interrupt configuration */
-    HAL_NVIC_SetPriority(FDCAN1_IT0_IRQn, 0, 0);
-    HAL_NVIC_EnableIRQ(FDCAN1_IT0_IRQn);
-    /* FDCAN1_IT1_IRQn interrupt configuration */
-    HAL_NVIC_SetPriority(FDCAN1_IT1_IRQn, 0, 0);
-    HAL_NVIC_EnableIRQ(FDCAN1_IT1_IRQn);
-    /* USART2_IRQn interrupt configuration */
-    HAL_NVIC_SetPriority(USART2_IRQn, 0, 0);
-    HAL_NVIC_EnableIRQ(USART2_IRQn);
 }
 
 /* USER CODE BEGIN 4 */

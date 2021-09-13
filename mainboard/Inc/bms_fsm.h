@@ -23,6 +23,7 @@ typedef enum {
     BMS_EV_TEMP_MEASURE,
     BMS_EV_PRECHARGE_CHECK,
     BMS_EV_PRECHARGE_TIMEOUT,
+    BMS_EV_NO_ERRORS,
     BMS_EV_NUM
 } bms_events;
 

@@ -45,7 +45,6 @@ const char *bal_state_names[BAL_NUM_STATES] =
     {[BAL_OFF] = "off", [BAL_COMPUTE] = "computing", [BAL_DISCHARGE] = "discharging", [BAL_COOLDOWN] = "cooldown"};
 
 const char *error_names[ERROR_NUM_ERRORS] = {
-    [ERROR_LTC_PEC]               = "LTC PEC mismatch",
     [ERROR_CELL_UNDER_VOLTAGE]    = "under-voltage",
     [ERROR_CELL_OVER_VOLTAGE]     = "over-voltage",
     [ERROR_CELL_OVER_TEMPERATURE] = "over-temperature",
@@ -54,6 +53,8 @@ const char *error_names[ERROR_NUM_ERRORS] = {
     [ERROR_ADC_INIT]              = "adc init",
     [ERROR_ADC_TIMEOUT]           = "adc timeout",
     [ERROR_INT_VOLTAGE_MISMATCH]  = "internal voltage mismatch",
+    [ERROR_CELLBOARD_COMM]        = "cellboard communication",
+    [ERROR_CELLBOARD_INTERNAL]    = "cellboard internal",
     [ERROR_FEEDBACK]              = "feedback"};
 
 char const *const feedback_names[FEEDBACK_N] = {
@@ -94,7 +95,7 @@ cli_t cli_bms;
 bool dmesg_ena = true;
 
 void cli_bms_init() {
-    cli_bms.uart           = &huart2;
+    cli_bms.uart           = &CLI_UART;
     cli_bms.cmds.functions = commands;
     cli_bms.cmds.names     = command_names;
     cli_bms.cmds.count     = N_COMMANDS;
@@ -234,10 +235,10 @@ void _cli_status(uint16_t argc, char **argv, char *out) {
 
 void _cli_balance(uint16_t argc, char **argv, char *out) {
     if (strcmp(argv[1], "on") == 0) {
-        fsm_catch_event(bal.fsm, EV_BAL_START);
+        fsm_trigger_event(bal.fsm, EV_BAL_START);
         sprintf(out, "enabling balancing\r\n");
     } else if (strcmp(argv[1], "off") == 0) {
-        fsm_catch_event(bal.fsm, EV_BAL_STOP);
+        fsm_trigger_event(bal.fsm, EV_BAL_STOP);
         sprintf(out, "disabling balancing\r\n");
     } else if (strcmp(argv[1], "thr") == 0) {
         if (argv[2] != NULL) {
@@ -299,10 +300,10 @@ void _cli_errors(uint16_t argc, char **argv, char *out) {
 
 void _cli_ts(uint16_t argc, char **argv, char *out) {
     if (strcmp(argv[1], "on") == 0) {
-        fsm_catch_event(bms.fsm, BMS_EV_TS_ON);
+        fsm_trigger_event(bms.fsm, BMS_EV_TS_ON);
         sprintf(out, "triggered TS ON event\r\n");
     } else if (strcmp(argv[1], "off") == 0) {
-        fsm_catch_event(bms.fsm, BMS_EV_TS_OFF);
+        fsm_trigger_event(bms.fsm, BMS_EV_TS_OFF);
         sprintf(out, "triggered TS OFF event\r\n");
     } else {
         sprintf(

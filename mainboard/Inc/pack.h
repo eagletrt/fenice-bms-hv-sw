@@ -3,36 +3,27 @@
  * @brief	This file contains the functions to manage the battery pack
  *
  * @date 	Apr 11, 2019
- * @author  Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @author 	Matteo Bonora [matteo.bonora@studenti.unitn.it]
  */
 
 #pragma once
 
-#include <inttypes.h>
-
 #include "error/error.h"
 #include "fenice_config.h"
-#include "peripherals/ltc6813_utils.h"
+#include "main.h"
+
+#include <inttypes.h>
 
 void pack_init();
 
 /**
- * @brief   Polls all the LTCs and the SI8900 ADC for voltages
+ * @brief   Polls SI8900 ADC for voltages
  * @details	This function should take 10~11ms to fully execute
  *
- * @param	hspi    The SPI configuration structure
  * @param	huart   The UART configuration structure
  * @returns The index of the last updated cell
  */
-void pack_update_voltages(SPI_HandleTypeDef *hspi, UART_HandleTypeDef *huart);
-
-/**
- * @brief	Gets quick temperature stats from the cellboards
- *
- * @param	hspi    The SPI configuration structure
- */
-void pack_update_temperatures(SPI_HandleTypeDef *hspi);
-void pack_update_temperatures_all(SPI_HandleTypeDef *hspi);
+void pack_update_voltages(UART_HandleTypeDef *huart);
 
 /**
  * @brief   Calculates the current exiting/entering the pack
