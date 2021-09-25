@@ -113,9 +113,9 @@ static const uint8_t TEMP_SENSOR_ADDRESS_CODING[TEMP_SENSORS_PER_STRIP] = {000, 
 #define PACK_TEMP_COUNT (TEMP_SENSOR_COUNT * LTC6813_COUNT)
 
 /**
- * Max current. In (A * 10)
+ * Max current. (A)
  */
-#define PACK_MAX_CURRENT 2000
+#define PACK_MAX_CURRENT 180.0f
 
 /**
  * Cell's limit voltages (mV * 10)
