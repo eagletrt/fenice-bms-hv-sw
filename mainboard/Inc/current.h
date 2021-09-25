@@ -16,8 +16,10 @@ typedef float current_t;
 
 /**
  * @brief Measures TS current from internal current sensors
+ * 
+ * @return uint32_t The timestamp at which the measurement occurred
  */
-void current_measure();
+uint32_t current_measure();
 
 /**
  * @brief Zeroes the Hall-effect sensor

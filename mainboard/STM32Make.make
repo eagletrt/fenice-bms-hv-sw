@@ -66,6 +66,7 @@ Src/cli_bms.c \
 Src/config.c \
 Src/current.c \
 Src/dma.c \
+Src/energy.c \
 Src/error/error.c \
 Src/error/error_list_ref.c \
 Src/feedback.c \

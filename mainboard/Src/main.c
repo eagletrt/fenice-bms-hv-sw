@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "bal_fsm.h"
+#include "energy.h"
 #include "bms_fsm.h"
 #include "cli_bms.h"
 #include "config.h"
@@ -121,6 +122,7 @@ int main(void) {
     super_fsm_init();
     current_measure();
     current_zero();
+    energy_init();
 
     /* USER CODE END 2 */
 

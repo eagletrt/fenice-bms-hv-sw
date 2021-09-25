@@ -58,11 +58,11 @@ void config_deinit(config_t config) {
 }
 
 bool config_read(config_t config) {
-    uint8_t tmpdata[config->size];
+    uint8_t buffer[64] = {0};
 
-    if (m95256_ReadBuffer(eeprom, tmpdata, config->address, config->size) == EEPROM_STATUS_COMPLETE) {
+    if (m95256_ReadBuffer(eeprom, buffer, config->address, config->size) == EEPROM_STATUS_COMPLETE) {
         error_reset(ERROR_EEPROM_COMM, 0);
-        memcpy(config->data, tmpdata, config->size);
+        memcpy(config->data, buffer, config->size);
         config->dirty = false;
         return true;
     }
