@@ -65,6 +65,7 @@ includeDirectories:
   - lib/micro-libs/fsm/**
   - lib/micro-libs/cli/**
   - lib/micro-libs/m95256/**
+  - lib/micro-libs/blink/**
 
 
 # Files that should be included in the compilation.
@@ -81,6 +82,7 @@ sourceFiles:
   - lib/micro-libs/fsm/**
   - lib/micro-libs/cli/**
   - lib/micro-libs/m95256/**
+  - lib/micro-libs/blink/**
 
 
 # When no makefile is present it will show a warning pop-up.

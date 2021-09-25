@@ -13,6 +13,7 @@
 #include "cli_bms.h"
 #include "error.h"
 #include "main.h"
+#include "mainboard_config.h"
 #include "pack.h"
 #include "peripherals/can_comm.h"
 #include "tim.h"
@@ -22,55 +23,92 @@
 #include <string.h>
 
 //------------------------------Declarations------------------------------------------
-void idle_entry(fsm FSM);
-void idle_handler(fsm FSM, uint8_t event);
-void idle_exit(fsm FSM);
-void precharge_entry(fsm FSM);
-void precharge_handler(fsm FSM, uint8_t event);
-void precharge_exit(fsm FSM);
-void on_entry(fsm FSM);
-void on_handler(fsm FSM, uint8_t event);
-void bms_on_exit(fsm FSM);
-void halt_entry(fsm FSM);
-void halt_handler(fsm FSM, uint8_t event);
+void bms_set_led_blinker();
+void bms_blink_led();
+
+void _idle_entry(fsm FSM);
+void _idle_handler(fsm FSM, uint8_t event);
+void _idle_exit(fsm FSM);
+void _precharge_entry(fsm FSM);
+void _precharge_handler(fsm FSM, uint8_t event);
+void _precharge_exit(fsm FSM);
+void _on_entry(fsm FSM);
+void _on_handler(fsm FSM, uint8_t event);
+void _on_exit(fsm FSM);
+void _halt_entry(fsm FSM);
+void _halt_run(fsm FSM);
+void _halt_handler(fsm FSM, uint8_t event);
 
 bms_fsm bms;
 
 void bms_fsm_init() {
-    bms.fsm = fsm_init(BMS_NUM_STATES, BMS_EV_NUM, NULL);
+    bms.fsm = fsm_init(BMS_NUM_STATES, BMS_EV_NUM, &bms_blink_led, NULL);
 
     fsm_state state;
-    state.handler = idle_handler;
-    state.entry   = idle_entry;
-    state.exit    = idle_exit;
+    state.run     = NULL;
+    state.handler = _idle_handler;
+    state.entry   = _idle_entry;
+    state.exit    = _idle_exit;
     fsm_set_state(bms.fsm, BMS_IDLE, &state);
 
-    state.handler = precharge_handler;
-    state.entry   = precharge_entry;
-    state.exit    = precharge_exit;
+    state.handler = _precharge_handler;
+    state.entry   = _precharge_entry;
+    state.exit    = _precharge_exit;
     fsm_set_state(bms.fsm, BMS_PRECHARGE, &state);
 
-    state.handler = on_handler;
-    state.entry   = on_entry;
-    state.exit    = bms_on_exit;
+    state.handler = _on_handler;
+    state.entry   = _on_entry;
+    state.exit    = _on_exit;
     fsm_set_state(bms.fsm, BMS_ON, &state);
 
-    state.handler = halt_handler;
-    state.entry   = halt_entry;
+    state.handler = _halt_handler;
+    state.entry   = _halt_entry;
+    state.run     = _halt_run;
     state.exit    = NULL;
     fsm_set_state(bms.fsm, BMS_HALT, &state);
 
     HAL_TIM_Base_Start_IT(&htim_bms);
     fsm_start(bms.fsm);
+
+    bms.led.port = STATE_LED_GPIO;
+    bms.led.pin  = STATE_LED_PIN;
+    bms.led.time = HAL_GetTick();
 }
 
-void idle_entry(fsm FSM) {
-    pack_set_ts_off();
+void bms_set_led_blinker() {
+    uint8_t pattern_count                    = 0;
+    uint8_t state_count                      = 0;
+    uint32_t state                           = fsm_get_state(bms.fsm);
+    uint16_t pattern[(BMS_NUM_STATES)*2 + 1] = {0};
 
+    pattern[pattern_count++] = 200;  // Big off
+    while (state_count < state) {
+        pattern[pattern_count++] = 200;  // On
+        pattern[pattern_count++] = 200;  // Off
+        state_count++;
+    }
+    pattern[pattern_count++] = 1000;  // Big off
+
+    BLINK_SET_PATTERN(bms.led, pattern, pattern_count);
+    BLINK_SET_ENABLE(bms.led, true);
+    BLINK_SET_REPEAT(bms.led, false);
+
+    blink_reset(&(bms.led));
+    HAL_GPIO_WritePin(bms.led.port, bms.led.pin, GPIO_PIN_SET);
+}
+void bms_blink_led() {
+    if (BLINK_GET_ENABLE(bms.led)) {
+        blink_run(&bms.led);
+    } else {
+        bms_set_led_blinker();
+    }
+}
+
+void _idle_entry(fsm FSM) {
     can_send(ID_TS_STATUS);
 }
 
-void idle_handler(fsm FSM, uint8_t event) {
+void _idle_handler(fsm FSM, uint8_t event) {
     switch (event) {
         case BMS_EV_TS_ON:
             fsm_transition(FSM, BMS_PRECHARGE);
@@ -81,10 +119,10 @@ void idle_handler(fsm FSM, uint8_t event) {
     }
 }
 
-void idle_exit(fsm FSM) {
+void _idle_exit(fsm FSM) {
 }
 
-void precharge_entry(fsm FSM) {
+void _precharge_entry(fsm FSM) {
     // Precharge
     pack_set_pc_start();
 
@@ -95,10 +133,10 @@ void precharge_entry(fsm FSM) {
     HAL_TIM_OC_Start_IT(&htim_bms, TIM_CHANNEL_1);
     HAL_TIM_OC_Start_IT(&htim_bms, TIM_CHANNEL_2);
 
-    cli_bms_debug("Precharge entryed", 18);
+    cli_bms_debug("Entered precharge", 18);
 }
 
-void precharge_handler(fsm FSM, uint8_t event) {
+void _precharge_handler(fsm FSM, uint8_t event) {
     switch (event) {
         case BMS_EV_PRECHARGE_TIMEOUT:
             cli_bms_debug("Precharge timeout", 18);
@@ -123,19 +161,16 @@ void precharge_handler(fsm FSM, uint8_t event) {
     }
 }
 
-void precharge_exit(fsm FSM) {
+void _precharge_exit(fsm FSM) {
     HAL_TIM_OC_Stop_IT(&htim_bms, TIM_CHANNEL_1);
     HAL_TIM_OC_Stop_IT(&htim_bms, TIM_CHANNEL_2);
 }
 
-void on_entry(fsm FSM) {
+void _on_entry(fsm FSM) {
     pack_set_precharge_end();
-    if (HAL_GPIO_ReadPin(CHARGE_GPIO_Port, CHARGE_Pin)) {
-        //entry charge fsm
-    }
 }
 
-void on_handler(fsm FSM, uint8_t event) {
+void _on_handler(fsm FSM, uint8_t event) {
     switch (event) {
         case BMS_EV_TS_OFF:
             fsm_transition(FSM, BMS_IDLE);
@@ -146,11 +181,11 @@ void on_handler(fsm FSM, uint8_t event) {
     }
 }
 
-void bms_on_exit(fsm FSM) {
+void _on_exit(fsm FSM) {
+    pack_set_ts_off();
 }
 
-void halt_entry(fsm FSM) {
-    pack_set_ts_off();
+void _halt_entry(fsm FSM) {
     // bms_set_fault(&data->bms);
     HAL_GPIO_WritePin(BMS_FAULT_GPIO_Port, BMS_FAULT_Pin, GPIO_PIN_RESET);
 
@@ -159,7 +194,13 @@ void halt_entry(fsm FSM) {
     //cli_bms_debug("HALT", 5);
 }
 
-void halt_handler(fsm FSM, uint8_t event) {
+void _halt_run(fsm FSM) {
+    if (error_get_fatal() == 0) {
+        fsm_trigger_event(FSM, BMS_EV_NO_ERRORS);
+    }
+}
+
+void _halt_handler(fsm FSM, uint8_t event) {
     switch (event) {
         case BMS_EV_NO_ERRORS:
             fsm_transition(FSM, BMS_IDLE);

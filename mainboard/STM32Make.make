@@ -83,6 +83,7 @@ Src/usart.c \
 lib/can/naked_generator/Primary/c/Primary.c \
 lib/can/naked_generator/Secondary/c/Secondary.c \
 lib/can/naked_generator/bms/c/bms.c \
+lib/micro-libs/blink/blink.c \
 lib/micro-libs/cli/cli.c \
 lib/micro-libs/fsm/fsm.c \
 lib/micro-libs/llist/llist.c \
@@ -167,6 +168,7 @@ C_INCLUDES =  \
 -Ilib/can/naked_generator/Primary/c \
 -Ilib/can/naked_generator/Secondary/c \
 -Ilib/can/naked_generator/bms/c \
+-Ilib/micro-libs/blink \
 -Ilib/micro-libs/cli \
 -Ilib/micro-libs/fsm \
 -Ilib/micro-libs/llist \

@@ -23,4 +23,7 @@
 
 #define cli_uart huart1
 
+#define STATE_LED_GPIO LED2_GPIO_Port
+#define STATE_LED_PIN  LED2_Pin
+
 #endif
