@@ -10,6 +10,7 @@
 
 #include "bms_fsm.h"
 #include "cli_bms.h"
+#include "current.h"
 #include "pack.h"
 
 CAN_TxHeaderTypeDef tx_header;
@@ -26,7 +27,7 @@ HAL_StatusTypeDef can_send(uint16_t id) {
         serialize_Primary_HV_VOLTAGE(
             buffer, pack_get_int_voltage(), pack_get_bus_voltage(), pack_get_max_voltage(), pack_get_min_voltage());
     } else if (id == ID_HV_CURRENT) {
-        serialize_Primary_HV_CURRENT(buffer, pack_get_current(), pack_get_power());
+        serialize_Primary_HV_CURRENT(buffer, current_get_current(), current_get_current() * pack_get_bus_voltage());
     } else if (id == ID_TS_STATUS) {
         serialize_Primary_TS_STATUS(buffer, Primary_Ts_Status_ON);
     } else {
@@ -41,7 +42,7 @@ HAL_StatusTypeDef can_send(uint16_t id) {
     HAL_StatusTypeDef status = HAL_CAN_AddTxMessage(&CAR_CAN, &tx_header, buffer, &mailbox);
     if (status != HAL_OK) {
         error_set(ERROR_CAN, 0, HAL_GetTick());
-        cli_bms_debug("CAN: Error sending message", 27);
+        //cli_bms_debug("CAN: Error sending message", 27);
 
     } else {
         error_reset(ERROR_CAN, 0);

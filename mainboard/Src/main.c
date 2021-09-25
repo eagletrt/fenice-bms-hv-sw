@@ -13,6 +13,7 @@
 
 #include "adc.h"
 #include "can.h"
+#include "dma.h"
 #include "gpio.h"
 #include "spi.h"
 #include "tim.h"
@@ -24,6 +25,7 @@
 #include "bms_fsm.h"
 #include "cli_bms.h"
 #include "config.h"
+#include "current.h"
 #include "error/error.h"
 #include "fenice_config.h"
 #include "m95256.h"
@@ -49,7 +51,6 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-DMA_HandleTypeDef hdma_adc1;
 
 fsm super_fsm;
 
@@ -102,19 +103,10 @@ int main(void) {
     MX_TIM3_Init();
     MX_TIM4_Init();
     MX_USART1_UART_Init();
+    MX_DMA_Init();
+    MX_ADC2_Init();
     /* USER CODE BEGIN 2 */
     HAL_GPIO_WritePin(EEPROM_HOLD_GPIO_Port, EEPROM_HOLD_Pin, GPIO_PIN_SET);
-
-    // Blink
-    HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_SET);
-    HAL_Delay(200);
-    HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_RESET);
-    HAL_Delay(200);
-    HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_SET);
-    HAL_Delay(200);
-    HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_RESET);
-    HAL_Delay(200);
-    HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_SET);
 
     can_init();
 
@@ -127,6 +119,8 @@ int main(void) {
     bal_fsm_init();
     bms_fsm_init();
     super_fsm_init();
+    current_measure();
+    current_zero();
 
     /* USER CODE END 2 */
 
@@ -136,6 +130,7 @@ int main(void) {
         /* USER CODE END WHILE */
 
         /* USER CODE BEGIN 3 */
+
         fsm_run(super_fsm);
 
         cli_loop(&cli_bms);
@@ -183,7 +178,7 @@ void SystemClock_Config(void) {
     RCC_ClkInitStruct.SYSCLKSource   = RCC_SYSCLKSOURCE_PLLCLK;
     RCC_ClkInitStruct.AHBCLKDivider  = RCC_SYSCLK_DIV1;
     RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
-    RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
+    RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV4;
 
     if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK) {
         Error_Handler();

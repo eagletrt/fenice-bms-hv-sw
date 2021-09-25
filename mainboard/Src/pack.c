@@ -47,8 +47,8 @@ typedef struct {
 typedef struct {
     uint8_t version;
 
-    double total_joule;
-    double charge_joule;
+    float total_joule;
+    float charge_joule;
 } soc_params;
 soc_params soc_params_default = {SOC_VERSION, 0, 0};
 
@@ -61,7 +61,6 @@ config_t soc_config;
 uint32_t soc_timer = 0;
 
 cells_t cells;
-current_t current;
 
 /**
  * @brief	Initializes the pack
@@ -70,7 +69,7 @@ current_t current;
 void pack_init() {
     cells.bus_voltage = 0;
     cells.int_voltage = 0;
-    current           = 0;
+    //current           = 0;
 
     for (size_t i = 0; i < PACK_CELL_COUNT; i++) {
         cells.voltages[i] = 0;
@@ -123,43 +122,43 @@ int32_t _mean(uint32_t values[], size_t size) {
 }
 
 //TODO: redo DMA and then rewrite the function
-void pack_update_current() {
-    current_t current50  = 0;
-    current_t current300 = 0;
-
-    int32_t adc50  = _mean(current_50, CURRENT_ARRAY_LENGTH);
-    int32_t adc300 = _mean(current_300, CURRENT_ARRAY_LENGTH);
-
-    // We calculate the input voltage
-    float in_volt = (((float)adc50 * 3.3) / 4096);
-    current50     = ((in_volt - S160_OFFSET) / S160_50A_SENS) * 10;
-
-    in_volt    = (((float)adc300 * 3.3) / 4096);
-    current300 = ((in_volt - S160_OFFSET) / S160_300A_SENS) * 10;
-
-    if (current300 >= 50) {
-        current = current300;
-    } else {
-        current = current50;
-    }
-
-    soc_params params = *(soc_params *)config_get(soc_config);
-
-    soc_sample_current(soc_total, current, pack_get_int_voltage(), HAL_GetTick());
-    soc_sample_current(soc_last_charge, current, pack_get_int_voltage(), HAL_GetTick());
-
-    params.charge_joule = soc_get_joule(soc_last_charge);
-
-    params.total_joule = soc_get_joule(soc_total);
-    config_set(soc_config, &params);
-
-    if (HAL_GetTick() - soc_timer >= SOC_WRITE_INTERVAL) {
-        soc_timer = HAL_GetTick();
-        config_write(soc_config);
-    }
-
-    error_toggle_check(current > PACK_MAX_CURRENT, ERROR_OVER_CURRENT, 0);
-}
+//void pack_update_current() {
+//    current_t current50  = 0;
+//    current_t current300 = 0;
+//
+//    int32_t adc50  = _mean(current_50, CURRENT_ARRAY_LENGTH);
+//    int32_t adc300 = _mean(current_300, CURRENT_ARRAY_LENGTH);
+//
+//    // We calculate the input voltage
+//    float in_volt = (((float)adc50 * 3.3) / 4096);
+//    current50     = ((in_volt - S160_OFFSET) / S160_50A_SENS) * 10;
+//
+//    in_volt    = (((float)adc300 * 3.3) / 4096);
+//    current300 = ((in_volt - S160_OFFSET) / S160_300A_SENS) * 10;
+//
+//    if (current300 >= 50) {
+//        current = current300;
+//    } else {
+//        current = current50;
+//    }
+//
+//    soc_params params = *(soc_params *)config_get(soc_config);
+//
+//    soc_sample_current(soc_total, current, pack_get_int_voltage(), HAL_GetTick());
+//    soc_sample_current(soc_last_charge, current, pack_get_int_voltage(), HAL_GetTick());
+//
+//    params.charge_joule = soc_get_joule(soc_last_charge);
+//
+//    params.total_joule = soc_get_joule(soc_total);
+//    config_set(soc_config, &params);
+//
+//    if (HAL_GetTick() - soc_timer >= SOC_WRITE_INTERVAL) {
+//        soc_timer = HAL_GetTick();
+//        config_write(soc_config);
+//    }
+//
+//    error_toggle_check(current > PACK_MAX_CURRENT, ERROR_OVER_CURRENT, 0);
+//}
 
 void pack_update_voltage_stats(voltage_t *total, voltage_t *maxv, voltage_t *minv) {
     uint32_t tot_voltage  = 0;
@@ -202,15 +201,15 @@ void pack_reset_soc() {
     soc_reset_count(soc_last_charge, HAL_GetTick());
 }
 
-double pack_get_soc() {
-    return soc_get_wh(soc_last_charge) / ((double)PACK_ENERGY_NOMINAL / 10) * 100;
+float pack_get_soc() {
+    return soc_get_wh(soc_last_charge) / (PACK_ENERGY_NOMINAL / 10.0) * 100;
 }
 
-double pack_get_energy_total() {
+float pack_get_energy_total() {
     return soc_get_wh(soc_total);
 }
 
-double pack_get_energy_last_charge() {
+float pack_get_energy_last_charge() {
     return soc_get_wh(soc_last_charge);
 }
 
@@ -274,13 +273,4 @@ temperature_t pack_get_min_temperature() {
 
 temperature_t pack_get_mean_temperature() {
     return cells.mean_temperature;
-}
-
-current_t pack_get_current() {
-    return current;
-}
-
-int16_t pack_get_power() {
-    // TODO: fix units
-    return current * cells.int_voltage;
 }
