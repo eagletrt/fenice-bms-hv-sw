@@ -8,4 +8,4 @@
 [submodule "mainboard/lib/micro-libs"]
 	path = mainboard/lib/micro-libs
 	url = git@github.com:eagletrt/micro-libs.git
-	branch = priority-queue
+	branch = master
