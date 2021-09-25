@@ -29,21 +29,23 @@ current_t _current_convert_shunt() {
     return 0.f;
 }
 
-void current_measure() {
+uint32_t current_measure() {
     // Start ADC measurements for every sensor
     HAL_ADC_Start(&hadc1);
     HAL_ADC_Start(&hadc2);
     //TODO: measure shunt
 
+    HAL_ADC_PollForConversion(&hadc1, 1);
+    HAL_ADC_PollForConversion(&hadc2, 1);
+    uint32_t time = HAL_GetTick();
+
     // Convert Hall-low (50A) and save rolling average
-    HAL_ADC_PollForConversion(&hadc1, 2);
     uint16_t adcval            = HAL_ADC_GetValue(&hadc1);
     float volt                 = (adcval * 3.3f) / 4095;
     current[CURRENT_SENSOR_50] = ROLLING_AVERAGE_FACTOR * _current_convert_low(volt) +
                                  (1 - ROLLING_AVERAGE_FACTOR) * current[CURRENT_SENSOR_50];
 
     // Convert Hall-high (300A) and save rolling average
-    HAL_ADC_PollForConversion(&hadc2, 2);
     adcval                      = HAL_ADC_GetValue(&hadc2);
     volt                        = (adcval * 3.3f) / 4095;
     current[CURRENT_SENSOR_300] = ROLLING_AVERAGE_FACTOR * _current_convert_high(volt) +
@@ -51,6 +53,8 @@ void current_measure() {
 
     // Check for over-current
     error_toggle_check(current_get_current() > PACK_MAX_CURRENT, ERROR_OVER_CURRENT, 0);
+
+    return time;
 }
 
 void current_zero() {

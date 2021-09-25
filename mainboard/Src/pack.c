@@ -16,12 +16,6 @@
 #include <stdbool.h>
 #include <string.h>
 
-#define CURRENT_ARRAY_LENGTH 512
-
-#define SOC_WRITE_INTERVAL 5000
-#define SOC_VERSION        0x01
-#define SOC_ADDR           0x30
-
 #ifndef max
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #endif
@@ -44,22 +38,6 @@ typedef struct {
 
 } cells_t;
 
-typedef struct {
-    uint8_t version;
-
-    float total_joule;
-    float charge_joule;
-} soc_params;
-soc_params soc_params_default = {SOC_VERSION, 0, 0};
-
-uint32_t current_50[CURRENT_ARRAY_LENGTH];   // TODO: move to pck_data and update DMA and generate getter no setter
-uint32_t current_300[CURRENT_ARRAY_LENGTH];  // TODO: move to pck_data and update DMA and generate getter no setter
-
-soc_t soc_total;
-soc_t soc_last_charge;
-config_t soc_config;
-uint32_t soc_timer = 0;
-
 cells_t cells;
 
 /**
@@ -78,13 +56,6 @@ void pack_init() {
     for (size_t i = 0; i < PACK_TEMP_COUNT; i++) {
         cells.temperatures[i] = 0;
     }
-
-    soc_init(&soc_total);
-    soc_init(&soc_last_charge);
-    config_init(&soc_config, SOC_ADDR, &soc_params_default, sizeof(soc_params));
-
-    soc_load(soc_total, ((soc_params *)config_get(soc_config))->total_joule, HAL_GetTick());
-    soc_load(soc_last_charge, ((soc_params *)config_get(soc_config))->charge_joule, HAL_GetTick());
 }
 
 void pack_update_voltages(UART_HandleTypeDef *huart) {
@@ -121,45 +92,6 @@ int32_t _mean(uint32_t values[], size_t size) {
     return sum / size;
 }
 
-//TODO: redo DMA and then rewrite the function
-//void pack_update_current() {
-//    current_t current50  = 0;
-//    current_t current300 = 0;
-//
-//    int32_t adc50  = _mean(current_50, CURRENT_ARRAY_LENGTH);
-//    int32_t adc300 = _mean(current_300, CURRENT_ARRAY_LENGTH);
-//
-//    // We calculate the input voltage
-//    float in_volt = (((float)adc50 * 3.3) / 4096);
-//    current50     = ((in_volt - S160_OFFSET) / S160_50A_SENS) * 10;
-//
-//    in_volt    = (((float)adc300 * 3.3) / 4096);
-//    current300 = ((in_volt - S160_OFFSET) / S160_300A_SENS) * 10;
-//
-//    if (current300 >= 50) {
-//        current = current300;
-//    } else {
-//        current = current50;
-//    }
-//
-//    soc_params params = *(soc_params *)config_get(soc_config);
-//
-//    soc_sample_current(soc_total, current, pack_get_int_voltage(), HAL_GetTick());
-//    soc_sample_current(soc_last_charge, current, pack_get_int_voltage(), HAL_GetTick());
-//
-//    params.charge_joule = soc_get_joule(soc_last_charge);
-//
-//    params.total_joule = soc_get_joule(soc_total);
-//    config_set(soc_config, &params);
-//
-//    if (HAL_GetTick() - soc_timer >= SOC_WRITE_INTERVAL) {
-//        soc_timer = HAL_GetTick();
-//        config_write(soc_config);
-//    }
-//
-//    error_toggle_check(current > PACK_MAX_CURRENT, ERROR_OVER_CURRENT, 0);
-//}
-
 void pack_update_voltage_stats(voltage_t *total, voltage_t *maxv, voltage_t *minv) {
     uint32_t tot_voltage  = 0;
     voltage_t max_voltage = cells.voltages[0];
@@ -195,22 +127,6 @@ void pack_update_temperature_stats() {
     cells.mean_temperature = (temperature_t)(avg_temperature / TEMP_SENSOR_COUNT);
     cells.max_temperature  = max_temperature;
     cells.min_temperature  = min(min_temperature, max_temperature);
-}
-
-void pack_reset_soc() {
-    soc_reset_count(soc_last_charge, HAL_GetTick());
-}
-
-float pack_get_soc() {
-    return soc_get_wh(soc_last_charge) / (PACK_ENERGY_NOMINAL / 10.0) * 100;
-}
-
-float pack_get_energy_total() {
-    return soc_get_wh(soc_total);
-}
-
-float pack_get_energy_last_charge() {
-    return soc_get_wh(soc_last_charge);
 }
 
 bool pack_set_ts_off() {
