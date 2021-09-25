@@ -48,9 +48,10 @@ void bal_set_threshold(uint16_t thresh) {
 
 void bal_fsm_init() {
     bal.cycle_length = BAL_CYCLE_LENGTH;
-    bal.fsm          = fsm_init(BAL_NUM_STATES, BAL_EV_NUM, NULL);
+    bal.fsm          = fsm_init(BAL_NUM_STATES, BAL_EV_NUM, NULL, NULL);
 
     fsm_state state;
+    state.run     = NULL;
     state.handler = off_handler;
     state.entry   = off_entry;
     state.exit    = NULL;
@@ -75,7 +76,6 @@ void bal_fsm_init() {
 }
 
 void off_entry(fsm FSM) {
-    uint16_t cells[PACK_CELL_COUNT] = {0};
 }
 
 void off_handler(fsm FSM, uint8_t event) {

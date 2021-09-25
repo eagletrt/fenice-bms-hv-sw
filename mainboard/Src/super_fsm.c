@@ -11,6 +11,7 @@
 
 #include "bms_fsm.h"
 #include "can_comm.h"
+#include "current.h"
 #include "main.h"
 #include "pack.h"
 #include "spi.h"
@@ -27,9 +28,10 @@ void super_bms(fsm handle, super_events event);
 void super_measure_volts(fsm handle, super_events event);
 
 void super_fsm_init() {
-    super_fsm = fsm_init(SUPER_NUM_STATES, SUPER_EV_NUM, NULL);
+    super_fsm = fsm_init(SUPER_NUM_STATES, SUPER_EV_NUM, NULL, NULL);
 
     fsm_state state;
+    state.run     = NULL;
     state.handler = super_bms;
     state.entry   = super_bms_entry;
     state.exit    = NULL;
@@ -64,8 +66,9 @@ void super_bms(fsm handle, super_events event) {
 }
 
 void super_measure_volts(fsm handle, super_events event) {
-    pack_update_voltages(&huart3);
-    pack_update_current();
+    pack_update_voltages(&SI8900_UART);
+    current_measure();
+
     can_send(ID_HV_CURRENT);
 
     fsm_transition(handle, SUPER_BMS);

@@ -11,11 +11,12 @@
 #define _SOC_H_
 
 /* Includes ------------------------------------------------------------------*/
-#include <inttypes.h>
-
+#include "current.h"
 #include "fenice_config.h"
+
+#include <inttypes.h>
 /* Exported types ------------------------------------------------------------*/
-typedef struct soc* soc_t;
+typedef struct soc *soc_t;
 /* Exported constants --------------------------------------------------------*/
 /* Exported macros -----------------------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
@@ -23,9 +24,9 @@ typedef struct soc* soc_t;
 /**
  * @brief Initializes soc instance
  */
-void soc_init(soc_t* handle);
+void soc_init(soc_t *handle);
 
-void soc_deinit(soc_t* handle);
+void soc_deinit(soc_t *handle);
 
 /**
  * @brief Loads saved values and resets timer
@@ -56,8 +57,8 @@ void soc_sample_current(soc_t handle, current_t current, voltage_t voltage, uint
  * 
  * @returns the consumption in Wh
  */
-double soc_get_wh(soc_t handle);
-double soc_get_joule(soc_t handle);
+float soc_get_wh(soc_t handle);
+float soc_get_joule(soc_t handle);
 
 /* Private types -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/

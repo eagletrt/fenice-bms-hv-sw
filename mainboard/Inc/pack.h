@@ -26,11 +26,6 @@ void pack_init();
 void pack_update_voltages(UART_HandleTypeDef *huart);
 
 /**
- * @brief   Calculates the current exiting/entering the pack
- */
-void pack_update_current();
-
-/**
  * @brief   Updates the pack's voltage stats
  * @details It updates *_voltage variables with the data of the pack
  */
@@ -43,9 +38,9 @@ void pack_update_voltage_stats();
 void pack_update_temperature_stats();
 
 void pack_reset_soc();
-double pack_get_soc();
-double pack_get_energy_total();
-double pack_get_energy_last_charge();
+float pack_get_soc();
+float pack_get_energy_total();
+float pack_get_energy_last_charge();
 
 bool pack_set_ts_off();
 bool pack_set_pc_start();
@@ -60,5 +55,3 @@ temperature_t *pack_get_temperatures();
 temperature_t pack_get_max_temperature();
 temperature_t pack_get_min_temperature();
 temperature_t pack_get_mean_temperature();
-current_t pack_get_current();
-int16_t pack_get_power();

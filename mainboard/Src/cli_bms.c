@@ -22,7 +22,7 @@
 #include <string.h>
 
 // TODO: don't count manually
-#define N_COMMANDS 11
+#define N_COMMANDS 12
 
 cli_command_func_t _cli_volts;
 cli_command_func_t _cli_volts_all;
@@ -33,6 +33,7 @@ cli_command_func_t _cli_balance;
 cli_command_func_t _cli_soc;
 cli_command_func_t _cli_errors;
 cli_command_func_t _cli_ts;
+cli_command_func_t _cli_current;
 cli_command_func_t _cli_dmesg;
 cli_command_func_t _cli_reset;
 cli_command_func_t _cli_help;
@@ -77,7 +78,7 @@ char const *const feedback_names[FEEDBACK_N] = {
     [FEEDBACK_TS_ON_POS]         = "TS ON"};
 
 char *command_names[N_COMMANDS] =
-    {"volt", "temp", "status", "errors", "ts", "bal", "soc", "dmesg", "reset", "?", "\ta"};
+    {"volt", "temp", "status", "errors", "ts", "bal", "soc", "current", "dmesg", "reset", "?", "\ta"};
 
 cli_command_func_t *commands[N_COMMANDS] = {
     &_cli_volts,
@@ -87,6 +88,7 @@ cli_command_func_t *commands[N_COMMANDS] = {
     &_cli_ts,
     &_cli_balance,
     &_cli_soc,
+    &_cli_current,
     &_cli_dmesg,
     &_cli_reset,
     &_cli_help,
@@ -119,7 +121,7 @@ void cli_bms_debug(char *text, size_t length) {
     if (dmesg_ena) {
         char out[3000] = {'\0'};
         // add prefix
-        sprintf(out, "[%.3f] ", (double)HAL_GetTick() / 1000);
+        sprintf(out, "[%.3f] ", (float)HAL_GetTick() / 1000);
 
         strcat(out, text);
         length += strlen(out);
@@ -153,7 +155,12 @@ void _cli_volts(uint16_t argc, char **argv, char *out) {
     } else if (strcmp(argv[1], "all") == 0) {
         _cli_volts_all(argc, &argv[1], out);
     } else {
-        sprintf(out, "Unknown parameter: %s\r\n", argv[1]);
+        sprintf(
+            out,
+            "Unknown parameter: %s\r\n"
+            "valid parameters:\r\n"
+            "- all: returns voltages for all cells\r\n",
+            argv[1]);
     }
 }
 
@@ -187,7 +194,12 @@ void _cli_temps(uint16_t argc, char **argv, char *out) {
     } else if (strcmp(argv[1], "all") == 0) {
         _cli_temps_all(argc, &argv[1], out);
     } else {
-        sprintf(out, "Unknown parameter: %s\r\n", argv[1]);
+        sprintf(
+            out,
+            "Unknown parameter: %s\r\n"
+            "valid parameters:\r\n"
+            "- all: returns temperature for all cells\r\n",
+            argv[1]);
     }
 }
 
@@ -313,6 +325,29 @@ void _cli_ts(uint16_t argc, char **argv, char *out) {
             "valid parameters:\r\n"
             "- on\r\n"
             "- off\r\n",
+            argv[1]);
+    }
+}
+
+void _cli_current(uint16_t argc, char **argv, char *out) {
+    if (argc == 0) {
+        sprintf(
+            out,
+            "Hall 50A:\t%.1fA\r\n"
+            "Hall 300A:\t%.1fA\r\n"
+            "Shunt:\t\t%.1fA\r\n",
+            current_get_current_sensors()[CURRENT_SENSOR_50],
+            current_get_current_sensors()[CURRENT_SENSOR_300],
+            current_get_current_sensors()[CURRENT_SENSOR_SHUNT]);
+    } else if (strcmp(argv[1], "zero") == 0) {
+        current_zero();
+        sprintf(out, "Current zeroed\r\n");
+    } else {
+        sprintf(
+            out,
+            "Unknown parameter: %s\r\n\n"
+            "valid parameters:\r\n"
+            "- zero: zeroes the hall-sensor measurement\r\n",
             argv[1]);
     }
 }

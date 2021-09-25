@@ -164,7 +164,6 @@ static const uint8_t TEMP_SENSOR_ADDRESS_CODING[TEMP_SENSORS_PER_STRIP] = {000, 
 
 typedef uint16_t voltage_t;
 typedef uint8_t temperature_t;
-typedef int16_t current_t;
 
 /**
  * Feedback bit set bit position 
