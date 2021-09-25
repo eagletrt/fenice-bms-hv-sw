@@ -11,12 +11,13 @@
 #ifndef BMS_FSM_H
 #define BMS_FSM_H
 
+#include "blink.h"
 #include "fsm.h"
 
 #include <stdbool.h>
-typedef enum { BMS_IDLE, BMS_PRECHARGE, BMS_ON, BMS_HALT, BMS_NUM_STATES } bms_states;
+typedef enum { BMS_IDLE = 0, BMS_PRECHARGE, BMS_ON, BMS_HALT, BMS_NUM_STATES } bms_states;
 typedef enum {
-    BMS_EV_HALT,
+    BMS_EV_HALT = 0,
     BMS_EV_TS_OFF,
     BMS_EV_TS_ON,
     BMS_EV_VOLT_MEASURE,
@@ -29,6 +30,7 @@ typedef enum {
 
 typedef struct {
     fsm fsm;
+    blink_t led;
 } bms_fsm;
 
 extern bms_fsm bms;
