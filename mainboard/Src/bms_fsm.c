@@ -67,7 +67,7 @@ void bms_fsm_init() {
     state.exit    = NULL;
     fsm_set_state(bms.fsm, BMS_HALT, &state);
 
-    HAL_TIM_Base_Start_IT(&htim_bms);
+    HAL_TIM_Base_Start_IT(&HTIM_BMS);
     fsm_start(bms.fsm);
 
     bms.led.port = STATE_LED_GPIO;
@@ -126,12 +126,12 @@ void _precharge_entry(fsm FSM) {
     // Precharge
     pack_set_pc_start();
 
-    uint32_t cnt = __HAL_TIM_GET_COUNTER(&htim_bms);
-    __HAL_TIM_SET_COMPARE(&htim_bms, TIM_CHANNEL_1, (cnt + PRECHARGE_CHECK_INTERVAL * 10));
-    __HAL_TIM_SET_COMPARE(&htim_bms, TIM_CHANNEL_2, (cnt + PRECHARGE_TIMEOUT * 10));
+    uint32_t cnt = __HAL_TIM_GET_COUNTER(&HTIM_BMS);
+    __HAL_TIM_SET_COMPARE(&HTIM_BMS, TIM_CHANNEL_1, (cnt + PRECHARGE_CHECK_INTERVAL * 10));
+    __HAL_TIM_SET_COMPARE(&HTIM_BMS, TIM_CHANNEL_2, (cnt + PRECHARGE_TIMEOUT * 10));
 
-    HAL_TIM_OC_Start_IT(&htim_bms, TIM_CHANNEL_1);
-    HAL_TIM_OC_Start_IT(&htim_bms, TIM_CHANNEL_2);
+    HAL_TIM_OC_Start_IT(&HTIM_BMS, TIM_CHANNEL_1);
+    HAL_TIM_OC_Start_IT(&HTIM_BMS, TIM_CHANNEL_2);
 
     cli_bms_debug("Entered precharge", 18);
 }
@@ -162,8 +162,8 @@ void _precharge_handler(fsm FSM, uint8_t event) {
 }
 
 void _precharge_exit(fsm FSM) {
-    HAL_TIM_OC_Stop_IT(&htim_bms, TIM_CHANNEL_1);
-    HAL_TIM_OC_Stop_IT(&htim_bms, TIM_CHANNEL_2);
+    HAL_TIM_OC_Stop_IT(&HTIM_BMS, TIM_CHANNEL_1);
+    HAL_TIM_OC_Stop_IT(&HTIM_BMS, TIM_CHANNEL_2);
 }
 
 void _on_entry(fsm FSM) {

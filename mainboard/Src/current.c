@@ -12,6 +12,7 @@
 #include "cli_bms.h"
 #include "error.h"
 #include "main.h"
+#include "mainboard_config.h"
 #include "string.h"
 
 #define ROLLING_AVERAGE_FACTOR 0.75f
@@ -36,8 +37,8 @@ current_t _current_convert_shunt() {
 }
 
 void current_start_measure() {
-    HAL_ADC_Start_DMA(&hadc3, (uint32_t *)adc_50, MEASURE_SAMPLE_SIZE);
-    HAL_ADC_Start_DMA(&hadc2, (uint32_t *)adc_300, MEASURE_SAMPLE_SIZE);
+    HAL_ADC_Start_DMA(&ADC_HALL50, (uint32_t *)adc_50, MEASURE_SAMPLE_SIZE);
+    HAL_ADC_Start_DMA(&ADC_HALL300, (uint32_t *)adc_300, MEASURE_SAMPLE_SIZE);
 }
 
 uint32_t current_read() {

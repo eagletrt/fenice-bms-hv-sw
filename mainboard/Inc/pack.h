@@ -9,8 +9,8 @@
 #pragma once
 
 #include "error/error.h"
-#include "fenice_config.h"
 #include "main.h"
+#include "mainboard_config.h"
 
 #include <inttypes.h>
 
