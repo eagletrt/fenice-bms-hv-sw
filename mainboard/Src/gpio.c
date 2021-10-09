@@ -39,6 +39,7 @@
         * EXTI
         * Free pins are configured automatically as Analog (this feature is enabled through
         * the Code Generation settings)
+     PC2   ------> ADCx_IN12
 */
 void MX_GPIO_Init(void)
 {
@@ -79,8 +80,8 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PC14 PC15 */
-  GPIO_InitStruct.Pin = GPIO_PIN_14|GPIO_PIN_15;
+  /*Configure GPIO pins : PC14 PC15 PCPin */
+  GPIO_InitStruct.Pin = GPIO_PIN_14|GPIO_PIN_15|IP_LOW_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);

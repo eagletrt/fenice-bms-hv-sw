@@ -22,11 +22,11 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "bal_fsm.h"
-#include "energy.h"
 #include "bms_fsm.h"
 #include "cli_bms.h"
 #include "config.h"
 #include "current.h"
+#include "energy.h"
 #include "error/error.h"
 #include "fenice_config.h"
 #include "m95256.h"
@@ -96,7 +96,6 @@ int main(void) {
     /* Initialize all configured peripherals */
     MX_GPIO_Init();
     MX_USART3_UART_Init();
-    MX_ADC1_Init();
     MX_CAN1_Init();
     MX_CAN2_Init();
     MX_SPI2_Init();
@@ -106,8 +105,10 @@ int main(void) {
     MX_USART1_UART_Init();
     MX_DMA_Init();
     MX_ADC2_Init();
+    MX_ADC3_Init();
     /* USER CODE BEGIN 2 */
     HAL_GPIO_WritePin(EEPROM_HOLD_GPIO_Port, EEPROM_HOLD_Pin, GPIO_PIN_SET);
+    current_start_measure();
 
     can_init();
 
@@ -120,7 +121,7 @@ int main(void) {
     bal_fsm_init();
     bms_fsm_init();
     super_fsm_init();
-    current_measure();
+    current_read();
     current_zero();
     energy_init();
 

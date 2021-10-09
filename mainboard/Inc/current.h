@@ -15,11 +15,16 @@ enum CURRENT_SENSORS { CURRENT_SENSOR_50 = 0, CURRENT_SENSOR_300, CURRENT_SENSOR
 typedef float current_t;
 
 /**
- * @brief Measures TS current from internal current sensors
+ * @brief Start current measurement using DMA
+ */
+void current_start_measure();
+
+/**
+ * @brief Reads TS current from current sensors
  * 
  * @return uint32_t The timestamp at which the measurement occurred
  */
-uint32_t current_measure();
+uint32_t current_read();
 
 /**
  * @brief Zeroes the Hall-effect sensor
