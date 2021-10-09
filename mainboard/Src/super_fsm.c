@@ -69,7 +69,7 @@ void super_bms(fsm handle, super_events event) {
 void super_measure_volts(fsm handle, super_events event) {
     pack_update_voltages(&SI8900_UART);
 
-    energy_sample_current(current_measure());
+    energy_sample_current(current_read());
 
     can_send(ID_HV_CURRENT);
 
