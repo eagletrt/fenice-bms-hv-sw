@@ -14,6 +14,7 @@
 #include "current.h"
 #include "energy.h"
 #include "main.h"
+#include "mainboard_config.h"
 #include "pack.h"
 #include "spi.h"
 #include "tim.h"
@@ -43,8 +44,8 @@ void super_fsm_init() {
     state.exit    = NULL;
     fsm_set_state(super_fsm, SUPER_MEASURE_VOLTS, &state);
 
-    HAL_TIM_OC_Start_IT(&htim_super, TIM_CHANNEL_1);
-    HAL_TIM_OC_Start_IT(&htim_super, TIM_CHANNEL_2);
+    HAL_TIM_OC_Start_IT(&HTIM_SUPER, TIM_CHANNEL_1);
+    HAL_TIM_OC_Start_IT(&HTIM_SUPER, TIM_CHANNEL_2);
     fsm_start(super_fsm);
 }
 

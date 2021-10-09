@@ -12,7 +12,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "current.h"
-#include "fenice_config.h"
+#include "mainboard_config.h"
 
 #include <inttypes.h>
 /* Exported types ------------------------------------------------------------*/

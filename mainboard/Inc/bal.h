@@ -11,10 +11,10 @@
 #ifndef BAL_H
 #define BAL_H
 
+#include "mainboard_config.h"
+
 #include <inttypes.h>
 #include <stdbool.h>
-
-#include "fenice_config.h"
 
 #define BAL_NULL_INDEX UINT8_MAX
 

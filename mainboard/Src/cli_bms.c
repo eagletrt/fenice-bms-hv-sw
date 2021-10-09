@@ -14,6 +14,7 @@
 #include "bms_fsm.h"
 #include "energy.h"
 #include "error/error.h"
+#include "feedback.h"
 #include "pack.h"
 #include "soc.h"
 #include "usart.h"

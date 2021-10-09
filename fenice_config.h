@@ -16,12 +16,6 @@
 //=================================== General ===============================
 //===========================================================================
 
-#define htim_err   htim3
-#define htim_bms   htim2
-#define htim_super htim4
-
-#define spi_eeprom hspi2
-
 /**
  * Maximum can payload. for CAN 2.0A is 8 bytes
  */
@@ -156,95 +150,8 @@ static const uint8_t TEMP_SENSOR_ADDRESS_CODING[TEMP_SENSORS_PER_STRIP] = {000, 
  */
 #define BAL_COOLDOWN_DELAY 5000
 
-// @section Pre-charge
-
-#define PRECHARGE_TIMEOUT           10000U
-#define PRECHARGE_CHECK_INTERVAL    100U
-#define PRECHARGE_VOLTAGE_THRESHOLD 0.95
-
 typedef uint16_t voltage_t;
 typedef uint8_t temperature_t;
-
-/**
- * Feedback bit set bit position 
- */
-enum {
-    FEEDBACK_VREF_POS,
-    FEEDBACK_FROM_TSMS_POS,
-    FEEDBACK_TO_TSMS_POS,
-    FEEDBACK_FROM_SHUTDOWN_POS,
-    FEEDBACK_LATCH_IMD_POS,
-    FEEDBACK_LATCH_BMS_POS,
-    FEEDBACK_IMD_FAULT_POS,
-    FEEDBACK_BMS_FAULT_POS,
-    FEEDBACK_TSAL_HV_POS,
-    FEEDBACK_AIR_POSITIVE_POS,
-    FEEDBACK_AIR_NEGATIVE_POS,
-    FEEDBACK_PC_END_POS,
-    FEEDBACK_RELAY_LV_POS,
-    FEEDBACK_IMD_SHUTDOWN_POS,
-    FEEDBACK_BMS_SHUTDOWN_POS,
-    FEEDBACK_TS_ON_POS,
-
-    //do not move FEEDBACK_N
-    FEEDBACK_N,
-};
-
-/**
- * Feedback bit sets 
- */
-#define FEEDBACK_NULL          0
-#define FEEDBACK_VREF          ((feedback_t)1 << FEEDBACK_VREF_POS)
-#define FEEDBACK_FROM_TSMS     ((feedback_t)1 << FEEDBACK_FROM_TSMS_POS)
-#define FEEDBACK_TO_TSMS       ((feedback_t)1 << FEEDBACK_TO_TSMS_POS)
-#define FEEDBACK_FROM_SHUTDOWN ((feedback_t)1 << FEEDBACK_FROM_SHUTDOWN_POS)
-#define FEEDBACK_LATCH_IMD     ((feedback_t)1 << FEEDBACK_LATCH_IMD_POS)
-#define FEEDBACK_LATCH_BMS     ((feedback_t)1 << FEEDBACK_LATCH_BMS_POS)
-#define FEEDBACK_IMD_FAULT     ((feedback_t)1 << FEEDBACK_IMD_FAULT_POS)
-#define FEEDBACK_BMS_FAULT     ((feedback_t)1 << FEEDBACK_BMS_FAULT_POS)
-#define FEEDBACK_TSAL_HV       ((feedback_t)1 << FEEDBACK_TSAL_HV_POS)
-#define FEEDBACK_AIR_POSITIVE  ((feedback_t)1 << FEEDBACK_AIR_POSITIVE_POS)
-#define FEEDBACK_AIR_NEGATIVE  ((feedback_t)1 << FEEDBACK_AIR_NEGATIVE_POS)
-#define FEEDBACK_PC_END        ((feedback_t)1 << FEEDBACK_PC_END_POS)
-#define FEEDBACK_RELAY_LV      ((feedback_t)1 << FEEDBACK_RELAY_LV_POS)
-#define FEEDBACK_IMD_SHUTDOWN  ((feedback_t)1 << FEEDBACK_IMD_SHUTDOWN_POS)
-#define FEEDBACK_BMS_SHUTDOWN  ((feedback_t)1 << FEEDBACK_BMS_SHUTDOWN_POS)
-#define FEEDBACK_TS_ON         ((feedback_t)1 << FEEDBACK_TS_ON_POS)
-#define FEEDBACK_ALL           (feedback_t)(((feedback_t)1 << FEEDBACK_N) - 1)
-
-//===========================================================================
-//=========================== S160 current transducer =======================
-//===========================================================================
-
-// 0A voltage level
-#define S160_OFFSET (3.33 / 2)
-
-// Sensitivity of the 50A sensor
-#define S160_50A_SENS 6.67
-
-//Sensitivity of the 300A sensor
-#define S160_300A_SENS 40
-
-//===========================================================================
-//=============================== SI8900 Settings ===========================
-//===========================================================================
-
-/**
- * Max time to wait for the sensor to initialize (auto-baudrate detection)
-*/
-#define SI8900_INIT_TIMEOUT 400
-
-/**
- * Max time to wait for a voltage reading
- * 
- * Keep it low, it will pause the main loop
-*/
-#define SI8900_TIMEOUT 5
-
-/**
- * Reference voltage of the ADC
-*/
-#define SI8900_VREF 3.33
 
 /*
  * If the cli should echo the input

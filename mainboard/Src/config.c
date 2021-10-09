@@ -75,6 +75,16 @@ bool config_write(config_t config) {
     if (config->dirty) {
         if (m95256_WriteBuffer(eeprom, (uint8_t *)config->data, config->address, config->size) ==
             EEPROM_STATUS_COMPLETE) {
+            // Read memory to check write success
+            uint8_t testbuf[EEPROM_BUFFER_SIZE] = {0};
+            if (m95256_ReadBuffer(eeprom, testbuf, config->address, config->size) == EEPROM_STATUS_COMPLETE) {
+                // TODO: continue this
+                //if (strcmp(config->data, testbuf, config->size) != 0) {
+                //    error_set(ERROR_EEPROM_COMM, 0, HAL_GetTick());
+                //}
+                //error_unset(ERROR_EEPROM_COMM, 0);
+            }
+
             config->dirty = false;
             return true;
         } else {

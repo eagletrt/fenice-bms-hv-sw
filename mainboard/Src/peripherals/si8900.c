@@ -11,7 +11,7 @@
 #include "peripherals/si8900.h"
 
 #include "error/error.h"
-#include "fenice_config.h"
+#include "mainboard_config.h"
 #include "usart.h"
 
 #include <stdlib.h>
