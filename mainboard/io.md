@@ -11,4 +11,4 @@ There are many peripherals and devices connected to the mainboard. Every compone
 - **User console** (UART): A serial interface is reserved as an user interface to read/write data and execute commands. The [cli](https://github.com/eagletrt/micro-libs/tree/master/cli) library is used as an interface.
 - **GPIOs**: 9 GPIO pins for external stuff.
 
-![Mainboard's I/O configuration](/pics/mainboard_cubemx.png)
+![Mainboard's I/O configuration](../../pics/mainboard_cubemx.png)
