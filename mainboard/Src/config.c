@@ -10,7 +10,7 @@
 #include "config.h"
 
 #include "error.h"
-#include "fenice_config.h"
+#include "mainboard_config.h"
 #include "spi.h"
 
 #include <stdlib.h>
@@ -34,7 +34,7 @@ bool config_init(config_t *config, uint16_t address, void *default_data, size_t 
     (*config)->dirty   = false;
 
     if (eeprom == NULL) {
-        m95256_init(&eeprom, &spi_eeprom, EEPROM_CS_GPIO_Port, EEPROM_CS_Pin);
+        m95256_init(&eeprom, &SPI_EEPROM, EEPROM_CS_GPIO_Port, EEPROM_CS_Pin);
     }
 
     if (config_read(*config)) {
