@@ -4,10 +4,3 @@ Battery management is a collection of operations that ensure the safety and effi
 A good battery management system is also able to keep the battery in good operating conditions, with the goal of maintaining the expected efficiency of the powertrain.
 
 The need of collecting a lot of data from all over the pack has dictated a scattered architecture for the BMS, that uses multiple data acquisition boards (cellboards) and a single control board (mainboard).
-
-```{toctree}
-:caption: 'Mainboard:'
-:maxdepth: 2
-
-mainboard/index
-```

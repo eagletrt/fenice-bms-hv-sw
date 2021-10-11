@@ -1,5 +1,7 @@
-## I/O Overview
+# I/O
+
 There are many peripherals and devices connected to the mainboard. Every component that interfaces with the mainboard's microcontroller is listed here:
+
 - **CAN-buses** (CAN): A CAN-bus to communicate with the car and an internal isolated bus for handling the cellboards.
 - **Si8900 isolated ADC** (UART): Used to measure pack and bus voltages, and is also used to measure the pack current using a shunt resistor.
 - **DAHB S/160 Hall-effect sensor** (ADC): Used to measure pack current. Less precise than the shunt, included for historic reasons. The unit contains two sensors with different gains to have a broader current range.
