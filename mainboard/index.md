@@ -4,16 +4,6 @@ The Mainboard is the central control unit of the BMS. It contains a microcontrol
 
 The logic of the mainboard is handled by a couple of finite state machines (FSM). The [fsm](https://github.com/eagletrt/micro-libs/tree/master/fsm) library is used to manage every state machine of the BMS.
 
-```{toctree}
-:caption: 'I/O:'
-:maxdepth: 2
-
-io
-```
-
-```{toctree}
-:caption: 'BMS Finite State Machine:'
-:maxdepth: 2
-
-bms_fsm
-```
+## Subsystems
+There are several subsystems to the Mainboard's firmware:
+- **bms_fsm**: The BMS fsm handles the main state machine of the board. It is responsible for the management of the tractive system activation and deactivation.
