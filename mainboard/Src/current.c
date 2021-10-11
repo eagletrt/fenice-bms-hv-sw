@@ -15,8 +15,7 @@
 #include "mainboard_config.h"
 #include "string.h"
 
-#define ROLLING_AVERAGE_FACTOR 0.75f
-#define MEASURE_SAMPLE_SIZE    128
+#define MEASURE_SAMPLE_SIZE 128
 
 uint16_t adc_50[MEASURE_SAMPLE_SIZE]  = {0};
 uint16_t adc_300[MEASURE_SAMPLE_SIZE] = {0};
@@ -54,17 +53,13 @@ uint32_t current_read() {
     avg_50 /= MEASURE_SAMPLE_SIZE;
     avg_300 /= MEASURE_SAMPLE_SIZE;
 
-    // Convert Hall-low (50A) and save rolling average
+    // Convert Hall-low (50A)
     float volt                 = (avg_50 * 3.3f) / 4095;
-    current[CURRENT_SENSOR_50] = (ROLLING_AVERAGE_FACTOR * _current_convert_low(volt) +
-                                  (1 - ROLLING_AVERAGE_FACTOR) * current[CURRENT_SENSOR_50]) -
-                                 zero[CURRENT_SENSOR_50];
+    current[CURRENT_SENSOR_50] = _current_convert_low(volt);
 
-    // Convert Hall-high (300A) and save rolling average
+    // Convert Hall-high (300A)
     volt                        = (avg_300 * 3.3f) / 4095;
-    current[CURRENT_SENSOR_300] = (ROLLING_AVERAGE_FACTOR * _current_convert_high(volt) +
-                                   (1 - ROLLING_AVERAGE_FACTOR) * current[CURRENT_SENSOR_300]) -
-                                  zero[CURRENT_SENSOR_300];
+    current[CURRENT_SENSOR_300] = _current_convert_high(volt);
 
     // Check for over-current
     error_toggle_check(current_get_current() > PACK_MAX_CURRENT, ERROR_OVER_CURRENT, 0);
