@@ -74,11 +74,19 @@ void current_zero() {
 
 current_t current_get_current() {
     // TODO: change this
-    return current[CURRENT_SENSOR_50];
+    //return current[CURRENT_SENSOR_50];
+    return current_get_current_from_sensor(CURRENT_SENSOR_50);
 }
 current_t *current_get_current_sensors() {
     return current;
 }
 current_t *current_get_zero() {
     return zero;
+}
+
+current_t current_get_current_from_sensor(unsigned sensor){
+    if(sensor > CURRENT_SENSOR_NUM){
+        return -1;
+    }
+    return current[sensor];
 }

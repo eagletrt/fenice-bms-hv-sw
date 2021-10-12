@@ -47,3 +47,8 @@ current_t *current_get_current_sensors();
  * @brief Returns the zero value for each current sensor. For the shunt the zero is always 0
  */
 current_t *current_get_zero();
+
+/**
+ * @brief Returns the current flowing through the specified sensor
+ */
+current_t current_get_current_from_sensor(unsigned sensor);
