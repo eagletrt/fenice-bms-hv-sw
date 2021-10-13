@@ -73,7 +73,6 @@ void current_zero() {
 }
 
 current_t current_get_current() {
-    // TODO: change this
     //return current[CURRENT_SENSOR_50];
     return current_get_current_from_sensor(CURRENT_SENSOR_50);
 }
