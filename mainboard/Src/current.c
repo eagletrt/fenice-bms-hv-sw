@@ -84,7 +84,7 @@ current_t *current_get_zero() {
 }
 
 current_t current_get_current_from_sensor(uint8_t sensor){
-    if(sensor > CURRENT_SENSOR_NUM){
+    if(sensor >= CURRENT_SENSOR_NUM){
         return -1;
     }
     return current[sensor];
