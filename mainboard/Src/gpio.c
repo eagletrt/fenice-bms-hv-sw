@@ -55,8 +55,7 @@ void MX_GPIO_Init(void)
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOC, GPIO9_Pin|GPIO8_Pin|MUX_A3_Pin|EEPROM_CS_Pin
-                          |EEPROM_HOLD_Pin|CARD_CS_Pin|BMS_FAULT_Pin|TS_ON_Pin
-                          |AIRP_OFF_Pin, GPIO_PIN_RESET);
+                          |CARD_CS_Pin|BMS_FAULT_Pin|TS_ON_Pin|AIRP_OFF_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, GPIO7_Pin|MUX_A0_Pin|MUX_A1_Pin|MUX_A2_Pin
@@ -65,6 +64,9 @@ void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, ADC_SIN_Pin|GPIO5_Pin|GPIO4_Pin|GPIO1_Pin
                           |GPIO3_Pin|LED2_Pin|LED1_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(EEPROM_HOLD_GPIO_Port, EEPROM_HOLD_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(AIRM_OFF_GPIO_Port, AIRM_OFF_Pin, GPIO_PIN_SET);
