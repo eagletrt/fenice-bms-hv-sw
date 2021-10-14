@@ -59,7 +59,8 @@ const char *error_names[ERROR_NUM_ERRORS] = {
     [ERROR_CELLBOARD_COMM]        = "cellboard communication",
     [ERROR_CELLBOARD_INTERNAL]    = "cellboard internal",
     [ERROR_FEEDBACK]              = "feedback",
-    [ERROR_EEPROM_COMM]           = "EEPROM communication"};
+    [ERROR_EEPROM_COMM]           = "EEPROM communication",
+    [ERROR_EEPROM_WRITE]          = "EEPROM write"};
 
 char const *const feedback_names[FEEDBACK_N] = {
     [FEEDBACK_VREF_POS]          = "VREF",
