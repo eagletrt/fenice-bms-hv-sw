@@ -201,7 +201,7 @@ bool error_reset(error_id id, uint8_t offset) {
 
 size_t error_get_fatal() {
     size_t count = error_count();
-    error_t errors[count];
+    error_t errors[ERROR_NUM_ERRORS];
     error_dump(errors);
 
     size_t fatal = 0;
