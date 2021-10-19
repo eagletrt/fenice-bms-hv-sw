@@ -152,7 +152,6 @@ int main(void) {
 
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
-    fsm_trigger_event(bal.fsm, EV_BAL_START);
 
     while (1) {
         if (HAL_GetTick() - volt_timer >= VOLT_MEASURE_INTERVAL - VOLT_MEASURE_TIME) {

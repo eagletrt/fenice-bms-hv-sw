@@ -27,22 +27,25 @@ void transition_callback(fsm handle);
 
 void bal_fsm_init() {
     bal.cycle_length = DCTO_30S;
-    bal.fsm          = fsm_init(BAL_NUM_STATES, BAL_EV_NUM, transition_callback);
+    bal.fsm          = fsm_init(BAL_NUM_STATES, BAL_EV_NUM, NULL, transition_callback);
 
     fsm_state state;
 
     state.handler = off_handler;
     state.entry   = off_entry;
+    state.run     = NULL;
     state.exit    = NULL;
     fsm_set_state(bal.fsm, BAL_OFF, &state);
 
     state.handler = NULL;
     state.entry   = compute_entry;
+    state.run     = NULL;
     state.exit    = NULL;
     fsm_set_state(bal.fsm, BAL_COMPUTE, &state);
 
     state.handler = discharge_handler;
     state.entry   = discharge_entry;
+    state.run     = NULL;
     state.exit    = NULL;
     fsm_set_state(bal.fsm, BAL_DISCHARGE, &state);
 }
