@@ -10,6 +10,8 @@
 
 #include "../Primary/ids.h"
 #include "../../Primary/c/Primary.h"
+#include "../bms/ids.h"
+#include "../../bms/c/bms.h"
 #include "can.h"
 
 void can_init();
