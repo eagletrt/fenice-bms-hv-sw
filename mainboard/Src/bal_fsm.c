@@ -19,10 +19,9 @@
 #define CONF_ADDR 0x01
 
 typedef struct {
-    uint8_t version;
     voltage_t threshold;
 } bal_params;
-bal_params bal_params_default = {CONF_VER, BAL_MAX_VOLTAGE_THRESHOLD};
+bal_params bal_params_default = {BAL_MAX_VOLTAGE_THRESHOLD};
 
 bal_fsm bal;
 config_t config;
@@ -72,7 +71,7 @@ void bal_fsm_init() {
     state.exit    = NULL;
     fsm_set_state(bal.fsm, BAL_COOLDOWN, &state);
 
-    config_init(&config, CONF_ADDR, &bal_params_default, sizeof(bal_params));
+    config_init(&config, CONF_ADDR, CONF_VER, &bal_params_default, sizeof(bal_params));
 }
 
 void off_entry(fsm FSM) {
