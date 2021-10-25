@@ -20,12 +20,13 @@ typedef struct config *config_t;
  * 
  * @param config The config handle
  * @param address The handle to read/write the config to
+ * @param version The version string to be used as comparison
  * @param default_data The default value for data. Used when the config in eeprom is invalid
  * @param size Size of the data structure
- * @return true Initialization from EEPROM successfull
- * @return false The default config has been initialized
+ * @return true Initialization from EEPROM successful
+ * @return false The default config has been initialized/error reading EEPROM
  */
-bool config_init(config_t *config, uint16_t address, void *default_data, size_t size);
+bool config_init(config_t *config, uint16_t address, uint32_t version, void *default_data, size_t size);
 
 /**
  * @brief Writes a config to EEPROM

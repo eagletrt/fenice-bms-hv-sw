@@ -11,21 +11,20 @@
 
 #include "soc.h"
 
+#define ENERGY_VERSION 0x5555
+#define ENERGY_ADDR    0x30
+
 #define ENERGY_WRITE_INTERVAL 5000
-#define ENERGY_VERSION        0x01
-#define ENERGY_ADDR           0x30
 
 typedef struct {
-    uint8_t version;
-
     float total_joule;
     float charge_joule;
 } soc_params;
-soc_params soc_params_default = {ENERGY_VERSION, 0, 0};
+soc_params soc_params_default = {0, 0};
 
 soc_t soc_total;        // Total energy
 soc_t soc_last_charge;  // Energy since last charge
-config_t soc_config;    // Config definition for config.h
+config_t soc_config;    // Config data for config.h
 
 void energy_init() {
     // Reset the counts
@@ -33,7 +32,7 @@ void energy_init() {
     soc_init(&soc_last_charge);
 
     // Try to load counts from memory. If errors, revert to default params
-    config_init(&soc_config, ENERGY_ADDR, &soc_params_default, sizeof(soc_params));
+    config_init(&soc_config, ENERGY_ADDR, ENERGY_VERSION, &soc_params_default, sizeof(soc_params));
 
     // Save the loaded values in soc instances
     soc_load(soc_total, ((soc_params *)config_get(soc_config))->total_joule, HAL_GetTick());
