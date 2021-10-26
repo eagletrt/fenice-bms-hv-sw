@@ -1,5 +1,6 @@
 #include "test_energy.h"
 
+#include <energy/energy.h>
 #include <energy.h>
 #include <stdio.h>
 
@@ -22,7 +23,8 @@ MunitResult test_constant(const MunitParameter params[], void *user_data_or_fixt
 
     uint32_t time = 0;
     float j       = 0.0f;
-    energy_reset_count(energy, time);
+    energy_set_count(energy, j);
+    energy_set_time(energy, time);
     energy_sample_energy(energy, current * volt, time);
 
     time += 1000;  // 1s
@@ -55,7 +57,8 @@ MunitResult test_var_voltage(const MunitParameter params[], void *user_data_or_f
     uint32_t time     = 0;
     float j           = 0.0f;
 
-    energy_reset_count(energy, time);
+    energy_set_count(energy, j);
+    energy_set_time(energy, time);
     energy_sample_energy(energy, current * volt, time);
     munit_assert_float(energy_get_joule(energy), ==, j);
     munit_assert_double_equal(energy_get_wh(energy), j / 3600.0f, 7);
@@ -98,7 +101,8 @@ MunitResult test_var_current(const MunitParameter params[], void *user_data_or_f
     uint32_t time     = 0;
     float j           = 0.0f;
 
-    energy_reset_count(energy, time);
+    energy_set_count(energy, j);
+    energy_set_time(energy, time);
     energy_sample_energy(energy, current * volt, time);
     munit_assert_float(energy_get_joule(energy), ==, j);
     munit_assert_double_equal(energy_get_wh(energy), j / 3600.0f, 7);

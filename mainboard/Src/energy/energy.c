@@ -1,16 +1,15 @@
 /**
- * @file        energy.c
- * @brief	    This file contains functions and utilities around energy and State of Charge estimation.
+ * @file    energy.c
+ * @brief   This file contains functions and utilities around energy monitoring.
  * 
- * @date        May 12, 2021
- * @author      Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @date    May 12, 2021
+ * @author  Matteo Bonora [matteo.bonora@studenti.unitn.it]
  */
 
 /* Includes ------------------------------------------------------------------*/
-#include "energy.h"
+#include "energy/energy.h"
 
 #include <stdlib.h>
-#include <string.h>
 
 /* Private typedef -----------------------------------------------------------*/
 struct energy {
@@ -27,26 +26,21 @@ struct energy {
 
 void energy_init(energy_t *handle) {
     *handle = malloc(sizeof(struct energy));
-    energy_reset_count(*handle, 0);
+    energy_set_count(*handle, 0);
+    energy_set_time(*handle, 0);
 }
 
 void energy_deinit(energy_t *handle) {
     free(*handle);
 }
 
-void energy_load(energy_t handle, float joule, uint32_t time) {
-    handle->energy = joule;
-    energy_reset_time(handle, time);
+void energy_set_count(energy_t handle, float energy) {
+    handle->energy = energy;
 }
 
-void energy_reset_time(energy_t handle, uint32_t time) {
+void energy_set_time(energy_t handle, uint32_t time) {
     handle->last_sample = time;
     handle->last_power  = 0;
-}
-
-void energy_reset_count(energy_t handle, uint32_t time) {
-    handle->energy = 0;
-    energy_reset_time(handle, time);
 }
 
 void energy_sample_energy(energy_t handle, float power, uint32_t time) {

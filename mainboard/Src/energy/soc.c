@@ -1,15 +1,16 @@
 /**
- * @file	energy.h
- * @brief	File containing energy management functions for SoC management.
+ * @file    soc.h
+ * @brief   State of Charge estimation and management. Based on the energy subsystem
  *
- * @date	Sep 25, 2021
+ * @date    Sep 25, 2021
  *
- * @author	Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @author  Matteo Bonora [matteo.bonora@studenti.unitn.it]
  */
 
-#include "soc.h"
+#include "energy/soc.h"
 
-#include "energy.h"
+#include "energy/energy.h"
+#include "pack/voltage.h"
 
 #define ENERGY_VERSION 0x5555
 #define ENERGY_ADDR    0x30
@@ -35,16 +36,19 @@ void soc_init() {
     config_init(&soc_config, ENERGY_ADDR, ENERGY_VERSION, &soc_params_default, sizeof(soc_params));
 
     // Save the loaded values in soc instances
-    energy_load(energy_total, ((soc_params *)config_get(soc_config))->total_joule, HAL_GetTick());
-    energy_load(energy_last_charge, ((soc_params *)config_get(soc_config))->charge_joule, HAL_GetTick());
+    energy_set_count(energy_total, ((soc_params *)config_get(soc_config))->total_joule);
+    energy_set_time(energy_total, HAL_GetTick());
+
+    energy_set_count(energy_last_charge, ((soc_params *)config_get(soc_config))->charge_joule);
+    energy_set_time(energy_last_charge, HAL_GetTick());
 }
 
 void soc_sample_energy(uint32_t timestamp) {
     soc_params params = *(soc_params *)config_get(soc_config);
 
     // Sample current values for SoC calculation
-    energy_sample_energy(energy_total, (current_get_current() * pack_get_int_voltage()) / 10.0f, timestamp);
-    energy_sample_energy(energy_last_charge, (current_get_current() * pack_get_int_voltage()) / 10.0f, timestamp);
+    energy_sample_energy(energy_total, (current_get_current() * voltage_get_internal()) / 10.0f, timestamp);
+    energy_sample_energy(energy_last_charge, (current_get_current() * voltage_get_internal()) / 10.0f, timestamp);
 
     // Update newly-calculated energy values to the energy structure
     params.charge_joule = energy_get_joule(energy_last_charge);
@@ -57,11 +61,12 @@ void soc_sample_energy(uint32_t timestamp) {
 }
 
 void soc_reset_soc() {
-    energy_reset_count(energy_last_charge, HAL_GetTick());
+    energy_set_count(energy_last_charge, 0);
+    energy_set_time(energy_last_charge, 0);
 }
 
 float soc_get_soc() {
-    // Compute Wh from Joule on the fly
+    // Compute state of charge based on nominal energy
     return energy_get_wh(energy_last_charge) / (PACK_ENERGY_NOMINAL / 10.0) * 100;
 }
 

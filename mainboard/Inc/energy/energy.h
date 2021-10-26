@@ -1,54 +1,49 @@
 /**
- * @file        soc.h
- * @brief	    This file contains functions and utilities around energy and State of Charge estimation.
+ * @file    energy.h
+ * @brief   This file contains functions and utilities around energy monitoring.
  * 
- * @date        May 12, 2021
- * @author      Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @date    May 12, 2021
+ * @author  Matteo Bonora [matteo.bonora@studenti.unitn.it]
  */
 
-/* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef _ENERGY_H_
-#define _ENERGY_H_
-
-/* Includes ------------------------------------------------------------------*/
-#include "current.h"
-#include "mainboard_config.h"
+#pragma once
 
 #include <inttypes.h>
 /* Exported types ------------------------------------------------------------*/
 typedef struct energy *energy_t;
+
 /* Exported constants --------------------------------------------------------*/
 /* Exported macros -----------------------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
-
 /**
- * @brief Initializes soc instance
+ * @brief Initializes energy instance
  */
 void energy_init(energy_t *handle);
 
 void energy_deinit(energy_t *handle);
 
 /**
- * @brief Loads saved values and resets timer
+ * @brief Sets a given energy value as the current energy count
+ * 
+ * @param handle energy_t instance
+ * @param joule Energy to set (in Joule)
  */
-void energy_load(energy_t handle, float joule, uint32_t time);
+void energy_set_count(energy_t handle, float energy);
 
 /**
  * @brief Resets integration time to a given timestamp.
  * 
- * @details Useful for resetting count when the battery is turned on
+ * @param handle energy_t instance
+ * @param time Time to set (in milliseconds)
  */
-void energy_reset_time(energy_t handle, uint32_t time);
+void energy_set_time(energy_t handle, uint32_t time);
 
 /**
- * @brief Resets all recorded values along with integration timestamp
+ * @brief   Updates energy counting with given data
  * 
- * @details Used when battery is fully charged or when consumption restricted to a certain period is wanted. 
- */
-void energy_reset_count(energy_t handle, uint32_t time);
-
-/**
- * @brief   Updates joule counting with given data
+ * @param handle energy_t instance
+ * @param power	Sampled power value (in Watt)
+ * @param time Time at which the measurement was made (in milliseconds)
  */
 void energy_sample_energy(energy_t handle, float power, uint32_t time);
 
@@ -58,10 +53,15 @@ void energy_sample_energy(energy_t handle, float power, uint32_t time);
  * @returns the consumption in Wh
  */
 float energy_get_wh(energy_t handle);
+
+/**
+ * @brief Calculate total consumption since last charge
+ * 
+ * @returns the consumption in Joule
+ */
 float energy_get_joule(energy_t handle);
 
 /* Private types -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 /* Private constants ---------------------------------------------------------*/
 /* Private Macros -----------------------------------------------------------*/
-#endif
