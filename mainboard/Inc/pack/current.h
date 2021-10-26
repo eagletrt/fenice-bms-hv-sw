@@ -1,10 +1,10 @@
 /**
- * @file	current.h
- * @brief	Functions that handle current measurement
+ * @file    current.h
+ * @brief   Functions that handle current measurement
  *
- * @date	Sep 24, 2021
+ * @date    Sep 24, 2021
  *
- * @author	Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @author  Matteo Bonora [matteo.bonora@studenti.unitn.it]
  */
 #pragma once
 

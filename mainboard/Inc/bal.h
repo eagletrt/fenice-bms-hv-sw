@@ -12,6 +12,7 @@
 #define BAL_H
 
 #include "mainboard_config.h"
+#include "pack/voltage.h"
 
 #include <inttypes.h>
 #include <stdbool.h>
