@@ -6,7 +6,7 @@ BUILD_DIR:=build
 EXECUTABLE:=mainboard_test
 TARGET:=$(BUILD_DIR)/$(EXECUTABLE)
 
-CSRC:=main.c test_bal.c test_soc.c test_volt_data.c munit.c bal.c soc.c
+CSRC:=main.c test_bal.c test_soc.c test_volt_data.c munit.c bal.c energy.c
 OBJ:=$(addprefix $(BUILD_DIR)/, $(CSRC:.c=.o))
 
 vpath %.c .
@@ -40,4 +40,3 @@ clean:
 	rm -f $(TARGET) $(OBJ)
 	rm -f $(OBJ:.o=.gcda) $(OBJ:.o=.gcno)
 	rm -d $(BUILD_DIR)
-

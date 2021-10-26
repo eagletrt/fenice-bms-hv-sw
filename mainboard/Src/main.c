@@ -26,12 +26,12 @@
 #include "cli_bms.h"
 #include "config.h"
 #include "current.h"
-#include "energy.h"
 #include "error/error.h"
 #include "m95256.h"
 #include "mainboard_config.h"
 #include "peripherals/can_comm.h"
 #include "si8900.h"
+#include "soc.h"
 #include "super_fsm.h"
 /* USER CODE END Includes */
 
@@ -123,7 +123,7 @@ int main(void) {
     super_fsm_init();
     current_read();
     current_zero();
-    energy_init();
+    soc_init();
 
     /* USER CODE END 2 */
 
