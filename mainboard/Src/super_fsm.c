@@ -12,10 +12,10 @@
 #include "bms_fsm.h"
 #include "can_comm.h"
 #include "current.h"
-#include "energy.h"
 #include "main.h"
 #include "mainboard_config.h"
 #include "pack.h"
+#include "soc.h"
 #include "spi.h"
 #include "tim.h"
 #include "usart.h"
@@ -70,7 +70,7 @@ void super_bms(fsm handle, super_events event) {
 void super_measure_volts(fsm handle, super_events event) {
     pack_update_voltages(&SI8900_UART);
 
-    energy_sample_current(current_read());
+    soc_sample_current(current_read());
 
     can_send(ID_HV_CURRENT);
 

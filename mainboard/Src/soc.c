@@ -1,70 +1,74 @@
 /**
- * @file        soc.c
- * @brief	    This file contains functions and utilities around energy and State of Charge estimation.
- * 
- * @date        May 12, 2021
- * @author      Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @file	energy.h
+ * @brief	File containing energy management functions for SoC management.
+ *
+ * @date	Sep 25, 2021
+ *
+ * @author	Matteo Bonora [matteo.bonora@studenti.unitn.it]
  */
 
-/* Includes ------------------------------------------------------------------*/
 #include "soc.h"
 
-#include <stdlib.h>
-#include <string.h>
+#include "energy.h"
 
-/* Private typedef -----------------------------------------------------------*/
-struct soc {
-    uint32_t last_sample;
-    float joule;
-    current_t last_current;
-};
+#define ENERGY_VERSION 0x5555
+#define ENERGY_ADDR    0x30
 
-/* Private define ------------------------------------------------------------*/
-/* Private macro -------------------------------------------------------------*/
-/* Private variables ---------------------------------------------------------*/
-/* Private function prototypes -----------------------------------------------*/
-/* Exported functions --------------------------------------------------------*/
+#define ENERGY_WRITE_INTERVAL 5000
 
-void soc_init(soc_t *handle) {
-    *handle = malloc(sizeof(struct soc));
-    soc_reset_count(*handle, 0);
+typedef struct {
+    float total_joule;
+    float charge_joule;
+} soc_params;
+soc_params soc_params_default = {0, 0};
+
+energy_t soc_total;        // Total energy
+energy_t soc_last_charge;  // Energy since last charge
+config_t soc_config;       // Config data for config.h
+
+void soc_init() {
+    // Reset the counts
+    soc_init(&soc_total);
+    soc_init(&soc_last_charge);
+
+    // Try to load counts from memory. If errors, revert to default params
+    config_init(&soc_config, ENERGY_ADDR, ENERGY_VERSION, &soc_params_default, sizeof(soc_params));
+
+    // Save the loaded values in soc instances
+    energy_load(soc_total, ((soc_params *)config_get(soc_config))->total_joule, HAL_GetTick());
+    energy_load(soc_last_charge, ((soc_params *)config_get(soc_config))->charge_joule, HAL_GetTick());
 }
 
-void soc_deinit(soc_t *handle) {
-    free(*handle);
+void soc_sample_current(uint32_t timestamp) {
+    soc_params params = *(soc_params *)config_get(soc_config);
+
+    // Sample current values for SoC calculation
+    energy_sample_current(soc_total, current_get_current(), pack_get_int_voltage(), timestamp);
+    energy_sample_current(soc_last_charge, current_get_current(), pack_get_int_voltage(), timestamp);
+
+    // Update newly-calculated energy values to the energy structure
+    params.charge_joule = energy_get_joule(soc_last_charge);
+    params.total_joule  = energy_get_joule(soc_total);
+
+    // Save energy values to EEPROM
+    config_set(soc_config, &params);
+    // TODO: make async writes (don't block this function)
+    config_write(soc_config);
 }
 
-void soc_load(soc_t handle, uint32_t joule, uint32_t time) {
-    handle->joule = joule;
-    soc_reset_time(handle, time);
+void soc_reset_soc() {
+    energy_reset_count(soc_last_charge, HAL_GetTick());
 }
 
-void soc_reset_time(soc_t handle, uint32_t time) {
-    handle->last_sample  = time;
-    handle->last_current = 0;
+float soc_get_soc() {
+    // Compute Wh from Joule on the fly
+    return energy_get_wh(soc_last_charge) / (PACK_ENERGY_NOMINAL / 10.0) * 100;
 }
 
-void soc_reset_count(soc_t handle, uint32_t time) {
-    handle->joule = 0;
-    soc_reset_time(handle, time);
+float soc_get_energy_total() {
+    return energy_get_wh(soc_total);
 }
 
-void soc_sample_current(soc_t handle, current_t current, voltage_t voltage, uint32_t time) {
-    // C = ∫I dt = I*Δt
-    float coulomb = ((float)(handle->last_current + current) * (time - handle->last_sample)) / 20000.0;
-
-    // J = C*V
-    handle->joule += (coulomb * voltage) / 100.0;
-
-    handle->last_current = current;
-    handle->last_sample  = time;
-}
-
-float soc_get_wh(soc_t handle) {
-    // 1 J = 1/3600s Wh
-    return handle->joule / 3600;
-}
-
-float soc_get_joule(soc_t handle) {
-    return handle->joule;
+float soc_get_energy_last_charge() {
+    return energy_get_wh(soc_last_charge);
 }

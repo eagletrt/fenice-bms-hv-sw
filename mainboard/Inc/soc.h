@@ -1,67 +1,51 @@
 /**
- * @file        soc.h
- * @brief	    This file contains functions and utilities around energy and State of Charge estimation.
- * 
- * @date        May 12, 2021
- * @author      Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @file	soc.c
+ * @brief	File containing energy management functions for SoC management.
+ *
+ * @date	Sep 25, 2021
+ *
+ * @author	Matteo Bonora [matteo.bonora@studenti.unitn.it]
  */
 
-/* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef _SOC_H_
-#define _SOC_H_
+#pragma once
 
-/* Includes ------------------------------------------------------------------*/
+#include "config.h"
 #include "current.h"
-#include "mainboard_config.h"
-
-#include <inttypes.h>
-/* Exported types ------------------------------------------------------------*/
-typedef struct soc *soc_t;
-/* Exported constants --------------------------------------------------------*/
-/* Exported macros -----------------------------------------------------------*/
-/* Exported functions --------------------------------------------------------*/
 
 /**
- * @brief Initializes soc instance
+ * @brief Initializes the energy management subsystem by reading SoC info from EEPROM
  */
-void soc_init(soc_t *handle);
-
-void soc_deinit(soc_t *handle);
+void soc_init();
 
 /**
- * @brief Loads saved values and resets timer
- */
-void soc_load(soc_t handle, uint32_t joule, uint32_t time);
-
-/**
- * @brief Resets integration time to a given timestamp.
+ * @brief Process a new current sample.
  * 
- * @details Useful for resetting count when the battery is turned on
+ * @param timestamp The timestamp at which the measurement occurred
  */
-void soc_reset_time(soc_t handle, uint32_t time);
+void soc_sample_current(uint32_t timestamp);
 
 /**
- * @brief Resets all recorded values along with integration timestamp
+ * @brief Resets the SoC count since last charge
+ */
+void soc_reset_soc();
+
+/**
+ * @brief returns the total energy spent since last charge
  * 
- * @details Used when battery is fully charged or when consumption restricted to a certain period is wanted. 
+ * @return float current value in A
  */
-void soc_reset_count(soc_t handle, uint32_t time);
+float soc_get_soc();
 
 /**
- * @brief   Updates coulomb and joule counting with given data
- */
-void soc_sample_current(soc_t handle, current_t current, voltage_t voltage, uint32_t time);
-
-/**
- * @brief Calculate total consumption since last charge
+ * @brief Returns the total energy count
  * 
- * @returns the consumption in Wh
+ * @return float current value in A
  */
-float soc_get_wh(soc_t handle);
-float soc_get_joule(soc_t handle);
+float soc_get_energy_total();
 
-/* Private types -------------------------------------------------------------*/
-/* Private variables ---------------------------------------------------------*/
-/* Private constants ---------------------------------------------------------*/
-/* Private Macros -----------------------------------------------------------*/
-#endif
+/**
+ * @brief Returns the energy since last charge
+ * 
+ * @return float current value in A
+ */
+float soc_get_energy_last_charge();

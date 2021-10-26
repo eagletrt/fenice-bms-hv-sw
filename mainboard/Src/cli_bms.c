@@ -12,7 +12,6 @@
 
 #include "bal_fsm.h"
 #include "bms_fsm.h"
-#include "energy.h"
 #include "error/error.h"
 #include "feedback.h"
 #include "pack.h"
@@ -277,7 +276,7 @@ void _cli_balance(uint16_t argc, char **argv, char *out) {
 }
 void _cli_soc(uint16_t argc, char **argv, char *out) {
     if (strcmp(argv[1], "reset") == 0) {
-        energy_reset_soc();
+        soc_reset_soc();
         sprintf(out, "Resetting energy meter\r\n");
     } else {
         sprintf(
@@ -285,9 +284,9 @@ void _cli_soc(uint16_t argc, char **argv, char *out) {
             "SoC: %.2f %%\r\n"
             "Energy: %.1f Wh\r\n"
             "Energy total: %.1f Wh\r\n",
-            energy_get_soc(),
-            energy_get_energy_last_charge(),
-            energy_get_energy_total());
+            soc_get_soc(),
+            soc_get_energy_last_charge(),
+            soc_get_energy_total());
     }
 }
 
