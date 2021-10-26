@@ -1,4 +1,4 @@
-INC:=. munit ../Inc
+INC:=. munit ../Inc ../Inc
 INC_PARAMS:=$(addprefix -I, $(INC))
 vpath %.h $(INC)
 
@@ -6,7 +6,7 @@ BUILD_DIR:=build
 EXECUTABLE:=mainboard_test
 TARGET:=$(BUILD_DIR)/$(EXECUTABLE)
 
-CSRC:=main.c test_bal.c test_energy.c test_volt_data.c munit.c bal.c energy.c
+CSRC:=main.c test_bal.c test_energy.c test_volt_data.c munit.c bal.c energy/energy.c
 OBJ:=$(addprefix $(BUILD_DIR)/, $(CSRC:.c=.o))
 
 vpath %.c .

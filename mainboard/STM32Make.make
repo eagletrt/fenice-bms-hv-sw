@@ -64,9 +64,9 @@ Src/bms_fsm.c \
 Src/can.c \
 Src/cli_bms.c \
 Src/config.c \
-Src/current.c \
 Src/dma.c \
-Src/energy.c \
+Src/energy/energy.c \
+Src/energy/soc.c \
 Src/error/error.c \
 Src/error/error_list_ref.c \
 Src/feedback.c \
@@ -75,7 +75,6 @@ Src/main.c \
 Src/pack.c \
 Src/peripherals/can_comm.c \
 Src/peripherals/si8900.c \
-Src/soc.c \
 Src/spi.c \
 Src/stm32f4xx_hal_msp.c \
 Src/stm32f4xx_it.c \
@@ -163,6 +162,7 @@ C_INCLUDES =  \
 -IDrivers/STM32F4xx_HAL_Driver/Inc \
 -IDrivers/STM32F4xx_HAL_Driver/Inc/Legacy \
 -IInc \
+-IInc/energy \
 -IInc/error \
 -IInc/peripherals \
 -Ilib/can/includes_generator/Primary \
