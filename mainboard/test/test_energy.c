@@ -1,7 +1,8 @@
 #include "test_energy.h"
 
 #include <energy/energy.h>
-#include <energy.h>
+#include <pack/current.h>
+#include <pack/voltage.h>
 #include <stdio.h>
 
 void *energy_setup(const MunitParameter params[], void *user_data) {

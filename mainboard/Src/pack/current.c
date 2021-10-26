@@ -1,19 +1,17 @@
 /**
- * @file		current.c
- * @brief		Functions that handle current measurement
+ * @file    current.c
+ * @brief   Functions that handle current measurement
  *
- * @date		Sep 24, 2021
+ * @date    Sep 24, 2021
  *
- * @author  	Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @author  Matteo Bonora [matteo.bonora@studenti.unitn.it]
  */
-#include "current.h"
+#include "pack/current.h"
 
 #include "adc.h"
-#include "cli_bms.h"
 #include "error.h"
 #include "main.h"
 #include "mainboard_config.h"
-#include "string.h"
 
 #define MEASURE_SAMPLE_SIZE 128
 
@@ -73,7 +71,7 @@ void current_zero() {
 }
 
 current_t current_get_current() {
-    // TODO: change this
+    // TODO: change this to combine all current sensors in a meaningful way.
     return current[CURRENT_SENSOR_50];
 }
 current_t *current_get_current_sensors() {

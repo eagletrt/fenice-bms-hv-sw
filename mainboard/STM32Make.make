@@ -72,7 +72,10 @@ Src/error/error_list_ref.c \
 Src/feedback.c \
 Src/gpio.c \
 Src/main.c \
-Src/pack.c \
+Src/pack/current.c \
+Src/pack/pack.c \
+Src/pack/temperature.c \
+Src/pack/voltage.c \
 Src/peripherals/can_comm.c \
 Src/peripherals/si8900.c \
 Src/spi.c \
@@ -164,6 +167,7 @@ C_INCLUDES =  \
 -IInc \
 -IInc/energy \
 -IInc/error \
+-IInc/pack \
 -IInc/peripherals \
 -Ilib/can/includes_generator/Primary \
 -Ilib/can/includes_generator/Secondary \
