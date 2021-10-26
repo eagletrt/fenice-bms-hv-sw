@@ -31,7 +31,7 @@ void energy_deinit(energy_t *handle);
 /**
  * @brief Loads saved values and resets timer
  */
-void energy_load(energy_t handle, uint32_t joule, uint32_t time);
+void energy_load(energy_t handle, float joule, uint32_t time);
 
 /**
  * @brief Resets integration time to a given timestamp.
@@ -50,7 +50,7 @@ void energy_reset_count(energy_t handle, uint32_t time);
 /**
  * @brief   Updates joule counting with given data
  */
-void energy_sample_current(energy_t handle, current_t current, voltage_t voltage, uint32_t time);
+void energy_sample_energy(energy_t handle, float power, uint32_t time);
 
 /**
  * @brief Calculate total consumption since last charge

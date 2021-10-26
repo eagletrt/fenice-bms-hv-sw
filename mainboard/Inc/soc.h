@@ -22,7 +22,7 @@ void soc_init();
  * 
  * @param timestamp The timestamp at which the measurement occurred
  */
-void soc_sample_current(uint32_t timestamp);
+void soc_sample_energy(uint32_t timestamp);
 
 /**
  * @brief Resets the SoC count since last charge
