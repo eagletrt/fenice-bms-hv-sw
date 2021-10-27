@@ -14,7 +14,8 @@
 #include "error.h"
 #include "main.h"
 #include "mainboard_config.h"
-#include "pack.h"
+#include "pack/pack.h"
+#include "pack/voltage.h"
 #include "peripherals/can_comm.h"
 #include "tim.h"
 
@@ -42,7 +43,7 @@ void _halt_handler(fsm FSM, uint8_t event);
 bms_fsm bms;
 
 void bms_fsm_init() {
-    bms.fsm = fsm_init(BMS_NUM_STATES, BMS_EV_NUM, &bms_blink_led, NULL);
+    bms.fsm = fsm_init(BMS_NUM_STATES, BMS_EV_NUM, &bms_blink_led, &bms_set_led_blinker);
 
     fsm_state state;
     state.run     = NULL;
@@ -73,6 +74,8 @@ void bms_fsm_init() {
     bms.led.port = STATE_LED_GPIO;
     bms.led.pin  = STATE_LED_PIN;
     bms.led.time = HAL_GetTick();
+
+    bms_set_led_blinker();
 }
 
 void bms_set_led_blinker() {
@@ -81,7 +84,7 @@ void bms_set_led_blinker() {
     uint32_t state                           = fsm_get_state(bms.fsm);
     uint16_t pattern[(BMS_NUM_STATES)*2 + 1] = {0};
 
-    pattern[pattern_count++] = 200;  // Big off
+    pattern[pattern_count++] = 200;  // Off
     while (state_count < state) {
         pattern[pattern_count++] = 200;  // On
         pattern[pattern_count++] = 200;  // Off
@@ -91,17 +94,13 @@ void bms_set_led_blinker() {
 
     BLINK_SET_PATTERN(bms.led, pattern, pattern_count);
     BLINK_SET_ENABLE(bms.led, true);
-    BLINK_SET_REPEAT(bms.led, false);
+    BLINK_SET_REPEAT(bms.led, true);
 
     blink_reset(&(bms.led));
     HAL_GPIO_WritePin(bms.led.port, bms.led.pin, GPIO_PIN_SET);
 }
 void bms_blink_led() {
-    if (BLINK_GET_ENABLE(bms.led)) {
-        blink_run(&bms.led);
-    } else {
-        bms_set_led_blinker();
-    }
+    blink_run(&bms.led);
 }
 
 void _idle_entry(fsm FSM) {
@@ -147,10 +146,10 @@ void _precharge_handler(fsm FSM, uint8_t event) {
 
         case BMS_EV_PRECHARGE_CHECK:
             char c[5] = {'\0'};
-            itoa(pack_get_bus_voltage() / pack_get_int_voltage() * PRECHARGE_VOLTAGE_THRESHOLD, c, 10);
+            itoa(voltage_get_bus() / voltage_get_internal() * PRECHARGE_VOLTAGE_THRESHOLD, c, 10);
             cli_bms_debug(c, 5);
 
-            if (pack_get_bus_voltage() >= pack_get_int_voltage() * PRECHARGE_VOLTAGE_THRESHOLD) {
+            if (voltage_get_bus() >= voltage_get_internal() * PRECHARGE_VOLTAGE_THRESHOLD) {
                 fsm_transition(bms.fsm, BMS_ON);
                 cli_bms_debug("Precharge ok", 18);
             }

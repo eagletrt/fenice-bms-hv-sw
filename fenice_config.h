@@ -1,10 +1,11 @@
 /**
- * @file		fenice_config.h
- * @brief		This file contains configuration settings for Chimera Evoluzione
+ * @file	fenice_config.h
+ * @brief	This file contains configuration settings for Chimera Evoluzione
  *
- * @date		Oct 07, 2019
- * @author		Matteo Bonora [matteo.bonora@studenti.unitn.it]
- * @author		Simone Ruffini [simone.ruffini@studenti.unitn.it]
+ * @date	Oct 07, 2019
+ * 
+ * @author	Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @author	Simone Ruffini [simone.ruffini@studenti.unitn.it]
  */
 
 #ifndef FENICE_CONFIG_H
@@ -149,9 +150,6 @@ static const uint8_t TEMP_SENSOR_ADDRESS_CODING[TEMP_SENSORS_PER_STRIP] = {000, 
  *  How much to wait for voltages to stabilize after a balancing cycle [ms]
  */
 #define BAL_COOLDOWN_DELAY 5000
-
-typedef uint16_t voltage_t;
-typedef uint8_t temperature_t;
 
 /*
  * If the cli should echo the input

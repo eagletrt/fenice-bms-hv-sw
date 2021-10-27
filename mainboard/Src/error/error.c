@@ -31,13 +31,13 @@ const error_timeout error_timeouts[ERROR_NUM_ERRORS] = {
     [ERROR_CELL_HIGH_TEMPERATURE] = SOFT,
     [ERROR_CELL_OVER_TEMPERATURE] = 1000,
     [ERROR_OVER_CURRENT]          = 500,
-    [ERROR_CAN]                   = 1000,
+    [ERROR_CAN]                   = SOFT,
     [ERROR_ADC_INIT]              = SOFT,
     [ERROR_ADC_TIMEOUT]           = SOFT,
     [ERROR_INT_VOLTAGE_MISMATCH]  = SOFT,
     [ERROR_CELLBOARD_COMM]        = 500,
     [ERROR_CELLBOARD_INTERNAL]    = 500,
-    [ERROR_FEEDBACK]              = 500,
+    [ERROR_FEEDBACK]              = SOFT,
     [ERROR_EEPROM_COMM]           = SOFT,
     [ERROR_EEPROM_WRITE]          = SOFT};
 

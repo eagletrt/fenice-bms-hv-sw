@@ -24,14 +24,15 @@
 #include "bms_fsm.h"
 #include "cli_bms.h"
 #include "config.h"
-#include "current.h"
-#include "energy.h"
 #include "error/error.h"
-#include "m95256.h"
 #include "mainboard_config.h"
+#include "pack/current.h"
 #include "peripherals/can_comm.h"
 #include "si8900.h"
+#include "soc.h"
 #include "super_fsm.h"
+
+#include <m95256.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -117,13 +118,13 @@ int main(void)
 
     si8900_init(&SI8900_UART, ADC_SIN_GPIO_Port, ADC_SIN_Pin);
 
-    pack_init();
+    voltage_init();
     bal_fsm_init();
     bms_fsm_init();
     super_fsm_init();
     current_read();
     current_zero();
-    energy_init();
+    soc_init();
 
 
     CAN_FilterTypeDef filter;

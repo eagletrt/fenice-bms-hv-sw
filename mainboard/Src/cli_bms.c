@@ -12,10 +12,11 @@
 
 #include "bal_fsm.h"
 #include "bms_fsm.h"
-#include "energy.h"
 #include "error/error.h"
 #include "feedback.h"
-#include "pack.h"
+#include "pack/pack.h"
+#include "pack/temperature.h"
+#include "pack/voltage.h"
 #include "soc.h"
 #include "usart.h"
 
@@ -139,8 +140,8 @@ void cli_bms_debug(char *text, size_t length) {
 
 void _cli_volts(uint16_t argc, char **argv, char *out) {
     if (strcmp(argv[1], "") == 0) {
-        voltage_t max = pack_get_max_voltage();
-        voltage_t min = pack_get_min_voltage();
+        voltage_t max = voltage_get_cell_max();
+        voltage_t min = voltage_get_cell_min();
         sprintf(
             out,
             "bus.......%.2f V\r\n"
@@ -149,9 +150,9 @@ void _cli_volts(uint16_t argc, char **argv, char *out) {
             "max.......%.3f V\r\n"
             "min.......%.3f V\r\n"
             "delta.....%.3f V\r\n",
-            (float)pack_get_bus_voltage() / 100,
-            (float)pack_get_int_voltage() / 100,
-            (float)pack_get_int_voltage() / PACK_CELL_COUNT / 100,
+            (float)voltage_get_bus() / 100,
+            (float)voltage_get_internal() / 100,
+            (float)voltage_get_internal() / PACK_CELL_COUNT / 100,
             (float)max / 10000,
             (float)min / 10000,
             (float)(max - min) / 10000);
@@ -177,33 +178,33 @@ void _cli_volts_all(uint16_t argc, char **argv, char *out) {
             sprintf(out + strlen(out), "\r\n%-3s", "");
         }
 
-        sprintf(out + strlen(out), "[%3u %-.3fv] ", i, (float)pack_get_voltages()[i] / 10000);
+        sprintf(out + strlen(out), "[%3u %-.3fv] ", i, (float)voltage_get_cells()[i] / 10000);
     }
 
     sprintf(out + strlen(out), "\r\n");
 }
 
 void _cli_temps(uint16_t argc, char **argv, char *out) {
-    if (strcmp(argv[1], "") == 0) {
-        sprintf(
-            out,
-            "average.....%.1f C\r\nmax.........%2u "
-            "C\r\nmin.........%2u C\r\n"
-            "delta.......%2u C\r\n",
-            (float)pack_get_mean_temperature() / 10,
-            pack_get_max_temperature(),
-            pack_get_min_temperature(),
-            pack_get_max_temperature() - pack_get_min_temperature());
-    } else if (strcmp(argv[1], "all") == 0) {
-        _cli_temps_all(argc, &argv[1], out);
-    } else {
-        sprintf(
-            out,
-            "Unknown parameter: %s\r\n"
-            "valid parameters:\r\n"
-            "- all: returns temperature for all cells\r\n",
-            argv[1]);
-    }
+    //if (strcmp(argv[1], "") == 0) {
+    //    sprintf(
+    //        out,
+    //        "average.....%.1f C\r\nmax.........%2u "
+    //        "C\r\nmin.........%2u C\r\n"
+    //        "delta.......%2u C\r\n",
+    //        (float)pack_get_mean_temperature() / 10,
+    //        pack_get_max_temperature(),
+    //        pack_get_min_temperature(),
+    //        pack_get_max_temperature() - pack_get_min_temperature());
+    //} else if (strcmp(argv[1], "all") == 0) {
+    //    _cli_temps_all(argc, &argv[1], out);
+    //} else {
+    //    sprintf(
+    //        out,
+    //        "Unknown parameter: %s\r\n"
+    //        "valid parameters:\r\n"
+    //        "- all: returns temperature for all cells\r\n",
+    //        argv[1]);
+    //}
 }
 
 void _cli_temps_all(uint16_t argc, char **argv, char *out) {
@@ -215,7 +216,7 @@ void _cli_temps_all(uint16_t argc, char **argv, char *out) {
         } else if (i % (TEMP_SENSOR_COUNT / 2) == 0 && i > 0) {
             sprintf(out + strlen(out), "\r\n%-3s", "");
         }
-        sprintf(out + strlen(out), "[%3u %2uc] ", i, pack_get_temperatures()[i]);
+        sprintf(out + strlen(out), "[%3u %2uc] ", i, temperature_get_all()[i]);
     }
 
     sprintf(out + strlen(out), "\r\n");
@@ -277,7 +278,7 @@ void _cli_balance(uint16_t argc, char **argv, char *out) {
 }
 void _cli_soc(uint16_t argc, char **argv, char *out) {
     if (strcmp(argv[1], "reset") == 0) {
-        energy_reset_soc();
+        soc_reset_soc();
         sprintf(out, "Resetting energy meter\r\n");
     } else {
         sprintf(
@@ -285,9 +286,9 @@ void _cli_soc(uint16_t argc, char **argv, char *out) {
             "SoC: %.2f %%\r\n"
             "Energy: %.1f Wh\r\n"
             "Energy total: %.1f Wh\r\n",
-            energy_get_soc(),
-            energy_get_energy_last_charge(),
-            energy_get_energy_total());
+            soc_get_soc(),
+            soc_get_energy_last_charge(),
+            soc_get_energy_total());
     }
 }
 

@@ -1,19 +1,17 @@
 /**
- * @file		current.c
- * @brief		Functions that handle current measurement
+ * @file    current.c
+ * @brief   Functions that handle current measurement
  *
- * @date		Sep 24, 2021
+ * @date    Sep 24, 2021
  *
- * @author  	Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @author  Matteo Bonora [matteo.bonora@studenti.unitn.it]
  */
-#include "current.h"
+#include "pack/current.h"
 
 #include "adc.h"
-#include "cli_bms.h"
 #include "error.h"
 #include "main.h"
 #include "mainboard_config.h"
-#include "string.h"
 
 #define MEASURE_SAMPLE_SIZE 128
 
