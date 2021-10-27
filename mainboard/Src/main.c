@@ -142,7 +142,7 @@ int main(void)
     filter.FilterActivation     = ENABLE;
 
     HAL_CAN_ConfigFilter(&BMS_CAN, &filter);
-    HAL_CAN_ActivateNotification(&BMS_CAN, CAN_IT_ERROR | CAN_IT_RX_FIFO0_MSG_PENDING | CAN_IT_RX_FIFO1_MSG_PENDING );
+    HAL_CAN_ActivateNotification(&BMS_CAN, CAN_IT_ERROR | CAN_IT_RX_FIFO0_MSG_PENDING );
     HAL_CAN_Start(&BMS_CAN);
 
   /* USER CODE END 2 */
