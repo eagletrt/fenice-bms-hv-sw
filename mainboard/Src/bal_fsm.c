@@ -12,7 +12,7 @@
 #include "cli_bms.h"
 #include "config.h"
 #include "fenice_config.h"
-#include "pack.h"
+#include "pack/pack.h"
 #include "spi.h"
 
 #define CONF_VER  0x01
@@ -86,7 +86,7 @@ void off_handler(fsm FSM, uint8_t event) {
 }
 
 void compute_entry(fsm FSM) {
-    if (bal_get_cells_to_discharge(pack_get_voltages(), PACK_CELL_COUNT, bal_get_threshold(), bal.cells) != 0) {
+    if (bal_get_cells_to_discharge(voltage_get_cells(), PACK_CELL_COUNT, bal_get_threshold(), bal.cells) != 0) {
         fsm_transition(FSM, BAL_DISCHARGE);
         return;
     }

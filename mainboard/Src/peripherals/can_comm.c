@@ -10,8 +10,9 @@
 
 #include "bms_fsm.h"
 #include "cli_bms.h"
-#include "current.h"
-#include "pack.h"
+#include "pack/current.h"
+#include "pack/pack.h"
+#include "pack/voltage.h"
 
 CAN_TxHeaderTypeDef tx_header;
 
@@ -25,9 +26,9 @@ HAL_StatusTypeDef can_send(uint16_t id) {
     uint8_t buffer[CAN_MAX_PAYLOAD_LENGTH];
     if (id == ID_HV_VOLTAGE) {
         serialize_Primary_HV_VOLTAGE(
-            buffer, pack_get_int_voltage(), pack_get_bus_voltage(), pack_get_max_voltage(), pack_get_min_voltage());
+            buffer, voltage_get_internal(), voltage_get_bus(), voltage_get_cell_max(), voltage_get_cell_min());
     } else if (id == ID_HV_CURRENT) {
-        serialize_Primary_HV_CURRENT(buffer, current_get_current(), current_get_current() * pack_get_bus_voltage());
+        serialize_Primary_HV_CURRENT(buffer, current_get_current(), current_get_current() * voltage_get_bus());
     } else if (id == ID_TS_STATUS) {
         serialize_Primary_TS_STATUS(buffer, Primary_Ts_Status_ON);
     } else {
