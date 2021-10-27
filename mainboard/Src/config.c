@@ -28,7 +28,7 @@ struct config {
 static m95256_t eeprom = NULL;
 
 bool config_init(config_t *config, uint16_t address, uint32_t version, void *default_data, size_t size) {
-    assert(size <= EEPROM_BUFFER_SIZE);
+    assert(size + VERSION_SIZE <= EEPROM_BUFFER_SIZE);
 
     *config         = (config_t)malloc(sizeof(struct config));
     (*config)->data = malloc(size);
