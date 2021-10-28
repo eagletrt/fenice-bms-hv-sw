@@ -15,4 +15,8 @@
 #include "can.h"
 
 void can_init();
+void can_car_init();
+void can_bms_init();
+void can_tx_header_init();
 HAL_StatusTypeDef can_send(uint16_t id);
+HAL_StatusTypeDef can_bms_send(uint16_t id);
