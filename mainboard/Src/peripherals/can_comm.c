@@ -7,6 +7,7 @@
  */
 
 #include "can_comm.h"
+#include "bal_fsm.h"
 
 #include "bms_fsm.h"
 #include "cli_bms.h"
@@ -22,7 +23,7 @@ void can_init() {
     tx_header.RTR   = CAN_RTR_DATA;
 }
 
-void tx_header_init() {
+void can_tx_header_init() {
     tx_header.ExtId = 0;
     tx_header.IDE   = CAN_ID_STD;
     tx_header.RTR   = CAN_RTR_DATA;
@@ -48,7 +49,7 @@ void can_bms_init(){
     HAL_CAN_ActivateNotification(&BMS_CAN, CAN_IT_ERROR | CAN_IT_RX_FIFO0_MSG_PENDING );
     HAL_CAN_Start(&BMS_CAN);
 
-    tx_header_init();
+    can_tx_header_init();
 }
 
 void can_car_init(){
@@ -71,28 +72,20 @@ void can_car_init(){
     HAL_CAN_ActivateNotification(&CAR_CAN, CAN_IT_ERROR | CAN_IT_RX_FIFO1_MSG_PENDING );
     HAL_CAN_Start(&CAR_CAN);
 
-    tx_header_init();
+    can_tx_header_init();
 }
 
-HAL_StatusTypeDef can_send(uint16_t id) {
-    uint8_t buffer[CAN_MAX_PAYLOAD_LENGTH];
-    if (id == ID_HV_VOLTAGE) {
-        serialize_Primary_HV_VOLTAGE(
-            buffer, voltage_get_internal(), voltage_get_bus(), voltage_get_cell_max(), voltage_get_cell_min());
-    } else if (id == ID_HV_CURRENT) {
-        serialize_Primary_HV_CURRENT(buffer, current_get_current(), current_get_current() * voltage_get_bus());
-    } else if (id == ID_TS_STATUS) {
-        serialize_Primary_TS_STATUS(buffer, Primary_Ts_Status_ON);
-    } else {
-        return HAL_ERROR;
-    }
+HAL_StatusTypeDef can_send(CAN_HandleTypeDef *hcan, uint8_t buffer, CAN_TxHeaderTypeDef *header) {
 
-    tx_header.StdId = id;
-    //tx_header.DLC   = sizeof(Primary_HV_VOLTAGE) << 16;  // Only valid for classic can frames
-    tx_header.DLC = sizeof(Primary_HV_VOLTAGE);
+    uint32_t mailbox = CAN_TX_MAILBOX0;
 
-    uint32_t mailbox         = CAN_TX_MAILBOX0;
-    HAL_StatusTypeDef status = HAL_CAN_AddTxMessage(&CAR_CAN, &tx_header, buffer, &mailbox);
+    if(HAL_CAN_IsTxMessagePending(hcan, CAN_TX_MAILBOX1))
+        mailbox = CAN_TX_MAILBOX1;
+    else if(HAL_CAN_IsTxMessagePending(hcan, CAN_TX_MAILBOX2))
+        mailbox = CAN_TX_MAILBOX2;
+
+
+    HAL_StatusTypeDef status = HAL_CAN_AddTxMessage(hcan, header, buffer, &mailbox);
     if (status != HAL_OK) {
         error_set(ERROR_CAN, 0, HAL_GetTick());
         //cli_bms_debug("CAN: Error sending message", 27);
@@ -102,6 +95,24 @@ HAL_StatusTypeDef can_send(uint16_t id) {
     }
 
     return status;
+}
+
+HAL_StatusTypeDef can_car_send(uint16_t id) {
+    uint8_t buffer[CAN_MAX_PAYLOAD_LENGTH];
+    if (id == ID_HV_VOLTAGE) {
+        tx_header.DLC = serialize_Primary_HV_VOLTAGE(
+            buffer, voltage_get_internal(), voltage_get_bus(), voltage_get_cell_max(), voltage_get_cell_min());
+    } else if (id == ID_HV_CURRENT) {
+        tx_header.DLC = serialize_Primary_HV_CURRENT(buffer, current_get_current(), current_get_current() * voltage_get_bus());
+    } else if (id == ID_TS_STATUS) {
+        tx_header.DLC = serialize_Primary_TS_STATUS(buffer, Primary_Ts_Status_ON);
+    } else {
+        return HAL_ERROR;
+    }
+
+    tx_header.StdId = id;
+    
+    return can_send(&CAR_CAN, buffer, &tx_header);
 }
 
 HAL_StatusTypeDef can_bms_send(uint16_t id) {
@@ -110,29 +121,17 @@ HAL_StatusTypeDef can_bms_send(uint16_t id) {
     tx_header.StdId = id;
     
     if(id == ID_MASTER_SYNC){
-        tx_header.DLS = serialize_bms_MASTER_SYNC(buffer, HAL_GetTick());
+        tx_header.DLC = serialize_bms_MASTER_SYNC(buffer, HAL_GetTick());
+    } else if(id == ID_BALANCING) {
+        register int i;
+        bms_balancing_cells bal_cells = bms_balancing_cells_default;
+        for(i=0; i<bal.cells_count; ++i) {
+            flipBit(bal_cells, i); //sets to 1
+        }
+        tx_header.DLC = serialize_bms_BALANCING(buffer, 0, NULL);
     }
 
-    uint32_t mailbox = 0;
-
-    if(HAL_CAN_IsTxMessagePending(&BMS_CAN, CAN_TX_MAILBOX0))
-        mailbox = CAN_TX_MAILBOX0;
-    else if(HAL_CAN_IsTxMessagePending(&BMS_CAN, CAN_TX_MAILBOX1))
-        mailbox = CAN_TX_MAILBOX1;
-    else
-        mailbox = CAN_TX_MAILBOX2;
-
-
-    HAL_StatusTypeDef status = HAL_CAN_AddTxMessage(&BMS_CAN, &tx_header, buffer, &mailbox);
-    if (status != HAL_OK) {
-        error_set(ERROR_CAN, 0, HAL_GetTick());
-        //cli_bms_debug("CAN: Error sending message", 27);
-
-    } else {
-        error_reset(ERROR_CAN, 0);
-    }
-
-    return status;
+    return can_send(&BMS_CAN, buffer, &tx_header);
 }
 
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
