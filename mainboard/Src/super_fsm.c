@@ -74,7 +74,7 @@ void super_measure_volts(fsm handle, super_events event) {
 
     soc_sample_energy(HAL_GetTick());
 
-    can_send(ID_HV_CURRENT);
+    can_car_send(ID_HV_CURRENT);
 
     fsm_transition(handle, SUPER_BMS);
 }
