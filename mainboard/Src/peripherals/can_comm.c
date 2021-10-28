@@ -22,6 +22,58 @@ void can_init() {
     tx_header.RTR   = CAN_RTR_DATA;
 }
 
+void tx_header_init() {
+    tx_header.ExtId = 0;
+    tx_header.IDE   = CAN_ID_STD;
+    tx_header.RTR   = CAN_RTR_DATA;
+}
+
+void can_bms_init(){
+    CAN_FilterTypeDef filter;
+    filter.FilterMode       = CAN_FILTERMODE_IDMASK;
+    filter.FilterIdLow      = 0 << 5;                 // Take all ids from 0
+    filter.FilterIdHigh     = ((1U << 11) - 1) << 5;  // to 2^11 - 1
+    filter.FilterMaskIdHigh = 0 << 5;                 // Don't care on can id bits
+    filter.FilterMaskIdLow  = 0 << 5;                 // Don't care on can id bits
+    /* HAL considers IdLow and IdHigh not as just the ID of the can message but
+        as the combination of: 
+        STDID + RTR + IDE + 4 most significant bits of EXTID
+    */
+    filter.FilterFIFOAssignment = CAN_FILTER_FIFO0;
+    filter.FilterBank           = 0;
+    filter.FilterScale          = CAN_FILTERSCALE_16BIT;
+    filter.FilterActivation     = ENABLE;
+
+    HAL_CAN_ConfigFilter(&BMS_CAN, &filter);
+    HAL_CAN_ActivateNotification(&BMS_CAN, CAN_IT_ERROR | CAN_IT_RX_FIFO0_MSG_PENDING );
+    HAL_CAN_Start(&BMS_CAN);
+
+    tx_header_init();
+}
+
+void can_car_init(){
+    CAN_FilterTypeDef filter;
+    filter.FilterMode       = CAN_FILTERMODE_IDMASK;
+    filter.FilterIdLow      = 0 << 5;                 // Take all ids from 0
+    filter.FilterIdHigh     = ((1U << 11) - 1) << 5;  // to 2^11 - 1
+    filter.FilterMaskIdHigh = 0 << 5;                 // Don't care on can id bits
+    filter.FilterMaskIdLow  = 0 << 5;                 // Don't care on can id bits
+    /* HAL considers IdLow and IdHigh not as just the ID of the can message but
+        as the combination of: 
+        STDID + RTR + IDE + 4 most significant bits of EXTID
+    */
+    filter.FilterFIFOAssignment = CAN_FILTER_FIFO1;
+    filter.FilterBank           = 0;
+    filter.FilterScale          = CAN_FILTERSCALE_16BIT;
+    filter.FilterActivation     = ENABLE;
+
+    HAL_CAN_ConfigFilter(&CAR_CAN, &filter);
+    HAL_CAN_ActivateNotification(&CAR_CAN, CAN_IT_ERROR | CAN_IT_RX_FIFO1_MSG_PENDING );
+    HAL_CAN_Start(&CAR_CAN);
+
+    tx_header_init();
+}
+
 HAL_StatusTypeDef can_send(uint16_t id) {
     uint8_t buffer[CAN_MAX_PAYLOAD_LENGTH];
     if (id == ID_HV_VOLTAGE) {
@@ -52,12 +104,91 @@ HAL_StatusTypeDef can_send(uint16_t id) {
     return status;
 }
 
+HAL_StatusTypeDef can_bms_send(uint16_t id) {
+    uint8_t buffer[CAN_MAX_PAYLOAD_LENGTH];
+
+    tx_header.StdId = id;
+    
+    if(id == ID_MASTER_SYNC){
+        tx_header.DLS = serialize_bms_MASTER_SYNC(buffer, HAL_GetTick());
+    }
+
+    uint32_t mailbox = 0;
+
+    if(HAL_CAN_IsTxMessagePending(&BMS_CAN, CAN_TX_MAILBOX0))
+        mailbox = CAN_TX_MAILBOX0;
+    else if(HAL_CAN_IsTxMessagePending(&BMS_CAN, CAN_TX_MAILBOX1))
+        mailbox = CAN_TX_MAILBOX1;
+    else
+        mailbox = CAN_TX_MAILBOX2;
+
+
+    HAL_StatusTypeDef status = HAL_CAN_AddTxMessage(&BMS_CAN, &tx_header, buffer, &mailbox);
+    if (status != HAL_OK) {
+        error_set(ERROR_CAN, 0, HAL_GetTick());
+        //cli_bms_debug("CAN: Error sending message", 27);
+
+    } else {
+        error_reset(ERROR_CAN, 0);
+    }
+
+    return status;
+}
+
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
     //void HAL_FDCAN_RxFifo0Callback(CAN_HandleTypeDef *hcan, uint32_t RxFifo0ITs) {
     //if (hfdcan->Instance == FDCAN1 && RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) {
     uint8_t rx_data[8] = {'\0'};
     CAN_RxHeaderTypeDef rx_header;
     if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rx_header, rx_data) != HAL_OK) {
+        //if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rx_header, rx_data) != HAL_OK) {
+        error_set(ERROR_CAN, 1, HAL_GetTick());
+        cli_bms_debug("CAN: Error receiving message", 29);
+        return;
+    }
+
+    if (hcan->Instance == BMS_CAN.Instance) {
+        if (rx_header.StdId == ID_VOLTAGES_0) {
+            bms_VOLTAGES_0 voltages_0;
+            deserialize_bms_VOLTAGES_0(rx_data, &voltages_0);
+        }
+        if (rx_header.StdId == ID_VOLTAGES_1) {
+            bms_VOLTAGES_1 voltages_1;
+            deserialize_bms_VOLTAGES_1(rx_data, &voltages_1);
+        }
+        if (rx_header.StdId == ID_VOLTAGES_2) {
+            bms_VOLTAGES_2 voltages_2;
+            deserialize_bms_VOLTAGES_2(rx_data, &voltages_2);
+        }
+        if (rx_header.StdId == ID_VOLTAGES_3) {
+            bms_VOLTAGES_3 voltages_3;
+            deserialize_bms_VOLTAGES_3(rx_data, &voltages_3);
+        }
+        if (rx_header.StdId == ID_VOLTAGES_4) {
+            bms_VOLTAGES_4 voltages_4;
+            deserialize_bms_VOLTAGES_4(rx_data, &voltages_4);
+        }
+        if (rx_header.StdId == ID_VOLTAGES_5) {
+            bms_VOLTAGES_5 voltages_5;
+            deserialize_bms_VOLTAGES_5(rx_data, &voltages_5);
+        }
+        if (rx_header.StdId == ID_TEMP_STATS) {
+            bms_TEMP_STATS temp_stats;
+            deserialize_bms_TEMP_STATS(rx_data, &temp_stats);
+        }
+        if (rx_header.StdId == ID_BOARD_STATUS) {
+            bms_BOARD_STATUS board_status;
+            deserialize_bms_BOARD_STATUS(rx_data, &board_status);
+        }
+    }
+}
+
+void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
+    //void HAL_FDCAN_RxFifo0Callback(CAN_HandleTypeDef *hcan, uint32_t RxFifo0ITs) {
+    //if (hfdcan->Instance == FDCAN1 && RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) {
+    uint8_t rx_data[8] = {'\0'};
+    CAN_RxHeaderTypeDef rx_header;
+    if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO1, &rx_header, rx_data) != HAL_OK) {
         //if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rx_header, rx_data) != HAL_OK) {
         error_set(ERROR_CAN, 1, HAL_GetTick());
         cli_bms_debug("CAN: Error receiving message", 29);
@@ -97,40 +228,6 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
                 case Primary_Status_CHG_CV:
                     break;
             }
-        }
-    }
-    if (hcan->Instance == BMS_CAN.Instance) {
-        if (rx_header.StdId == ID_VOLTAGES_0) {
-            bms_VOLTAGES_0 voltages_0;
-            deserialize_bms_VOLTAGES_0(rx_data, &voltages_0);
-        }
-        if (rx_header.StdId == ID_VOLTAGES_1) {
-            bms_VOLTAGES_1 voltages_1;
-            deserialize_bms_VOLTAGES_1(rx_data, &voltages_1);
-        }
-        if (rx_header.StdId == ID_VOLTAGES_2) {
-            bms_VOLTAGES_2 voltages_2;
-            deserialize_bms_VOLTAGES_2(rx_data, &voltages_2);
-        }
-        if (rx_header.StdId == ID_VOLTAGES_3) {
-            bms_VOLTAGES_3 voltages_3;
-            deserialize_bms_VOLTAGES_3(rx_data, &voltages_3);
-        }
-        if (rx_header.StdId == ID_VOLTAGES_4) {
-            bms_VOLTAGES_4 voltages_4;
-            deserialize_bms_VOLTAGES_4(rx_data, &voltages_4);
-        }
-        if (rx_header.StdId == ID_VOLTAGES_5) {
-            bms_VOLTAGES_5 voltages_5;
-            deserialize_bms_VOLTAGES_5(rx_data, &voltages_5);
-        }
-        if (rx_header.StdId == ID_TEMP_STATS) {
-            bms_TEMP_STATS temp_stats;
-            deserialize_bms_TEMP_STATS(rx_data, &temp_stats);
-        }
-        if (rx_header.StdId == ID_BOARD_STATUS) {
-            bms_BOARD_STATUS board_status;
-            deserialize_bms_BOARD_STATUS(rx_data, &board_status);
         }
     }
 }
