@@ -22,8 +22,10 @@ void can_send(uint16_t id) {
     CAN_TxHeaderTypeDef tx_header;
     uint8_t buffer[CAN_MAX_PAYLOAD_LENGTH];
 
+    tx_header.ExtId = 0;
     tx_header.StdId = id;
     tx_header.IDE   = CAN_ID_STD;
+    tx_header.RTR   = CAN_RTR_DATA;
 
     if (id == ID_BOARD_STATUS) {
         bms_balancing_status state = BAL_OFF;
@@ -62,6 +64,14 @@ void can_send(uint16_t id) {
     }
 
     uint32_t mailbox = 0;
+
+    if(HAL_CAN_IsTxMessagePending(&BMS_CAN, CAN_TX_MAILBOX0))
+        mailbox = CAN_TX_MAILBOX0;
+    else if(HAL_CAN_IsTxMessagePending(&BMS_CAN, CAN_TX_MAILBOX1))
+        mailbox = CAN_TX_MAILBOX1;
+    else
+        mailbox = CAN_TX_MAILBOX2;
+
     if (HAL_CAN_AddTxMessage(&BMS_CAN, &tx_header, buffer, &mailbox) == HAL_OK) {
         ERROR_UNSET(ERROR_CAN);
     } else {
