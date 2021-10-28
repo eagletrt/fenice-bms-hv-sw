@@ -9,6 +9,7 @@
 
 #include "bal_fsm.h"
 
+#include "can_comm.h"
 #include "cli_bms.h"
 #include "config.h"
 #include "fenice_config.h"
@@ -86,7 +87,8 @@ void off_handler(fsm FSM, uint8_t event) {
 }
 
 void compute_entry(fsm FSM) {
-    if (bal_get_cells_to_discharge(voltage_get_cells(), PACK_CELL_COUNT, bal_get_threshold(), bal.cells) != 0) {
+    bal.cells_count = bal_get_cells_to_discharge(voltage_get_cells(), PACK_CELL_COUNT, bal_get_threshold(), bal.cells);
+    if ( bal.cells_count != 0) {
         fsm_transition(FSM, BAL_DISCHARGE);
         return;
     }
@@ -96,6 +98,7 @@ void compute_entry(fsm FSM) {
 
 void discharge_entry(fsm FSM) {
     bal.discharge_time = HAL_GetTick();
+    can_bms_send(ID_BALANCING);
     cli_bms_debug("Discharging cells", 18);
 }
 

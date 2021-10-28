@@ -20,6 +20,7 @@ typedef struct {
     fsm fsm;
 
     uint16_t cells[PACK_CELL_COUNT];
+    uint16_t cells_count;
     uint32_t discharge_time;
     uint32_t cycle_length;
 } bal_fsm;
