@@ -12,6 +12,7 @@
 
 #include "bal.h"
 #include "fsm.h"
+#include "can_comm.h"
 
 enum { BAL_OFF, BAL_COMPUTE, BAL_DISCHARGE, BAL_COOLDOWN, BAL_NUM_STATES };
 enum { EV_BAL_STOP, EV_BAL_START, EV_BAL_CHECK_TIMER, BAL_EV_NUM };
@@ -19,7 +20,7 @@ enum { EV_BAL_STOP, EV_BAL_START, EV_BAL_CHECK_TIMER, BAL_EV_NUM };
 typedef struct {
     fsm fsm;
 
-    uint16_t cells[PACK_CELL_COUNT];
+    bms_balancing_cells cells[LTC6813_COUNT];
     uint16_t cells_count;
     uint32_t discharge_time;
     uint32_t cycle_length;
