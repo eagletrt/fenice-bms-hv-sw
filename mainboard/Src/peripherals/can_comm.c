@@ -75,7 +75,7 @@ void can_car_init(){
     can_tx_header_init();
 }
 
-HAL_StatusTypeDef can_send(CAN_HandleTypeDef *hcan, uint8_t buffer, CAN_TxHeaderTypeDef *header) {
+HAL_StatusTypeDef can_send(CAN_HandleTypeDef *hcan, uint8_t *buffer, CAN_TxHeaderTypeDef *header) {
 
     uint32_t mailbox = CAN_TX_MAILBOX0;
 
