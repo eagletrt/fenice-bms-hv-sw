@@ -11,6 +11,7 @@
 #include "bal.h"
 
 #include <stddef.h>
+#include <string.h>
 
 #ifndef max
 #define max(a, b) ((a) > (b) ? (a) : (b))
@@ -100,15 +101,27 @@ uint16_t _bal_hateville(uint16_t D[], uint16_t count, uint16_t solution[]) {
 
 /* @section Public functions */
 
-uint16_t bal_get_cells_to_discharge(voltage_t volts[], uint16_t count, voltage_t threshold, uint16_t cells[]) {
+uint16_t bal_get_cells_to_discharge(voltage_t volts[], uint16_t count, voltage_t threshold, bms_balancing_cells cells[]) {
 	voltage_t imbalance[count];
+	uint16_t solution[count];
 
 	uint16_t len = bal_compute_imbalance(volts, count, threshold, imbalance);
 	if (len == 0) {
 		return false;
 	}
 
-	return bal_exclude_neighbors(imbalance, len, cells);
+	uint16_t c = bal_exclude_neighbors(imbalance, len, solution);
+
+	register uint16_t i;
+
+	for(i=0; i<LTC6813_COUNT; ++i) {
+		memset(cells, 0, sizeof(bms_balancing_cells)*LTC6813_COUNT);
+	}
+
+	for(i=0; i<c; ++i) {
+		flipBit(cells[solution[i] / LTC6813_CELL_COUNT], (solution[i] % LTC6813_CELL_COUNT));
+	}
+	return c;
 }
 
 uint16_t bal_compute_imbalance(voltage_t volts[], uint16_t count, voltage_t threshold, uint16_t cells[]) {

@@ -12,6 +12,7 @@
 #define BAL_H
 
 #include "mainboard_config.h"
+#include "can_comm.h"
 #include "pack/voltage.h"
 
 #include <inttypes.h>
@@ -30,7 +31,7 @@
  * 
  * @returns amount of cells to be discharged
  */
-uint16_t bal_get_cells_to_discharge(voltage_t volts[], uint16_t count, voltage_t threshold, uint16_t cells[]);
+uint16_t bal_get_cells_to_discharge(voltage_t volts[], uint16_t count, voltage_t threshold, bms_balancing_cells cells[]);
 
 /**
  * @brief	Computes the cells with voltage exceeding the given threshold + lowest cell voltage
