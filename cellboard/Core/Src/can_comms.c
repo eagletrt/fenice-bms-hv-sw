@@ -78,3 +78,22 @@ void can_send(uint16_t id) {
         ERROR_SET(ERROR_CAN);
     }
 }
+
+void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
+    //void HAL_FDCAN_RxFifo0Callback(CAN_HandleTypeDef *hcan, uint32_t RxFifo0ITs) {
+    //if (hfdcan->Instance == FDCAN1 && RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) {
+    uint8_t rx_data[8] = {'\0'};
+    CAN_RxHeaderTypeDef rx_header;
+    if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rx_header, rx_data) != HAL_OK) {
+        //if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rx_header, rx_data) != HAL_OK) {
+        ERROR_SET(ERROR_CAN);
+        return;
+    }
+
+    ERROR_UNSET(ERROR_CAN);
+
+    if(rx_header.StdId == ID_BALANCING){
+        bms_BALANCING balancing;
+        deserialize_bms_BALANCING(rx_data, &balancing);
+    }
+}
