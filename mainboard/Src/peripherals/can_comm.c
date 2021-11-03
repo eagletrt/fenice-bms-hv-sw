@@ -123,12 +123,12 @@ HAL_StatusTypeDef can_bms_send(uint16_t id) {
     if(id == ID_MASTER_SYNC){
         tx_header.DLC = serialize_bms_MASTER_SYNC(buffer, HAL_GetTick());
     } else if(id == ID_BALANCING) {
-        register int i;
-        bms_balancing_cells bal_cells = bms_balancing_cells_default;
-        for(i=0; i<bal.cells_count; ++i) {
-            flipBit(bal_cells, i); //sets to 1
+        register uint16_t i;
+        for(i=0; i<LTC6813_COUNT; ++i){
+            tx_header.DLC = serialize_bms_BALANCING(buffer, i, bal.cells[i]);
+            can_send(&BMS_CAN, buffer, &tx_header);
         }
-        tx_header.DLC = serialize_bms_BALANCING(buffer, 0, NULL);
+        return; //TODO: ugly
     }
 
     return can_send(&BMS_CAN, buffer, &tx_header);
