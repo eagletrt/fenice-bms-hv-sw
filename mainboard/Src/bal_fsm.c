@@ -88,8 +88,7 @@ void off_handler(fsm FSM, uint8_t event) {
 }
 
 void compute_entry(fsm FSM) {
-    bal.cells_count = bal_get_cells_to_discharge(voltage_get_cells(), PACK_CELL_COUNT, bal_get_threshold(), bal.cells);
-    if ( bal.cells_count != 0) {
+    if ( bal_get_cells_to_discharge(voltage_get_cells(), PACK_CELL_COUNT, bal_get_threshold(), bal.cells, LTC6813_COUNT) != 0) {
         fsm_transition(FSM, BAL_DISCHARGE);
         return;
     }
@@ -104,7 +103,7 @@ void discharge_entry(fsm FSM) {
 }
 
 void discharge_exit(fsm FSM){
-    bal.cells_count = 0;
+    
     can_bms_send(ID_BALANCING);
 }
 
