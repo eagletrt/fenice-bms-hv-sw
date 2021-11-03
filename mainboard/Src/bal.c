@@ -54,20 +54,22 @@ uint16_t _min_index(voltage_t data[], size_t count) {
  * @param	out	output array
  * @param	out_index	length of output (initialize to 0 please)
  */
-void _bal_hateville_solution(uint16_t DP[], uint16_t i, uint16_t out[], uint16_t *out_index) {
+void _bal_hateville_solution(uint16_t DP[], uint16_t i, bms_balancing_cells cells[], uint16_t *out_index) {
 	if (i == 0) {
 		return;
 	} else if (i == 1) {
 		if (DP[1] > 0) {
-			out[(*out_index)++] = 0;
+			flipBit(cells[0], 0);
+			++(*out_index);
 		}
 		return;
 	} else if (DP[i] == DP[i - 1]) {
-		_bal_hateville_solution(DP, i - 1, out, out_index);
+		_bal_hateville_solution(DP, i - 1, cells, out_index);
 		return;
 	} else {
-		_bal_hateville_solution(DP, i - 2, out, out_index);
-		out[(*out_index)++] = i - 1;
+		_bal_hateville_solution(DP, i - 2, cells, out_index);
+		flipBit(cells[i / LTC6813_CELL_COUNT], i % LTC6813_CELL_COUNT);
+		++(*out_index);
 
 		return;
 	}
@@ -84,7 +86,7 @@ void _bal_hateville_solution(uint16_t DP[], uint16_t i, uint16_t out[], uint16_t
  * 
  * @returns	length of the solution array
  */
-uint16_t _bal_hateville(uint16_t D[], uint16_t count, uint16_t solution[]) {
+uint16_t _bal_hateville(uint16_t D[], uint16_t count, bms_balancing_cells solution[]) {
 	uint16_t DP[count + 1];
 
 	DP[0] = 0;
@@ -101,27 +103,17 @@ uint16_t _bal_hateville(uint16_t D[], uint16_t count, uint16_t solution[]) {
 
 /* @section Public functions */
 
-uint16_t bal_get_cells_to_discharge(voltage_t volts[], uint16_t count, voltage_t threshold, bms_balancing_cells cells[]) {
-	voltage_t imbalance[count];
-	uint16_t solution[count];
+uint16_t bal_get_cells_to_discharge(voltage_t volts[], uint16_t volts_count, voltage_t threshold, bms_balancing_cells cells[], uint16_t cells_count) {
+	voltage_t imbalance[volts_count];
 
-	uint16_t len = bal_compute_imbalance(volts, count, threshold, imbalance);
+	uint16_t len = bal_compute_imbalance(volts, volts_count, threshold, imbalance);
 	if (len == 0) {
 		return false;
 	}
 
-	uint16_t c = bal_exclude_neighbors(imbalance, len, solution);
+	memset(cells, 0, sizeof(bms_balancing_cells) * cells_count);
 
-	register uint16_t i;
-
-	for(i=0; i<LTC6813_COUNT; ++i) {
-		memset(cells, 0, sizeof(bms_balancing_cells)*LTC6813_COUNT);
-	}
-
-	for(i=0; i<c; ++i) {
-		flipBit(cells[solution[i] / LTC6813_CELL_COUNT], (solution[i] % LTC6813_CELL_COUNT));
-	}
-	return c;
+	return bal_exclude_neighbors(imbalance, len, cells);
 }
 
 uint16_t bal_compute_imbalance(voltage_t volts[], uint16_t count, voltage_t threshold, uint16_t cells[]) {
@@ -137,10 +129,6 @@ uint16_t bal_compute_imbalance(voltage_t volts[], uint16_t count, voltage_t thre
 	return indexes;
 }
 
-uint16_t bal_exclude_neighbors(uint16_t data[], uint16_t count, uint16_t cells[]) {
-	for (uint16_t i = 0; i < PACK_CELL_COUNT; i++) {
-		cells[i] = BAL_NULL_INDEX;
-	}
-
+uint16_t bal_exclude_neighbors(uint16_t data[], uint16_t count, bms_balancing_cells cells[]) {
 	return _bal_hateville(data, PACK_CELL_COUNT, cells);
 }

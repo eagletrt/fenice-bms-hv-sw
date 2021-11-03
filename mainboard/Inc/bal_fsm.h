@@ -21,7 +21,6 @@ typedef struct {
     fsm fsm;
 
     bms_balancing_cells cells[LTC6813_COUNT];
-    uint16_t cells_count;
     uint32_t discharge_time;
     uint32_t cycle_length;
 } bal_fsm;

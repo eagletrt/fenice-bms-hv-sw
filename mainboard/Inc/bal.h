@@ -24,14 +24,15 @@
  * @brief   Wrapper function around bal_compute_imbalance and bal_exclude_neighbors
  * 
  * @param	volts		Array of cell voltages
- * @param	count		Size of `volts`
+ * @param	volts_count Size of `volts`
  * @param	threshold	Balancing tolerance (voltage + threshold)
  * @param	indexes		Output array of indexes to be balanced
  * @param	cells		array of cell's indexes that need to be discharged
+ * @param	cells_count Size of `cells`
  * 
  * @returns amount of cells to be discharged
  */
-uint16_t bal_get_cells_to_discharge(voltage_t volts[], uint16_t count, voltage_t threshold, bms_balancing_cells cells[]);
+uint16_t bal_get_cells_to_discharge(voltage_t volts[], uint16_t volts_count, voltage_t threshold, bms_balancing_cells cells[], uint16_t cells_count);
 
 /**
  * @brief	Computes the cells with voltage exceeding the given threshold + lowest cell voltage
@@ -55,5 +56,5 @@ uint16_t bal_compute_imbalance(voltage_t volts[], uint16_t count, voltage_t thre
  * 
  * @returns	amount of cells to be discharged
  */
-uint16_t bal_exclude_neighbors(uint16_t indexes[], uint16_t count, uint16_t cells[]);
+uint16_t bal_exclude_neighbors(uint16_t indexes[], uint16_t count, bms_balancing_cells cells[]);
 #endif
