@@ -68,7 +68,7 @@ void _bal_hateville_solution(uint16_t DP[], uint16_t i, bms_balancing_cells cell
 		return;
 	} else {
 		_bal_hateville_solution(DP, i - 2, cells, out_index);
-		flipBit(cells[i / LTC6813_CELL_COUNT], i % LTC6813_CELL_COUNT);
+		flipBit(cells[i / LTC6813_CELL_COUNT], (i % LTC6813_CELL_COUNT));
 		++(*out_index);
 
 		return;
