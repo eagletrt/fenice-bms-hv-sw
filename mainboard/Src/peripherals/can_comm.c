@@ -44,6 +44,7 @@ void can_bms_init(){
     filter.FilterBank           = 0;
     filter.FilterScale          = CAN_FILTERSCALE_16BIT;
     filter.FilterActivation     = ENABLE;
+    filter.SlaveStartFilterBank = 14;
 
     HAL_CAN_ConfigFilter(&BMS_CAN, &filter);
     HAL_CAN_ActivateNotification(&BMS_CAN, CAN_IT_ERROR | CAN_IT_RX_FIFO0_MSG_PENDING );
@@ -64,9 +65,10 @@ void can_car_init(){
         STDID + RTR + IDE + 4 most significant bits of EXTID
     */
     filter.FilterFIFOAssignment = CAN_FILTER_FIFO1;
-    filter.FilterBank           = 0;
+    filter.FilterBank           = 14;
     filter.FilterScale          = CAN_FILTERSCALE_16BIT;
     filter.FilterActivation     = ENABLE;
+    filter.SlaveStartFilterBank = 14;
 
     HAL_CAN_ConfigFilter(&CAR_CAN, &filter);
     HAL_CAN_ActivateNotification(&CAR_CAN, CAN_IT_ERROR | CAN_IT_RX_FIFO1_MSG_PENDING );
@@ -77,11 +79,15 @@ void can_car_init(){
 
 HAL_StatusTypeDef can_send(CAN_HandleTypeDef *hcan, uint8_t *buffer, CAN_TxHeaderTypeDef *header) {
 
-    uint32_t mailbox = CAN_TX_MAILBOX0;
+    CAN_WAIT(hcan);
 
-    if(HAL_CAN_IsTxMessagePending(hcan, CAN_TX_MAILBOX1))
+    uint32_t mailbox;
+
+    if(!HAL_CAN_IsTxMessagePending(hcan, CAN_TX_MAILBOX0))
+        mailbox = CAN_TX_MAILBOX0;
+    else if(!HAL_CAN_IsTxMessagePending(hcan, CAN_TX_MAILBOX1))
         mailbox = CAN_TX_MAILBOX1;
-    else if(HAL_CAN_IsTxMessagePending(hcan, CAN_TX_MAILBOX2))
+    else
         mailbox = CAN_TX_MAILBOX2;
 
 
@@ -127,8 +133,9 @@ HAL_StatusTypeDef can_bms_send(uint16_t id) {
         for(i=0; i<LTC6813_COUNT; ++i){
             tx_header.DLC = serialize_bms_BALANCING(buffer, i, bal.cells[i]);
             can_send(&BMS_CAN, buffer, &tx_header);
+            HAL_Delay(100);
         }
-        return; //TODO: ugly
+        return HAL_OK; //TODO: ugly
     }
 
     return can_send(&BMS_CAN, buffer, &tx_header);
