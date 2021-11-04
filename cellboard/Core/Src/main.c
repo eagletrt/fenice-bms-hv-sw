@@ -197,8 +197,6 @@ int main(void)
                 //sprintf(buf + strlen(buf), "[%3u %-.3f V] ", i, (float)voltages[i] / 10000);
             }
 
-            can_send(ID_BOARD_STATUS);
-
             sprintf(buf + strlen(buf), "Threshold: %d mV", BAL_MAX_VOLTAGE_THRESHOLD / 10);
             sprintf(buf + strlen(buf), "\r\nBAL: %li", fsm_get_state(bal.fsm));
             if (errors != 0) {
