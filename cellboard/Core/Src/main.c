@@ -163,17 +163,8 @@ int main(void)
             volt_timer = HAL_GetTick();
             volt_read();
 
-            can_send(ID_VOLTAGES_0);
+            can_send(TOPIC_VOLTAGE_INFO_FILTER);
             CAN_WAIT(&BMS_CAN);
-            can_send(ID_VOLTAGES_1);
-            CAN_WAIT(&BMS_CAN);
-            can_send(ID_VOLTAGES_2);
-            CAN_WAIT(&BMS_CAN);
-            can_send(ID_VOLTAGES_3);
-            CAN_WAIT(&BMS_CAN);
-            can_send(ID_VOLTAGES_4);
-            CAN_WAIT(&BMS_CAN);
-            can_send(ID_VOLTAGES_5);
 
             char buf[5000] = {'\0'};
             uint16_t min   = volt_get_min();
@@ -212,7 +203,7 @@ int main(void)
             temp_timer = HAL_GetTick();
 
             temp_measure_all();
-            can_send(ID_TEMP_STATS);
+            can_send(TOPIC_TEMPERATURE_INFO_FILTER);
         }
 
         fsm_run(bal.fsm);
