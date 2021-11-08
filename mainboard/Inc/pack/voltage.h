@@ -27,3 +27,4 @@ voltage_t voltage_get_cell_max();
 voltage_t voltage_get_cell_min();
 voltage_t voltage_get_bus();
 voltage_t voltage_get_internal();
+void voltage_set_cells(uint16_t index, voltage_t v1, voltage_t v2, voltage_t v3);

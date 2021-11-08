@@ -89,3 +89,9 @@ voltage_t voltage_get_bus() {
 voltage_t voltage_get_internal() {
     return voltage.internal;
 }
+
+void voltage_set_cells(uint16_t index, voltage_t v1, voltage_t v2, voltage_t v3) {
+    voltage.cells[index] = v1;
+    voltage.cells[index+1] = v2;
+    voltage.cells[index+2] = v3;
+}
