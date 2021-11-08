@@ -157,34 +157,32 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
         if (rx_header.StdId == ID_VOLTAGES_0) {
             bms_VOLTAGES_0 voltages_0;
             deserialize_bms_VOLTAGES_0(rx_data, &voltages_0);
+            voltage_set_cells(voltages_0.start_index, voltages_0.voltage0, voltages_0.voltage1, voltages_0.voltage2);
         }
-        if (rx_header.StdId == ID_VOLTAGES_1) {
+        else if (rx_header.StdId == ID_VOLTAGES_1) {
             bms_VOLTAGES_1 voltages_1;
             deserialize_bms_VOLTAGES_1(rx_data, &voltages_1);
+            voltage_set_cells(voltages_1.start_index, voltages_1.voltage0, voltages_1.voltage1, voltages_1.voltage2);
         }
-        if (rx_header.StdId == ID_VOLTAGES_2) {
+        else if (rx_header.StdId == ID_VOLTAGES_2) {
             bms_VOLTAGES_2 voltages_2;
             deserialize_bms_VOLTAGES_2(rx_data, &voltages_2);
+            voltage_set_cells(voltages_2.start_index, voltages_2.voltage0, voltages_2.voltage1, voltages_2.voltage2);
         }
-        if (rx_header.StdId == ID_VOLTAGES_3) {
+        else if (rx_header.StdId == ID_VOLTAGES_3) {
             bms_VOLTAGES_3 voltages_3;
             deserialize_bms_VOLTAGES_3(rx_data, &voltages_3);
+            voltage_set_cells(voltages_3.start_index, voltages_3.voltage0, voltages_3.voltage1, voltages_3.voltage2);
         }
-        if (rx_header.StdId == ID_VOLTAGES_4) {
+        else if (rx_header.StdId == ID_VOLTAGES_4) {
             bms_VOLTAGES_4 voltages_4;
             deserialize_bms_VOLTAGES_4(rx_data, &voltages_4);
+            voltage_set_cells(voltages_4.start_index, voltages_4.voltage0, voltages_4.voltage1, voltages_4.voltage2);
         }
-        if (rx_header.StdId == ID_VOLTAGES_5) {
+        else if (rx_header.StdId == ID_VOLTAGES_5) {
             bms_VOLTAGES_5 voltages_5;
             deserialize_bms_VOLTAGES_5(rx_data, &voltages_5);
-        }
-        if (rx_header.StdId == ID_TEMP_STATS) {
-            bms_TEMP_STATS temp_stats;
-            deserialize_bms_TEMP_STATS(rx_data, &temp_stats);
-        }
-        if (rx_header.StdId == ID_BOARD_STATUS) {
-            bms_BOARD_STATUS board_status;
-            deserialize_bms_BOARD_STATUS(rx_data, &board_status);
+            voltage_set_cells(voltages_5.start_index, voltages_5.voltage0, voltages_5.voltage1, voltages_5.voltage2);
         }
     }
 }
