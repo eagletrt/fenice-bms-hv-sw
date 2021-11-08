@@ -104,7 +104,7 @@ void bms_blink_led() {
 }
 
 void _idle_entry(fsm FSM) {
-    can_send(ID_TS_STATUS);
+    can_car_send(ID_TS_STATUS);
 }
 
 void _idle_handler(fsm FSM, uint8_t event) {
