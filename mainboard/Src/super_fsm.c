@@ -9,6 +9,7 @@
 
 #include "super_fsm.h"
 
+#include "bal_fsm.h"
 #include "bms_fsm.h"
 #include "can_comm.h"
 #include "energy.h"
@@ -61,6 +62,7 @@ void super_bms(fsm handle, super_events event) {
             break;
         case SUPER_EV_BMS:
             fsm_run(bms.fsm);
+            fsm_run(bal.fsm);
             fsm_trigger_event(handle, SUPER_EV_BMS);
             break;
         default:
@@ -74,7 +76,7 @@ void super_measure_volts(fsm handle, super_events event) {
 
     soc_sample_energy(HAL_GetTick());
 
-    can_send(ID_HV_CURRENT);
+    can_car_send(ID_HV_CURRENT);
 
     fsm_transition(handle, SUPER_BMS);
 }
