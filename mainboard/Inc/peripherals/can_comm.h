@@ -13,6 +13,8 @@
 #include "../bms/ids.h"
 #include "../../bms/c/bms.h"
 #include "can.h"
+#include "pack/voltage.h"
+
 
 
 #define CAN_WAIT(C)                                                                                     \
