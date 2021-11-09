@@ -19,13 +19,15 @@
 #include <math.h>
 
 void _can_send(CAN_HandleTypeDef *hcan, uint8_t *buffer, CAN_TxHeaderTypeDef *header) {
+    CAN_WAIT(hcan);
+
     uint32_t mailbox = 0;
 
-    if(HAL_CAN_IsTxMessagePending(hcan, CAN_TX_MAILBOX0))
+    if(!HAL_CAN_IsTxMessagePending(hcan, CAN_TX_MAILBOX0))
         mailbox = CAN_TX_MAILBOX0;
-    else if(HAL_CAN_IsTxMessagePending(hcan, CAN_TX_MAILBOX1))
+    else if(!HAL_CAN_IsTxMessagePending(hcan, CAN_TX_MAILBOX1))
         mailbox = CAN_TX_MAILBOX1;
-    else
+    else if(!HAL_CAN_IsTxMessagePending(hcan, CAN_TX_MAILBOX2))
         mailbox = CAN_TX_MAILBOX2;
 
     if (HAL_CAN_AddTxMessage(hcan, header, buffer, &mailbox) == HAL_OK) {
@@ -38,19 +40,12 @@ void _can_send(CAN_HandleTypeDef *hcan, uint8_t *buffer, CAN_TxHeaderTypeDef *he
 int serialize_bms_TOPIC_STATUS_FILTER(uint8_t *buffer, bms_errors errors, bms_balancing_status balancing_status) {
     switch (cellboard_index)
     {
-        case 0:
-            return serialize_bms_BOARD_STATUS_0(buffer, errors, balancing_status);
-        case 1:
-            return serialize_bms_BOARD_STATUS_1(buffer, errors, balancing_status);
-        case 2:
-            return serialize_bms_BOARD_STATUS_2(buffer, errors, balancing_status);
-        case 3:
-            return serialize_bms_BOARD_STATUS_3(buffer, errors, balancing_status);
-        case 4:
-            return serialize_bms_BOARD_STATUS_4(buffer, errors, balancing_status);
-        case 5:
-            return serialize_bms_BOARD_STATUS_5(buffer, errors, balancing_status);
-        
+        case 0: return serialize_bms_BOARD_STATUS_0(buffer, errors, balancing_status);
+        case 1: return serialize_bms_BOARD_STATUS_1(buffer, errors, balancing_status);
+        case 2: return serialize_bms_BOARD_STATUS_2(buffer, errors, balancing_status);
+        case 3: return serialize_bms_BOARD_STATUS_3(buffer, errors, balancing_status);
+        case 4: return serialize_bms_BOARD_STATUS_4(buffer, errors, balancing_status);
+        case 5: return serialize_bms_BOARD_STATUS_5(buffer, errors, balancing_status);
         default: return -1;
     }
 }
@@ -58,18 +53,12 @@ int serialize_bms_TOPIC_STATUS_FILTER(uint8_t *buffer, bms_errors errors, bms_ba
 int serialize_bms_TOPIC_TEMPERATURE_INFO(uint8_t *buffer, uint8_t average, uint8_t max, uint8_t min) {
     switch (cellboard_index)
     {
-        case 0:
-            return serialize_bms_TEMP_STATS_0(buffer, average, max, min);
-        case 1:
-            return serialize_bms_TEMP_STATS_1(buffer, average, max, min);
-        case 2:
-            return serialize_bms_TEMP_STATS_2(buffer, average, max, min);
-        case 3:
-            return serialize_bms_TEMP_STATS_3(buffer, average, max, min);
-        case 4:
-            return serialize_bms_TEMP_STATS_4(buffer, average, max, min);
-        case 5:
-            return serialize_bms_TEMP_STATS_5(buffer, average, max, min);        
+        case 0: return serialize_bms_TEMP_STATS_0(buffer, average, max, min);
+        case 1: return serialize_bms_TEMP_STATS_1(buffer, average, max, min);
+        case 2: return serialize_bms_TEMP_STATS_2(buffer, average, max, min);
+        case 3: return serialize_bms_TEMP_STATS_3(buffer, average, max, min);
+        case 4: return serialize_bms_TEMP_STATS_4(buffer, average, max, min);
+        case 5: return serialize_bms_TEMP_STATS_5(buffer, average, max, min);        
         default: return -1;
     }
 }
@@ -77,18 +66,12 @@ int serialize_bms_TOPIC_TEMPERATURE_INFO(uint8_t *buffer, uint8_t average, uint8
 int serialize_bms_TOPIC_VOLTAGE_INFO(uint8_t *buffer, uint8_t start_index, uint16_t voltage0, uint16_t voltage1, uint16_t voltage2) {
     switch (cellboard_index)
     {
-        case 0:
-            return serialize_bms_VOLTAGES_0(buffer, start_index, voltage0, voltage1, voltage2);
-        case 1:
-            return serialize_bms_VOLTAGES_1(buffer, start_index, voltage0, voltage1, voltage2);
-        case 2:
-            return serialize_bms_VOLTAGES_2(buffer, start_index, voltage0, voltage1, voltage2);
-        case 3:
-            return serialize_bms_VOLTAGES_3(buffer, start_index, voltage0, voltage1, voltage2);
-        case 4:
-            return serialize_bms_VOLTAGES_4(buffer, start_index, voltage0, voltage1, voltage2);
-        case 5:
-            return serialize_bms_VOLTAGES_5(buffer, start_index, voltage0, voltage1, voltage2);      
+        case 0: return serialize_bms_VOLTAGES_0(buffer, start_index, voltage0, voltage1, voltage2);
+        case 1: return serialize_bms_VOLTAGES_1(buffer, start_index, voltage0, voltage1, voltage2);
+        case 2: return serialize_bms_VOLTAGES_2(buffer, start_index, voltage0, voltage1, voltage2);
+        case 3: return serialize_bms_VOLTAGES_3(buffer, start_index, voltage0, voltage1, voltage2);
+        case 4: return serialize_bms_VOLTAGES_4(buffer, start_index, voltage0, voltage1, voltage2);
+        case 5: return serialize_bms_VOLTAGES_5(buffer, start_index, voltage0, voltage1, voltage2);      
         default: return -1;
     }
 }
@@ -186,9 +169,11 @@ void can_send(uint16_t topic_id) {
 
         register uint8_t i;
         for(i=0; i<18; i+=3){
-            tx_header.DLC == serialize_bms_TOPIC_VOLTAGE_INFO(buffer, i, voltages[i], voltages[i+1], voltages[i+2]);
+            tx_header.DLC = serialize_bms_TOPIC_VOLTAGE_INFO(buffer, i, voltages[i], voltages[i+1], voltages[i+2]);
             _can_send(&BMS_CAN, buffer, &tx_header);
         }
+
+        return;
     }
     
     _can_send(&BMS_CAN, buffer, &tx_header);
