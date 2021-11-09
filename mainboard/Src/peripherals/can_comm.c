@@ -78,16 +78,15 @@ void can_car_init(){
 }
 
 HAL_StatusTypeDef can_send(CAN_HandleTypeDef *hcan, uint8_t *buffer, CAN_TxHeaderTypeDef *header) {
-
     CAN_WAIT(hcan);
 
-    uint32_t mailbox;
+    uint32_t mailbox = 0;
 
     if(!HAL_CAN_IsTxMessagePending(hcan, CAN_TX_MAILBOX0))
         mailbox = CAN_TX_MAILBOX0;
     else if(!HAL_CAN_IsTxMessagePending(hcan, CAN_TX_MAILBOX1))
         mailbox = CAN_TX_MAILBOX1;
-    else
+    else if(!HAL_CAN_IsTxMessagePending(hcan, CAN_TX_MAILBOX2))
         mailbox = CAN_TX_MAILBOX2;
 
 
@@ -183,6 +182,54 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
             bms_VOLTAGES_5 voltages_5;
             deserialize_bms_VOLTAGES_5(rx_data, &voltages_5);
             voltage_set_cells(voltages_5.start_index, voltages_5.voltage0, voltages_5.voltage1, voltages_5.voltage2);
+        }
+        else if (rx_header.StdId == ID_TEMP_STATS_0) {
+            bms_TEMP_STATS_0 temp_stats_0;
+            deserialize_bms_TEMP_STATS_0(rx_data, &temp_stats_0);
+        }
+        else if (rx_header.StdId == ID_TEMP_STATS_1) {
+            bms_TEMP_STATS_1 temp_stats_1;
+            deserialize_bms_TEMP_STATS_1(rx_data, &temp_stats_1);
+        }
+        else if (rx_header.StdId == ID_TEMP_STATS_2) {
+            bms_TEMP_STATS_2 temp_stats_2;
+            deserialize_bms_TEMP_STATS_2(rx_data, &temp_stats_2);
+        }
+        else if (rx_header.StdId == ID_TEMP_STATS_3) {
+            bms_TEMP_STATS_3 temp_stats_3;
+            deserialize_bms_TEMP_STATS_3(rx_data, &temp_stats_3);
+        }
+        else if (rx_header.StdId == ID_TEMP_STATS_4) {
+            bms_TEMP_STATS_4 temp_stats_4;
+            deserialize_bms_TEMP_STATS_4(rx_data, &temp_stats_4);
+        }
+        else if (rx_header.StdId == ID_TEMP_STATS_5) {
+            bms_TEMP_STATS_5 temp_stats_5;
+            deserialize_bms_TEMP_STATS_5(rx_data, &temp_stats_5);
+        }
+        else if (rx_header.StdId == ID_BOARD_STATUS_0) {
+            bms_BOARD_STATUS_0 board_status_0;
+            deserialize_bms_BOARD_STATUS_0(rx_data, &board_status_0);
+        }
+        else if (rx_header.StdId == ID_BOARD_STATUS_1) {
+            bms_BOARD_STATUS_1 board_status_1;
+            deserialize_bms_BOARD_STATUS_1(rx_data, &board_status_1);
+        }
+        else if (rx_header.StdId == ID_BOARD_STATUS_2) {
+            bms_BOARD_STATUS_2 board_status_2;
+            deserialize_bms_BOARD_STATUS_2(rx_data, &board_status_2);
+        }
+        else if (rx_header.StdId == ID_BOARD_STATUS_3) {
+            bms_BOARD_STATUS_3 board_status_3;
+            deserialize_bms_BOARD_STATUS_3(rx_data, &board_status_3);
+        }
+        else if (rx_header.StdId == ID_BOARD_STATUS_4) {
+            bms_BOARD_STATUS_4 board_status_4;
+            deserialize_bms_BOARD_STATUS_4(rx_data, &board_status_4);
+        }
+        else if (rx_header.StdId == ID_BOARD_STATUS_5) {
+            bms_BOARD_STATUS_5 board_status_5;
+            deserialize_bms_BOARD_STATUS_5(rx_data, &board_status_5);
         }
     }
 }
