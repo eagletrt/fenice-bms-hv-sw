@@ -168,7 +168,7 @@ void can_send(uint16_t topic_id) {
         }
 
         register uint8_t i;
-        for(i=0; i<18; i+=3){
+        for(i=0; i<CELLBOARD_CELL_COUNT; i+=3){
             tx_header.DLC = serialize_bms_TOPIC_VOLTAGE_INFO(buffer, i, voltages[i], voltages[i+1], voltages[i+2]);
             _can_send(&BMS_CAN, buffer, &tx_header);
         }
