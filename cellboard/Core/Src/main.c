@@ -132,10 +132,10 @@ int main(void)
 
     CAN_FilterTypeDef filter;
     filter.FilterMode       = CAN_FILTERMODE_IDMASK;
-    filter.FilterIdLow      = 0 << 5;                 // Take all ids from 0
-    filter.FilterIdHigh     = ((1U << 11) - 1) << 5;  // to 2^11 - 1
-    filter.FilterMaskIdHigh = 0 << 5;                 // Don't care on can id bits
-    filter.FilterMaskIdLow  = 0 << 5;                 // Don't care on can id bits
+    filter.FilterIdLow      = TOPIC_BALANCING_FILTER << 5;                 // Take all ids from 0
+    filter.FilterIdHigh     = TOPIC_BALANCING_FILTER << 5;  // to 2^11 - 1
+    filter.FilterMaskIdHigh = TOPIC_BALANCING_MASK << 5;                 // Don't care on can id bits
+    filter.FilterMaskIdLow  = TOPIC_BALANCING_MASK << 5;                 // Don't care on can id bits
     /* HAL considers IdLow and IdHigh not as just the ID of the can message but
         as the combination of: 
         STDID + RTR + IDE + 4 most significant bits of EXTID
