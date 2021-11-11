@@ -37,7 +37,9 @@
         * Output
         * EVENT_OUT
         * EXTI
-     PB4   ------> FDCAN3_TX
+        * Free pins are configured automatically as Analog (this feature is enabled through
+        * the Code Generation settings)
+     PC2   ------> ADCx_IN12
 */
 void MX_GPIO_Init(void)
 {
@@ -46,87 +48,88 @@ void MX_GPIO_Init(void)
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
-  __HAL_RCC_GPIOF_CLK_ENABLE();
+  __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(CS_EEPROM_GPIO_Port, CS_EEPROM_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, GPIO9_Pin|GPIO8_Pin|MUX_A3_Pin|EEPROM_CS_Pin
+                          |CARD_CS_Pin|BMS_FAULT_Pin|TS_ON_Pin|AIRP_OFF_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(ANALOG_DATA_GPIO_Port, ANALOG_DATA_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, GPIO7_Pin|MUX_A0_Pin|MUX_A1_Pin|MUX_A2_Pin
+                          |GPIO6_Pin|GPIO2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, MUX_A2_Pin|MUX_A3_Pin|CS_LTC_Pin|BMS_FAULT_Pin
-                          |TS_ON_Pin|PC_ENDED_Pin|HOLD_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, ADC_SIN_Pin|GPIO5_Pin|GPIO4_Pin|GPIO1_Pin
+                          |GPIO3_Pin|LED2_Pin|LED1_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, ADC_SIN_Pin|MUX_A1_Pin|MUX_A0_Pin|CS_SD_Pin
-                          |LED_2_Pin|LED_1_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(EEPROM_HOLD_GPIO_Port, EEPROM_HOLD_Pin, GPIO_PIN_SET);
 
-  /*Configure GPIO pin : PtPin */
-  GPIO_InitStruct.Pin = CS_EEPROM_Pin;
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(AIRM_OFF_GPIO_Port, AIRM_OFF_Pin, GPIO_PIN_SET);
+
+  /*Configure GPIO pins : PCPin PCPin PCPin PCPin
+                           PCPin PCPin PCPin PCPin
+                           PCPin */
+  GPIO_InitStruct.Pin = GPIO9_Pin|GPIO8_Pin|MUX_A3_Pin|EEPROM_CS_Pin
+                          |EEPROM_HOLD_Pin|CARD_CS_Pin|BMS_FAULT_Pin|TS_ON_Pin
+                          |AIRP_OFF_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(CS_EEPROM_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PCPin PCPin */
-  GPIO_InitStruct.Pin = IP_LOW_Pin|IP_HIGH_Pin;
+  /*Configure GPIO pins : PC14 PC15 PCPin */
+  GPIO_InitStruct.Pin = GPIO_PIN_14|GPIO_PIN_15|IP_LOW_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : PtPin */
-  GPIO_InitStruct.Pin = ANALOG_DATA_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(ANALOG_DATA_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : PtPin */
-  GPIO_InitStruct.Pin = CARD_INSERT_Pin;
+  /*Configure GPIO pins : PCPin PCPin */
+  GPIO_InitStruct.Pin = CHARGE_Pin|CARD_OK_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(CARD_INSERT_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PAPin PAPin PAPin PAPin */
+  GPIO_InitStruct.Pin = FB_FROM_TSMS_Pin|FD_RELAY_LV_Pin|FB_IMD_FAULT_Pin|MUX_IN_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PAPin PAPin PAPin PAPin
-                           PAPin PAPin PAPin */
-  GPIO_InitStruct.Pin = MUX_A2_Pin|MUX_A3_Pin|CS_LTC_Pin|BMS_FAULT_Pin
-                          |TS_ON_Pin|PC_ENDED_Pin|HOLD_Pin;
+                           PAPin PAPin */
+  GPIO_InitStruct.Pin = GPIO7_Pin|MUX_A0_Pin|MUX_A1_Pin|MUX_A2_Pin
+                          |GPIO6_Pin|GPIO2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PBPin PBPin PBPin PBPin
-                           PBPin PBPin */
-  GPIO_InitStruct.Pin = ADC_SIN_Pin|MUX_A1_Pin|MUX_A0_Pin|CS_SD_Pin
-                          |LED_2_Pin|LED_1_Pin;
+                           PBPin PBPin PBPin */
+  GPIO_InitStruct.Pin = ADC_SIN_Pin|GPIO5_Pin|GPIO4_Pin|GPIO1_Pin
+                          |GPIO3_Pin|LED2_Pin|LED1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PtPin */
-  GPIO_InitStruct.Pin = PWM_IMD_Pin;
+  GPIO_InitStruct.Pin = IMD_PWM_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(PWM_IMD_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : PB4 */
-  GPIO_InitStruct.Pin = GPIO_PIN_4;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStruct.Alternate = GPIO_AF11_FDCAN3;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  HAL_GPIO_Init(IMD_PWM_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PtPin */
-  GPIO_InitStruct.Pin = CHARGE_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pin = AIRM_OFF_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(CHARGE_GPIO_Port, &GPIO_InitStruct);
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(AIRM_OFF_GPIO_Port, &GPIO_InitStruct);
 
 }
 

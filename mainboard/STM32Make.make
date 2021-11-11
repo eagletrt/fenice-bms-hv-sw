@@ -36,58 +36,65 @@ BUILD_DIR = build
 ######################################
 # C sources
 C_SOURCES =  \
-Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal.c \
-Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_cortex.c \
-Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_dma.c \
-Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_dma_ex.c \
-Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_exti.c \
-Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_fdcan.c \
-Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_flash.c \
-Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_flash_ex.c \
-Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_flash_ramfunc.c \
-Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_gpio.c \
-Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_pwr.c \
-Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_pwr_ex.c \
-Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_rcc.c \
-Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_rcc_ex.c \
-Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_spi.c \
-Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_spi_ex.c \
-Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_tim.c \
-Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_tim_ex.c \
-Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_uart.c \
-Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_uart_ex.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_adc.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_adc_ex.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_can.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma_ex.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ex.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ramfunc.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr_ex.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc_ex.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_spi.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_adc.c \
+Src/adc.c \
 Src/bal.c \
 Src/bal_fsm.c \
 Src/bms_fsm.c \
+Src/can.c \
 Src/cli_bms.c \
 Src/config.c \
+Src/dma.c \
+Src/energy/energy.c \
+Src/energy/soc.c \
 Src/error/error.c \
 Src/error/error_list_ref.c \
-Src/fdcan.c \
 Src/feedback.c \
 Src/gpio.c \
 Src/main.c \
-Src/pack.c \
-Src/peripherals/can.c \
-Src/peripherals/ltc6813.c \
-Src/peripherals/ltc6813_utils.c \
+Src/pack/current.c \
+Src/pack/pack.c \
+Src/pack/temperature.c \
+Src/pack/voltage.c \
+Src/peripherals/can_comm.c \
 Src/peripherals/si8900.c \
-Src/soc.c \
 Src/spi.c \
-Src/stm32g4xx_hal_msp.c \
-Src/stm32g4xx_it.c \
+Src/stm32f4xx_hal_msp.c \
+Src/stm32f4xx_it.c \
 Src/super_fsm.c \
-Src/system_stm32g4xx.c \
+Src/system_stm32f4xx.c \
 Src/tim.c \
 Src/usart.c \
-lib/can/naked_generator/BMSinternal/c/BMSinternal.c \
 lib/can/naked_generator/Primary/c/Primary.c \
 lib/can/naked_generator/Secondary/c/Secondary.c \
+lib/can/naked_generator/bms/c/bms.c \
+lib/micro-libs/blink/blink.c \
 lib/micro-libs/cli/cli.c \
 lib/micro-libs/fsm/fsm.c \
 lib/micro-libs/llist/llist.c \
 lib/micro-libs/m95256/m95256.c \
-lib/micro-libs/priority-queue/priority_queue.c
+lib/micro-libs/priority-queue/priority_queue.c \
+lib/micro-libs/priority-queue/priority_queue_fast_insert.c
 
 
 CPP_SOURCES = \
@@ -95,7 +102,7 @@ CPP_SOURCES = \
 
 # ASM sources
 ASM_SOURCES =  \
-startup_stm32g474xx.s
+startup_stm32f446xx.s
 
 
 
@@ -144,7 +151,7 @@ AS_DEFS =
 
 # C defines
 C_DEFS =  \
--DSTM32G474xx \
+-DSTM32F446xx \
 -DUSE_HAL_DRIVER
 
 
@@ -153,19 +160,22 @@ AS_INCLUDES = \
 
 # C includes
 C_INCLUDES =  \
--IDrivers/CMSIS/Device/ST/STM32G4xx/Include \
+-IDrivers/CMSIS/Device/ST/STM32F4xx/Include \
 -IDrivers/CMSIS/Include \
--IDrivers/STM32G4xx_HAL_Driver/Inc \
--IDrivers/STM32G4xx_HAL_Driver/Inc/Legacy \
+-IDrivers/STM32F4xx_HAL_Driver/Inc \
+-IDrivers/STM32F4xx_HAL_Driver/Inc/Legacy \
 -IInc \
+-IInc/energy \
 -IInc/error \
+-IInc/pack \
 -IInc/peripherals \
--Ilib/can/includes_generator/BMSinternal \
 -Ilib/can/includes_generator/Primary \
 -Ilib/can/includes_generator/Secondary \
--Ilib/can/naked_generator/BMSinternal/c \
+-Ilib/can/includes_generator/bms \
 -Ilib/can/naked_generator/Primary/c \
 -Ilib/can/naked_generator/Secondary/c \
+-Ilib/can/naked_generator/bms/c \
+-Ilib/micro-libs/blink \
 -Ilib/micro-libs/cli \
 -Ilib/micro-libs/fsm \
 -Ilib/micro-libs/llist \
@@ -196,7 +206,7 @@ CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 # LDFLAGS
 #######################################
 # link script
-LDSCRIPT = STM32G474CETx_FLASH.ld
+LDSCRIPT = STM32F446RETx_FLASH.ld
 
 # libraries
 LIBS = -lc -lm -lnosys 
@@ -257,7 +267,7 @@ flash: $(BUILD_DIR)/$(TARGET).elf
 # erase
 #######################################
 erase: $(BUILD_DIR)/$(TARGET).elf
-	"/usr/bin/openocd" -f ./openocd.cfg -c "init; reset halt; stm32g4x mass_erase 0; exit"
+	"/usr/bin/openocd" -f ./openocd.cfg -c "init; reset halt; stm32f4x mass_erase 0; exit"
 
 #######################################
 # clean up

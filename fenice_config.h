@@ -2,15 +2,20 @@
  * @file		fenice_config.h
  * @brief		This file contains configuration settings for Fenice
  *
- * @date		Oct 07, 2019
- * @author		Matteo Bonora [matteo.bonora@studenti.unitn.it]
- * @author		Simone Ruffini [simone.ruffini@studenti.unitn.it]
+ * @date	Oct 07, 2019
+ * 
+ * @author	Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @author	Simone Ruffini [simone.ruffini@studenti.unitn.it]
  */
 
 #ifndef FENICE_CONFIG_H
 #define FENICE_CONFIG_H
 
 #include <inttypes.h>
+
+//===========================================================================
+//=================================== General ===============================
+//===========================================================================
 
 /**
  * Maximum can payload. for CAN 2.0A is 8 bytes
@@ -43,9 +48,9 @@
 #define PACK_TEMP_COUNT (TEMP_SENSOR_COUNT * CELLBOARD_COUNT)
 
 /**
- * Max current. In (A * 10)
+ * Max current. (A)
  */
-#define PACK_MAX_CURRENT 2000
+#define PACK_MAX_CURRENT 180.0f
 
 /**
  * Cell's limit voltages (mV * 10)

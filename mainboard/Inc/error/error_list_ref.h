@@ -18,11 +18,11 @@
 #ifndef ERROR_LIST_REF_H
 #define ERROR_LIST_REF_H
 
-#include <stdio.h>
-
 #include "error/error.h"
-#include "fenice_config.h"
 #include "llist.h"
+#include "mainboard_config.h"
+
+#include <stdio.h>
 
 //#define ERROR_GET_REF(__ID__, __OFFSET__)
 //	(*((error_list_ref_array[__ID__]) + __OFFSET__))
