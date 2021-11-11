@@ -13,18 +13,6 @@
 
 #include <math.h>
 
-enum ltc6813_i2c_ctrl {
-    I2C_READ             = 1,
-    I2C_WRITE            = 0,
-    I2C_START            = 0b01100000,
-    I2C_STOP             = 0b00010000,
-    I2C_BLANK            = 0b00000000,
-    I2C_NO_TRANSMIT      = 0b01110000,
-    I2C_MASTER_ACK       = 0b00000000,
-    I2C_MASTER_NACK      = 0b00001000,
-    I2C_MASTER_NACK_STOP = 0b00001001
-};
-
 size_t ltc6813_read_voltages(SPI_HandleTypeDef *hspi, voltage_t *volts) {
     uint8_t cmd[4];
     uint16_t cmd_pec;

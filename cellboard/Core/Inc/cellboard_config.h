@@ -38,7 +38,7 @@
 /**
  * Temperature measurement interval (ms)
  */
-#define TEMP_MEASURE_INTERVAL 400
+#define TEMP_MEASURE_INTERVAL 300
 
 #define TEMP_ADC_COUNT 6
 

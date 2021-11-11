@@ -8,4 +8,4 @@
 
 #include "error.h"
 
-uint16_t errors;
+uint8_t errors;
