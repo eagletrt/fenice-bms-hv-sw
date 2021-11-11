@@ -14,14 +14,9 @@
 #include "pack/current.h"
 #include "pack/pack.h"
 #include "pack/voltage.h"
+#include "pack/temperature.h"
 
 CAN_TxHeaderTypeDef tx_header;
-
-void can_init() {
-    tx_header.ExtId = 0;
-    tx_header.IDE   = CAN_ID_STD;
-    tx_header.RTR   = CAN_RTR_DATA;
-}
 
 void can_tx_header_init() {
     tx_header.ExtId = 0;
@@ -132,7 +127,6 @@ HAL_StatusTypeDef can_bms_send(uint16_t id) {
         for(i=0; i<LTC6813_COUNT; ++i){
             tx_header.DLC = serialize_bms_BALANCING(buffer, i, bal.cells[i]);
             can_send(&BMS_CAN, buffer, &tx_header);
-            HAL_Delay(100);
         }
         return HAL_OK; //TODO: ugly
     }
@@ -145,6 +139,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
     //if (hfdcan->Instance == FDCAN1 && RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) {
     uint8_t rx_data[8] = {'\0'};
     CAN_RxHeaderTypeDef rx_header;
+
     if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rx_header, rx_data) != HAL_OK) {
         //if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rx_header, rx_data) != HAL_OK) {
         error_set(ERROR_CAN, 1, HAL_GetTick());
@@ -186,26 +181,32 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
         else if (rx_header.StdId == ID_TEMP_STATS_0) {
             bms_TEMP_STATS_0 temp_stats_0;
             deserialize_bms_TEMP_STATS_0(rx_data, &temp_stats_0);
+            temperature_set_cells(temp_stats_0.start_index, temp_stats_0.temp0, temp_stats_0.temp1, temp_stats_0.temp2, temp_stats_0.temp3, temp_stats_0.temp4, temp_stats_0.temp5);
         }
         else if (rx_header.StdId == ID_TEMP_STATS_1) {
             bms_TEMP_STATS_1 temp_stats_1;
             deserialize_bms_TEMP_STATS_1(rx_data, &temp_stats_1);
+            temperature_set_cells(temp_stats_1.start_index, temp_stats_1.temp0, temp_stats_1.temp1, temp_stats_1.temp2, temp_stats_1.temp3, temp_stats_1.temp4, temp_stats_1.temp5);
         }
         else if (rx_header.StdId == ID_TEMP_STATS_2) {
             bms_TEMP_STATS_2 temp_stats_2;
             deserialize_bms_TEMP_STATS_2(rx_data, &temp_stats_2);
+            temperature_set_cells(temp_stats_2.start_index, temp_stats_2.temp0, temp_stats_2.temp1, temp_stats_2.temp2, temp_stats_2.temp3, temp_stats_2.temp4, temp_stats_2.temp5);
         }
         else if (rx_header.StdId == ID_TEMP_STATS_3) {
             bms_TEMP_STATS_3 temp_stats_3;
             deserialize_bms_TEMP_STATS_3(rx_data, &temp_stats_3);
+            temperature_set_cells(temp_stats_3.start_index, temp_stats_3.temp0, temp_stats_3.temp1, temp_stats_3.temp2, temp_stats_3.temp3, temp_stats_3.temp4, temp_stats_3.temp5);
         }
         else if (rx_header.StdId == ID_TEMP_STATS_4) {
             bms_TEMP_STATS_4 temp_stats_4;
             deserialize_bms_TEMP_STATS_4(rx_data, &temp_stats_4);
+            temperature_set_cells(temp_stats_4.start_index, temp_stats_4.temp0, temp_stats_4.temp1, temp_stats_4.temp2, temp_stats_4.temp3, temp_stats_4.temp4, temp_stats_4.temp5);
         }
         else if (rx_header.StdId == ID_TEMP_STATS_5) {
             bms_TEMP_STATS_5 temp_stats_5;
             deserialize_bms_TEMP_STATS_5(rx_data, &temp_stats_5);
+            temperature_set_cells(temp_stats_5.start_index, temp_stats_5.temp0, temp_stats_5.temp1, temp_stats_5.temp2, temp_stats_5.temp3, temp_stats_5.temp4, temp_stats_5.temp5);
         }
         else if (rx_header.StdId == ID_BOARD_STATUS_0) {
             bms_BOARD_STATUS_0 board_status_0;
