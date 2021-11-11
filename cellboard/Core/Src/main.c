@@ -130,24 +130,7 @@ int main(void)
 
     bal_fsm_init();
 
-    CAN_FilterTypeDef filter;
-    filter.FilterMode       = CAN_FILTERMODE_IDMASK;
-    filter.FilterIdLow      = TOPIC_BALANCING_FILTER << 5;                 // Take all ids from 0
-    filter.FilterIdHigh     = TOPIC_BALANCING_FILTER << 5;  // to 2^11 - 1
-    filter.FilterMaskIdHigh = TOPIC_BALANCING_MASK << 5;                 // Don't care on can id bits
-    filter.FilterMaskIdLow  = TOPIC_BALANCING_MASK << 5;                 // Don't care on can id bits
-    /* HAL considers IdLow and IdHigh not as just the ID of the can message but
-        as the combination of: 
-        STDID + RTR + IDE + 4 most significant bits of EXTID
-    */
-    filter.FilterFIFOAssignment = CAN_FILTER_FIFO0;
-    filter.FilterBank           = 0;
-    filter.FilterScale          = CAN_FILTERSCALE_16BIT;
-    filter.FilterActivation     = ENABLE;
-
-    HAL_CAN_ConfigFilter(&BMS_CAN, &filter);
-    HAL_CAN_ActivateNotification(&BMS_CAN, CAN_IT_ERROR | CAN_IT_RX_FIFO0_MSG_PENDING );
-    HAL_CAN_Start(&BMS_CAN);
+    can_init_with_filter();
 
   /* USER CODE END 2 */
 
@@ -164,7 +147,7 @@ int main(void)
             volt_read();
 
             can_send(TOPIC_VOLTAGE_INFO_FILTER);
-            CAN_WAIT(&BMS_CAN);
+            // CAN_WAIT(&BMS_CAN);
 
             char buf[5000] = {'\0'};
             uint16_t min   = volt_get_min();

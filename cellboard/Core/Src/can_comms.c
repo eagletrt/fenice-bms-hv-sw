@@ -18,6 +18,7 @@
 
 #include <math.h>
 
+
 void _can_send(CAN_HandleTypeDef *hcan, uint8_t *buffer, CAN_TxHeaderTypeDef *header) {
     CAN_WAIT(hcan);
 
@@ -120,7 +121,7 @@ void can_send(uint16_t topic_id) {
             default: return;
         }
 
-        tx_header.DLC = serialize_bms_TOPIC_STATUS_FILTER(buffer, (uint8_t*)errors, state);
+        tx_header.DLC = serialize_bms_TOPIC_STATUS_FILTER(buffer, &errors, state);
     } else if (topic_id == TOPIC_TEMPERATURE_INFO_FILTER) {
         switch(cellboard_index){
             case 0: 
@@ -196,4 +197,28 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
         bms_BALANCING balancing;
         deserialize_bms_BALANCING(rx_data, &balancing);
     }
+    
+}
+
+void can_init_with_filter(){
+
+    CAN_FilterTypeDef filter;
+    filter.FilterMode       = CAN_FILTERMODE_IDMASK;
+    filter.FilterIdLow      = TOPIC_BALANCING_FILTER << 5;                 // Take all ids from 0
+    filter.FilterIdHigh     = TOPIC_BALANCING_FILTER << 5;  // to 2^11 - 1
+    filter.FilterMaskIdHigh = TOPIC_BALANCING_MASK << 5;                 // Don't care on can id bits
+    filter.FilterMaskIdLow  = TOPIC_BALANCING_MASK << 5;                 // Don't care on can id bits
+    /* HAL considers IdLow and IdHigh not as just the ID of the can message but
+        as the combination of: 
+        STDID + RTR + IDE + 4 most significant bits of EXTID
+    */
+    filter.FilterFIFOAssignment = CAN_FILTER_FIFO0;
+    filter.FilterBank           = 0;
+    filter.FilterScale          = CAN_FILTERSCALE_16BIT;
+    filter.FilterActivation     = ENABLE;
+
+    HAL_CAN_ConfigFilter(&BMS_CAN, &filter);
+    HAL_CAN_ActivateNotification(&BMS_CAN, CAN_IT_ERROR | CAN_IT_RX_FIFO0_MSG_PENDING );
+    HAL_CAN_Start(&BMS_CAN);
+
 }
