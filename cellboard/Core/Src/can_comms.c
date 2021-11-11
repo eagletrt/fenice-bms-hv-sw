@@ -42,6 +42,7 @@ int serialize_bms_TOPIC_STATUS_FILTER(uint8_t *buffer, bms_errors errors, bms_ba
     switch (cellboard_index)
     {
         case 0: return serialize_bms_BOARD_STATUS_0(buffer, errors, balancing_status);
+        case 7:
         case 1: return serialize_bms_BOARD_STATUS_1(buffer, errors, balancing_status);
         case 2: return serialize_bms_BOARD_STATUS_2(buffer, errors, balancing_status);
         case 3: return serialize_bms_BOARD_STATUS_3(buffer, errors, balancing_status);
@@ -51,15 +52,16 @@ int serialize_bms_TOPIC_STATUS_FILTER(uint8_t *buffer, bms_errors errors, bms_ba
     }
 }
 
-int serialize_bms_TOPIC_TEMPERATURE_INFO(uint8_t *buffer, uint8_t average, uint8_t max, uint8_t min) {
+int serialize_bms_TOPIC_TEMPERATURE_INFO(uint8_t* buffer, uint8_t start_index, uint8_t temp0, uint8_t temp1, uint8_t temp2, uint8_t temp3, uint8_t temp4, uint8_t temp5) {
     switch (cellboard_index)
     {
-        case 0: return serialize_bms_TEMP_STATS_0(buffer, average, max, min);
-        case 1: return serialize_bms_TEMP_STATS_1(buffer, average, max, min);
-        case 2: return serialize_bms_TEMP_STATS_2(buffer, average, max, min);
-        case 3: return serialize_bms_TEMP_STATS_3(buffer, average, max, min);
-        case 4: return serialize_bms_TEMP_STATS_4(buffer, average, max, min);
-        case 5: return serialize_bms_TEMP_STATS_5(buffer, average, max, min);        
+        case 0: return serialize_bms_TEMP_STATS_0(buffer, start_index, temp0, temp1, temp2, temp3, temp4, temp5);
+        case 7:
+        case 1: return serialize_bms_TEMP_STATS_1(buffer, start_index, temp0, temp1, temp2, temp3, temp4, temp5);
+        case 2: return serialize_bms_TEMP_STATS_2(buffer, start_index, temp0, temp1, temp2, temp3, temp4, temp5);
+        case 3: return serialize_bms_TEMP_STATS_3(buffer, start_index, temp0, temp1, temp2, temp3, temp4, temp5);
+        case 4: return serialize_bms_TEMP_STATS_4(buffer, start_index, temp0, temp1, temp2, temp3, temp4, temp5);
+        case 5: return serialize_bms_TEMP_STATS_5(buffer, start_index, temp0, temp1, temp2, temp3, temp4, temp5);        
         default: return -1;
     }
 }
@@ -68,6 +70,7 @@ int serialize_bms_TOPIC_VOLTAGE_INFO(uint8_t *buffer, uint8_t start_index, uint1
     switch (cellboard_index)
     {
         case 0: return serialize_bms_VOLTAGES_0(buffer, start_index, voltage0, voltage1, voltage2);
+        case 7:
         case 1: return serialize_bms_VOLTAGES_1(buffer, start_index, voltage0, voltage1, voltage2);
         case 2: return serialize_bms_VOLTAGES_2(buffer, start_index, voltage0, voltage1, voltage2);
         case 3: return serialize_bms_VOLTAGES_3(buffer, start_index, voltage0, voltage1, voltage2);
@@ -103,6 +106,7 @@ void can_send(uint16_t topic_id) {
             case 0:
                 tx_header.StdId = ID_BOARD_STATUS_0;
                 break;
+            case 7:
             case 1: 
                 tx_header.StdId = ID_BOARD_STATUS_1;
                 break;
@@ -127,6 +131,7 @@ void can_send(uint16_t topic_id) {
             case 0: 
                 tx_header.StdId = ID_TEMP_STATS_0;
                 break;
+            case 7:
             case 1: 
                 tx_header.StdId = ID_TEMP_STATS_1;
                 break;
@@ -144,12 +149,27 @@ void can_send(uint16_t topic_id) {
                 break;
             default: return;
         }
-        tx_header.DLC = serialize_bms_TOPIC_TEMPERATURE_INFO(buffer, temp_serialize(temp_get_average()), temp_serialize(temp_get_max()), temp_serialize(temp_get_min()));
+
+        register uint8_t i;
+        for(i=0; i<CELLBOARD_TEMP_SENSOR_COUNT; i+=6){
+            tx_header.DLC = serialize_bms_TOPIC_TEMPERATURE_INFO(buffer, i, 
+                temp_serialize(temperatures[i]),
+                temp_serialize(temperatures[i+1]),
+                temp_serialize(temperatures[i+2]),
+                temp_serialize(temperatures[i+3]),
+                temp_serialize(temperatures[i+4]),
+                temp_serialize(temperatures[i+5])
+            );
+            _can_send(&BMS_CAN, buffer, &tx_header);
+        }
+
+        return;
     } else if (topic_id == TOPIC_VOLTAGE_INFO_FILTER) {
         switch(cellboard_index){
             case 0: 
                 tx_header.StdId = ID_VOLTAGES_0;
                 break;
+            case 7:
             case 1:
                 tx_header.StdId = ID_VOLTAGES_1;
                 break;
