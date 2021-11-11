@@ -59,3 +59,12 @@ temperature_t temperature_get_average() {
     }
     return (temperature_t)round(average / PACK_TEMP_COUNT);
 }
+
+void temperature_set_cells(uint8_t index, temperature_t t1, temperature_t t2, temperature_t t3, temperature_t t4, temperature_t t5, temperature_t t6) {
+    temperatures[index] = t1;
+    temperatures[index+1] = t2;
+    temperatures[index+2] = t3;
+    temperatures[index+3] = t4;
+    temperatures[index+4] = t5;
+    temperatures[index+5] = t6;
+}
