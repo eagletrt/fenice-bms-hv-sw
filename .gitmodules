@@ -8,4 +8,10 @@
 [submodule "mainboard/lib/micro-libs"]
 	path = mainboard/lib/micro-libs
 	url = git@github.com:eagletrt/micro-libs.git
-	branch = master
+[submodule "cellboard/Core/Lib/can-cicd"]
+	path = cellboard/Core/Lib/can-cicd
+	url = git@github.com:eagletrt/can-cicd
+	branch = build
+[submodule "cellboard/Core/Lib/micro-libs"]
+	path = cellboard/Core/Lib/micro-libs
+	url = git@github.com:eagletrt/micro-libs
