@@ -19,10 +19,11 @@
 
 #define CAN_WAIT(C)                                                                                     \
     {                                                                                                   \
-        while (HAL_CAN_GetTxMailboxesFreeLevel(C) == 0);                                                \
+        uint32_t tick = HAL_GetTick();                                                                  \
+        while (HAL_GetTick() - tick < 10 &&                                                             \
+                HAL_CAN_GetTxMailboxesFreeLevel(C) == 0);                                               \
     } 
 
-void can_init();
 void can_car_init();
 void can_bms_init();
 void can_tx_header_init();
