@@ -107,6 +107,7 @@ int main(void)
   MX_SPI1_Init();
   MX_SPI3_Init();
   MX_USART1_UART_Init();
+  MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
 
     cellboard_index = HAL_GPIO_ReadPin(ADDRESS_2_GPIO_Port, ADDRESS_2_Pin) |
@@ -131,6 +132,8 @@ int main(void)
     bal_fsm_init();
 
     can_init_with_filter();
+
+  // HAL_TIM_Base_Start_IT(&DISCHARGE_TIMER);
 
   /* USER CODE END 2 */
 
@@ -179,7 +182,7 @@ int main(void)
             sprintf(buf + strlen(buf), "\r\n\n");
             HAL_UART_Transmit_IT(&CLI_UART, (uint8_t *)buf, strlen(buf));
             //HAL_Delay(200);
-            fsm_trigger_event(bal.fsm, EV_BAL_CHECK_TIMER);
+            //fsm_trigger_event(bal.fsm, EV_BAL_CHECK_TIMER);
         }
 
         if (HAL_GetTick() - temp_timer >= TEMP_MEASURE_INTERVAL) {
@@ -190,6 +193,7 @@ int main(void)
         }
 
         fsm_run(bal.fsm);
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -244,6 +248,17 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim){
+  /*
+   When DISCHARGE_TIMER elapses bal_timers_handler is called,
+   when the function completes its work the DISCHARGE_TIMER is stopped
+  */
+  if(htim->Instance == DISCHARGE_TIMER.Instance){
+    bal_timers_handler(htim, bal.fsm);
+   HAL_TIM_Base_Stop_IT(htim);
+  }
+}
 
 /* USER CODE END 4 */
 
