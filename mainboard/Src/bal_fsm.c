@@ -65,7 +65,7 @@ void bal_fsm_init() {
 
     state.handler = discharge_handler;
     state.entry   = discharge_entry;
-    state.exit    = discharge_exit;
+    state.exit    = NULL;
     fsm_set_state(bal.fsm, BAL_DISCHARGE, &state);
 
     state.handler = cooldown_handler;
@@ -93,6 +93,7 @@ void compute_entry(fsm FSM) {
         return;
     }
     cli_bms_debug("Non si può fare meglio di così.", 34);
+    can_bms_send(ID_BALANCING);
     fsm_transition(FSM, BAL_OFF);
 }
 
@@ -100,11 +101,6 @@ void discharge_entry(fsm FSM) {
     bal.discharge_time = HAL_GetTick();
     can_bms_send(ID_BALANCING);
     cli_bms_debug("Discharging cells", 18);
-}
-
-void discharge_exit(fsm FSM){
-    
-    can_bms_send(ID_BALANCING);
 }
 
 void discharge_handler(fsm FSM, uint8_t event) {
