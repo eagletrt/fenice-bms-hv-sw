@@ -13,6 +13,8 @@
 
 #include <inttypes.h>
 
+extern temperature_t temperatures[CELLBOARD_TEMP_SENSOR_COUNT];
+
 void temp_init();
 
 /**

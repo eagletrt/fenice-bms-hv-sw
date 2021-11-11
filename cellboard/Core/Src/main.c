@@ -177,8 +177,8 @@ int main(void)
                 sprintf(buf + strlen(buf), "\r\nERRORS: %x", errors);
             }
             sprintf(buf + strlen(buf), "\r\n\n");
-            HAL_UART_Transmit(&CLI_UART, (uint8_t *)buf, strlen(buf), 500);
-            HAL_Delay(200);
+            HAL_UART_Transmit_IT(&CLI_UART, (uint8_t *)buf, strlen(buf));
+            //HAL_Delay(200);
             fsm_trigger_event(bal.fsm, EV_BAL_CHECK_TIMER);
         }
 
