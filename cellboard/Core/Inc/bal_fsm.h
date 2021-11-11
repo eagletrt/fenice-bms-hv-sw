@@ -13,6 +13,7 @@
 //#include "bal.h"
 #include "cellboard_config.h"
 #include "fsm.h"
+#include "tim.h"
 
 #include <inttypes.h>
 
@@ -31,5 +32,6 @@ typedef struct {
 extern bal_fsm bal;
 
 void bal_fsm_init();
+void bal_timers_handler(TIM_HandleTypeDef* htim, fsm handle);
 
 #endif

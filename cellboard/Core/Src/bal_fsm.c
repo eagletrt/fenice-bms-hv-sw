@@ -8,7 +8,6 @@
  */
 
 #include "bal_fsm.h"
-
 #include "bal.h"
 #include "can_comms.h"
 #include "ltc6813_utils.h"
@@ -82,7 +81,10 @@ void compute_entry(fsm handle) {
 
 void discharge_entry(fsm handle) {
     ltc6813_set_balancing(&LTC6813_SPI, bal.cells, bal.cells_length, bal.cycle_length);
-    bal.discharge_time = HAL_GetTick();
+    //  Resetting and starting the DISCHARGE_TIMER
+    HAL_TIM_Base_Stop_IT(&DISCHARGE_TIMER);
+    __HAL_TIM_SetCounter(&DISCHARGE_TIMER, 0U);
+    HAL_TIM_Base_Start_IT(&DISCHARGE_TIMER);
     //cli_bms_debug("Discharging cells", 18);
 }
 
@@ -92,15 +94,16 @@ void discharge_handler(fsm handle, uint8_t event) {
             fsm_transition(handle, BAL_OFF);
 
             break;
-        case EV_BAL_CHECK_TIMER:
-            // TODO: use timers or something
-            if (HAL_GetTick() - bal.discharge_time >= DCTO_TO_MILLIS[bal.cycle_length]) {
-                bal.cells_length = 0;
-            }
-            if (HAL_GetTick() - bal.discharge_time >= DCTO_TO_MILLIS[bal.cycle_length] + BAL_COOLDOWN_DELAY) {
-                fsm_transition(handle, BAL_COMPUTE);
-            }
-
-            break;
+    }
+}
+/**
+  * @brief  When DISCHARGE_TIMER elapses the discharge is complete 
+  *         so the cells_length will be set to zero
+  * @retval None
+  */
+void bal_timers_handler(TIM_HandleTypeDef* htim, fsm handle){
+    if(htim->Instance == DISCHARGE_TIMER.Instance){
+        
+        bal.cells_length = 0;
     }
 }
