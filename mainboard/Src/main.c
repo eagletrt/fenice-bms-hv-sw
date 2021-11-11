@@ -111,8 +111,6 @@ int main(void)
     HAL_GPIO_WritePin(EEPROM_HOLD_GPIO_Port, EEPROM_HOLD_Pin, GPIO_PIN_SET);
     current_start_measure();
 
-    can_init();
-
     cli_bms_init();
     error_init();
 
