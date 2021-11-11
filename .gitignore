@@ -5,6 +5,7 @@ build/
 *.hex
 *.map
 .mxproject
+Backup/
 
 **/.vscode/*
 !**/.vscode/extensions.json

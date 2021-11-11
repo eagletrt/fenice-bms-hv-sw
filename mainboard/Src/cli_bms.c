@@ -13,7 +13,10 @@
 #include "bal_fsm.h"
 #include "bms_fsm.h"
 #include "error/error.h"
-#include "pack.h"
+#include "feedback.h"
+#include "pack/pack.h"
+#include "pack/temperature.h"
+#include "pack/voltage.h"
 #include "soc.h"
 #include "usart.h"
 
@@ -22,7 +25,7 @@
 #include <string.h>
 
 // TODO: don't count manually
-#define N_COMMANDS 11
+#define N_COMMANDS 12
 
 cli_command_func_t _cli_volts;
 cli_command_func_t _cli_volts_all;
@@ -33,6 +36,7 @@ cli_command_func_t _cli_balance;
 cli_command_func_t _cli_soc;
 cli_command_func_t _cli_errors;
 cli_command_func_t _cli_ts;
+cli_command_func_t _cli_current;
 cli_command_func_t _cli_dmesg;
 cli_command_func_t _cli_reset;
 cli_command_func_t _cli_help;
@@ -45,16 +49,19 @@ const char *bal_state_names[BAL_NUM_STATES] =
     {[BAL_OFF] = "off", [BAL_COMPUTE] = "computing", [BAL_DISCHARGE] = "discharging", [BAL_COOLDOWN] = "cooldown"};
 
 const char *error_names[ERROR_NUM_ERRORS] = {
-    [ERROR_LTC_PEC]               = "LTC PEC mismatch",
     [ERROR_CELL_UNDER_VOLTAGE]    = "under-voltage",
     [ERROR_CELL_OVER_VOLTAGE]     = "over-voltage",
     [ERROR_CELL_OVER_TEMPERATURE] = "over-temperature",
     [ERROR_OVER_CURRENT]          = "over-current",
     [ERROR_CAN]                   = "CAN",
-    [ERROR_ADC_INIT]              = "adc init",
-    [ERROR_ADC_TIMEOUT]           = "adc timeout",
+    [ERROR_ADC_INIT]              = "ADC init",
+    [ERROR_ADC_TIMEOUT]           = "ADC timeout",
     [ERROR_INT_VOLTAGE_MISMATCH]  = "internal voltage mismatch",
-    [ERROR_FEEDBACK]              = "feedback"};
+    [ERROR_CELLBOARD_COMM]        = "cellboard communication",
+    [ERROR_CELLBOARD_INTERNAL]    = "cellboard internal",
+    [ERROR_FEEDBACK]              = "feedback",
+    [ERROR_EEPROM_COMM]           = "EEPROM communication",
+    [ERROR_EEPROM_WRITE]          = "EEPROM write"};
 
 char const *const feedback_names[FEEDBACK_N] = {
     [FEEDBACK_VREF_POS]          = "VREF",
@@ -75,7 +82,7 @@ char const *const feedback_names[FEEDBACK_N] = {
     [FEEDBACK_TS_ON_POS]         = "TS ON"};
 
 char *command_names[N_COMMANDS] =
-    {"volt", "temp", "status", "errors", "ts", "bal", "soc", "dmesg", "reset", "?", "\ta"};
+    {"volt", "temp", "status", "errors", "ts", "bal", "soc", "current", "dmesg", "reset", "?", "\ta"};
 
 cli_command_func_t *commands[N_COMMANDS] = {
     &_cli_volts,
@@ -85,6 +92,7 @@ cli_command_func_t *commands[N_COMMANDS] = {
     &_cli_ts,
     &_cli_balance,
     &_cli_soc,
+    &_cli_current,
     &_cli_dmesg,
     &_cli_reset,
     &_cli_help,
@@ -94,7 +102,7 @@ cli_t cli_bms;
 bool dmesg_ena = true;
 
 void cli_bms_init() {
-    cli_bms.uart           = &huart2;
+    cli_bms.uart           = &CLI_UART;
     cli_bms.cmds.functions = commands;
     cli_bms.cmds.names     = command_names;
     cli_bms.cmds.count     = N_COMMANDS;
@@ -117,7 +125,7 @@ void cli_bms_debug(char *text, size_t length) {
     if (dmesg_ena) {
         char out[3000] = {'\0'};
         // add prefix
-        sprintf(out, "[%.3f] ", (double)HAL_GetTick() / 1000);
+        sprintf(out, "[%.3f] ", (float)HAL_GetTick() / 1000);
 
         strcat(out, text);
         length += strlen(out);
@@ -132,8 +140,8 @@ void cli_bms_debug(char *text, size_t length) {
 
 void _cli_volts(uint16_t argc, char **argv, char *out) {
     if (strcmp(argv[1], "") == 0) {
-        voltage_t max = pack_get_max_voltage();
-        voltage_t min = pack_get_min_voltage();
+        voltage_t max = voltage_get_cell_max();
+        voltage_t min = voltage_get_cell_min();
         sprintf(
             out,
             "bus.......%.2f V\r\n"
@@ -142,16 +150,21 @@ void _cli_volts(uint16_t argc, char **argv, char *out) {
             "max.......%.3f V\r\n"
             "min.......%.3f V\r\n"
             "delta.....%.3f V\r\n",
-            (float)pack_get_bus_voltage() / 100,
-            (float)pack_get_int_voltage() / 100,
-            (float)pack_get_int_voltage() / PACK_CELL_COUNT / 100,
+            (float)voltage_get_bus() / 100,
+            (float)voltage_get_internal() / 100,
+            (float)voltage_get_internal() / PACK_CELL_COUNT / 100,
             (float)max / 10000,
             (float)min / 10000,
             (float)(max - min) / 10000);
     } else if (strcmp(argv[1], "all") == 0) {
         _cli_volts_all(argc, &argv[1], out);
     } else {
-        sprintf(out, "Unknown parameter: %s\r\n", argv[1]);
+        sprintf(
+            out,
+            "Unknown parameter: %s\r\n"
+            "valid parameters:\r\n"
+            "- all: returns voltages for all cells\r\n",
+            argv[1]);
     }
 }
 
@@ -165,28 +178,33 @@ void _cli_volts_all(uint16_t argc, char **argv, char *out) {
             sprintf(out + strlen(out), "\r\n%-3s", "");
         }
 
-        sprintf(out + strlen(out), "[%3u %-.3fv] ", i, (float)pack_get_voltages()[i] / 10000);
+        sprintf(out + strlen(out), "[%3u %-.3fv] ", i, (float)voltage_get_cells()[i] / 10000);
     }
 
     sprintf(out + strlen(out), "\r\n");
 }
 
 void _cli_temps(uint16_t argc, char **argv, char *out) {
-    if (strcmp(argv[1], "") == 0) {
-        sprintf(
-            out,
-            "average.....%.1f C\r\nmax.........%2u "
-            "C\r\nmin.........%2u C\r\n"
-            "delta.......%2u C\r\n",
-            (float)pack_get_mean_temperature() / 10,
-            pack_get_max_temperature(),
-            pack_get_min_temperature(),
-            pack_get_max_temperature() - pack_get_min_temperature());
-    } else if (strcmp(argv[1], "all") == 0) {
-        _cli_temps_all(argc, &argv[1], out);
-    } else {
-        sprintf(out, "Unknown parameter: %s\r\n", argv[1]);
-    }
+    //if (strcmp(argv[1], "") == 0) {
+    //    sprintf(
+    //        out,
+    //        "average.....%.1f C\r\nmax.........%2u "
+    //        "C\r\nmin.........%2u C\r\n"
+    //        "delta.......%2u C\r\n",
+    //        (float)pack_get_mean_temperature() / 10,
+    //        pack_get_max_temperature(),
+    //        pack_get_min_temperature(),
+    //        pack_get_max_temperature() - pack_get_min_temperature());
+    //} else if (strcmp(argv[1], "all") == 0) {
+    //    _cli_temps_all(argc, &argv[1], out);
+    //} else {
+    //    sprintf(
+    //        out,
+    //        "Unknown parameter: %s\r\n"
+    //        "valid parameters:\r\n"
+    //        "- all: returns temperature for all cells\r\n",
+    //        argv[1]);
+    //}
 }
 
 void _cli_temps_all(uint16_t argc, char **argv, char *out) {
@@ -198,7 +216,7 @@ void _cli_temps_all(uint16_t argc, char **argv, char *out) {
         } else if (i % (TEMP_SENSOR_COUNT / 2) == 0 && i > 0) {
             sprintf(out + strlen(out), "\r\n%-3s", "");
         }
-        sprintf(out + strlen(out), "[%3u %2uc] ", i, pack_get_temperatures()[i]);
+        sprintf(out + strlen(out), "[%3u %2uc] ", i, temperature_get_all()[i]);
     }
 
     sprintf(out + strlen(out), "\r\n");
@@ -234,10 +252,10 @@ void _cli_status(uint16_t argc, char **argv, char *out) {
 
 void _cli_balance(uint16_t argc, char **argv, char *out) {
     if (strcmp(argv[1], "on") == 0) {
-        fsm_catch_event(bal.fsm, EV_BAL_START);
+        fsm_trigger_event(bal.fsm, EV_BAL_START);
         sprintf(out, "enabling balancing\r\n");
     } else if (strcmp(argv[1], "off") == 0) {
-        fsm_catch_event(bal.fsm, EV_BAL_STOP);
+        fsm_trigger_event(bal.fsm, EV_BAL_STOP);
         sprintf(out, "disabling balancing\r\n");
     } else if (strcmp(argv[1], "thr") == 0) {
         if (argv[2] != NULL) {
@@ -260,7 +278,7 @@ void _cli_balance(uint16_t argc, char **argv, char *out) {
 }
 void _cli_soc(uint16_t argc, char **argv, char *out) {
     if (strcmp(argv[1], "reset") == 0) {
-        pack_reset_soc();
+        soc_reset_soc();
         sprintf(out, "Resetting energy meter\r\n");
     } else {
         sprintf(
@@ -268,9 +286,9 @@ void _cli_soc(uint16_t argc, char **argv, char *out) {
             "SoC: %.2f %%\r\n"
             "Energy: %.1f Wh\r\n"
             "Energy total: %.1f Wh\r\n",
-            pack_get_soc(),
-            pack_get_energy_last_charge(),
-            pack_get_energy_total());
+            soc_get_soc(),
+            soc_get_energy_last_charge(),
+            soc_get_energy_total());
     }
 }
 
@@ -299,10 +317,10 @@ void _cli_errors(uint16_t argc, char **argv, char *out) {
 
 void _cli_ts(uint16_t argc, char **argv, char *out) {
     if (strcmp(argv[1], "on") == 0) {
-        fsm_catch_event(bms.fsm, BMS_EV_TS_ON);
+        fsm_trigger_event(bms.fsm, BMS_EV_TS_ON);
         sprintf(out, "triggered TS ON event\r\n");
     } else if (strcmp(argv[1], "off") == 0) {
-        fsm_catch_event(bms.fsm, BMS_EV_TS_OFF);
+        fsm_trigger_event(bms.fsm, BMS_EV_TS_OFF);
         sprintf(out, "triggered TS OFF event\r\n");
     } else {
         sprintf(
@@ -311,6 +329,29 @@ void _cli_ts(uint16_t argc, char **argv, char *out) {
             "valid parameters:\r\n"
             "- on\r\n"
             "- off\r\n",
+            argv[1]);
+    }
+}
+
+void _cli_current(uint16_t argc, char **argv, char *out) {
+    if (argc == 0) {
+        sprintf(
+            out,
+            "Hall 50A:\t%.1fA\r\n"
+            "Hall 300A:\t%.1fA\r\n"
+            "Shunt:\t\t%.1fA\r\n",
+            current_get_current_from_sensor(CURRENT_SENSOR_50),
+            current_get_current_from_sensor(CURRENT_SENSOR_300),
+            current_get_current_from_sensor(CURRENT_SENSOR_SHUNT));
+    } else if (strcmp(argv[1], "zero") == 0) {
+        current_zero();
+        sprintf(out, "Current zeroed\r\n");
+    } else {
+        sprintf(
+            out,
+            "Unknown parameter: %s\r\n\n"
+            "valid parameters:\r\n"
+            "- zero: zeroes the hall-sensor measurement\r\n",
             argv[1]);
     }
 }

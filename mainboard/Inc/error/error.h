@@ -20,7 +20,7 @@
     if ((condition)) {                                   \
         error_set((error_type), (index), HAL_GetTick()); \
     } else {                                             \
-        error_unset((error_type), (index));              \
+        error_reset((error_type), (index));              \
     }
 
 /**
@@ -31,11 +31,11 @@
  * link the error to the reference in the error_reference array.
  */
 typedef enum {
-    ERROR_LTC_PEC,
-
+    ERROR_CELL_LOW_VOLTAGE,
     ERROR_CELL_UNDER_VOLTAGE,
     ERROR_CELL_OVER_VOLTAGE,
     ERROR_CELL_OVER_TEMPERATURE,
+    ERROR_CELL_HIGH_TEMPERATURE,
 
     ERROR_OVER_CURRENT,
     ERROR_CAN,
@@ -44,12 +44,18 @@ typedef enum {
     ERROR_ADC_TIMEOUT,
     ERROR_INT_VOLTAGE_MISMATCH,
 
+    ERROR_CELLBOARD_COMM,
+    ERROR_CELLBOARD_INTERNAL,
+
     ERROR_FEEDBACK,
 
-    ERROR_NUM_ERRORS
-} error_id;
+    ERROR_EEPROM_COMM,
+    ERROR_EEPROM_WRITE,
 
-typedef enum { SOFT = UINT32_MAX, SHORT = 500, REGULAR = 1000, INSTANT = 0 } error_timeout;
+    ERROR_NUM_ERRORS
+} __attribute__((__packed__)) error_id;
+
+typedef enum { SOFT = UINT32_MAX, SHORT = 500, REGULAR = 1000, INSTANT = 0 } __attribute__((__packed__)) error_timeout;
 
 /**
  * @brief an error is active when it enters the error list (ERROR_ACTIVE)
@@ -57,7 +63,7 @@ typedef enum { SOFT = UINT32_MAX, SHORT = 500, REGULAR = 1000, INSTANT = 0 } err
  * an error becomes inactive
  **/
 
-typedef enum { STATE_WARNING, STATE_FATAL } error_state;
+typedef enum { STATE_WARNING, STATE_FATAL } __attribute__((__packed__)) error_state;
 
 /** @brief	Defines an error instance */
 typedef struct {
@@ -75,9 +81,10 @@ bool error_set(error_id type, uint8_t offset, uint32_t now);
 error_t *error_get_top();
 bool error_set_fatal(error_t *error);
 
-bool error_unset(error_id type, uint8_t offset);
+bool error_reset(error_id type, uint8_t offset);
 
-uint8_t error_count();
+size_t error_get_fatal();
+size_t error_count();
 void error_dump(error_t errors[]);
 bool compare_timeouts(error_t *a, error_t *b);
 
