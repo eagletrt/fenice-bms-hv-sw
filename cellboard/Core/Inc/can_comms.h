@@ -12,5 +12,6 @@
 #include "../bms/ids.h"
 
 void can_send(uint16_t id);
+void can_init_with_filter();
 
 #endif
