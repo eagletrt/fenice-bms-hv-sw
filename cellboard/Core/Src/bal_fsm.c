@@ -51,7 +51,7 @@ void bal_fsm_init() {
 }
 
 void transition_callback(fsm handle) {
-    can_send(ID_BOARD_STATUS);
+    can_send(TOPIC_STATUS_FILTER);
 }
 
 void off_entry(fsm handle) {
