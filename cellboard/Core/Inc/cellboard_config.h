@@ -59,4 +59,8 @@
 
 #define DISCHARGE_TIMER htim6 
 
+typedef uint16_t voltage_t;
+typedef float temperature_t;
+typedef int16_t current_t;
+
 #endif
