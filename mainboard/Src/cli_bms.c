@@ -340,9 +340,9 @@ void _cli_current(uint16_t argc, char **argv, char *out) {
             "Hall 50A:\t%.1fA\r\n"
             "Hall 300A:\t%.1fA\r\n"
             "Shunt:\t\t%.1fA\r\n",
-            current_get_current_sensors()[CURRENT_SENSOR_50],
-            current_get_current_sensors()[CURRENT_SENSOR_300],
-            current_get_current_sensors()[CURRENT_SENSOR_SHUNT]);
+            current_get_current_from_sensor(CURRENT_SENSOR_50),
+            current_get_current_from_sensor(CURRENT_SENSOR_300),
+            current_get_current_from_sensor(CURRENT_SENSOR_SHUNT));
     } else if (strcmp(argv[1], "zero") == 0) {
         current_zero();
         sprintf(out, "Current zeroed\r\n");

@@ -11,57 +11,11 @@
 #include "error.h"
 
 #include <inttypes.h>
+#include "fenice_config.h"
 
 typedef uint16_t feedback_t;
 
 extern feedback_t feedback;
-
-/**
- * Feedback bit set bit position 
- */
-enum {
-    FEEDBACK_VREF_POS,
-    FEEDBACK_FROM_TSMS_POS,
-    FEEDBACK_TO_TSMS_POS,
-    FEEDBACK_FROM_SHUTDOWN_POS,
-    FEEDBACK_LATCH_IMD_POS,
-    FEEDBACK_LATCH_BMS_POS,
-    FEEDBACK_IMD_FAULT_POS,
-    FEEDBACK_BMS_FAULT_POS,
-    FEEDBACK_TSAL_HV_POS,
-    FEEDBACK_AIR_POSITIVE_POS,
-    FEEDBACK_AIR_NEGATIVE_POS,
-    FEEDBACK_PC_END_POS,
-    FEEDBACK_RELAY_LV_POS,
-    FEEDBACK_IMD_SHUTDOWN_POS,
-    FEEDBACK_BMS_SHUTDOWN_POS,
-    FEEDBACK_TS_ON_POS,
-
-    //do not move FEEDBACK_N
-    FEEDBACK_N,
-};
-
-/**
- * Feedback bit sets 
- */
-#define FEEDBACK_NULL          0
-#define FEEDBACK_VREF          ((feedback_t)1 << FEEDBACK_VREF_POS)
-#define FEEDBACK_FROM_TSMS     ((feedback_t)1 << FEEDBACK_FROM_TSMS_POS)
-#define FEEDBACK_TO_TSMS       ((feedback_t)1 << FEEDBACK_TO_TSMS_POS)
-#define FEEDBACK_FROM_SHUTDOWN ((feedback_t)1 << FEEDBACK_FROM_SHUTDOWN_POS)
-#define FEEDBACK_LATCH_IMD     ((feedback_t)1 << FEEDBACK_LATCH_IMD_POS)
-#define FEEDBACK_LATCH_BMS     ((feedback_t)1 << FEEDBACK_LATCH_BMS_POS)
-#define FEEDBACK_IMD_FAULT     ((feedback_t)1 << FEEDBACK_IMD_FAULT_POS)
-#define FEEDBACK_BMS_FAULT     ((feedback_t)1 << FEEDBACK_BMS_FAULT_POS)
-#define FEEDBACK_TSAL_HV       ((feedback_t)1 << FEEDBACK_TSAL_HV_POS)
-#define FEEDBACK_AIR_POSITIVE  ((feedback_t)1 << FEEDBACK_AIR_POSITIVE_POS)
-#define FEEDBACK_AIR_NEGATIVE  ((feedback_t)1 << FEEDBACK_AIR_NEGATIVE_POS)
-#define FEEDBACK_PC_END        ((feedback_t)1 << FEEDBACK_PC_END_POS)
-#define FEEDBACK_RELAY_LV      ((feedback_t)1 << FEEDBACK_RELAY_LV_POS)
-#define FEEDBACK_IMD_SHUTDOWN  ((feedback_t)1 << FEEDBACK_IMD_SHUTDOWN_POS)
-#define FEEDBACK_BMS_SHUTDOWN  ((feedback_t)1 << FEEDBACK_BMS_SHUTDOWN_POS)
-#define FEEDBACK_TS_ON         ((feedback_t)1 << FEEDBACK_TS_ON_POS)
-#define FEEDBACK_ALL           (feedback_t)(((feedback_t)1 << FEEDBACK_N) - 1)
 
 // Feedbacks to check after TS OFF
 #define FEEDBACK_TS_OFF_VAL FEEDBACK_VREF

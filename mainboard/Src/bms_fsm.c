@@ -104,7 +104,7 @@ void bms_blink_led() {
 }
 
 void _idle_entry(fsm FSM) {
-    can_send(ID_TS_STATUS);
+    can_car_send(ID_TS_STATUS);
 }
 
 void _idle_handler(fsm FSM, uint8_t event) {
@@ -128,6 +128,8 @@ void _precharge_entry(fsm FSM) {
     uint32_t cnt = __HAL_TIM_GET_COUNTER(&HTIM_BMS);
     __HAL_TIM_SET_COMPARE(&HTIM_BMS, TIM_CHANNEL_1, (cnt + PRECHARGE_CHECK_INTERVAL * 10));
     __HAL_TIM_SET_COMPARE(&HTIM_BMS, TIM_CHANNEL_2, (cnt + PRECHARGE_TIMEOUT * 10));
+
+    __HAL_TIM_CLEAR_FLAG(&HTIM_BMS, TIM_IT_CC2); //clears existing interrupts on channel 2
 
     HAL_TIM_OC_Start_IT(&HTIM_BMS, TIM_CHANNEL_1);
     HAL_TIM_OC_Start_IT(&HTIM_BMS, TIM_CHANNEL_2);

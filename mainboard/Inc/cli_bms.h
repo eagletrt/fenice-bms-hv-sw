@@ -12,6 +12,7 @@
 #define CLI_BMS_H
 
 #include "cli.h"
+#include "fenice_config.h"
 
 extern cli_t cli_bms;
 
