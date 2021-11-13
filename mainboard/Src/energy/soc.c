@@ -29,8 +29,8 @@ config_t soc_config;          // Config data for config.h
 
 void soc_init() {
     // Reset the counts
-    soc_init(&energy_total);
-    soc_init(&energy_last_charge);
+    energy_init(&energy_total);
+    energy_init(&energy_last_charge);
 
     // Try to load counts from memory. If errors, revert to default params
     config_init(&soc_config, ENERGY_ADDR, ENERGY_VERSION, &soc_params_default, sizeof(soc_params));

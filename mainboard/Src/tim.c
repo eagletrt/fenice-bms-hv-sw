@@ -93,6 +93,17 @@ void MX_TIM2_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN TIM2_Init 2 */
+  
+  /* 
+    TLDR: Basically if TIM_SR_UIF = 1 -> HAL_TIM_PeriodElapsedCallback is triggered
+
+    When Base_Init is called the TIM_SR_UIF flag was set, nobody knows why except this guy
+    (https://electronics.stackexchange.com/questions/161967/stm32-timer-interrupt-works-immediately) 
+    The Timer elapsed Interrupt function was called as consequence of this bug.
+
+    The adopted solution it's different instead of the one linked above, however it's working.
+  */
+  __HAL_TIM_CLEAR_IT(&htim2, TIM_IT_UPDATE);
 
   /* USER CODE END TIM2_Init 2 */
 
@@ -151,6 +162,8 @@ void MX_TIM3_Init(void)
   }
   /* USER CODE BEGIN TIM3_Init 2 */
 
+  __HAL_TIM_CLEAR_IT(&htim3, TIM_IT_UPDATE);
+
   /* USER CODE END TIM3_Init 2 */
 
 }
@@ -208,6 +221,8 @@ void MX_TIM4_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN TIM4_Init 2 */
+
+  __HAL_TIM_CLEAR_IT(&htim4, TIM_IT_UPDATE);
 
   /* USER CODE END TIM4_Init 2 */
 
