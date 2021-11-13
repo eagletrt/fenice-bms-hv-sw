@@ -1,12 +1,12 @@
-build/
 *.o
 *.elf
 *.bin
 *.hex
 *.map
 .mxproject
-Backup/
+
+**/build/
+**/Backup/*
 
 **/.vscode/*
 !**/.vscode/extensions.json
-Backup/
