@@ -30,7 +30,7 @@
 #include "peripherals/can_comm.h"
 #include "si8900.h"
 #include "soc.h"
-#include "super_fsm.h"
+#include "measures.h"
 
 #include <m95256.h>
 /* USER CODE END Includes */
@@ -119,12 +119,13 @@ int main(void)
     voltage_init();
     bal_fsm_init();
     bms_fsm_init();
-    super_fsm_init();
+    //super_fsm_init();
     current_read();
     current_zero();
     soc_init();
     can_bms_init();
     can_car_init();
+    measures_init();
 
   /* USER CODE END 2 */
 
@@ -135,7 +136,10 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
-        fsm_run(super_fsm);
+        //fsm_run(super_fsm);
+
+        fsm_run(bms.fsm);
+        fsm_run(bal.fsm);
 
         cli_loop(&cli_bms);
     }

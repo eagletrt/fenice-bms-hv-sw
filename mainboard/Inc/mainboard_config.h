@@ -15,9 +15,9 @@
 //=================================== General ===============================
 //===========================================================================
 
-#define HTIM_ERR   htim3
-#define HTIM_BMS   htim2
-#define HTIM_SUPER htim4
+#define HTIM_ERR        htim3
+#define HTIM_BMS        htim2
+#define HTIM_MEASURES   htim4
 
 #define SPI_EEPROM hspi2
 
