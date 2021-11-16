@@ -349,6 +349,7 @@ void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim) {
                 pulse = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_2);
                 __HAL_TIM_SET_COMPARE(htim, TIM_CHANNEL_2, (pulse + TEMPS_READ_INTERVAL * 10));
 
+                can_car_send(ID_HV_TEMP);
                 //fsm_trigger_event(super_fsm, SUPER_EV_MEASURE_TEMPS);
                 break;
             default:
