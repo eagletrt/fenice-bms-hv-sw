@@ -72,6 +72,7 @@ Src/error/error_list_ref.c \
 Src/feedback.c \
 Src/gpio.c \
 Src/main.c \
+Src/measures.c \
 Src/pack/current.c \
 Src/pack/pack.c \
 Src/pack/temperature.c \
@@ -81,7 +82,6 @@ Src/peripherals/si8900.c \
 Src/spi.c \
 Src/stm32f4xx_hal_msp.c \
 Src/stm32f4xx_it.c \
-Src/super_fsm.c \
 Src/system_stm32f4xx.c \
 Src/tim.c \
 Src/usart.c \

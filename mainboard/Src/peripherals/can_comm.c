@@ -106,6 +106,8 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         tx_header.DLC = serialize_Primary_HV_CURRENT(buffer, current_get_current(), current_get_current() * voltage_get_bus());
     } else if (id == ID_TS_STATUS) {
         tx_header.DLC = serialize_Primary_TS_STATUS(buffer, Primary_Ts_Status_ON);
+    } else if (id == ID_HV_TEMP) {
+        tx_header.DLC = serialize_Primary_HV_TEMP(buffer, temperature_get_average(), temperature_get_max(), temperature_get_min());
     } else {
         return HAL_ERROR;
     }
