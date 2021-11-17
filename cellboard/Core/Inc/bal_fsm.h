@@ -23,7 +23,7 @@ enum { EV_BAL_STOP = 0, EV_BAL_START, EV_BAL_CHECK_TIMER, BAL_EV_NUM };
 typedef struct {
     fsm fsm;
 
-    uint16_t cells[PACK_CELL_COUNT];
+    bms_balancing_cells cells;
     size_t cells_length;
     uint32_t discharge_time;
     uint32_t cycle_length;
