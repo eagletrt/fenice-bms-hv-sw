@@ -17,6 +17,7 @@
 #include "volt.h"
 
 #include <math.h>
+#include <string.h>
 
 
 void _can_send(CAN_HandleTypeDef *hcan, uint8_t *buffer, CAN_TxHeaderTypeDef *header) {
@@ -42,11 +43,11 @@ int serialize_bms_TOPIC_STATUS_FILTER(uint8_t *buffer, bms_errors errors, bms_ba
     switch (cellboard_index)
     {
         case 0: return serialize_bms_BOARD_STATUS_0(buffer, errors, balancing_status);
-        case 7:
         case 1: return serialize_bms_BOARD_STATUS_1(buffer, errors, balancing_status);
         case 2: return serialize_bms_BOARD_STATUS_2(buffer, errors, balancing_status);
         case 3: return serialize_bms_BOARD_STATUS_3(buffer, errors, balancing_status);
         case 4: return serialize_bms_BOARD_STATUS_4(buffer, errors, balancing_status);
+        case 7:
         case 5: return serialize_bms_BOARD_STATUS_5(buffer, errors, balancing_status);
         default: return -1;
     }
@@ -56,11 +57,11 @@ int serialize_bms_TOPIC_TEMPERATURE_INFO(uint8_t* buffer, uint8_t start_index, u
     switch (cellboard_index)
     {
         case 0: return serialize_bms_TEMP_STATS_0(buffer, start_index, temp0, temp1, temp2, temp3, temp4, temp5);
-        case 7:
         case 1: return serialize_bms_TEMP_STATS_1(buffer, start_index, temp0, temp1, temp2, temp3, temp4, temp5);
         case 2: return serialize_bms_TEMP_STATS_2(buffer, start_index, temp0, temp1, temp2, temp3, temp4, temp5);
         case 3: return serialize_bms_TEMP_STATS_3(buffer, start_index, temp0, temp1, temp2, temp3, temp4, temp5);
         case 4: return serialize_bms_TEMP_STATS_4(buffer, start_index, temp0, temp1, temp2, temp3, temp4, temp5);
+        case 7:
         case 5: return serialize_bms_TEMP_STATS_5(buffer, start_index, temp0, temp1, temp2, temp3, temp4, temp5);        
         default: return -1;
     }
@@ -70,11 +71,11 @@ int serialize_bms_TOPIC_VOLTAGE_INFO(uint8_t *buffer, uint8_t start_index, uint1
     switch (cellboard_index)
     {
         case 0: return serialize_bms_VOLTAGES_0(buffer, start_index, voltage0, voltage1, voltage2);
-        case 7:
         case 1: return serialize_bms_VOLTAGES_1(buffer, start_index, voltage0, voltage1, voltage2);
         case 2: return serialize_bms_VOLTAGES_2(buffer, start_index, voltage0, voltage1, voltage2);
         case 3: return serialize_bms_VOLTAGES_3(buffer, start_index, voltage0, voltage1, voltage2);
         case 4: return serialize_bms_VOLTAGES_4(buffer, start_index, voltage0, voltage1, voltage2);
+        case 7:
         case 5: return serialize_bms_VOLTAGES_5(buffer, start_index, voltage0, voltage1, voltage2);      
         default: return -1;
     }
@@ -106,7 +107,6 @@ void can_send(uint16_t topic_id) {
             case 0:
                 tx_header.StdId = ID_BOARD_STATUS_0;
                 break;
-            case 7:
             case 1: 
                 tx_header.StdId = ID_BOARD_STATUS_1;
                 break;
@@ -119,6 +119,7 @@ void can_send(uint16_t topic_id) {
             case 4: 
                 tx_header.StdId = ID_BOARD_STATUS_4;
                 break;
+            case 7:
             case 5: 
                 tx_header.StdId = ID_BOARD_STATUS_5;
                 break;
@@ -131,7 +132,6 @@ void can_send(uint16_t topic_id) {
             case 0: 
                 tx_header.StdId = ID_TEMP_STATS_0;
                 break;
-            case 7:
             case 1: 
                 tx_header.StdId = ID_TEMP_STATS_1;
                 break;
@@ -144,6 +144,7 @@ void can_send(uint16_t topic_id) {
             case 4: 
                 tx_header.StdId = ID_TEMP_STATS_4;
                 break;
+            case 7:
             case 5: 
                 tx_header.StdId = ID_TEMP_STATS_5;
                 break;
@@ -169,7 +170,6 @@ void can_send(uint16_t topic_id) {
             case 0: 
                 tx_header.StdId = ID_VOLTAGES_0;
                 break;
-            case 7:
             case 1:
                 tx_header.StdId = ID_VOLTAGES_1;
                 break;
@@ -182,6 +182,7 @@ void can_send(uint16_t topic_id) {
             case 4: 
                 tx_header.StdId = ID_VOLTAGES_4; 
                 break;
+            case 7:
             case 5: 
                 tx_header.StdId = ID_VOLTAGES_5; 
                 break;
@@ -216,6 +217,12 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
     if(rx_header.StdId == ID_BALANCING){
         bms_BALANCING balancing;
         deserialize_bms_BALANCING(rx_data, &balancing);
+
+        if(balancing.board_index != cellboard_index) return;
+
+        memcpy(bal.cells, balancing.cells, sizeof(bal.cells));
+
+        fsm_trigger_event(bal.fsm, EV_BAL_START);
     }
     
 }

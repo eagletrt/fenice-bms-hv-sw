@@ -78,7 +78,22 @@ size_t ltc6813_read_voltages(SPI_HandleTypeDef *hspi, voltage_t *volts) {
     return count;
 }
 
-void ltc6813_build_dcc(uint16_t indexes[], uint16_t size, uint8_t cfgar[8], uint8_t cfgbr[8]) {
+void ltc6813_build_dcc(bms_balancing_cells cells, uint16_t size, uint8_t cfgar[8], uint8_t cfgbr[8]) {
+    for(uint8_t i = 0; i < LTC6813_CELL_COUNT; ++i) {
+        if(getBit(cells, i)) {
+            if (i < 8) {
+                cfgar[4] |= dcc[i];
+            } else if (i >= 8 && i < 12) {
+                cfgar[5] |= dcc[i];
+            } else if (i >= 12 && i < 16) {
+                cfgbr[0] |= dcc[i];
+            } else if (i >= 16 && i < 18) {
+                cfgbr[1] |= dcc[i];
+            }
+        }
+    }
+
+/*
     for (uint16_t i = 0; i < size; i++) {
         if (indexes[i] < 8) {
             cfgar[4] |= dcc[indexes[i]];
@@ -90,6 +105,7 @@ void ltc6813_build_dcc(uint16_t indexes[], uint16_t size, uint8_t cfgar[8], uint
             cfgbr[1] |= dcc[indexes[i]];
         }
     }
+*/
 
     uint16_t pec = ltc6813_pec15(6, cfgar);
     cfgar[6]     = (uint8_t)(pec >> 8);

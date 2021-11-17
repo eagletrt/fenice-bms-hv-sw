@@ -54,7 +54,7 @@ void transition_callback(fsm handle) {
 }
 
 void off_entry(fsm handle) {
-    uint16_t cells[PACK_CELL_COUNT] = {0};
+    bms_balancing_cells cells = bms_balancing_cells_default;
     bal.cells_length                = 0;
 
     ltc6813_set_balancing(&LTC6813_SPI, cells, PACK_CELL_COUNT, 0);
@@ -63,7 +63,7 @@ void off_entry(fsm handle) {
 void off_handler(fsm handle, uint8_t event) {
     switch (event) {
         case EV_BAL_START:
-            fsm_transition(handle, BAL_COMPUTE);
+            fsm_transition(handle, BAL_DISCHARGE);
             break;
     }
 }
@@ -92,7 +92,6 @@ void discharge_handler(fsm handle, uint8_t event) {
     switch (event) {
         case EV_BAL_STOP:
             fsm_transition(handle, BAL_OFF);
-
             break;
     }
 }
@@ -103,7 +102,6 @@ void discharge_handler(fsm handle, uint8_t event) {
   */
 void bal_timers_handler(TIM_HandleTypeDef* htim, fsm handle){
     if(htim->Instance == DISCHARGE_TIMER.Instance){
-        
-        bal.cells_length = 0;
+        fsm_trigger_event(bal.fsm, EV_BAL_STOP);
     }
 }
