@@ -153,62 +153,62 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
         if (rx_header.StdId == ID_VOLTAGES_0) {
             bms_VOLTAGES_0 voltages_0;
             deserialize_bms_VOLTAGES_0(rx_data, &voltages_0);
-            voltage_set_cells(voltages_0.start_index, voltages_0.voltage0, voltages_0.voltage1, voltages_0.voltage2);
+            voltage_set_cells(voltages_0.start_index + VOLTAGE_CELLBOARD_0, voltages_0.voltage0, voltages_0.voltage1, voltages_0.voltage2);
         }
         else if (rx_header.StdId == ID_VOLTAGES_1) {
             bms_VOLTAGES_1 voltages_1;
             deserialize_bms_VOLTAGES_1(rx_data, &voltages_1);
-            voltage_set_cells(voltages_1.start_index, voltages_1.voltage0, voltages_1.voltage1, voltages_1.voltage2);
+            voltage_set_cells(voltages_1.start_index + VOLTAGE_CELLBOARD_1, voltages_1.voltage0, voltages_1.voltage1, voltages_1.voltage2);
         }
         else if (rx_header.StdId == ID_VOLTAGES_2) {
             bms_VOLTAGES_2 voltages_2;
             deserialize_bms_VOLTAGES_2(rx_data, &voltages_2);
-            voltage_set_cells(voltages_2.start_index, voltages_2.voltage0, voltages_2.voltage1, voltages_2.voltage2);
+            voltage_set_cells(voltages_2.start_index + VOLTAGE_CELLBOARD_2, voltages_2.voltage0, voltages_2.voltage1, voltages_2.voltage2);
         }
         else if (rx_header.StdId == ID_VOLTAGES_3) {
             bms_VOLTAGES_3 voltages_3;
             deserialize_bms_VOLTAGES_3(rx_data, &voltages_3);
-            voltage_set_cells(voltages_3.start_index, voltages_3.voltage0, voltages_3.voltage1, voltages_3.voltage2);
+            voltage_set_cells(voltages_3.start_index + VOLTAGE_CELLBOARD_3, voltages_3.voltage0, voltages_3.voltage1, voltages_3.voltage2);
         }
         else if (rx_header.StdId == ID_VOLTAGES_4) {
             bms_VOLTAGES_4 voltages_4;
             deserialize_bms_VOLTAGES_4(rx_data, &voltages_4);
-            voltage_set_cells(voltages_4.start_index, voltages_4.voltage0, voltages_4.voltage1, voltages_4.voltage2);
+            voltage_set_cells(voltages_4.start_index + VOLTAGE_CELLBOARD_4, voltages_4.voltage0, voltages_4.voltage1, voltages_4.voltage2);
         }
         else if (rx_header.StdId == ID_VOLTAGES_5) {
             bms_VOLTAGES_5 voltages_5;
             deserialize_bms_VOLTAGES_5(rx_data, &voltages_5);
-            voltage_set_cells(voltages_5.start_index, voltages_5.voltage0, voltages_5.voltage1, voltages_5.voltage2);
+            voltage_set_cells(voltages_5.start_index + VOLTAGE_CELLBOARD_5, voltages_5.voltage0, voltages_5.voltage1, voltages_5.voltage2);
         }
         else if (rx_header.StdId == ID_TEMP_STATS_0) {
             bms_TEMP_STATS_0 temp_stats_0;
             deserialize_bms_TEMP_STATS_0(rx_data, &temp_stats_0);
-            temperature_set_cells(temp_stats_0.start_index, temp_stats_0.temp0, temp_stats_0.temp1, temp_stats_0.temp2, temp_stats_0.temp3, temp_stats_0.temp4, temp_stats_0.temp5);
+            temperature_set_cells(temp_stats_0.start_index + TEMP_CELLBOARD_0, temp_stats_0.temp0, temp_stats_0.temp1, temp_stats_0.temp2, temp_stats_0.temp3, temp_stats_0.temp4, temp_stats_0.temp5);
         }
         else if (rx_header.StdId == ID_TEMP_STATS_1) {
             bms_TEMP_STATS_1 temp_stats_1;
             deserialize_bms_TEMP_STATS_1(rx_data, &temp_stats_1);
-            temperature_set_cells(temp_stats_1.start_index, temp_stats_1.temp0, temp_stats_1.temp1, temp_stats_1.temp2, temp_stats_1.temp3, temp_stats_1.temp4, temp_stats_1.temp5);
+            temperature_set_cells(temp_stats_1.start_index + TEMP_CELLBOARD_1, temp_stats_1.temp0, temp_stats_1.temp1, temp_stats_1.temp2, temp_stats_1.temp3, temp_stats_1.temp4, temp_stats_1.temp5);
         }
         else if (rx_header.StdId == ID_TEMP_STATS_2) {
             bms_TEMP_STATS_2 temp_stats_2;
             deserialize_bms_TEMP_STATS_2(rx_data, &temp_stats_2);
-            temperature_set_cells(temp_stats_2.start_index, temp_stats_2.temp0, temp_stats_2.temp1, temp_stats_2.temp2, temp_stats_2.temp3, temp_stats_2.temp4, temp_stats_2.temp5);
+            temperature_set_cells(temp_stats_2.start_index + TEMP_CELLBOARD_2, temp_stats_2.temp0, temp_stats_2.temp1, temp_stats_2.temp2, temp_stats_2.temp3, temp_stats_2.temp4, temp_stats_2.temp5);
         }
         else if (rx_header.StdId == ID_TEMP_STATS_3) {
             bms_TEMP_STATS_3 temp_stats_3;
             deserialize_bms_TEMP_STATS_3(rx_data, &temp_stats_3);
-            temperature_set_cells(temp_stats_3.start_index, temp_stats_3.temp0, temp_stats_3.temp1, temp_stats_3.temp2, temp_stats_3.temp3, temp_stats_3.temp4, temp_stats_3.temp5);
+            temperature_set_cells(temp_stats_3.start_index + TEMP_CELLBOARD_3, temp_stats_3.temp0, temp_stats_3.temp1, temp_stats_3.temp2, temp_stats_3.temp3, temp_stats_3.temp4, temp_stats_3.temp5);
         }
         else if (rx_header.StdId == ID_TEMP_STATS_4) {
             bms_TEMP_STATS_4 temp_stats_4;
             deserialize_bms_TEMP_STATS_4(rx_data, &temp_stats_4);
-            temperature_set_cells(temp_stats_4.start_index, temp_stats_4.temp0, temp_stats_4.temp1, temp_stats_4.temp2, temp_stats_4.temp3, temp_stats_4.temp4, temp_stats_4.temp5);
+            temperature_set_cells(temp_stats_4.start_index + TEMP_CELLBOARD_4, temp_stats_4.temp0, temp_stats_4.temp1, temp_stats_4.temp2, temp_stats_4.temp3, temp_stats_4.temp4, temp_stats_4.temp5);
         }
         else if (rx_header.StdId == ID_TEMP_STATS_5) {
             bms_TEMP_STATS_5 temp_stats_5;
             deserialize_bms_TEMP_STATS_5(rx_data, &temp_stats_5);
-            temperature_set_cells(temp_stats_5.start_index, temp_stats_5.temp0, temp_stats_5.temp1, temp_stats_5.temp2, temp_stats_5.temp3, temp_stats_5.temp4, temp_stats_5.temp5);
+            temperature_set_cells(temp_stats_5.start_index + TEMP_CELLBOARD_5, temp_stats_5.temp0, temp_stats_5.temp1, temp_stats_5.temp2, temp_stats_5.temp3, temp_stats_5.temp4, temp_stats_5.temp5);
         }
         else if (rx_header.StdId == ID_BOARD_STATUS_0) {
             bms_BOARD_STATUS_0 board_status_0;

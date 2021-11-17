@@ -9,8 +9,16 @@
 #pragma once
 
 #include <inttypes.h>
+#include <mainboard_config.h>
 
 typedef uint8_t temperature_t;
+
+typedef enum { TEMP_CELLBOARD_0 = 0, 
+    TEMP_CELLBOARD_1 = TEMP_SENSOR_COUNT*1, 
+    TEMP_CELLBOARD_2 = TEMP_SENSOR_COUNT*2, 
+    TEMP_CELLBOARD_3 = TEMP_SENSOR_COUNT*3, 
+    TEMP_CELLBOARD_4 = TEMP_SENSOR_COUNT*4, 
+    TEMP_CELLBOARD_5 = TEMP_SENSOR_COUNT*5,} TEMP_CELLBOARD_START_INDEX;
 
 void temperature_init();
 
