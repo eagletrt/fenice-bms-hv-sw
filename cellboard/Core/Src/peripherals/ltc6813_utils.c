@@ -116,14 +116,14 @@ void ltc6813_build_dcc(bms_balancing_cells cells, uint16_t size, uint8_t cfgar[8
     cfgbr[7] = (uint8_t)(pec);
 }
 
-void ltc6813_set_balancing(SPI_HandleTypeDef *hspi, uint16_t *indexes, uint16_t size, int dcto) {
+void ltc6813_set_balancing(SPI_HandleTypeDef *hspi, bms_balancing_cells cells, uint16_t size, int dcto) {
     uint8_t cfgar[8] = {0};
     uint8_t cfgbr[8] = {0};
 
     // cfgbr[i][1] += 0b00001000; // set DTMEN
     cfgar[0] += 0b00000010;  // set DTEN
     cfgar[5] += dcto << 4;   // Set timer
-    ltc6813_build_dcc(indexes, size, cfgar, cfgbr);
+    ltc6813_build_dcc(cells, size, cfgar, cfgbr);
 
     ltc6813_wakeup_idle(hspi);
 

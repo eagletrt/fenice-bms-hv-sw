@@ -152,6 +152,7 @@ int main(void)
             // CAN_WAIT(&BMS_CAN);
 
             char buf[5000] = {'\0'};
+            /*
             uint16_t min   = volt_get_min();
 
             for (uint8_t i = 0; i < CELLBOARD_CELL_COUNT; i++) {
@@ -172,7 +173,7 @@ int main(void)
                 //}
                 //sprintf(buf + strlen(buf), "[%3u %-.3f V] ", i, (float)voltages[i] / 10000);
             }
-
+*/
             sprintf(buf + strlen(buf), "Threshold: %d mV", BAL_MAX_VOLTAGE_THRESHOLD / 10);
             sprintf(buf + strlen(buf), "\r\nBAL: %li", fsm_get_state(bal.fsm));
             if (errors != 0) {

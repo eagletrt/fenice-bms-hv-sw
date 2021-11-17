@@ -14,6 +14,7 @@
 #include "cellboard_config.h"
 #include "fsm.h"
 #include "tim.h"
+#include "can_comms.h"
 
 #include <inttypes.h>
 
