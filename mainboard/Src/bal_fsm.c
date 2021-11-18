@@ -16,6 +16,8 @@
 #include "pack/pack.h"
 #include "spi.h"
 
+#include <string.h>
+
 #define CONF_VER  0x01
 #define CONF_ADDR 0x01
 
@@ -33,7 +35,9 @@ void compute_entry(fsm FSM);
 void discharge_entry(fsm FSM);
 void discharge_exit(fsm FSM);
 void discharge_handler(fsm FSM, uint8_t event);
+void cooldown_entry(fsm FSM);
 void cooldown_handler(fsm FSM, uint8_t event);
+void cooldown_exit(fsm FSM);
 
 voltage_t bal_get_threshold() {
     return ((bal_params *)config_get(config))->threshold;
@@ -48,7 +52,7 @@ void bal_set_threshold(uint16_t thresh) {
 }
 
 void bal_fsm_init() {
-    bal.cycle_length = BAL_CYCLE_LENGTH;
+    bal.cycle_length = TIM_MS_TO_TICKS(&HTIM_BAL, 30000);
     bal.fsm          = fsm_init(BAL_NUM_STATES, BAL_EV_NUM, NULL, NULL);
 
     fsm_state state;
@@ -65,18 +69,23 @@ void bal_fsm_init() {
 
     state.handler = discharge_handler;
     state.entry   = discharge_entry;
-    state.exit    = NULL;
+    state.exit    = discharge_exit;
     fsm_set_state(bal.fsm, BAL_DISCHARGE, &state);
 
     state.handler = cooldown_handler;
-    state.entry   = NULL;
-    state.exit    = NULL;
+    state.entry   = cooldown_entry;
+    state.exit    = cooldown_exit;
     fsm_set_state(bal.fsm, BAL_COOLDOWN, &state);
+
+    __HAL_TIM_SetCounter(&HTIM_BAL, 0U);
+    HAL_TIM_Base_Start_IT(&HTIM_BAL);
 
     config_init(&config, CONF_ADDR, CONF_VER, &bal_params_default, sizeof(bal_params));
 }
 
 void off_entry(fsm FSM) {
+	memset(bal.cells, 0, sizeof(bms_balancing_cells) * LTC6813_COUNT);
+    can_bms_send(ID_BALANCING);
 }
 
 void off_handler(fsm FSM, uint8_t event) {
@@ -88,6 +97,7 @@ void off_handler(fsm FSM, uint8_t event) {
 }
 
 void compute_entry(fsm FSM) {
+    voltage_set_cells(0, 1000, 0, 0);
     if ( bal_get_cells_to_discharge(voltage_get_cells(), PACK_CELL_COUNT, bal_get_threshold(), bal.cells, LTC6813_COUNT) != 0) {
         fsm_transition(FSM, BAL_DISCHARGE);
         return;
@@ -98,7 +108,14 @@ void compute_entry(fsm FSM) {
 }
 
 void discharge_entry(fsm FSM) {
+    /*
+    fsm_trigger_event(FSM, EV_BAL_CHECK_TIMER);
     bal.discharge_time = HAL_GetTick();
+    */
+
+    __HAL_TIM_SET_COMPARE(&HTIM_BAL, TIM_CHANNEL_1, __HAL_TIM_GET_COUNTER(&HTIM_BAL) + bal.cycle_length);
+    HAL_TIM_OC_Start_IT(&HTIM_BAL, TIM_CHANNEL_1);
+
     can_bms_send(ID_BALANCING);
     cli_bms_debug("Discharging cells", 18);
 }
@@ -108,26 +125,33 @@ void discharge_handler(fsm FSM, uint8_t event) {
         case EV_BAL_STOP:
             fsm_transition(FSM, BAL_OFF);
             break;
-        case EV_BAL_CHECK_TIMER:
-            if (bal.discharge_time - HAL_GetTick() >= bal.cycle_length) {
-                fsm_transition(FSM, BAL_COOLDOWN);
-            } else {
-                fsm_trigger_event(FSM, EV_BAL_CHECK_TIMER);
-            }
-            break;
+        case EV_BAL_COOLDOWN_START:
+            fsm_transition(FSM, BAL_COOLDOWN);
     }
+}
+
+void discharge_exit(fsm FSM) {
+    HAL_TIM_OC_Stop_IT(&HTIM_BAL, TIM_CHANNEL_1);
+}
+
+void cooldown_entry(fsm FSM) {
+    __HAL_TIM_SET_COMPARE(&HTIM_BAL, TIM_CHANNEL_2, __HAL_TIM_GET_COUNTER(&HTIM_BAL) + TIM_MS_TO_TICKS(&HTIM_BAL, BAL_COOLDOWN_DELAY));
+    __HAL_TIM_CLEAR_FLAG(&HTIM_BAL, TIM_IT_CC2); //clears existing interrupts on channel 1
+    HAL_TIM_OC_Start_IT(&HTIM_BAL, TIM_CHANNEL_2);
+
+    cli_bms_debug("Cooldown cells", 15);
 }
 
 void cooldown_handler(fsm FSM, uint8_t event) {
     switch (event) {
         case EV_BAL_STOP:
             fsm_transition(FSM, BAL_OFF);
-        case EV_BAL_CHECK_TIMER:
-            if (bal.discharge_time - HAL_GetTick() >= bal.cycle_length + BAL_COOLDOWN_DELAY) {
-                fsm_transition(FSM, BAL_COMPUTE);
-            } else {
-                fsm_trigger_event(FSM, EV_BAL_CHECK_TIMER);
-            }
+        case EV_BAL_COOLDOWN_END:
+            fsm_transition(FSM, BAL_COMPUTE);
             break;
     }
+}
+
+void cooldown_exit(fsm FSM) {
+    HAL_TIM_OC_Stop_IT(&HTIM_BAL, TIM_CHANNEL_2);
 }
