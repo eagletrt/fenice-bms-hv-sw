@@ -18,7 +18,7 @@
 
 #include <inttypes.h>
 
-enum { BAL_OFF = 0, BAL_COMPUTE, BAL_DISCHARGE, BAL_NUM_STATES };
+enum { BAL_OFF = 0, BAL_DISCHARGE, BAL_NUM_STATES };
 enum { EV_BAL_STOP = 0, EV_BAL_START, EV_BAL_CHECK_TIMER, BAL_EV_NUM };
 
 typedef struct {

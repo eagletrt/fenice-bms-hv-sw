@@ -19,7 +19,6 @@ bal_fsm bal;
 
 void off_entry(fsm handle);
 void off_handler(fsm handle, uint8_t event);
-void compute_entry(fsm handle);
 void discharge_entry(fsm handle);
 void discharge_handler(fsm handle, uint8_t event);
 void transition_callback(fsm handle);
@@ -35,12 +34,6 @@ void bal_fsm_init() {
     state.run     = NULL;
     state.exit    = NULL;
     fsm_set_state(bal.fsm, BAL_OFF, &state);
-
-    state.handler = NULL;
-    state.entry   = compute_entry;
-    state.run     = NULL;
-    state.exit    = NULL;
-    fsm_set_state(bal.fsm, BAL_COMPUTE, &state);
 
     state.handler = discharge_handler;
     state.entry   = discharge_entry;
@@ -66,17 +59,6 @@ void off_handler(fsm handle, uint8_t event) {
             fsm_transition(handle, BAL_DISCHARGE);
             break;
     }
-}
-
-void compute_entry(fsm handle) {
-    bal.cells_length = bal_get_cells_to_discharge(voltages, PACK_CELL_COUNT, BAL_MAX_VOLTAGE_THRESHOLD, bal.cells);
-
-    if (bal.cells_length != 0) {
-        fsm_transition(handle, BAL_DISCHARGE);
-        return;
-    }
-    //cli_bms_debug("Non si può fare meglio di così.", 34);
-    fsm_transition(handle, BAL_OFF);
 }
 
 void discharge_entry(fsm handle) {
