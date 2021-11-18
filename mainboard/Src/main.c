@@ -107,6 +107,7 @@ int main(void)
   MX_DMA_Init();
   MX_ADC2_Init();
   MX_ADC3_Init();
+  MX_TIM5_Init();
   /* USER CODE BEGIN 2 */
     HAL_GPIO_WritePin(EEPROM_HOLD_GPIO_Port, EEPROM_HOLD_Pin, GPIO_PIN_SET);
     current_start_measure();
@@ -140,6 +141,16 @@ int main(void)
 
         fsm_run(bms.fsm);
         fsm_run(bal.fsm);
+
+        if(measure_current_flag) {
+          measure_current_flag = false;
+          measures_current();
+          can_car_send(ID_HV_CURRENT);
+        }
+        if(measure_temp_flag) {
+          measure_temp_flag = false;
+          can_car_send(ID_HV_TEMP);
+        }
 
         cli_loop(&cli_bms);
     }

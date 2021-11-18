@@ -129,6 +129,7 @@ void _precharge_entry(fsm FSM) {
     __HAL_TIM_SET_COMPARE(&HTIM_BMS, TIM_CHANNEL_1, (cnt + PRECHARGE_CHECK_INTERVAL * 10));
     __HAL_TIM_SET_COMPARE(&HTIM_BMS, TIM_CHANNEL_2, (cnt + PRECHARGE_TIMEOUT * 10));
 
+    __HAL_TIM_CLEAR_FLAG(&HTIM_BMS, TIM_IT_CC1); //clears existing interrupts on channel 1
     __HAL_TIM_CLEAR_FLAG(&HTIM_BMS, TIM_IT_CC2); //clears existing interrupts on channel 2
 
     HAL_TIM_OC_Start_IT(&HTIM_BMS, TIM_CHANNEL_1);

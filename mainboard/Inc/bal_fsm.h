@@ -13,9 +13,10 @@
 #include "bal.h"
 #include "fsm.h"
 #include "can_comm.h"
+#include "tim.h"
 
 enum { BAL_OFF, BAL_COMPUTE, BAL_DISCHARGE, BAL_COOLDOWN, BAL_NUM_STATES };
-enum { EV_BAL_STOP, EV_BAL_START, EV_BAL_CHECK_TIMER, BAL_EV_NUM };
+enum { EV_BAL_STOP, EV_BAL_START, EV_BAL_COOLDOWN_START, EV_BAL_COOLDOWN_END, BAL_EV_NUM };
 
 typedef struct {
     fsm fsm;
