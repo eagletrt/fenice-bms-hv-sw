@@ -49,7 +49,6 @@ void transition_callback(fsm handle) {
 
 void off_entry(fsm handle) {
     bms_balancing_cells cells = { 1, 1, 1 };
-
     ltc6813_set_balancing(&LTC6813_SPI, cells, 0);
 }
 
@@ -83,13 +82,13 @@ void discharge_handler(fsm handle, uint8_t event) {
   * @retval None
   */
 void bal_timers_handler(TIM_HandleTypeDef* htim, fsm handle){
-    if(htim->Instance == DISCHARGE_TIMER.Instance){
+    if(htim->Instance == DISCHARGE_TIMER.Instance) {
+        memset(bal.cells, 0, sizeof(bal.cells));
         fsm_trigger_event(bal.fsm, EV_BAL_STOP);
     }
 }
 
 uint8_t bal_is_cells_empty() {
     bms_balancing_cells empty = bms_balancing_cells_default;
-    volatile int a = memcmp(bal.cells, &empty, sizeof(bal.cells)) == 0;
-    return a;
+    return memcmp(bal.cells, &empty, sizeof(bal.cells)) == 0;
 }
