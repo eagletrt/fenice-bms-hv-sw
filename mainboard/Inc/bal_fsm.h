@@ -20,8 +20,8 @@ enum { EV_BAL_STOP, EV_BAL_START, EV_BAL_COOLDOWN_START, EV_BAL_COOLDOWN_END, BA
 
 typedef struct {
     fsm fsm;
-
     bms_balancing_cells cells[LTC6813_COUNT];
+    bms_balancing_status status[LTC6813_COUNT];
     uint32_t discharge_time;
     uint32_t cycle_length;
 } bal_fsm;
@@ -32,5 +32,6 @@ uint16_t bal_get_threshold();
 void bal_set_threshold(uint16_t thresh);
 
 void bal_fsm_init();
+uint8_t bal_are_cells_off_status();
 
 #endif
