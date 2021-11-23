@@ -39,9 +39,6 @@
 
 #define LTC6813_PERIPHERAL hspi1
 
-// Set to 1 to emulate the LTC daisy chain
-#define LTC6813_EMU 1
-
 /**
  * Number of daisy chained LTCs
  */

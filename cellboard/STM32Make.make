@@ -41,7 +41,6 @@ Core/Lib/can-cicd/naked_generator/Secondary/c/Secondary.c \
 Core/Lib/can-cicd/naked_generator/bms/c/bms.c \
 Core/Lib/micro-libs/fsm/fsm.c \
 Core/Lib/micro-libs/m95256/m95256.c \
-Core/Src/bal.c \
 Core/Src/bal_fsm.c \
 Core/Src/can.c \
 Core/Src/can_comms.c \

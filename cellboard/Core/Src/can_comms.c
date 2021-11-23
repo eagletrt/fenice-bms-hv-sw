@@ -95,9 +95,6 @@ void can_send(uint16_t topic_id) {
             case BAL_OFF:
                 state = bms_balancing_status_OFF;
                 break;
-            case BAL_COMPUTE:
-                state = bms_balancing_status_COMPUTE;
-                break;
             case BAL_DISCHARGE:
                 state = bms_balancing_status_DISCHARGE;
                 break;
@@ -221,8 +218,11 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
         if(balancing.board_index != cellboard_index) return;
 
         memcpy(bal.cells, balancing.cells, sizeof(bal.cells));
-
-        fsm_trigger_event(bal.fsm, EV_BAL_START);
+        if(bal_is_cells_empty()) {
+            fsm_trigger_event(bal.fsm, EV_BAL_STOP);
+        } else {
+            fsm_trigger_event(bal.fsm, EV_BAL_START);
+        }
     }
     
 }

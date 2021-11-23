@@ -78,7 +78,7 @@ size_t ltc6813_read_voltages(SPI_HandleTypeDef *hspi, voltage_t *volts) {
     return count;
 }
 
-void ltc6813_build_dcc(bms_balancing_cells cells, uint16_t size, uint8_t cfgar[8], uint8_t cfgbr[8]) {
+void ltc6813_build_dcc(bms_balancing_cells cells, uint8_t cfgar[8], uint8_t cfgbr[8]) {
     for(uint8_t i = 0; i < LTC6813_CELL_COUNT; ++i) {
         if(getBit(cells, i)) {
             if (i < 8) {
@@ -93,20 +93,6 @@ void ltc6813_build_dcc(bms_balancing_cells cells, uint16_t size, uint8_t cfgar[8
         }
     }
 
-/*
-    for (uint16_t i = 0; i < size; i++) {
-        if (indexes[i] < 8) {
-            cfgar[4] |= dcc[indexes[i]];
-        } else if (indexes[i] >= 8 && indexes[i] < 12) {
-            cfgar[5] |= dcc[indexes[i]];
-        } else if (indexes[i] >= 12 && indexes[i] < 16) {
-            cfgbr[0] |= dcc[indexes[i]];
-        } else if (indexes[i] >= 16 && indexes[i] < 18) {
-            cfgbr[1] |= dcc[indexes[i]];
-        }
-    }
-*/
-
     uint16_t pec = ltc6813_pec15(6, cfgar);
     cfgar[6]     = (uint8_t)(pec >> 8);
     cfgar[7]     = (uint8_t)(pec);
@@ -116,14 +102,14 @@ void ltc6813_build_dcc(bms_balancing_cells cells, uint16_t size, uint8_t cfgar[8
     cfgbr[7] = (uint8_t)(pec);
 }
 
-void ltc6813_set_balancing(SPI_HandleTypeDef *hspi, bms_balancing_cells cells, uint16_t size, int dcto) {
+void ltc6813_set_balancing(SPI_HandleTypeDef *hspi, bms_balancing_cells cells, int dcto) {
     uint8_t cfgar[8] = {0};
     uint8_t cfgbr[8] = {0};
 
     // cfgbr[i][1] += 0b00001000; // set DTMEN
     cfgar[0] += 0b00000010;  // set DTEN
     cfgar[5] += dcto << 4;   // Set timer
-    ltc6813_build_dcc(cells, size, cfgar, cfgbr);
+    ltc6813_build_dcc(cells, cfgar, cfgbr);
 
     ltc6813_wakeup_idle(hspi);
 

@@ -152,18 +152,14 @@ int main(void)
             // CAN_WAIT(&BMS_CAN);
 
             char buf[5000] = {'\0'};
-            /*
             uint16_t min   = volt_get_min();
 
             for (uint8_t i = 0; i < CELLBOARD_CELL_COUNT; i++) {
                 sprintf(buf + strlen(buf), "%3u %-.3fV", i, (float)voltages[i] / 10000);
 
-                for (size_t k = 0; k < bal.cells_length; k++) {
-                    if (bal.cells[k] == i) {
-                        sprintf(buf + strlen(buf), " D");
-                        break;
-                    }
-                }
+                if (getBit(bal.cells, i))
+                  sprintf(buf + strlen(buf), " D");
+
                 if (min == i) {
                     sprintf(buf + strlen(buf), " M");
                 }
@@ -173,7 +169,6 @@ int main(void)
                 //}
                 //sprintf(buf + strlen(buf), "[%3u %-.3f V] ", i, (float)voltages[i] / 10000);
             }
-*/
             sprintf(buf + strlen(buf), "Threshold: %d mV", BAL_MAX_VOLTAGE_THRESHOLD / 10);
             sprintf(buf + strlen(buf), "\r\nBAL: %li", fsm_get_state(bal.fsm));
             if (errors != 0) {

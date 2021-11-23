@@ -25,7 +25,6 @@ typedef struct {
     fsm fsm;
 
     bms_balancing_cells cells;
-    size_t cells_length;
     uint32_t discharge_time;
     uint32_t cycle_length;
 } bal_fsm;
@@ -34,5 +33,6 @@ extern bal_fsm bal;
 
 void bal_fsm_init();
 void bal_timers_handler(TIM_HandleTypeDef* htim, fsm handle);
+uint8_t bal_is_cells_empty();
 
 #endif
