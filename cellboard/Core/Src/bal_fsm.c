@@ -48,7 +48,7 @@ void transition_callback(fsm handle) {
 }
 
 void off_entry(fsm handle) {
-    bms_balancing_cells cells = { 1, 1, 1 };
+    bms_balancing_cells cells = bms_balancing_cells_default;
     ltc6813_set_balancing(&LTC6813_SPI, cells, 0);
 }
 
