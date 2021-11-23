@@ -87,6 +87,9 @@ void bal_fsm_init() {
 }
 
 void off_entry(fsm FSM) {
+    HAL_TIM_OC_Stop_IT(&HTIM_BAL, TIM_CHANNEL_1);
+    HAL_TIM_OC_Stop_IT(&HTIM_BAL, TIM_CHANNEL_2);
+    cli_bms_debug("disabling balancing", 20);
 	memset(bal.cells, 0, sizeof(bms_balancing_cells) * LTC6813_COUNT);
     can_bms_send(ID_BALANCING);
 }
@@ -131,9 +134,9 @@ void discharge_handler(fsm FSM, uint8_t event) {
             break;
         case EV_BAL_COOLDOWN_START:
             if(bal_are_cells_off_status()){
-                fsm_trigger_event(FSM, EV_BAL_COOLDOWN_START);
-            } else {
                 fsm_transition(FSM, BAL_COOLDOWN);
+            } else {
+                fsm_trigger_event(FSM, EV_BAL_COOLDOWN_START);
             }
             break;
     }
