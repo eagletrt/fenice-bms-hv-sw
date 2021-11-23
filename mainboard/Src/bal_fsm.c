@@ -52,7 +52,10 @@ void bal_set_threshold(uint16_t thresh) {
 }
 
 void bal_fsm_init() {
-    bal.cycle_length = TIM_MS_TO_TICKS(&HTIM_BAL, 30000);
+    memset(bal.cells, 0, sizeof(bal.cells));
+    memset(bal.status, bms_balancing_status_OFF, sizeof(bal.status));
+
+    bal.cycle_length = TIM_MS_TO_TICKS(&HTIM_BAL, BAL_CYCLE_LENGTH);
     bal.fsm          = fsm_init(BAL_NUM_STATES, BAL_EV_NUM, NULL, NULL);
 
     fsm_state state;
@@ -97,7 +100,6 @@ void off_handler(fsm FSM, uint8_t event) {
 }
 
 void compute_entry(fsm FSM) {
-    voltage_set_cells(0, 1000, 0, 0);
     if ( bal_get_cells_to_discharge(voltage_get_cells(), PACK_CELL_COUNT, bal_get_threshold(), bal.cells, LTC6813_COUNT) != 0) {
         fsm_transition(FSM, BAL_DISCHARGE);
         return;
@@ -113,7 +115,9 @@ void discharge_entry(fsm FSM) {
     bal.discharge_time = HAL_GetTick();
     */
 
+    HAL_TIM_Base_Stop_IT(&HTIM_BAL);
     __HAL_TIM_SET_COMPARE(&HTIM_BAL, TIM_CHANNEL_1, __HAL_TIM_GET_COUNTER(&HTIM_BAL) + bal.cycle_length);
+    HAL_TIM_Base_Start_IT(&HTIM_BAL);
     HAL_TIM_OC_Start_IT(&HTIM_BAL, TIM_CHANNEL_1);
 
     can_bms_send(ID_BALANCING);
@@ -126,7 +130,12 @@ void discharge_handler(fsm FSM, uint8_t event) {
             fsm_transition(FSM, BAL_OFF);
             break;
         case EV_BAL_COOLDOWN_START:
-            fsm_transition(FSM, BAL_COOLDOWN);
+            if(bal_are_cells_off_status()){
+                fsm_trigger_event(FSM, EV_BAL_COOLDOWN_START);
+            } else {
+                fsm_transition(FSM, BAL_COOLDOWN);
+            }
+            break;
     }
 }
 
@@ -135,8 +144,11 @@ void discharge_exit(fsm FSM) {
 }
 
 void cooldown_entry(fsm FSM) {
+
+    HAL_TIM_Base_Stop_IT(&HTIM_BAL);
     __HAL_TIM_SET_COMPARE(&HTIM_BAL, TIM_CHANNEL_2, __HAL_TIM_GET_COUNTER(&HTIM_BAL) + TIM_MS_TO_TICKS(&HTIM_BAL, BAL_COOLDOWN_DELAY));
     __HAL_TIM_CLEAR_FLAG(&HTIM_BAL, TIM_IT_CC2); //clears existing interrupts on channel 1
+    HAL_TIM_Base_Start_IT(&HTIM_BAL);
     HAL_TIM_OC_Start_IT(&HTIM_BAL, TIM_CHANNEL_2);
 
     cli_bms_debug("Cooldown cells", 15);
@@ -154,4 +166,9 @@ void cooldown_handler(fsm FSM, uint8_t event) {
 
 void cooldown_exit(fsm FSM) {
     HAL_TIM_OC_Stop_IT(&HTIM_BAL, TIM_CHANNEL_2);
+}
+
+uint8_t bal_are_cells_off_status() {
+    bms_balancing_status off[LTC6813_COUNT] = { bms_balancing_status_OFF };
+    return memcmp(bal.status, off, sizeof(bal.status)) == 0;
 }

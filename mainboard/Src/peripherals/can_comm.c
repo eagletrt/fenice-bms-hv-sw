@@ -213,26 +213,32 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
         else if (rx_header.StdId == ID_BOARD_STATUS_0) {
             bms_BOARD_STATUS_0 board_status_0;
             deserialize_bms_BOARD_STATUS_0(rx_data, &board_status_0);
+            bal.status[0] = board_status_0.balancing_status;
         }
         else if (rx_header.StdId == ID_BOARD_STATUS_1) {
             bms_BOARD_STATUS_1 board_status_1;
             deserialize_bms_BOARD_STATUS_1(rx_data, &board_status_1);
+            bal.status[1] = board_status_1.balancing_status;
         }
         else if (rx_header.StdId == ID_BOARD_STATUS_2) {
             bms_BOARD_STATUS_2 board_status_2;
             deserialize_bms_BOARD_STATUS_2(rx_data, &board_status_2);
+            bal.status[2] = board_status_2.balancing_status;
         }
         else if (rx_header.StdId == ID_BOARD_STATUS_3) {
             bms_BOARD_STATUS_3 board_status_3;
             deserialize_bms_BOARD_STATUS_3(rx_data, &board_status_3);
+            bal.status[3] = board_status_3.balancing_status;
         }
         else if (rx_header.StdId == ID_BOARD_STATUS_4) {
             bms_BOARD_STATUS_4 board_status_4;
             deserialize_bms_BOARD_STATUS_4(rx_data, &board_status_4);
+            bal.status[4] = board_status_4.balancing_status;
         }
         else if (rx_header.StdId == ID_BOARD_STATUS_5) {
             bms_BOARD_STATUS_5 board_status_5;
             deserialize_bms_BOARD_STATUS_5(rx_data, &board_status_5);
+            bal.status[5] = board_status_5.balancing_status;
         }
     }
 }
