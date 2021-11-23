@@ -150,6 +150,17 @@ int main(void)
 
             can_send(TOPIC_VOLTAGE_INFO_FILTER);
             // CAN_WAIT(&BMS_CAN);
+        }
+
+        if (HAL_GetTick() - temp_timer >= TEMP_MEASURE_INTERVAL) {
+            temp_timer = HAL_GetTick();
+
+            temp_measure_all();
+            can_send(TOPIC_TEMPERATURE_INFO_FILTER);
+
+
+
+            
 
             char buf[5000] = {'\0'};
             uint16_t min   = volt_get_min();
@@ -178,13 +189,6 @@ int main(void)
             HAL_UART_Transmit_IT(&CLI_UART, (uint8_t *)buf, strlen(buf));
             //HAL_Delay(200);
             //fsm_trigger_event(bal.fsm, EV_BAL_CHECK_TIMER);
-        }
-
-        if (HAL_GetTick() - temp_timer >= TEMP_MEASURE_INTERVAL) {
-            temp_timer = HAL_GetTick();
-
-            temp_measure_all();
-            can_send(TOPIC_TEMPERATURE_INFO_FILTER);
         }
 
         fsm_run(bal.fsm);
