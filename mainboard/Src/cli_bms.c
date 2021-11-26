@@ -19,6 +19,8 @@
 #include "pack/voltage.h"
 #include "soc.h"
 #include "usart.h"
+#include "can.h"
+#include "can_comms.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -265,6 +267,29 @@ void _cli_balance(uint16_t argc, char **argv, char *out) {
             }
         }
         sprintf(out, "balancing threshold is %u mV\r\n", bal_get_threshold() / 10);
+    } else if(strcmp(argv[1], "test") == 0) {
+        CAN_TxHeaderTypeDef header;
+        uint8_t buffer[CAN_MAX_PAYLOAD_LENGTH];
+        uint8_t board, cell;
+        
+        tx_header.ExtId = 0;
+        tx_header.IDE   = CAN_ID_STD;
+        tx_header.RTR   = CAN_RTR_DATA;
+        tx_header.StdId = ID_BALANCING;
+
+        if(argc < 4) {
+            sprintf(out, "wrong number of parameters\r\n", cell, board);
+            return
+        }
+        board = atoi(argv[2]);
+        cell = atoi(argv[3]);
+        
+        setBit(cells, cell, 1);
+
+        tx_header.DLC = serialize_bms_BALANCING(buffer, board, cells);
+        can_send(&BMS_CAN, buffer, &header);
+
+        sprintf(out, "testing cell %d on board %d\r\n", cell, board);
     } else {
         sprintf(
             out,
@@ -273,6 +298,7 @@ void _cli_balance(uint16_t argc, char **argv, char *out) {
             "- on\r\n"
             "- off\r\n"
             "- thr <millivolts>\r\n",
+            "- test <board> <cell>\r\n",
             argv[1]);
     }
 }
