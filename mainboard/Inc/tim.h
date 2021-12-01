@@ -48,7 +48,9 @@ extern TIM_HandleTypeDef htim5;
 
 #define TIM_GET_FREQ(TIM) (uint16_t)(TIM_GetInternalClkFreq((TIM)) / ((TIM)->Instance->PSC + 1))
 
-#define TIM_MS_TO_TICKS(TIM, MS) (uint32_t)(TIM_GET_FREQ((TIM)) * MS / 1000)
+#define TIM_MS_TO_TICKS(TIM, MS)      (uint32_t)(TIM_GET_FREQ((TIM)) * (MS) / 1000)
+
+#define TIM_TICKS_TO_MS(TIM, TICKS)   (uint32_t)((TICKS) * 1000 / TIM_GET_FREQ((TIM)))
 
 /* USER CODE END Private defines */
 
