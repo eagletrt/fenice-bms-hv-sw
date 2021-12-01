@@ -32,7 +32,7 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
                     if ( icValue > icValRising) {
                         period = TIM_TICKS_TO_MS(&HTIM_IMD, icValue - icValRising);
                     } else {
-                        period = TIM_TICKS_TO_MS(&HTIM_IMD, (0xffffffff - icValRising) + icValue);
+                        period = TIM_TICKS_TO_MS(&HTIM_IMD, (HTIM_IMD.Instance->ARR - icValRising) + icValue);
                     }
                 }
 
