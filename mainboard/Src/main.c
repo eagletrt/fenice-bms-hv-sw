@@ -31,6 +31,7 @@
 #include "si8900.h"
 #include "soc.h"
 #include "measures.h"
+#include "imd.h"
 
 #include <m95256.h>
 /* USER CODE END Includes */
@@ -127,6 +128,7 @@ int main(void)
     can_bms_init();
     can_car_init();
     measures_init();
+    imd_init();
 
   /* USER CODE END 2 */
 

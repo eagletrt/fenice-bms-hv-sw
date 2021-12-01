@@ -19,6 +19,7 @@
 #define HTIM_BMS        htim2
 #define HTIM_MEASURES   htim4
 #define HTIM_BAL        htim5
+#define HTIM_IMD        htim2
 
 #define SPI_EEPROM hspi2
 

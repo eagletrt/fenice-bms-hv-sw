@@ -99,6 +99,10 @@ void off_handler(fsm FSM, uint8_t event) {
         case EV_BAL_START:
             fsm_transition(FSM, BAL_COMPUTE);
             break;
+        case EV_BAL_STOP:
+            memset(bal.cells, 0, sizeof(bms_balancing_cells) * LTC6813_COUNT);
+            can_bms_send(ID_BALANCING);
+            break;
     }
 }
 

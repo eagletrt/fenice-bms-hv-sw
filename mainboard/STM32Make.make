@@ -71,6 +71,7 @@ Src/error/error.c \
 Src/error/error_list_ref.c \
 Src/feedback.c \
 Src/gpio.c \
+Src/imd.c \
 Src/main.c \
 Src/measures.c \
 Src/pack/current.c \
