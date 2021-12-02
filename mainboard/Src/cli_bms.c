@@ -21,13 +21,14 @@
 #include "usart.h"
 #include "can.h"
 #include "can_comm.h"
+#include "imd.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 // TODO: don't count manually
-#define N_COMMANDS 12
+#define N_COMMANDS 13
 
 cli_command_func_t _cli_volts;
 cli_command_func_t _cli_volts_all;
@@ -41,6 +42,7 @@ cli_command_func_t _cli_ts;
 cli_command_func_t _cli_current;
 cli_command_func_t _cli_dmesg;
 cli_command_func_t _cli_reset;
+cli_command_func_t _cli_imd;
 cli_command_func_t _cli_help;
 cli_command_func_t _cli_taba;
 
@@ -84,7 +86,7 @@ char const *const feedback_names[FEEDBACK_N] = {
     [FEEDBACK_TS_ON_POS]         = "TS ON"};
 
 char *command_names[N_COMMANDS] =
-    {"volt", "temp", "status", "errors", "ts", "bal", "soc", "current", "dmesg", "reset", "?", "\ta"};
+    {"volt", "temp", "status", "errors", "ts", "bal", "soc", "current", "dmesg", "reset", "imd", "?", "\ta"};
 
 cli_command_func_t *commands[N_COMMANDS] = {
     &_cli_volts,
@@ -97,6 +99,7 @@ cli_command_func_t *commands[N_COMMANDS] = {
     &_cli_current,
     &_cli_dmesg,
     &_cli_reset,
+    &_cli_imd,
     &_cli_help,
     &_cli_taba};
 
@@ -410,4 +413,15 @@ void _cli_help(uint16_t argc, char **argv, char *out) {
     for (uint8_t i = 0; i < N_COMMANDS - 1; i++) {
         sprintf(out + strlen(out), "- %s\r\n", cli_bms.cmds.names[i]);
     }
+}
+
+void _cli_imd(uint16_t argc, char **argv, char *out) {
+    sprintf(out,
+     "IMD status:\r\n"
+     "duty cycle:   %f%%\r\n"
+     "frequency:    %fHz\r\n"
+     "period:       %lums\r\n",
+     imd_get_duty_cycle_percentage(),
+     imd_get_freq(),
+     imd_get_period());
 }
