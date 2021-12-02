@@ -13,7 +13,10 @@
 #include "mainboard_config.h"
 #include "tim.h"
 
+typedef enum { IMD_SC, IMD_NORMAL, IMD_UNDER_VOLTAGE, IMD_START_MEASURE, IMD_DEVICE_ERROR, IMD_HEARTH_FAULT } IMD_STATE;
+
 void imd_init();
-uint32_t imd_get_freq();
+float imd_get_freq();
 uint32_t imd_get_period();
-uint8_t imd_get_duty_cycle_percentage();
+float imd_get_duty_cycle_percentage();
+IMD_STATE imd_get_state();
