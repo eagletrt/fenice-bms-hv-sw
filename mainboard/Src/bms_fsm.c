@@ -68,7 +68,7 @@ void bms_fsm_init() {
     state.exit    = NULL;
     fsm_set_state(bms.fsm, BMS_HALT, &state);
 
-    HAL_TIM_Base_Start_IT(&HTIM_BMS);
+    //HAL_TIM_Base_Start_IT(&HTIM_BMS);
     fsm_start(bms.fsm);
 
     bms.led.port = STATE_LED_GPIO;
@@ -125,9 +125,12 @@ void _precharge_entry(fsm FSM) {
     // Precharge
     pack_set_pc_start();
 
+    HAL_TIM_OC_Stop_IT(&HTIM_BMS, TIM_CHANNEL_1);
+    HAL_TIM_OC_Stop_IT(&HTIM_BMS, TIM_CHANNEL_2);
+
     uint32_t cnt = __HAL_TIM_GET_COUNTER(&HTIM_BMS);
-    __HAL_TIM_SET_COMPARE(&HTIM_BMS, TIM_CHANNEL_1, (cnt + PRECHARGE_CHECK_INTERVAL * 10));
-    __HAL_TIM_SET_COMPARE(&HTIM_BMS, TIM_CHANNEL_2, (cnt + PRECHARGE_TIMEOUT * 10));
+    __HAL_TIM_SET_COMPARE(&HTIM_BMS, TIM_CHANNEL_1, (cnt + TIM_MS_TO_TICKS(&HTIM_BMS, PRECHARGE_CHECK_INTERVAL)));
+    __HAL_TIM_SET_COMPARE(&HTIM_BMS, TIM_CHANNEL_2, (cnt + TIM_MS_TO_TICKS(&HTIM_BMS, PRECHARGE_TIMEOUT)));
 
     __HAL_TIM_CLEAR_FLAG(&HTIM_BMS, TIM_IT_CC1); //clears existing interrupts on channel 1
     __HAL_TIM_CLEAR_FLAG(&HTIM_BMS, TIM_IT_CC2); //clears existing interrupts on channel 2

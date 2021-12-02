@@ -80,9 +80,6 @@ void bal_fsm_init() {
     state.exit    = cooldown_exit;
     fsm_set_state(bal.fsm, BAL_COOLDOWN, &state);
 
-    __HAL_TIM_SetCounter(&HTIM_BAL, 0U);
-    HAL_TIM_Base_Start_IT(&HTIM_BAL);
-
     config_init(&config, CONF_ADDR, CONF_VER, &bal_params_default, sizeof(bal_params));
 }
 
@@ -122,9 +119,8 @@ void discharge_entry(fsm FSM) {
     bal.discharge_time = HAL_GetTick();
     */
 
-    HAL_TIM_Base_Stop_IT(&HTIM_BAL);
+    HAL_TIM_OC_Stop_IT(&HTIM_BAL, TIM_CHANNEL_1);
     __HAL_TIM_SET_COMPARE(&HTIM_BAL, TIM_CHANNEL_1, __HAL_TIM_GET_COUNTER(&HTIM_BAL) + bal.cycle_length);
-    HAL_TIM_Base_Start_IT(&HTIM_BAL);
     HAL_TIM_OC_Start_IT(&HTIM_BAL, TIM_CHANNEL_1);
 
     can_bms_send(ID_BALANCING);
@@ -152,10 +148,9 @@ void discharge_exit(fsm FSM) {
 
 void cooldown_entry(fsm FSM) {
 
-    HAL_TIM_Base_Stop_IT(&HTIM_BAL);
+    HAL_TIM_OC_Stop_IT(&HTIM_BAL, TIM_CHANNEL_2);
     __HAL_TIM_SET_COMPARE(&HTIM_BAL, TIM_CHANNEL_2, __HAL_TIM_GET_COUNTER(&HTIM_BAL) + TIM_MS_TO_TICKS(&HTIM_BAL, BAL_COOLDOWN_DELAY));
     __HAL_TIM_CLEAR_FLAG(&HTIM_BAL, TIM_IT_CC2); //clears existing interrupts on channel 1
-    HAL_TIM_Base_Start_IT(&HTIM_BAL);
     HAL_TIM_OC_Start_IT(&HTIM_BAL, TIM_CHANNEL_2);
 
     cli_bms_debug("Cooldown cells", 15);
