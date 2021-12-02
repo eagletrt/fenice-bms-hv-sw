@@ -35,6 +35,7 @@ extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;
 extern TIM_HandleTypeDef htim5;
+extern TIM_HandleTypeDef htim9;
 
 /* USER CODE BEGIN Private defines */
 
@@ -46,11 +47,11 @@ extern TIM_HandleTypeDef htim5;
  */
 #define _M_GET_TIM_APB_PLACEMENT(__HANDLE__) (((__HANDLE__)->Instance < (TIM_TypeDef *)APB2PERIPH_BASE) ? 1U : 0U)
 
-#define TIM_GET_FREQ(TIM) (uint16_t)(TIM_GetInternalClkFreq((TIM)) / ((TIM)->Instance->PSC + 1))
+#define TIM_GET_FREQ(TIM)             (uint32_t)(TIM_GetInternalClkFreq((TIM)) / ((TIM)->Instance->PSC + 1))
 
-#define TIM_MS_TO_TICKS(TIM, MS)      (uint32_t)(TIM_GET_FREQ((TIM)) * (MS) / 1000)
+#define TIM_MS_TO_TICKS(TIM, MS)      (uint32_t)((TIM_GET_FREQ((TIM)) / 1000.0) * (MS))
 
-#define TIM_TICKS_TO_MS(TIM, TICKS)   (uint32_t)((TICKS) * 1000 / TIM_GET_FREQ((TIM)))
+#define TIM_TICKS_TO_MS(TIM, TICKS)   (uint32_t)(((float)(TICKS) / TIM_GET_FREQ((TIM))) * 1000)
 
 /* USER CODE END Private defines */
 
@@ -58,6 +59,7 @@ void MX_TIM2_Init(void);
 void MX_TIM3_Init(void);
 void MX_TIM4_Init(void);
 void MX_TIM5_Init(void);
+void MX_TIM9_Init(void);
 
 /* USER CODE BEGIN Prototypes */
 
