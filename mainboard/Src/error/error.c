@@ -37,7 +37,7 @@ const error_timeout error_timeouts[ERROR_NUM_ERRORS] = {
     [ERROR_INT_VOLTAGE_MISMATCH]  = SOFT,
     [ERROR_CELLBOARD_COMM]        = 500,
     [ERROR_CELLBOARD_INTERNAL]    = 500,
-    [ERROR_FEEDBACK]              = SOFT,
+    [ERROR_FEEDBACK]              = 1000,
     [ERROR_EEPROM_COMM]           = SOFT,
     [ERROR_EEPROM_WRITE]          = SOFT};
 
@@ -70,18 +70,17 @@ int8_t error_compare(llist_node a, llist_node b) {
 }
 
 bool error_set_timer(error_t *error) {
-    HAL_TIM_Base_Stop_IT(&HTIM_ERR);
     HAL_TIM_OC_Stop_IT(&HTIM_ERR, TIM_CHANNEL_1);
     HAL_GPIO_WritePin(GPIO1_GPIO_Port, GPIO1_Pin, GPIO_PIN_RESET);
 
     if (error != NULL && error->state == STATE_WARNING && error_timeouts[error->id] < SOFT) {
         // Set counter period register to the delta
-        HAL_TIM_Base_Start_IT(&HTIM_ERR);
+        volatile uint16_t delta = get_timeout_delta(error);
+        uint16_t pulse          = __HAL_TIM_GET_COUNTER(&HTIM_ERR);
+        __HAL_TIM_SET_COMPARE(&HTIM_ERR, TIM_CHANNEL_1, pulse + TIM_MS_TO_TICKS(&HTIM_ERR, delta));
+        __HAL_TIM_CLEAR_FLAG(&HTIM_ERR, TIM_IT_CC1);
         HAL_TIM_OC_Start_IT(&HTIM_ERR, TIM_CHANNEL_1);
 
-        volatile uint16_t delta = (get_timeout_delta(error) * 10U);
-        uint16_t pulse          = HAL_TIM_ReadCapturedValue(&HTIM_ERR, TIM_CHANNEL_1);
-        __HAL_TIM_SET_COMPARE(&HTIM_ERR, TIM_CHANNEL_1, pulse + delta);
         HAL_GPIO_WritePin(GPIO1_GPIO_Port, GPIO1_Pin, GPIO_PIN_SET);
 
         return true;
@@ -93,7 +92,6 @@ bool error_set_timer(error_t *error) {
 
 void error_init() {
     er_list = llist_init(error_compare, error_equals);
-    HAL_TIM_Base_Stop_IT(&HTIM_ERR);
 }
 
 /**
