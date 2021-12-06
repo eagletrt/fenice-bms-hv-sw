@@ -217,10 +217,10 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 
         if(balancing.board_index != cellboard_index) return;
 
+        fsm_trigger_event(bal.fsm, EV_BAL_STOP);
+
         memcpy(bal.cells, balancing.cells, sizeof(bal.cells));
-        if(bal_is_cells_empty()) {
-            fsm_trigger_event(bal.fsm, EV_BAL_STOP);
-        } else {
+        if(!bal_is_cells_empty()) {
             fsm_trigger_event(bal.fsm, EV_BAL_START);
         }
     }
