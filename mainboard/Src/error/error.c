@@ -198,7 +198,7 @@ bool error_reset(error_id id, uint8_t offset) {
     return false;
 }
 
-uint8_t error_is_fatal(llist_node n){
+int8_t error_is_fatal(llist_node n){
     if(((error_t*)n)->state == STATE_FATAL){
         return 1;
     }
@@ -206,7 +206,7 @@ uint8_t error_is_fatal(llist_node n){
 }
 
 size_t error_get_fatal() {
-    return llist_reduce(er_list, sizeof(error_t), (int (*))error_is_fatal);
+    return llist_reduce(er_list, sizeof(error_t), (int (*)(void *))error_is_fatal);
 }
 
 /**
