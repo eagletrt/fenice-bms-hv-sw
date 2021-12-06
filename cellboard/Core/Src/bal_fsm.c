@@ -22,6 +22,7 @@ void off_entry(fsm handle);
 void off_handler(fsm handle, uint8_t event);
 void discharge_entry(fsm handle);
 void discharge_handler(fsm handle, uint8_t event);
+void discharge_exit(fsm handle);
 void transition_callback(fsm handle);
 
 void bal_fsm_init() {
@@ -39,7 +40,7 @@ void bal_fsm_init() {
     state.handler = discharge_handler;
     state.entry   = discharge_entry;
     state.run     = NULL;
-    state.exit    = NULL;
+    state.exit    = discharge_exit;
     fsm_set_state(bal.fsm, BAL_DISCHARGE, &state);
 }
 
@@ -63,7 +64,6 @@ void off_handler(fsm handle, uint8_t event) {
 void discharge_entry(fsm handle) {
     ltc6813_set_balancing(&LTC6813_SPI, bal.cells, bal.cycle_length);
     //  Resetting and starting the DISCHARGE_TIMER
-    HAL_TIM_Base_Stop_IT(&DISCHARGE_TIMER);
     __HAL_TIM_SetCounter(&DISCHARGE_TIMER, 0U);
     HAL_TIM_Base_Start_IT(&DISCHARGE_TIMER);
     //cli_bms_debug("Discharging cells", 18);
@@ -75,6 +75,10 @@ void discharge_handler(fsm handle, uint8_t event) {
             fsm_transition(handle, BAL_OFF);
             break;
     }
+}
+
+void discharge_exit(fsm handle) {
+    HAL_TIM_Base_Stop_IT(&DISCHARGE_TIMER);
 }
 /**
   * @brief  When DISCHARGE_TIMER elapses the discharge is complete 

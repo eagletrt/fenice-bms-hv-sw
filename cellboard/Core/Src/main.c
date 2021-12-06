@@ -255,7 +255,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim){
   */
   if(htim->Instance == DISCHARGE_TIMER.Instance){
     bal_timers_handler(htim, bal.fsm);
-   HAL_TIM_Base_Stop_IT(htim);
   }
 }
 

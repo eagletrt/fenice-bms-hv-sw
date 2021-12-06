@@ -15,6 +15,7 @@
 #include "main.h"
 #include "temp.h"
 #include "volt.h"
+#include "spi.h"
 
 #include <math.h>
 #include <string.h>
@@ -217,7 +218,9 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 
         if(balancing.board_index != cellboard_index) return;
 
-        fsm_trigger_event(bal.fsm, EV_BAL_STOP);
+        //stop any existing balancing
+        bms_balancing_cells cells = bms_balancing_cells_default;
+        ltc6813_set_balancing(&LTC6813_SPI, cells, 0);
 
         memcpy(bal.cells, balancing.cells, sizeof(bal.cells));
         if(!bal_is_cells_empty()) {
