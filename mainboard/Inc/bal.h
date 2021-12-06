@@ -12,7 +12,7 @@
 #define BAL_H
 
 #include "mainboard_config.h"
-#include "can_comm.h"
+#include "../../bms/c/bms.h"
 #include "pack/voltage.h"
 
 #include <inttypes.h>

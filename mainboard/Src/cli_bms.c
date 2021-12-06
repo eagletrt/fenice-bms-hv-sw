@@ -417,10 +417,15 @@ void _cli_help(uint16_t argc, char **argv, char *out) {
 
 void _cli_imd(uint16_t argc, char **argv, char *out) {
     sprintf(out,
-     "IMD status:\r\n"
-     "duty cycle:   %f%%\r\n"
-     "frequency:    %fHz\r\n"
-     "period:       %lums\r\n",
+     "fault:        %u\r\n"
+     "IMD status:   %u\r\n"
+     "details:      %d\r\n"
+     "duty cycle:   %.2f%%\r\n"
+     "frequency:    %uHz\r\n"
+     "period:       %ums\r\n",
+     imd_is_fault(),
+     (uint8_t)imd_get_state(),
+     imd_get_details(),
      imd_get_duty_cycle_percentage(),
      imd_get_freq(),
      imd_get_period());
