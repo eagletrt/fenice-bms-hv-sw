@@ -10,15 +10,23 @@ void imd_init() {
 }
 
 float imd_get_duty_cycle_percentage() {
-    return periodTicks == 0 ? 0 : (100.0 * dutyCycleTicks / periodTicks);
+    return imd_get_duty_cycle() * 100;
 }
 
-float imd_get_freq() {
+float imd_get_duty_cycle() {
+    return periodTicks == 0 ? 0 : ((float)dutyCycleTicks / periodTicks);
+}
+
+uint8_t imd_get_freq() {
     return periodTicks == 0 ? 0 : (1000.0 / TIM_TICKS_TO_MS(&HTIM_IMD, periodTicks));
 }
 
-uint32_t imd_get_period() {
+uint8_t imd_get_period() {
     return TIM_TICKS_TO_MS(&HTIM_IMD, periodTicks);
+}
+
+uint8_t imd_is_fault() {
+    return !HAL_GPIO_ReadPin(FB_IMD_FAULT_GPIO_Port, FB_IMD_FAULT_Pin);
 }
 
 IMD_STATE imd_get_state() {
@@ -29,9 +37,32 @@ IMD_STATE imd_get_state() {
     if(freq == 20)  return IMD_UNDER_VOLTAGE;
     if(freq == 30)  return IMD_START_MEASURE;
     if(freq == 40)  return IMD_DEVICE_ERROR;
-    if(freq == 50)  return IMD_HEARTH_FAULT;
+    if(freq == 50)  return IMD_EARTH_FAULT;
 
     return -1;
+}
+
+int16_t imd_get_details() {
+    uint8_t duty = imd_get_duty_cycle();
+    switch(imd_get_state()) {
+        case IMD_SC:
+            return !isRisingEdge; //assume that if isRisingEdge == 0 then the pin value is 1, otherwise 0
+        case IMD_NORMAL:
+        case IMD_UNDER_VOLTAGE: //never reached
+            return (1080 / (duty - 0.05f)) - 1200;
+        case IMD_START_MEASURE:
+            if(duty < 15)       return 1;
+            else if(duty > 85)  return 0;
+            else                return -1;
+        case IMD_DEVICE_ERROR:
+            if(duty < 55 && duty > 45)  return 1;
+            else                        return -1;
+        case IMD_EARTH_FAULT:
+            if(duty < 55 && duty > 45)  return 1;
+            else                        return -1;
+        default:
+            return -1;
+    }
 }
 
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
