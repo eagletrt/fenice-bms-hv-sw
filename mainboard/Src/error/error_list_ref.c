@@ -16,6 +16,7 @@
  */
 
 #include "error/error_list_ref.h"
+#include "feedback.h"
 
 #include <stdio.h>
 
@@ -44,7 +45,7 @@ llist_node error_adc_timeout[1]                     = {NULL};
 llist_node error_int_voltage_mismatch[1]            = {NULL};
 llist_node error_cellboard_comm[LTC6813_COUNT]      = {NULL};
 llist_node error_cellboard_internal[LTC6813_COUNT]  = {NULL};
-llist_node error_feedback[1]                        = {NULL};
+llist_node error_feedback[FEEDBACK_N]               = {NULL};
 llist_node error_eeprom_comm[1]                     = {NULL};
 llist_node error_eeprom_write[1]                    = {NULL};
 

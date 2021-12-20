@@ -32,7 +32,9 @@
 #include "soc.h"
 #include "measures.h"
 #include "imd.h"
+#include "feedback.h"
 
+#include <string.h>
 #include <m95256.h>
 /* USER CODE END Includes */
 
@@ -110,6 +112,8 @@ int main(void)
   MX_ADC3_Init();
   MX_TIM5_Init();
   MX_TIM9_Init();
+  MX_ADC1_Init();
+  MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
     HAL_GPIO_WritePin(EEPROM_HOLD_GPIO_Port, EEPROM_HOLD_Pin, GPIO_PIN_SET);
     current_start_measure();
@@ -130,6 +134,7 @@ int main(void)
     can_car_init();
     measures_init();
     imd_init();
+    feedback_init();
 
   /* USER CODE END 2 */
 
@@ -139,15 +144,14 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-
         //fsm_run(super_fsm);
 
         fsm_run(bms.fsm);
         fsm_run(bal.fsm);
 
-        if(measure_current_flag) {
-          measure_current_flag = false;
-          measures_current();
+        if(measure_voltage_current_flag) {
+          measure_voltage_current_flag = false;
+          measures_voltage_current();
           can_car_send(ID_HV_CURRENT);
         }
         if(measure_temp_flag) {
@@ -247,4 +251,3 @@ void assert_failed(uint8_t *file, uint32_t line)
 }
 #endif /* USE_FULL_ASSERT */
 
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

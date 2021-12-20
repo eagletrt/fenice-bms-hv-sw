@@ -37,7 +37,7 @@ const error_timeout error_timeouts[ERROR_NUM_ERRORS] = {
     [ERROR_INT_VOLTAGE_MISMATCH]  = SOFT,
     [ERROR_CELLBOARD_COMM]        = 500,
     [ERROR_CELLBOARD_INTERNAL]    = 500,
-    [ERROR_FEEDBACK]              = 1000,
+    [ERROR_FEEDBACK]              = 500,
     [ERROR_EEPROM_COMM]           = SOFT,
     [ERROR_EEPROM_WRITE]          = SOFT};
 

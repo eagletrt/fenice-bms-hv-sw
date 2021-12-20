@@ -21,6 +21,9 @@ void pack_init();
  */
 void pack_update_temperature_stats();
 
+void pack_set_ts_on();
+void pack_set_airn_off(uint8_t value);
+void pack_set_pc_on();
 bool pack_set_ts_off();
-bool pack_set_pc_start();
-bool pack_set_precharge_end();
+void pack_set_pc_start();
+void pack_set_precharge_end();
