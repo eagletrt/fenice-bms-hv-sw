@@ -1,3 +1,4 @@
+/* USER CODE BEGIN Header */
 /**
   ******************************************************************************
   * @file    gpio.c
@@ -6,16 +7,16 @@
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; Copyright (c) 2021 STMicroelectronics.
-  * All rights reserved.</center></h2>
+  * Copyright (c) 2021 STMicroelectronics.
+  * All rights reserved.
   *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
+  * This software is licensed under terms that can be found in the LICENSE file
+  * in the root directory of this software component.
+  * If no LICENSE file comes with this software, it is provided AS-IS.
   *
   ******************************************************************************
   */
+/* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
 #include "gpio.h"
@@ -39,7 +40,6 @@
         * EXTI
         * Free pins are configured automatically as Analog (this feature is enabled through
         * the Code Generation settings)
-     PC2   ------> ADCx_IN12
 */
 void MX_GPIO_Init(void)
 {
@@ -54,8 +54,9 @@ void MX_GPIO_Init(void)
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, GPIO9_Pin|GPIO8_Pin|MUX_A3_Pin|EEPROM_CS_Pin
-                          |CARD_CS_Pin|BMS_FAULT_Pin|TS_ON_Pin|AIRP_OFF_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, GPIO9_Pin|PC_ON_Pin|GPIO8_Pin|MUX_A3_Pin
+                          |EEPROM_CS_Pin|CARD_CS_Pin|BMS_FAULT_Pin|TS_ON_Pin
+                          |AIRP_OFF_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, GPIO7_Pin|MUX_A0_Pin|MUX_A1_Pin|MUX_A2_Pin
@@ -69,21 +70,21 @@ void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(EEPROM_HOLD_GPIO_Port, EEPROM_HOLD_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(AIRM_OFF_GPIO_Port, AIRM_OFF_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(AIRN_OFF_GPIO_Port, AIRN_OFF_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pins : PCPin PCPin PCPin PCPin
                            PCPin PCPin PCPin PCPin
-                           PCPin */
-  GPIO_InitStruct.Pin = GPIO9_Pin|GPIO8_Pin|MUX_A3_Pin|EEPROM_CS_Pin
-                          |EEPROM_HOLD_Pin|CARD_CS_Pin|BMS_FAULT_Pin|TS_ON_Pin
-                          |AIRP_OFF_Pin;
+                           PCPin PCPin */
+  GPIO_InitStruct.Pin = GPIO9_Pin|PC_ON_Pin|GPIO8_Pin|MUX_A3_Pin
+                          |EEPROM_CS_Pin|EEPROM_HOLD_Pin|CARD_CS_Pin|BMS_FAULT_Pin
+                          |TS_ON_Pin|AIRP_OFF_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PC14 PC15 PCPin */
-  GPIO_InitStruct.Pin = GPIO_PIN_14|GPIO_PIN_15|IP_LOW_Pin;
+  /*Configure GPIO pin : PC15 */
+  GPIO_InitStruct.Pin = GPIO_PIN_15;
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
@@ -94,9 +95,9 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PAPin PAPin PAPin PAPin */
-  GPIO_InitStruct.Pin = FB_FROM_TSMS_Pin|FD_RELAY_LV_Pin|FB_IMD_FAULT_Pin|MUX_IN_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  /*Configure GPIO pins : PAPin PAPin */
+  GPIO_InitStruct.Pin = FB_RELAY_SD_Pin|FB_IMD_FAULT_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
@@ -119,16 +120,21 @@ void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PtPin */
-  GPIO_InitStruct.Pin = AIRM_OFF_Pin;
+  GPIO_InitStruct.Pin = AIRN_OFF_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(AIRM_OFF_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(AIRN_OFF_GPIO_Port, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI1_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI2_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI2_IRQn);
 
 }
 
 /* USER CODE BEGIN 2 */
 
 /* USER CODE END 2 */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

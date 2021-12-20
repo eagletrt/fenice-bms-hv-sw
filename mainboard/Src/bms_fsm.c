@@ -18,6 +18,7 @@
 #include "pack/voltage.h"
 #include "peripherals/can_comm.h"
 #include "tim.h"
+#include "feedback.h"
 
 #include <inttypes.h>
 #include <stdio.h>
@@ -29,16 +30,21 @@ void bms_blink_led();
 
 void _idle_entry(fsm FSM);
 void _idle_handler(fsm FSM, uint8_t event);
-void _idle_exit(fsm FSM);
+void _ts_on_entry(fsm FSM);
+void _ts_on_handler(fsm FSM, uint8_t event);
+void _ts_on_exit(fsm FSM);
+void _airn_off_entry(fsm FSM);
+void _airn_off_handler(fsm FSM, uint8_t event);
+void _airn_off_exit(fsm FSM);
 void _precharge_entry(fsm FSM);
 void _precharge_handler(fsm FSM, uint8_t event);
 void _precharge_exit(fsm FSM);
 void _on_entry(fsm FSM);
 void _on_handler(fsm FSM, uint8_t event);
 void _on_exit(fsm FSM);
-void _halt_entry(fsm FSM);
-void _halt_run(fsm FSM);
-void _halt_handler(fsm FSM, uint8_t event);
+void _fault_entry(fsm FSM);
+void _fault_run(fsm FSM);
+void _fault_handler(fsm FSM, uint8_t event);
 
 bms_fsm bms;
 
@@ -49,8 +55,18 @@ void bms_fsm_init() {
     state.run     = NULL;
     state.handler = _idle_handler;
     state.entry   = _idle_entry;
-    state.exit    = _idle_exit;
+    state.exit    = NULL;
     fsm_set_state(bms.fsm, BMS_IDLE, &state);
+
+    state.handler = _ts_on_handler;
+    state.entry   = _ts_on_entry;
+    state.exit    = NULL;
+    fsm_set_state(bms.fsm, BMS_TS_ON, &state);
+
+    state.handler = _airn_off_handler;
+    state.entry   = _airn_off_entry;
+    state.exit    = NULL;
+    fsm_set_state(bms.fsm, BMS_AIRN_OFF, &state);
 
     state.handler = _precharge_handler;
     state.entry   = _precharge_entry;
@@ -62,11 +78,11 @@ void bms_fsm_init() {
     state.exit    = _on_exit;
     fsm_set_state(bms.fsm, BMS_ON, &state);
 
-    state.handler = _halt_handler;
-    state.entry   = _halt_entry;
-    state.run     = _halt_run;
+    state.handler = _fault_handler;
+    state.entry   = _fault_entry;
+    state.run     = _fault_run;
     state.exit    = NULL;
-    fsm_set_state(bms.fsm, BMS_HALT, &state);
+    fsm_set_state(bms.fsm, BMS_FAULT, &state);
 
     //HAL_TIM_Base_Start_IT(&HTIM_BMS);
     fsm_start(bms.fsm);
@@ -76,6 +92,8 @@ void bms_fsm_init() {
     bms.led.time = HAL_GetTick();
 
     bms_set_led_blinker();
+
+    HAL_GPIO_WritePin(BMS_FAULT_GPIO_Port, BMS_FAULT_Pin, GPIO_PIN_RESET);
 }
 
 void bms_set_led_blinker() {
@@ -98,6 +116,8 @@ void bms_set_led_blinker() {
 
     blink_reset(&(bms.led));
     HAL_GPIO_WritePin(bms.led.port, bms.led.pin, GPIO_PIN_SET);
+
+    can_car_send(ID_TS_STATUS);    
 }
 void bms_blink_led() {
     blink_run(&bms.led);
@@ -105,20 +125,65 @@ void bms_blink_led() {
 
 void _idle_entry(fsm FSM) {
     can_car_send(ID_TS_STATUS);
+    pack_set_airn_off(GPIO_PIN_SET);
+    fsm_trigger_event(FSM, BMS_EV_FB_CHECK);
+    cli_bms_debug("idle state", 10);
 }
 
 void _idle_handler(fsm FSM, uint8_t event) {
     switch (event) {
         case BMS_EV_TS_ON:
-            fsm_transition(FSM, BMS_PRECHARGE);
+            fsm_transition(FSM, BMS_TS_ON);
             break;
-        case BMS_EV_HALT:
-            fsm_transition(FSM, BMS_HALT);
+        case BMS_EV_FAULT:
+            fsm_transition(FSM, BMS_FAULT);
             break;
+        case BMS_EV_FB_CHECK:
+            feedback_check(FEEDBACK_TS_OFF_MASK, FEEDBACK_TS_OFF_VAL, ERROR_FEEDBACK);
+            fsm_trigger_event(FSM, BMS_EV_FB_CHECK);
     }
 }
 
-void _idle_exit(fsm FSM) {
+void _ts_on_entry(fsm FSM) {
+    fsm_trigger_event(FSM, BMS_EV_FB_CHECK);
+    cli_bms_debug("ts on state", 11);
+}
+
+void _ts_on_handler(fsm FSM, uint8_t event) {
+    switch(event) {
+        case BMS_EV_FAULT:
+            fsm_transition(FSM, BMS_FAULT);
+            break;
+        case BMS_EV_FB_CHECK:
+            //feedback_read(FEEDBACK_TS_ON_VAL);
+            if(feedback_check(FEEDBACK_TS_ON_MASK, FEEDBACK_TS_ON_VAL, ERROR_FEEDBACK)) {
+                pack_set_ts_on();
+                fsm_transition(FSM, BMS_AIRN_OFF);
+            } else {
+                fsm_trigger_event(FSM, BMS_EV_FB_CHECK);
+            }
+    }
+}
+
+void _airn_off_entry(fsm FSM) {
+    fsm_trigger_event(FSM, BMS_EV_FB_CHECK);
+    cli_bms_debug("airn close state", 16);
+}
+
+void _airn_off_handler(fsm FSM, uint8_t event) {
+    switch(event) {
+        case BMS_EV_FAULT:
+            fsm_transition(FSM, BMS_FAULT);
+            break;
+        case BMS_EV_FB_CHECK:
+            //feedback_read(FEEDBACK_AIRN_OFF_VAL);
+            if(feedback_check(FEEDBACK_AIRN_OFF_MASK, FEEDBACK_AIRN_OFF_VAL, ERROR_FEEDBACK)) {
+                pack_set_airn_off(GPIO_PIN_RESET);
+                fsm_transition(FSM, BMS_PRECHARGE);
+            } else {
+                fsm_trigger_event(FSM, BMS_EV_FB_CHECK);
+            }
+    }
 }
 
 void _precharge_entry(fsm FSM) {
@@ -146,6 +211,7 @@ void _precharge_handler(fsm FSM, uint8_t event) {
         case BMS_EV_PRECHARGE_TIMEOUT:
             cli_bms_debug("Precharge timeout", 18);
             // send timeout warning
+            //NB there's no break; !!!!
         case BMS_EV_TS_OFF:
             fsm_transition(FSM, BMS_IDLE);
             break;
@@ -155,13 +221,15 @@ void _precharge_handler(fsm FSM, uint8_t event) {
             itoa(voltage_get_bus() / voltage_get_internal() * PRECHARGE_VOLTAGE_THRESHOLD, c, 10);
             cli_bms_debug(c, 5);
 
-            if (voltage_get_bus() >= voltage_get_internal() * PRECHARGE_VOLTAGE_THRESHOLD) {
+            if (voltage_get_bus() >= voltage_get_internal() * PRECHARGE_VOLTAGE_THRESHOLD && 
+                    feedback_check(FEEDBACK_PC_ON_MASK, FEEDBACK_PC_ON_VAL, ERROR_FEEDBACK)) {
+                pack_set_precharge_end();
                 fsm_transition(bms.fsm, BMS_ON);
                 cli_bms_debug("Precharge ok", 18);
             }
             break;
-        case BMS_EV_HALT:
-            fsm_transition(FSM, BMS_HALT);
+        case BMS_EV_FAULT:
+            fsm_transition(FSM, BMS_FAULT);
             break;
     }
 }
@@ -172,7 +240,8 @@ void _precharge_exit(fsm FSM) {
 }
 
 void _on_entry(fsm FSM) {
-    pack_set_precharge_end();
+    fsm_trigger_event(FSM, BMS_EV_FB_CHECK);
+    cli_bms_debug("on state", 8);
 }
 
 void _on_handler(fsm FSM, uint8_t event) {
@@ -180,9 +249,13 @@ void _on_handler(fsm FSM, uint8_t event) {
         case BMS_EV_TS_OFF:
             fsm_transition(FSM, BMS_IDLE);
             break;
-        case BMS_EV_HALT:
-            fsm_transition(FSM, BMS_HALT);
+        case BMS_EV_FAULT:
+            fsm_transition(FSM, BMS_FAULT);
             break;
+        case BMS_EV_FB_CHECK:
+            //feedback_read(FEEDBACK_ON_MASK);
+            feedback_check(FEEDBACK_ON_MASK, FEEDBACK_ON_VAL, ERROR_FEEDBACK);
+            fsm_trigger_event(FSM, BMS_EV_FB_CHECK);
     }
 }
 
@@ -190,7 +263,7 @@ void _on_exit(fsm FSM) {
     pack_set_ts_off();
 }
 
-void _halt_entry(fsm FSM) {
+void _fault_entry(fsm FSM) {
     // bms_set_fault(&data->bms);
     HAL_GPIO_WritePin(BMS_FAULT_GPIO_Port, BMS_FAULT_Pin, GPIO_PIN_RESET);
 
@@ -199,13 +272,14 @@ void _halt_entry(fsm FSM) {
     //cli_bms_debug("HALT", 5);
 }
 
-void _halt_run(fsm FSM) {
+void _fault_run(fsm FSM) {
+    feedback_check(FEEDBACK_TS_OFF_MASK, FEEDBACK_TS_OFF_VAL, ERROR_FEEDBACK);
     if (error_get_fatal() == 0) {
         fsm_trigger_event(FSM, BMS_EV_NO_ERRORS);
     }
 }
 
-void _halt_handler(fsm FSM, uint8_t event) {
+void _fault_handler(fsm FSM, uint8_t event) {
     switch (event) {
         case BMS_EV_NO_ERRORS:
             fsm_transition(FSM, BMS_IDLE);

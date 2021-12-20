@@ -105,7 +105,24 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
     } else if (id == ID_HV_CURRENT) {
         tx_header.DLC = serialize_Primary_HV_CURRENT(buffer, current_get_current(), current_get_current() * voltage_get_bus());
     } else if (id == ID_TS_STATUS) {
-        tx_header.DLC = serialize_Primary_TS_STATUS(buffer, Primary_Ts_Status_ON);
+        Primary_Ts_Status status = Primary_Ts_Status_OFF;
+        switch(fsm_get_state(bms.fsm)) {
+            case BMS_IDLE:
+                status = Primary_Ts_Status_OFF;
+                break;
+            case BMS_TS_ON:
+            case BMS_AIRN_OFF:
+            case BMS_PRECHARGE:
+                status = Primary_Ts_Status_PRECHARGE;
+                break;
+            case BMS_ON:
+                status = Primary_Ts_Status_ON;
+                break;
+            case BMS_FAULT:
+                status = Primary_Ts_Status_FATAL;
+                break;
+        }
+        tx_header.DLC = serialize_Primary_TS_STATUS(buffer, status);
     } else if (id == ID_HV_TEMP) {
         tx_header.DLC = serialize_Primary_HV_TEMP(buffer, temperature_get_average(), temperature_get_max(), temperature_get_min());
     } else {

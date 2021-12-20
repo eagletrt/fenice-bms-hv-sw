@@ -57,6 +57,8 @@ void read_temps();
 /* Private defines -----------------------------------------------------------*/
 #define GPIO9_Pin GPIO_PIN_13
 #define GPIO9_GPIO_Port GPIOC
+#define PC_ON_Pin GPIO_PIN_14
+#define PC_ON_GPIO_Port GPIOC
 #define GPIO8_Pin GPIO_PIN_0
 #define GPIO8_GPIO_Port GPIOC
 #define CHARGE_Pin GPIO_PIN_1
@@ -67,10 +69,12 @@ void read_temps();
 #define IP_HIGH_GPIO_Port GPIOC
 #define FB_FROM_TSMS_Pin GPIO_PIN_0
 #define FB_FROM_TSMS_GPIO_Port GPIOA
-#define FD_RELAY_LV_Pin GPIO_PIN_1
-#define FD_RELAY_LV_GPIO_Port GPIOA
+#define FB_RELAY_SD_Pin GPIO_PIN_1
+#define FB_RELAY_SD_GPIO_Port GPIOA
+#define FB_RELAY_SD_EXTI_IRQn EXTI1_IRQn
 #define FB_IMD_FAULT_Pin GPIO_PIN_2
 #define FB_IMD_FAULT_GPIO_Port GPIOA
+#define FB_IMD_FAULT_EXTI_IRQn EXTI2_IRQn
 #define GPIO7_Pin GPIO_PIN_3
 #define GPIO7_GPIO_Port GPIOA
 #define MUX_IN_Pin GPIO_PIN_4
@@ -113,8 +117,8 @@ void read_temps();
 #define TS_ON_GPIO_Port GPIOC
 #define AIRP_OFF_Pin GPIO_PIN_12
 #define AIRP_OFF_GPIO_Port GPIOC
-#define AIRM_OFF_Pin GPIO_PIN_2
-#define AIRM_OFF_GPIO_Port GPIOD
+#define AIRN_OFF_Pin GPIO_PIN_2
+#define AIRN_OFF_GPIO_Port GPIOD
 #define GPIO1_Pin GPIO_PIN_4
 #define GPIO1_GPIO_Port GPIOB
 #define GPIO3_Pin GPIO_PIN_7
@@ -132,5 +136,3 @@ void read_temps();
 #endif
 
 #endif /* __MAIN_H */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

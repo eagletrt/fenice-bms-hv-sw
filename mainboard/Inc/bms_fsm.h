@@ -15,11 +15,12 @@
 #include "fsm.h"
 
 #include <stdbool.h>
-typedef enum { BMS_IDLE = 0, BMS_PRECHARGE, BMS_ON, BMS_HALT, BMS_NUM_STATES } bms_states;
+typedef enum { BMS_IDLE = 0, BMS_TS_ON, BMS_AIRN_OFF, BMS_PRECHARGE, BMS_ON, BMS_FAULT, BMS_NUM_STATES } bms_states;
 typedef enum {
-    BMS_EV_HALT = 0,
+    BMS_EV_FAULT = 0,
     BMS_EV_TS_OFF,
     BMS_EV_TS_ON,
+    BMS_EV_FB_CHECK,
     BMS_EV_VOLT_MEASURE,
     BMS_EV_TEMP_MEASURE,
     BMS_EV_PRECHARGE_CHECK,

@@ -14,13 +14,12 @@
 
 #include <inttypes.h>
 #include <math.h>
+#include <string.h>
 
 temperature_t temperatures[PACK_TEMP_COUNT];
 
 void temperature_init() {
-    for (size_t i = 0; i < PACK_TEMP_COUNT; i++) {
-        temperatures[i] = 0;
-    }
+    memset(temperatures, 0, sizeof(temperatures));
 }
 
 void temperature_check() {

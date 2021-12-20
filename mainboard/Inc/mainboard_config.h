@@ -15,6 +15,7 @@
 //=================================== General ===============================
 //===========================================================================
 
+#define HTIM_MUX        htim1
 #define HTIM_IMD        htim2
 #define HTIM_ERR        htim3
 #define HTIM_MEASURES   htim4
@@ -25,6 +26,7 @@
 
 #define ADC_HALL50  hadc3
 #define ADC_HALL300 hadc2
+#define ADC_MUX     hadc1
 
 #define STATE_LED_GPIO LED2_GPIO_Port
 #define STATE_LED_PIN  LED2_Pin
