@@ -47,7 +47,7 @@ cli_command_func_t _cli_help;
 cli_command_func_t _cli_taba;
 
 const char *bms_state_names[BMS_NUM_STATES] =
-    {[BMS_IDLE] = "idle", [BMS_PRECHARGE] = "precharge", [BMS_ON] = "run", [BMS_HALT] = "halt"};
+    {[BMS_IDLE] = "idle", [BMS_PRECHARGE] = "precharge", [BMS_ON] = "run", [BMS_FAULT] = "fault"};
 
 const char *bal_state_names[BAL_NUM_STATES] =
     {[BAL_OFF] = "off", [BAL_COMPUTE] = "computing", [BAL_DISCHARGE] = "discharging", [BAL_COOLDOWN] = "cooldown"};
@@ -67,22 +67,22 @@ const char *error_names[ERROR_NUM_ERRORS] = {
     [ERROR_EEPROM_COMM]           = "EEPROM communication",
     [ERROR_EEPROM_WRITE]          = "EEPROM write"};
 
-char const *const feedback_names[FEEDBACK_N] = {
-    [FEEDBACK_VREF_POS]          = "VREF",
+char const *const feedback_names[FEEDBACK_MUX_N] = {
+    [FEEDBACK_CHECK_MUX_POS]     = "VREF",
     [FEEDBACK_FROM_TSMS_POS]     = "FROM TSMS",
     [FEEDBACK_TO_TSMS_POS]       = "TO TSMS",
-    [FEEDBACK_FROM_SHUTDOWN_POS] = "FROM SHUTDOWN",
+    [FEEDBACK_FROM_SD_POS]       = "FROM SHUTDOWN",
     [FEEDBACK_LATCH_IMD_POS]     = "LATCH IMD",
     [FEEDBACK_LATCH_BMS_POS]     = "LATCH BMS",
     [FEEDBACK_IMD_FAULT_POS]     = "IMD FAULT",
     [FEEDBACK_BMS_FAULT_POS]     = "BMS FAULT",
-    [FEEDBACK_TSAL_HV_POS]       = "TSAL OVER 60V",
-    [FEEDBACK_AIR_POSITIVE_POS]  = "AIR POSITIVE",
-    [FEEDBACK_AIR_NEGATIVE_POS]  = "AIR NEGATIVE",
-    [FEEDBACK_PC_END_POS]        = "PRE-CHARGE END",
-    [FEEDBACK_RELAY_LV_POS]      = "RELAY LV",
-    [FEEDBACK_IMD_SHUTDOWN_POS]  = "IMD SHUTDOWN",
-    [FEEDBACK_BMS_SHUTDOWN_POS]  = "BMS SHUTDOWN",
+    [FEEDBACK_TSAL_OVER60V_POS]  = "TSAL OVER 60V",
+    [FEEDBACK_AIRP_POS]          = "AIR POSITIVE",
+    [FEEDBACK_AIRN_POS]          = "AIR NEGATIVE",
+    //[FEEDBACK_PC_END_POS]        = "PRE-CHARGE END",
+    [FEEDBACK_RELAY_SD_POS]      = "RELAY LV",
+    [FEEDBACK_IMD_SD_POS]        = "IMD SHUTDOWN",
+    [FEEDBACK_BMS_SD_POS]        = "BMS SHUTDOWN",
     [FEEDBACK_TS_ON_POS]         = "TS ON"};
 
 char *command_names[N_COMMANDS] =
@@ -190,38 +190,39 @@ void _cli_volts_all(uint16_t argc, char **argv, char *out) {
 }
 
 void _cli_temps(uint16_t argc, char **argv, char *out) {
-    //if (strcmp(argv[1], "") == 0) {
-    //    sprintf(
-    //        out,
-    //        "average.....%.1f C\r\nmax.........%2u "
-    //        "C\r\nmin.........%2u C\r\n"
-    //        "delta.......%2u C\r\n",
-    //        (float)pack_get_mean_temperature() / 10,
-    //        pack_get_max_temperature(),
-    //        pack_get_min_temperature(),
-    //        pack_get_max_temperature() - pack_get_min_temperature());
-    //} else if (strcmp(argv[1], "all") == 0) {
-    //    _cli_temps_all(argc, &argv[1], out);
-    //} else {
-    //    sprintf(
-    //        out,
-    //        "Unknown parameter: %s\r\n"
-    //        "valid parameters:\r\n"
-    //        "- all: returns temperature for all cells\r\n",
-    //        argv[1]);
-    //}
+    if (strcmp(argv[1], "") == 0) {
+        sprintf(
+            out,
+            "average.....%.1f °C\r\nmax.........%2u "
+            "C\r\nmin.........%2u °C\r\n"
+            "delta.......%2u °C\r\n",
+            (float)temperature_get_average() / 10,
+            temperature_get_max() / 4,
+            temperature_get_min() / 4,
+            (temperature_get_max() - temperature_get_min()) / 4);
+    } else if (strcmp(argv[1], "all") == 0) {
+        _cli_temps_all(argc, &argv[1], out);
+    } else {
+        sprintf(
+            out,
+            "Unknown parameter: %s\r\n"
+            "valid parameters:\r\n"
+            "- all: returns temperature for all cells\r\n",
+            argv[1]);
+    }
 }
 
 void _cli_temps_all(uint16_t argc, char **argv, char *out) {
     out[0] = '\0';
+    temperature_t *temp_all = temperature_get_all();
 
     for (uint8_t i = 0; i < PACK_TEMP_COUNT; i++) {
         if (i % TEMP_SENSOR_COUNT == 0) {
             sprintf(out + strlen(out), "\r\n%-3d", i / TEMP_SENSOR_COUNT);
-        } else if (i % (TEMP_SENSOR_COUNT / 2) == 0 && i > 0) {
+        } else if (i % (TEMP_SENSOR_COUNT / 4) == 0 && i > 0) {
             sprintf(out + strlen(out), "\r\n%-3s", "");
         }
-        sprintf(out + strlen(out), "[%3u %2uc] ", i, temperature_get_all()[i]);
+        sprintf(out + strlen(out), "[%3u %2u °C] ", i, temp_all[i] / 4);
     }
 
     sprintf(out + strlen(out), "\r\n");
@@ -273,7 +274,7 @@ void _cli_balance(uint16_t argc, char **argv, char *out) {
     } else if(strcmp(argv[1], "test") == 0) {
         CAN_TxHeaderTypeDef tx_header;
         uint8_t buffer[CAN_MAX_PAYLOAD_LENGTH];
-        uint8_t board, cell;
+        uint8_t board;
         bms_balancing_cells cells = bms_balancing_cells_default;
         
         tx_header.ExtId = 0;
@@ -282,19 +283,25 @@ void _cli_balance(uint16_t argc, char **argv, char *out) {
         tx_header.StdId = ID_BALANCING;
 
         board = atoi(argv[2]);
-        cell = atoi(argv[3]);
 
         if(argc < 3) {
             sprintf(out, "wrong number of parameters\r\n");
             return;
         }
-        
-        setBit(cells, cell, 1);
+
+        sprintf(out, "testing cells [");
+
+        uint8_t c;
+        for(uint8_t i=3; i<argc; ++i) {
+            c = atoi(argv[i]);   
+            setBit(cells, c, 1);
+            sprintf(out + strlen(out), "%u,", c);
+        }
 
         tx_header.DLC = serialize_bms_BALANCING(buffer, board, cells);
         can_send(&BMS_CAN, buffer, &tx_header);
 
-        sprintf(out, "testing cell %d on board %d\r\n", cell, board);
+        sprintf(out + strlen(out) - 1, "]\r\non board %d\r\n", board);
     } else {
         sprintf(
             out,
@@ -303,7 +310,7 @@ void _cli_balance(uint16_t argc, char **argv, char *out) {
             "- on\r\n"
             "- off\r\n"
             "- thr <millivolts>\r\n"
-            "- test <board> <cell>\r\n",
+            "- test <board> <cell0 cell1 ... cellN>\r\n",
             argv[1]);
     }
 }
