@@ -39,7 +39,7 @@ void can_bms_init(){
     filter.FilterBank           = 0;
     filter.FilterScale          = CAN_FILTERSCALE_16BIT;
     filter.FilterActivation     = ENABLE;
-    filter.SlaveStartFilterBank = 14;
+    filter.SlaveStartFilterBank = CAN_SLAVE_START_FILTER_BANK;
 
     HAL_CAN_ConfigFilter(&BMS_CAN, &filter);
     HAL_CAN_ActivateNotification(&BMS_CAN, CAN_IT_ERROR | CAN_IT_RX_FIFO0_MSG_PENDING );
@@ -63,7 +63,7 @@ void can_car_init(){
     filter.FilterBank           = 14;
     filter.FilterScale          = CAN_FILTERSCALE_16BIT;
     filter.FilterActivation     = ENABLE;
-    filter.SlaveStartFilterBank = 14;
+    filter.SlaveStartFilterBank = CAN_SLAVE_START_FILTER_BANK;
 
     HAL_CAN_ConfigFilter(&CAR_CAN, &filter);
     HAL_CAN_ActivateNotification(&CAR_CAN, CAN_IT_ERROR | CAN_IT_RX_FIFO1_MSG_PENDING );
@@ -111,7 +111,7 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
                 status = Primary_Ts_Status_OFF;
                 break;
             case BMS_TS_ON:
-            case BMS_AIRN_OFF:
+            case BMS_AIRN_CLOSE:
             case BMS_PRECHARGE:
                 status = Primary_Ts_Status_PRECHARGE;
                 break;
@@ -154,13 +154,10 @@ HAL_StatusTypeDef can_bms_send(uint16_t id) {
 }
 
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
-    //void HAL_FDCAN_RxFifo0Callback(CAN_HandleTypeDef *hcan, uint32_t RxFifo0ITs) {
-    //if (hfdcan->Instance == FDCAN1 && RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) {
     uint8_t rx_data[8] = {'\0'};
     CAN_RxHeaderTypeDef rx_header;
 
     if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rx_header, rx_data) != HAL_OK) {
-        //if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rx_header, rx_data) != HAL_OK) {
         error_set(ERROR_CAN, 1, HAL_GetTick());
         cli_bms_debug("CAN: Error receiving message", 29);
         return;
@@ -261,12 +258,9 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 }
 
 void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
-    //void HAL_FDCAN_RxFifo0Callback(CAN_HandleTypeDef *hcan, uint32_t RxFifo0ITs) {
-    //if (hfdcan->Instance == FDCAN1 && RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) {
     uint8_t rx_data[8] = {'\0'};
     CAN_RxHeaderTypeDef rx_header;
     if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO1, &rx_header, rx_data) != HAL_OK) {
-        //if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rx_header, rx_data) != HAL_OK) {
         error_set(ERROR_CAN, 1, HAL_GetTick());
         cli_bms_debug("CAN: Error receiving message", 29);
         return;

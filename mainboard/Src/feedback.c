@@ -28,37 +28,26 @@ void feedback_init() {
     __HAL_TIM_CLEAR_FLAG(&HTIM_MUX, TIM_FLAG_CC1);
     HAL_TIM_Base_Start_IT(&HTIM_MUX);
     HAL_TIM_OC_Start_IT(&HTIM_MUX, TIM_CHANNEL_1);
-}
 
-void feedback_read(feedback_t fb_mask) {
-    //initialize the feedback value to 0 on the mask bits;
-    feedback &= (~fb_mask);
-    for (uint8_t i = 0; i < FEEDBACK_N; ++i) {
-        if ((1U << i) & fb_mask) {
-            HAL_GPIO_WritePin(MUX_A0_GPIO_Port, MUX_A0_Pin, (i & 0b00000001));
-            HAL_GPIO_WritePin(MUX_A1_GPIO_Port, MUX_A1_Pin, (i & 0b00000010));
-            HAL_GPIO_WritePin(MUX_A2_GPIO_Port, MUX_A2_Pin, (i & 0b00000100));
-            HAL_GPIO_WritePin(MUX_A3_GPIO_Port, MUX_A3_Pin, (i & 0b00001000));
-
-            feedback |= (HAL_GPIO_ReadPin(MUX_IN_GPIO_Port, MUX_IN_Pin) << i);
-        }
-    }
+    HAL_GPIO_WritePin(BMS_FAULT_GPIO_Port, BMS_FAULT_Pin, GPIO_PIN_SET);
 }
 
 bool _is_adc_value_high(uint8_t index) {
-    if(index == FEEDBACK_CHECK_MUX_POS) return (CONVERT_ADC_TO_VOLTAGE(adc_values[index]) * 4.3F) > feedback_analog_threshold_h;
-    return CONVERT_ADC_TO_VOLTAGE(adc_values[index]) > feedback_analog_threshold_h;
+    float val = CONVERT_ADC_TO_VOLTAGE(adc_values[index]);
+    if(index == FEEDBACK_CHECK_MUX_POS) val *= 4.3F;
+
+    return val > feedback_analog_threshold_h;
 }
 
 bool _is_adc_value_low(uint8_t index) {
-    if(index == FEEDBACK_CHECK_MUX_POS) return (CONVERT_ADC_TO_VOLTAGE(adc_values[index]) * 4.3F) < feedback_analog_threshold_l;
+    float val = CONVERT_ADC_TO_VOLTAGE(adc_values[index]);
+    if(index == FEEDBACK_CHECK_MUX_POS) val *= 4.3F;
+
     return CONVERT_ADC_TO_VOLTAGE(adc_values[index]) < feedback_analog_threshold_l;
 }
 
-bool feedback_check(feedback_t fb_check_mask, feedback_t fb_value, error_id error_id) {
+feedback_t feedback_check(feedback_t fb_check_mask, feedback_t fb_value, error_id error_id) {
     feedback_t difference = 0;
-
-    return true;
     
     for (uint8_t i=0; i<FEEDBACK_N; ++i) {
         feedback_t fb = fb_value & (1U << i);
@@ -78,7 +67,7 @@ bool feedback_check(feedback_t fb_check_mask, feedback_t fb_value, error_id erro
         }
     }
 
-    return !difference;
+    return difference;
 }
 
 // //this check is performed during ON state and from PRECHARGE TO ON
@@ -108,7 +97,6 @@ void feedback_set_next_mux_index() {
     HAL_GPIO_WritePin(MUX_A1_GPIO_Port, MUX_A1_Pin, (fb_index & 0b00000010));
     HAL_GPIO_WritePin(MUX_A2_GPIO_Port, MUX_A2_Pin, (fb_index & 0b00000100));
     HAL_GPIO_WritePin(MUX_A3_GPIO_Port, MUX_A3_Pin, (fb_index & 0b00001000));
-    //for(uint8_t i=0; i<100; ++i);
 }
 
 void feedback_save_value(uint32_t adc_value, uint8_t index) {

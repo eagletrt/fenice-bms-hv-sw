@@ -177,7 +177,7 @@ enum {
     FEEDBACK_IMD_SD_POS,
     FEEDBACK_BMS_FAULT_POS,
     FEEDBACK_AIRP_GATE_POS,
-    FEEDBACK_TSAL_POS,
+    FEEDBACK_TSAL_GREEN_POS,
     FEEDBACK_LATCH_BMS_POS,
     FEEDBACK_LATCH_IMD_POS,
     FEEDBACK_AIRN_GATE_POS,
@@ -229,7 +229,7 @@ enum {
 #define FEEDBACK_NULL           0
 #define FEEDBACK_TS_ON	        ((feedback_t)1 << FEEDBACK_TS_ON_POS)
 #define FEEDBACK_BSPD_SIG	    ((feedback_t)1 << FEEDBACK_BSPD_SIG_POS)
-#define FEEDBACK_TSAL	        ((feedback_t)1 << FEEDBACK_TSAL_POS)
+#define FEEDBACK_TSAL_GREEN     ((feedback_t)1 << FEEDBACK_TSAL_GREEN_POS)
 #define FEEDBACK_TSAL_OVER60V	((feedback_t)1 << FEEDBACK_TSAL_OVER60V_POS)
 #define FEEDBACK_LATCH_IMD	    ((feedback_t)1 << FEEDBACK_LATCH_IMD_POS)
 #define FEEDBACK_BMS_SD	        ((feedback_t)1 << FEEDBACK_BMS_SD_POS)

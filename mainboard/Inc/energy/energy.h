@@ -10,7 +10,11 @@
 
 #include <inttypes.h>
 /* Exported types ------------------------------------------------------------*/
-typedef struct energy *energy_t;
+typedef struct energy {
+    uint32_t last_sample;
+    float energy;
+    float last_power;
+} energy_t;
 
 /* Exported constants --------------------------------------------------------*/
 /* Exported macros -----------------------------------------------------------*/
@@ -20,15 +24,13 @@ typedef struct energy *energy_t;
  */
 void energy_init(energy_t *handle);
 
-void energy_deinit(energy_t *handle);
-
 /**
  * @brief Sets a given energy value as the current energy count
  * 
  * @param handle energy_t instance
  * @param joule Energy to set (in Joule)
  */
-void energy_set_count(energy_t handle, float energy);
+void energy_set_count(energy_t *handle, float energy);
 
 /**
  * @brief Resets integration time to a given timestamp.
@@ -36,7 +38,7 @@ void energy_set_count(energy_t handle, float energy);
  * @param handle energy_t instance
  * @param time Time to set (in milliseconds)
  */
-void energy_set_time(energy_t handle, uint32_t time);
+void energy_set_time(energy_t *handle, uint32_t time);
 
 /**
  * @brief   Updates energy counting with given data
@@ -45,7 +47,7 @@ void energy_set_time(energy_t handle, uint32_t time);
  * @param power	Sampled power value (in Watt)
  * @param time Time at which the measurement was made (in milliseconds)
  */
-void energy_sample_energy(energy_t handle, float power, uint32_t time);
+void energy_sample_energy(energy_t *handle, float power, uint32_t time);
 
 /**
  * @brief Calculate total consumption since last charge

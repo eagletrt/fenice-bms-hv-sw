@@ -111,9 +111,9 @@ int main(void)
   MX_ADC2_Init();
   MX_ADC3_Init();
   MX_TIM5_Init();
-  MX_TIM9_Init();
   MX_ADC1_Init();
-  MX_TIM1_Init();
+  MX_TIM8_Init();
+  MX_TIM10_Init();
   /* USER CODE BEGIN 2 */
     HAL_GPIO_WritePin(EEPROM_HOLD_GPIO_Port, EEPROM_HOLD_Pin, GPIO_PIN_SET);
     current_start_measure();

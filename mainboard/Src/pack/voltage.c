@@ -75,7 +75,7 @@ voltage_t voltage_get_cell_max() {
 }
 
 voltage_t voltage_get_cell_min() {
-    voltage_t min_volt = 0;
+    voltage_t min_volt = UINT16_MAX;
     for (size_t i = 0; i < PACK_CELL_COUNT; i++) {
         min_volt = MIN(min_volt, voltage.cells[i]);
     }
