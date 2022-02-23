@@ -15,12 +15,12 @@
 //=================================== General ===============================
 //===========================================================================
 
-#define HTIM_MUX        htim1
 #define HTIM_IMD        htim2
 #define HTIM_ERR        htim3
 #define HTIM_MEASURES   htim4
 #define HTIM_BAL        htim5
-#define HTIM_BMS        htim9
+#define HTIM_BMS        htim8
+#define HTIM_MUX        htim10
 
 #define SPI_EEPROM hspi2
 

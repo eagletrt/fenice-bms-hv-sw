@@ -24,6 +24,8 @@
                 HAL_CAN_GetTxMailboxesFreeLevel(C) == 0);                                               \
     } 
 
+#define CAN_SLAVE_START_FILTER_BANK 14
+
 void can_car_init();
 void can_bms_init();
 void can_tx_header_init();
