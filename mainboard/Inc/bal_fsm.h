@@ -34,4 +34,6 @@ void bal_set_threshold(uint16_t thresh);
 void bal_fsm_init();
 uint8_t bal_are_cells_off_status();
 
+void _bal_handle_tim_oc_irq(TIM_HandleTypeDef *htim);
+
 #endif

@@ -23,3 +23,4 @@ extern bool measure_voltage_current_flag, measure_temp_flag;
 
 void measures_init();
 void measures_voltage_current();
+void _measures_handle_tim_oc_irq(TIM_HandleTypeDef *htim);

@@ -593,63 +593,16 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* tim_baseHandle)
 
 /* USER CODE BEGIN 1 */
 void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim) {
-  uint32_t pulse = __HAL_TIM_GET_COUNTER(htim);
   if (htim->Instance == HTIM_ERR.Instance) {
-      HAL_GPIO_WritePin(GPIO1_GPIO_Port, GPIO1_Pin, GPIO_PIN_RESET);
-      //fsm_trigger_event(bms.fsm, BMS_EV_HALT);
-      fsm_transition(bms.fsm, BMS_FAULT);
-      error_set_fatal(error_get_top());
-  }
-  else if (htim->Instance == HTIM_BMS.Instance) {
-      switch (htim->Channel) {
-          case HAL_TIM_ACTIVE_CHANNEL_1:
-              __HAL_TIM_SET_COMPARE(htim, TIM_CHANNEL_1, (pulse + TIM_MS_TO_TICKS(htim, PRECHARGE_CHECK_INTERVAL)));
-              fsm_trigger_event(bms.fsm, BMS_EV_PRECHARGE_CHECK);
-              break;
-          case HAL_TIM_ACTIVE_CHANNEL_2:
-              fsm_trigger_event(bms.fsm, BMS_EV_PRECHARGE_TIMEOUT);
-              break;
-          case HAL_TIM_ACTIVE_CHANNEL_3:
-              __HAL_TIM_SET_COMPARE(htim, TIM_CHANNEL_3, (pulse + TIM_MS_TO_TICKS(htim, FB_CHECK_INTERVAL)));
-              fsm_trigger_event(bms.fsm, BMS_EV_FB_CHECK);
-              break;
-          case HAL_TIM_ACTIVE_CHANNEL_4:
-              fsm_trigger_event(bms.fsm, BMS_EV_FB_TIMEOUT);
-              break;
-          default:
-              break;
-      }
-  }
-  else if (htim->Instance == HTIM_MEASURES.Instance) {
-      switch (htim->Channel) {
-          case HAL_TIM_ACTIVE_CHANNEL_1:
-              __HAL_TIM_SET_COMPARE(htim, TIM_CHANNEL_1, (pulse + TIM_MS_TO_TICKS(htim, VOLTS_READ_INTERVAL)));
-
-              measure_voltage_current_flag = true;
-              break;
-          case HAL_TIM_ACTIVE_CHANNEL_2:
-              __HAL_TIM_SET_COMPARE(htim, TIM_CHANNEL_2, (pulse + TIM_MS_TO_TICKS(htim, TEMPS_READ_INTERVAL * 10)));
-
-              measure_temp_flag = true;
-              //fsm_trigger_event(super_fsm, SUPER_EV_MEASURE_TEMPS);
-              break;
-          default:
-              break;
-    }
+    _error_handle_tim_oc_irq();
+  } else if (htim->Instance == HTIM_BMS.Instance) {
+    _bms_handle_tim_oc_irq(htim);
+  } else if (htim->Instance == HTIM_MEASURES.Instance) {
+    _measures_handle_tim_oc_irq(htim);
   } else if (htim->Instance == HTIM_BAL.Instance) {
-    switch (htim->Channel) {
-      case HAL_TIM_ACTIVE_CHANNEL_1:
-        fsm_trigger_event(bal.fsm, EV_BAL_COOLDOWN_START);
-        break;
-      case HAL_TIM_ACTIVE_CHANNEL_2:
-        fsm_trigger_event(bal.fsm, EV_BAL_COOLDOWN_END);
-        break;
-      default: break;
-    }
+    _bal_handle_tim_oc_irq(htim);
   } else if(htim->Instance == HTIM_MUX.Instance) {
-    if(htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1) {
-      HAL_ADC_Start_IT(&ADC_MUX);
-    }
+    _feedback_handle_tim_oc_irq();
   }
 }
 

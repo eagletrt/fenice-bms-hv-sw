@@ -345,3 +345,25 @@ void _fault_handler(fsm FSM, uint8_t event) {
             break;
     }
 }
+
+void _bms_handle_tim_oc_irq(TIM_HandleTypeDef *htim) {
+    uint32_t pulse = __HAL_TIM_GetCounter(htim);
+    switch (htim->Channel) {
+          case HAL_TIM_ACTIVE_CHANNEL_1:
+              __HAL_TIM_SET_COMPARE(htim, TIM_CHANNEL_1, (pulse + TIM_MS_TO_TICKS(htim, PRECHARGE_CHECK_INTERVAL)));
+              fsm_trigger_event(bms.fsm, BMS_EV_PRECHARGE_CHECK);
+              break;
+          case HAL_TIM_ACTIVE_CHANNEL_2:
+              fsm_trigger_event(bms.fsm, BMS_EV_PRECHARGE_TIMEOUT);
+              break;
+          case HAL_TIM_ACTIVE_CHANNEL_3:
+              __HAL_TIM_SET_COMPARE(htim, TIM_CHANNEL_3, (pulse + TIM_MS_TO_TICKS(htim, FB_CHECK_INTERVAL)));
+              fsm_trigger_event(bms.fsm, BMS_EV_FB_CHECK);
+              break;
+          case HAL_TIM_ACTIVE_CHANNEL_4:
+              fsm_trigger_event(bms.fsm, BMS_EV_FB_TIMEOUT);
+              break;
+          default:
+              break;
+      }
+}

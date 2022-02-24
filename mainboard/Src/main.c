@@ -136,6 +136,10 @@ int main(void)
     imd_init();
     feedback_init();
 
+
+
+    DBGMCU->APB2FZ = DBGMCU_APB2_FZ_DBG_TIM10_STOP;
+
   /* USER CODE END 2 */
 
   /* Infinite loop */

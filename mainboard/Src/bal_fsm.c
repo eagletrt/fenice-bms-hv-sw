@@ -174,3 +174,15 @@ uint8_t bal_are_cells_off_status() {
     bms_balancing_status off[LTC6813_COUNT] = { bms_balancing_status_OFF };
     return memcmp(bal.status, off, sizeof(bal.status)) == 0;
 }
+
+void _bal_handle_tim_oc_irq(TIM_HandleTypeDef *htim) {
+    switch (htim->Channel) {
+      case HAL_TIM_ACTIVE_CHANNEL_1:
+        fsm_trigger_event(bal.fsm, EV_BAL_COOLDOWN_START);
+        break;
+      case HAL_TIM_ACTIVE_CHANNEL_2:
+        fsm_trigger_event(bal.fsm, EV_BAL_COOLDOWN_END);
+        break;
+      default: break;
+    }
+}

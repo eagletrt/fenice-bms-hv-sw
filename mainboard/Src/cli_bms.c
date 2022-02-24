@@ -128,9 +128,10 @@ void cli_bms_init() {
 
 void cli_bms_debug(char *text, size_t length) {
     if (dmesg_ena) {
-        char out[3000] = {'\0'};
+        char out[300] = {'\0'};
+        float tick = (float)HAL_GetTick() / 1000;
         // add prefix
-        sprintf(out, "[%.3f] ", (float)HAL_GetTick() / 1000);
+        sprintf(out, "[%f] ", tick);
 
         strcat(out, text);
         length += strlen(out);
@@ -302,6 +303,15 @@ void _cli_balance(uint16_t argc, char **argv, char *out) {
         can_send(&BMS_CAN, buffer, &tx_header);
 
         sprintf(out + strlen(out) - 1, "]\r\non board %d\r\n", board);
+    } else if(argc < 2) {
+        sprintf(
+            out,
+            "Invalid number of parameters.\r\n\n"
+            "valid parameters:\r\n"
+            "- on\r\n"
+            "- off\r\n"
+            "- thr <millivolts>\r\n"
+            "- test <board> <cell0 cell1 ... cellN>\r\n");
     } else {
         sprintf(
             out,
@@ -311,7 +321,7 @@ void _cli_balance(uint16_t argc, char **argv, char *out) {
             "- off\r\n"
             "- thr <millivolts>\r\n"
             "- test <board> <cell0 cell1 ... cellN>\r\n",
-            argv[1]);
+            argv[0]);
     }
 }
 void _cli_soc(uint16_t argc, char **argv, char *out) {
@@ -360,6 +370,13 @@ void _cli_ts(uint16_t argc, char **argv, char *out) {
     } else if (strcmp(argv[1], "off") == 0) {
         fsm_trigger_event(bms.fsm, BMS_EV_TS_OFF);
         sprintf(out, "triggered TS OFF event\r\n");
+    } else if(argc < 2) {
+        sprintf(
+            out,
+            "Invalid number of parameters.\r\n\n"
+            "valid parameters:\r\n"
+            "- on\r\n"
+            "- off\r\n");
     } else {
         sprintf(
             out,
@@ -384,6 +401,12 @@ void _cli_current(uint16_t argc, char **argv, char *out) {
     } else if (strcmp(argv[1], "zero") == 0) {
         current_zero();
         sprintf(out, "Current zeroed\r\n");
+    } else if(argc < 2) {
+        sprintf(
+            out,
+            "Invalid number of parameters.\r\n\n"
+            "valid parameters:\r\n"
+            "- zero: zeroes the hall-sensor measurement\r\n");
     } else {
         sprintf(
             out,
