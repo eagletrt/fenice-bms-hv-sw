@@ -10,6 +10,7 @@
 
 #include "error/error_list_ref.h"
 #include "mainboard_config.h"
+#include "bms_fsm.h"
 #include "tim.h"
 
 #include <stdlib.h>
@@ -221,4 +222,11 @@ size_t error_count() {
  */
 void error_dump(error_t errors[]) {
     llist_export(er_list, (void *)errors, sizeof(error_t));
+}
+
+void _error_handle_tim_oc_irq() {
+    HAL_GPIO_WritePin(GPIO1_GPIO_Port, GPIO1_Pin, GPIO_PIN_RESET);
+    //fsm_trigger_event(bms.fsm, BMS_EV_HALT);
+    fsm_transition(bms.fsm, BMS_FAULT);
+    error_set_fatal(error_get_top());
 }

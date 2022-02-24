@@ -14,10 +14,12 @@
 #include "fenice_config.h"
 
 #define MUX_INTERVAL_MS 0.1
-#define MUX_DELAY_MS    0.001
+#define MUX_DELAY_MS    0.01
 
 #define FB_CHECK_INTERVAL   2
 #define FB_TIMEOUT    50
+
+#define ADC_VALUES_COUNT FEEDBACK_MUX_N+1
 
 typedef uint32_t feedback_t;
 
@@ -84,7 +86,7 @@ extern feedback_t feedback;
 
 
 
-#define CONVERT_ADC_TO_VOLTAGE(VALUE) ((VALUE) * 3.3F / 4096)
+#define CONVERT_ADC_TO_VOLTAGE(VALUE) ((VALUE) * 3.3F / 4095)
 
 
 void feedback_init();
@@ -94,7 +96,8 @@ bool feedback_check_charge();
 bool feedback_check_precharge();
 bool feedback_check_on();
 
-uint8_t feedback_get_adc_index();
-void feedback_incr_adc_index();
+uint8_t feedback_get_mux_index();
 void feedback_set_next_mux_index();
-void feedback_save_value(uint32_t adc_value, uint8_t index);
+void feedback_save_mux_value(uint32_t adc_value, uint8_t index);
+void _feedback_handle_tim_oc_irq();
+void _feedback_handle_adc_cnv_cmpl_irq();

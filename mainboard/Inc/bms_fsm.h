@@ -38,4 +38,6 @@ typedef struct {
 extern bms_fsm bms;
 
 void bms_fsm_init();
+
+void _bms_handle_tim_oc_irq(TIM_HandleTypeDef *htim);
 #endif
