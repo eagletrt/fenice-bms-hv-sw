@@ -27,12 +27,11 @@
 #include "error/error.h"
 #include "mainboard_config.h"
 #include "pack/current.h"
-#include "peripherals/can_comm.h"
-#include "si8900.h"
 #include "soc.h"
 #include "measures.h"
 #include "imd.h"
 #include "feedback.h"
+#include "adc124s021.h"
 
 #include <string.h>
 #include <m95256.h>
@@ -99,7 +98,6 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_USART3_UART_Init();
   MX_CAN1_Init();
   MX_CAN2_Init();
   MX_SPI2_Init();
@@ -108,12 +106,13 @@ int main(void)
   MX_TIM4_Init();
   MX_USART1_UART_Init();
   MX_DMA_Init();
-  MX_ADC2_Init();
   MX_ADC3_Init();
   MX_TIM5_Init();
   MX_ADC1_Init();
   MX_TIM8_Init();
   MX_TIM10_Init();
+  MX_SPI1_Init();
+  MX_ADC2_Init();
   /* USER CODE BEGIN 2 */
     HAL_GPIO_WritePin(EEPROM_HOLD_GPIO_Port, EEPROM_HOLD_Pin, GPIO_PIN_SET);
     current_start_measure();
@@ -121,13 +120,9 @@ int main(void)
     cli_bms_init();
     error_init();
 
-    si8900_init(&SI8900_UART, ADC_SIN_GPIO_Port, ADC_SIN_Pin);
-
     voltage_init();
     bal_fsm_init();
     bms_fsm_init();
-    //super_fsm_init();
-    current_read();
     current_zero();
     soc_init();
     can_bms_init();
@@ -135,10 +130,6 @@ int main(void)
     measures_init();
     imd_init();
     feedback_init();
-
-
-
-    DBGMCU->APB2FZ = DBGMCU_APB2_FZ_DBG_TIM10_STOP;
 
   /* USER CODE END 2 */
 
@@ -152,16 +143,6 @@ int main(void)
 
         fsm_run(bms.fsm);
         fsm_run(bal.fsm);
-
-        if(measure_voltage_current_flag) {
-          measure_voltage_current_flag = false;
-          measures_voltage_current();
-          can_car_send(ID_HV_CURRENT);
-        }
-        if(measure_temp_flag) {
-          measure_temp_flag = false;
-          can_car_send(ID_HV_TEMP);
-        }
 
         cli_loop(&cli_bms);
     }
@@ -182,6 +163,7 @@ void SystemClock_Config(void)
   */
   __HAL_RCC_PWR_CLK_ENABLE();
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
@@ -189,7 +171,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLM = 13;
+  RCC_OscInitStruct.PLL.PLLM = 8;
   RCC_OscInitStruct.PLL.PLLN = 180;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 2;
@@ -198,12 +180,14 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+
   /** Activate the Over-Drive mode
   */
   if (HAL_PWREx_EnableOverDrive() != HAL_OK)
   {
     Error_Handler();
   }
+
   /** Initializes the CPU, AHB and APB buses clocks
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
@@ -254,4 +238,3 @@ void assert_failed(uint8_t *file, uint32_t line)
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
-

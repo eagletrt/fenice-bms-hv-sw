@@ -72,7 +72,7 @@ int8_t error_compare(llist_node a, llist_node b) {
 
 bool error_set_timer(error_t *error) {
     HAL_TIM_OC_Stop_IT(&HTIM_ERR, TIM_CHANNEL_1);
-    HAL_GPIO_WritePin(GPIO1_GPIO_Port, GPIO1_Pin, GPIO_PIN_RESET);
+    //HAL_GPIO_WritePin(GPIO1_GPIO_Port, GPIO1_Pin, GPIO_PIN_RESET);
 
     if (error != NULL && error->state == STATE_WARNING && error_timeouts[error->id] < SOFT) {
         // Set counter period register to the delta
@@ -82,7 +82,7 @@ bool error_set_timer(error_t *error) {
         __HAL_TIM_CLEAR_FLAG(&HTIM_ERR, TIM_IT_CC1);
         HAL_TIM_OC_Start_IT(&HTIM_ERR, TIM_CHANNEL_1);
 
-        HAL_GPIO_WritePin(GPIO1_GPIO_Port, GPIO1_Pin, GPIO_PIN_SET);
+        //HAL_GPIO_WritePin(GPIO1_GPIO_Port, GPIO1_Pin, GPIO_PIN_SET);
 
         return true;
     } else {
@@ -225,7 +225,7 @@ void error_dump(error_t errors[]) {
 }
 
 void _error_handle_tim_oc_irq() {
-    HAL_GPIO_WritePin(GPIO1_GPIO_Port, GPIO1_Pin, GPIO_PIN_RESET);
+    //HAL_GPIO_WritePin(GPIO1_GPIO_Port, GPIO1_Pin, GPIO_PIN_RESET);
     //fsm_trigger_event(bms.fsm, BMS_EV_HALT);
     fsm_transition(bms.fsm, BMS_FAULT);
     error_set_fatal(error_get_top());

@@ -78,8 +78,8 @@ Src/pack/current.c \
 Src/pack/pack.c \
 Src/pack/temperature.c \
 Src/pack/voltage.c \
+Src/peripherals/adc124s021.c \
 Src/peripherals/can_comm.c \
-Src/peripherals/si8900.c \
 Src/spi.c \
 Src/stm32f4xx_hal_msp.c \
 Src/stm32f4xx_it.c \
