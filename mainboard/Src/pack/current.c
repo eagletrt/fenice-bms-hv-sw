@@ -30,6 +30,7 @@ current_t _current_convert_high(float volt) {
 }
 
 current_t _current_convert_shunt(float volt) {
+    return (volt - 0.46) / (1e-4 * 500);
     UNUSED(volt);
     return 0.f;
 }
@@ -58,7 +59,7 @@ uint32_t current_read(uint16_t shunt_adc_val) {
     volt                            = (avg_300 * 3.3f) / 4096;
     current[CURRENT_SENSOR_300]     = _current_convert_high(volt);
 
-    volt                            = shunt_adc_val / 100;
+    volt                            = (float)shunt_adc_val / 100;
     current[CURRENT_SENSOR_SHUNT]   = _current_convert_shunt(volt);
 
     // Check for over-current
