@@ -261,27 +261,6 @@ enum {
 //Sensitivity of the 300A sensor
 #define S160_300A_SENS 40
 
-//===========================================================================
-//=============================== SI8900 Settings ===========================
-//===========================================================================
-
-/**
- * Max time to wait for the sensor to initialize (auto-baudrate detection)
-*/
-#define SI8900_INIT_TIMEOUT 400
-
-/**
- * Max time to wait for a voltage reading
- * 
- * Keep it low, it will pause the main loop
-*/
-#define SI8900_TIMEOUT 5
-
-/**
- * Reference voltage of the ADC
-*/
-#define SI8900_VREF 3.33
-
 /*
  * If the cli should echo the input
 */

@@ -24,7 +24,7 @@ void current_start_measure();
  * 
  * @return uint32_t The timestamp at which the measurement occurred
  */
-uint32_t current_read();
+uint32_t current_read(uint16_t shunt_adc_val);
 
 /**
  * @brief Zeroes the Hall-effect sensor

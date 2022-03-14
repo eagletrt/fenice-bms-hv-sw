@@ -25,9 +25,9 @@ typedef enum { VOLTAGE_CELLBOARD_0 = 0,
 void voltage_init();
 
 /**
- * @brief   Polls SI8900 ADC for voltages
+ * @brief   Polls ADC124S021 for voltages
  */
-void voltage_measure();
+void voltage_measure(voltage_t voltages[2]);
 
 voltage_t *voltage_get_cells();
 voltage_t voltage_get_cell_max();

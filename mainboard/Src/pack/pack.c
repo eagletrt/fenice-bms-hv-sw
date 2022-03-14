@@ -31,7 +31,7 @@ bool pack_set_ts_off() {
 }
 
 void pack_set_pc_start() {
-    HAL_GPIO_WritePin(PC_ON_GPIO_Port, PC_ON_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(PRECHARGE_GPIO_Port, PRECHARGE_Pin, GPIO_PIN_SET);
 
     /*
     // Check feedback

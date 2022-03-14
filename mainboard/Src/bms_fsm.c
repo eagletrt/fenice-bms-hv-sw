@@ -326,7 +326,7 @@ void _fault_entry(fsm FSM) {
     // bms_set_fault(&data->bms);
     HAL_GPIO_WritePin(BMS_FAULT_GPIO_Port, BMS_FAULT_Pin, GPIO_PIN_RESET);
 
-    HAL_GPIO_WritePin(GPIO4_GPIO_Port, GPIO4_Pin, GPIO_PIN_SET);
+    //HAL_GPIO_WritePin(GPIO4_GPIO_Port, GPIO4_Pin, GPIO_PIN_SET);
     //can_send_error(&hcan, data->error, data->error_index, &data->pack);
     //cli_bms_debug("HALT", 5);
 }

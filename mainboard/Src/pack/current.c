@@ -29,7 +29,8 @@ current_t _current_convert_high(float volt) {
     return (1 / 2.5e-3f) * (volt / (330.f / (330 + 169)) - 2.5f);
 }
 
-current_t _current_convert_shunt() {
+current_t _current_convert_shunt(float volt) {
+    UNUSED(volt);
     return 0.f;
 }
 
@@ -38,9 +39,7 @@ void current_start_measure() {
     HAL_ADC_Start_DMA(&ADC_HALL300, (uint32_t *)adc_300, MEASURE_SAMPLE_SIZE);
 }
 
-uint32_t current_read() {
-    //TODO: measure shunt
-
+uint32_t current_read(uint16_t shunt_adc_val) {
     uint32_t time    = HAL_GetTick();
     uint32_t avg_50  = 0;
     uint32_t avg_300 = 0;
@@ -52,12 +51,15 @@ uint32_t current_read() {
     avg_300 /= MEASURE_SAMPLE_SIZE;
 
     // Convert Hall-low (50A)
-    float volt                 = (avg_50 * 3.3f) / 4095;
-    current[CURRENT_SENSOR_50] = _current_convert_low(volt);
+    float volt                      = (avg_50 * 3.3f) / 4096;
+    current[CURRENT_SENSOR_50]      = _current_convert_low(volt);
 
     // Convert Hall-high (300A)
-    volt                        = (avg_300 * 3.3f) / 4095;
-    current[CURRENT_SENSOR_300] = _current_convert_high(volt);
+    volt                            = (avg_300 * 3.3f) / 4096;
+    current[CURRENT_SENSOR_300]     = _current_convert_high(volt);
+
+    volt                            = shunt_adc_val / 100;
+    current[CURRENT_SENSOR_SHUNT]   = _current_convert_shunt(volt);
 
     // Check for over-current
     error_toggle_check(current_get_current() > PACK_MAX_CURRENT, ERROR_OVER_CURRENT, 0);

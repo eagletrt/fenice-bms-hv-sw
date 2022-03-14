@@ -8,11 +8,11 @@
  */
 
 #include "pack/voltage.h"
+#include "peripherals/adc124s021.h"
 
 #include "error/error.h"
 #include "main.h"
-#include "peripherals/si8900.h"
-#include "usart.h"
+#include "spi.h"
 
 struct voltage {
     voltage_t bus;
@@ -36,30 +36,27 @@ void voltage_init() {
     }
 }
 
-void voltage_measure() {
-    voltage_t internal = 0;
-    voltage_t bus      = 0;
-    voltage_t sum      = 0;
+void voltage_measure(voltage_t voltages[2]) {
+    ADC124S021_CH chs[2]    = {ADC124_BUS_CHANNEL, ADC124_INTERNAL_CHANNEL};
+    voltage_t sum           = 0;
 
-    if (si8900_read_channel(&SI8900_UART, SI8900_AIN0, &internal)) {
-        voltage.internal = internal;
+    if(voltages != NULL || adc124s021_read_channels(&SPI_ADC124S, chs, 2, voltages)) {
+        voltage.bus = voltages[0];
+        voltage.internal = voltages[1];
     }
-    HAL_Delay(2);  // TODO: this sucks
-    if (si8900_read_channel(&SI8900_UART, SI8900_AIN1, &bus)) {
-        voltage.bus = bus;
-    }
+
 
     for (uint16_t i = 0; i < PACK_CELL_COUNT; i++) {
         sum += voltage.cells[i];
     }
 
     // Check if difference between readings from the ADC and cellboards is greater than 10V
-    if (MAX(internal, sum) - MIN(internal, sum) > 10 * 100) {
+    if (MAX(voltages[1], sum) - MIN(voltages[1], sum) > 10 * 100) {
         error_set(ERROR_INT_VOLTAGE_MISMATCH, 0, HAL_GetTick());
     } else {
         error_reset(ERROR_INT_VOLTAGE_MISMATCH, 0);
     }
-    voltage.internal = MAX(internal, sum);  // TODO: is this a good thing?
+    voltage.internal = MAX(voltages[1], sum);  // TODO: is this a good thing?
 }
 
 voltage_t *voltage_get_cells() {

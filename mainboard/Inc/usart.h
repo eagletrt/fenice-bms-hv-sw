@@ -33,15 +33,12 @@ extern "C" {
 /* USER CODE END Includes */
 
 extern UART_HandleTypeDef huart1;
-extern UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN Private defines */
 #define CLI_UART    huart1
-#define SI8900_UART huart3
 /* USER CODE END Private defines */
 
 void MX_USART1_UART_Init(void);
-void MX_USART3_UART_Init(void);
 
 /* USER CODE BEGIN Prototypes */
 
