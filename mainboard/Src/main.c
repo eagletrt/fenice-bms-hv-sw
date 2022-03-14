@@ -123,6 +123,7 @@ int main(void)
     voltage_init();
     bal_fsm_init();
     bms_fsm_init();
+    current_read(0);
     current_zero();
     soc_init();
     can_bms_init();

@@ -32,6 +32,8 @@ cFlags: []
 cxxFlags: []
 assemblyFlags: 
   - -specs=nosys.specs
+linkerFlags:
+  - -u_printf_float
 
 
 # libraries to be included. The -l prefix to the library will be automatically added.
