@@ -3,14 +3,14 @@
 	url = https://github.com/nemequ/munit.git
 [submodule "mainboard/lib/can"]
 	path = mainboard/lib/can
-	url = git@github.com:eagletrt/fenice-can-cicd.git
+	url = git@github.com:eagletrt/can-cicd-forkme.git
 	branch = build
 [submodule "mainboard/lib/micro-libs"]
 	path = mainboard/lib/micro-libs
 	url = git@github.com:eagletrt/micro-libs.git
 [submodule "cellboard/Core/Lib/can-cicd"]
 	path = cellboard/Core/Lib/can-cicd
-	url = git@github.com:eagletrt/can-cicd
+	url = git@github.com:eagletrt/can-cicd-forkme.git
 	branch = build
 [submodule "cellboard/Core/Lib/micro-libs"]
 	path = cellboard/Core/Lib/micro-libs
