@@ -69,12 +69,11 @@ void read_temps();
 #define ITS_CH2_GPIO_Port GPIOC
 #define FB_SD_END_Pin GPIO_PIN_0
 #define FB_SD_END_GPIO_Port GPIOA
+#define FB_SD_END_EXTI_IRQn EXTI0_IRQn
 #define FB_RELAY_SD_Pin GPIO_PIN_1
 #define FB_RELAY_SD_GPIO_Port GPIOA
-#define FB_RELAY_SD_EXTI_IRQn EXTI1_IRQn
 #define FB_IMD_FAULT_Pin GPIO_PIN_2
 #define FB_IMD_FAULT_GPIO_Port GPIOA
-#define FB_IMD_FAULT_EXTI_IRQn EXTI2_IRQn
 #define MUX_IN_Pin GPIO_PIN_4
 #define MUX_IN_GPIO_Port GPIOA
 #define CS_ADC_Pin GPIO_PIN_4

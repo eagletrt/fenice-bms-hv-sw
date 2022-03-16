@@ -1,6 +1,6 @@
 /**
- * @file    current.h
- * @brief   Functions that handle current measurement
+ * @file    imd.h
+ * @brief   functions that checks imd status
  *
  * @date    Dec 01, 2021
  *

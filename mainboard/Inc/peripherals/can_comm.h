@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "../Primary/ids.h"
-#include "../../Primary/c/Primary.h"
+#include "../primary/ids.h"
+#include "../../primary/c/primary.h"
 #include "../bms/ids.h"
 #include "../../bms/c/bms.h"
 #include "can.h"

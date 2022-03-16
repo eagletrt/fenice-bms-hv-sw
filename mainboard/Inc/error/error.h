@@ -10,7 +10,7 @@
 #ifndef ERROR_H
 #define ERROR_H
 
-#include "../../lib/can/naked_generator/Primary/c/Primary.h"
+#include "../../lib/can/naked_generator/primary/c/primary.h"
 #include "llist.h"
 
 #include <inttypes.h>

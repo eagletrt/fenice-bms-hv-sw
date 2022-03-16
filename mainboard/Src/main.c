@@ -140,8 +140,6 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-        //fsm_run(super_fsm);
-
         fsm_run(bms.fsm);
         fsm_run(bal.fsm);
 
