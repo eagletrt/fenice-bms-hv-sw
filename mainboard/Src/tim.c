@@ -601,15 +601,12 @@ void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim) {
     _measures_handle_tim_oc_irq(htim);
   } else if (htim->Instance == HTIM_BAL.Instance) {
     _bal_handle_tim_oc_irq(htim);
-  } else if(htim->Instance == HTIM_MUX.Instance) {
-    _feedback_handle_tim_oc_irq();
   }
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
   if(htim->Instance == HTIM_MUX.Instance) {
-    //cli_bms_debug("b", 1);
-    feedback_set_next_mux_index();
+    _feedback_handle_tim_elapsed_irq();
 
   }
 }

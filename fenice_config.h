@@ -168,85 +168,64 @@ static const uint8_t TEMP_SENSOR_ADDRESS_CODING[TEMP_SENSORS_PER_STRIP] = {000, 
 
 
 enum {
-    FEEDBACK_BSPD_POS,
-    FEEDBACK_AIRN_POS,
-    FEEDBACK_AIRP_POS,
-    FEEDBACK_TSAL_OVER60V_POS,
-    FEEDBACK_TS_ON_POS,
-    FEEDBACK_BMS_SD_POS,
-    FEEDBACK_IMD_SD_POS,
-    FEEDBACK_BMS_FAULT_POS,
-    FEEDBACK_AIRP_GATE_POS,
+    FEEDBACK_TSAL_GREEN_FAULT_POS,
+    FEEDBACK_IMD_LATCHED_POS,
+    FEEDBACK_TSAL_GREEN_FAULT_LATCHED_POS,
+    FEEDBACK_BMD_LATCHED_POS,
+    FEEDBACK_EXT_LATCHED_POS,
     FEEDBACK_TSAL_GREEN_POS,
-    FEEDBACK_LATCH_BMS_POS,
-    FEEDBACK_LATCH_IMD_POS,
+    FEEDBACK_TS_OVER_60V_STATUS_POS,
+    FEEDBACK_AIRN_STATUS_POS,
+    FEEDBACK_AIRP_STATUS_POS,
+    FEEDBACK_AIRP_GATE_POS,
     FEEDBACK_AIRN_GATE_POS,
+    FEEDBACK_PRECHARGE_STATUS_POS,
+    FEEDBACK_TSP_OVER_60V_STATUS_POS,
     FEEDBACK_CHECK_MUX_POS,
-    FEEDBACK_FROM_SD_POS,
-    FEEDBACK_TO_TSMS_POS,
+    FEEDBACK_SD_IN_POS,
+    FEEDBACK_SD_OUT_POS,
 
     FEEDBACK_MUX_N
 };
 
 enum {
-    FEEDBACK_FROM_TSMS_POS,
-    FEEDBACK_RELAY_SD_POS,
+    FEEDBACK_RELAY_SD_POS = FEEDBACK_MUX_N,
     FEEDBACK_IMD_FAULT_POS,
 
-    FEEDBACK_GPIO_N
+    ADC_VALUES_COUNT
 };
-/**
- * Feedback bit set bit position 
- */
 
-/*
 enum {
-    FEEDBACK_VREF_POS,
-    FEEDBACK_FROM_TSMS_POS,
-    FEEDBACK_TO_TSMS_POS,
-    FEEDBACK_FROM_SHUTDOWN_POS,
-    FEEDBACK_LATCH_IMD_POS,
-    FEEDBACK_LATCH_BMS_POS,
-    FEEDBACK_IMD_FAULT_POS,
-    FEEDBACK_BMS_FAULT_POS,
-    FEEDBACK_TSAL_HV_POS,
-    FEEDBACK_AIR_POSITIVE_POS,
-    FEEDBACK_AIR_NEGATIVE_POS,
-    FEEDBACK_PC_END_POS,
-    FEEDBACK_RELAY_LV_POS,
-    FEEDBACK_IMD_SHUTDOWN_POS,
-    FEEDBACK_BMS_SHUTDOWN_POS,
-    FEEDBACK_TS_ON_POS,
+    FEEDBACK_SD_END_POS = ADC_VALUES_COUNT,
 
-    //do not move FEEDBACK_N
-    FEEDBACK_N,
+    FEEDBACK_N
 };
-*/
 
 /**
  * Feedback bit sets 
  */
-#define FEEDBACK_NULL           0
-#define FEEDBACK_TS_ON	        ((feedback_t)1 << FEEDBACK_TS_ON_POS)
-#define FEEDBACK_BSPD_SIG	    ((feedback_t)1 << FEEDBACK_BSPD_SIG_POS)
-#define FEEDBACK_TSAL_GREEN     ((feedback_t)1 << FEEDBACK_TSAL_GREEN_POS)
-#define FEEDBACK_TSAL_OVER60V	((feedback_t)1 << FEEDBACK_TSAL_OVER60V_POS)
-#define FEEDBACK_LATCH_IMD	    ((feedback_t)1 << FEEDBACK_LATCH_IMD_POS)
-#define FEEDBACK_BMS_SD	        ((feedback_t)1 << FEEDBACK_BMS_SD_POS)
-#define FEEDBACK_IMD_SD	        ((feedback_t)1 << FEEDBACK_IMD_SD_POS)
-#define FEEDBACK_BMS_FAULT	    ((feedback_t)1 << FEEDBACK_BMS_FAULT_POS)
-#define FEEDBACK_AIRP_GATE	    ((feedback_t)1 << FEEDBACK_AIRP_GATE_POS)
-#define FEEDBACK_AIRN	        ((feedback_t)1 << FEEDBACK_AIRN_POS)
-#define FEEDBACK_AIRP	        ((feedback_t)1 << FEEDBACK_AIRP_POS)
-#define FEEDBACK_LATCH_BMS	    ((feedback_t)1 << FEEDBACK_LATCH_BMS_POS)
-#define FEEDBACK_AIRN_GATE	    ((feedback_t)1 << FEEDBACK_AIRN_GATE_POS)
-#define FEEDBACK_CHECK_MUX	    ((feedback_t)1 << FEEDBACK_CHECK_MUX_POS)
-#define FEEDBACK_FROM_SD	    ((feedback_t)1 << FEEDBACK_FROM_SD_POS)
-#define FEEDBACK_TO_TSMS	    ((feedback_t)1 << FEEDBACK_TO_TSMS_POS)
-#define FEEDBACK_FROM_TSMS	    ((feedback_t)1 << (FEEDBACK_FROM_TSMS_POS + FEEDBACK_MUX_N))
-#define FEEDBACK_RELAY_SD	    ((feedback_t)1 << (FEEDBACK_RELAY_SD_POS + FEEDBACK_MUX_N))
-#define FEEDBACK_IMD_FAULT	    ((feedback_t)1 << (FEEDBACK_IMD_FAULT_POS + FEEDBACK_MUX_N))
-#define FEEDBACK_ALL            (feedback_t)(((feedback_t)1 << (FEEDBACK_MUX_N+FEEDBACK_GPIO_N)) - 1)
+#define FEEDBACK_NULL                           0
+#define FEEDBACK_TSAL_GREEN_FAULT               ((feedback_t)1 << FEEDBACK_TSAL_GREEN_FAULT_POS)
+#define FEEDBACK_IMD_LATCHED                    ((feedback_t)1 << FEEDBACK_IMD_LATCHED_POS)
+#define FEEDBACK_TSAL_GREEN_FAULT_LATCHED       ((feedback_t)1 << FEEDBACK_TSAL_GREEN_FAULT_LATCHED_POS)
+#define FEEDBACK_BMD_LATCHED                    ((feedback_t)1 << FEEDBACK_BMD_LATCHED_POS)
+#define FEEDBACK_EXT_LATCHED                    ((feedback_t)1 << FEEDBACK_EXT_LATCHED_POS)
+#define FEEDBACK_TSAL_GREEN                     ((feedback_t)1 << FEEDBACK_TSAL_GREEN_POS)
+#define FEEDBACK_TS_OVER_60V_STATUS             ((feedback_t)1 << FEEDBACK_TS_OVER_60V_STATUS_POS)
+#define FEEDBACK_AIRN_STATUS                    ((feedback_t)1 << FEEDBACK_AIRN_STATUS_POS)
+#define FEEDBACK_AIRP_STATUS                    ((feedback_t)1 << FEEDBACK_AIRP_STATUS_POS)
+#define FEEDBACK_AIRP_GATE                      ((feedback_t)1 << FEEDBACK_AIRP_GATE_POS)
+#define FEEDBACK_AIRN_GATE                      ((feedback_t)1 << FEEDBACK_AIRN_GATE_POS)
+#define FEEDBACK_PRECHARGE_STATUS               ((feedback_t)1 << FEEDBACK_PRECHARGE_STATUS_POS)
+#define FEEDBACK_TSP_OVER_60V_STATUS            ((feedback_t)1 << FEEDBACK_TSP_OVER_60V_STATUS_POS)
+#define FEEDBACK_CHECK_MUX                      ((feedback_t)1 << FEEDBACK_CHECK_MUX_POS)
+#define FEEDBACK_SD_IN                          ((feedback_t)1 << FEEDBACK_SD_IN_POS)
+#define FEEDBACK_SD_OUT                         ((feedback_t)1 << FEEDBACK_SD_OUT_POS)
+#define FEEDBACK_RELAY_SD                       ((feedback_t)1 << FEEDBACK_RELAY_SD_POS)
+#define FEEDBACK_IMD_FAULT                      ((feedback_t)1 << FEEDBACK_IMD_FAULT_POS)
+#define FEEDBACK_SD_END                         ((feedback_t)1 << FEEDBACK_SD_END_POS)
+#define FEEDBACK_ALL                            (feedback_t)(((feedback_t)1 << (FEEDBACK_N)) - 1)
+
 
 //===========================================================================
 //=========================== S160 current transducer =======================

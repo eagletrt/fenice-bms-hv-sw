@@ -5,6 +5,8 @@
 #include "can_comm.h"
 
 void measures_init() {
+    __HAL_TIM_SET_COMPARE(&HTIM_MEASURES, TIM_CHANNEL_1, TIM_MS_TO_TICKS(&HTIM_MEASURES, VOLTS_READ_INTERVAL));
+    __HAL_TIM_SET_COMPARE(&HTIM_MEASURES, TIM_CHANNEL_2, TIM_MS_TO_TICKS(&HTIM_MEASURES, TEMPS_READ_INTERVAL));
     HAL_TIM_OC_Start_IT(&HTIM_MEASURES, TIM_CHANNEL_1);
     HAL_TIM_OC_Start_IT(&HTIM_MEASURES, TIM_CHANNEL_2);
 }
@@ -23,15 +25,20 @@ void _measures_handle_tim_oc_irq(TIM_HandleTypeDef *htim) {
     uint32_t pulse = __HAL_TIM_GetCounter(htim);
     switch (htim->Channel) {
         case HAL_TIM_ACTIVE_CHANNEL_1:
-            __HAL_TIM_SET_COMPARE(htim, TIM_CHANNEL_1, (pulse + TIM_MS_TO_TICKS(htim, VOLTS_READ_INTERVAL)));
-
             measures_voltage_current();
+            can_car_send(ID_HV_VOLTAGE);
             can_car_send(ID_HV_CURRENT);
+            can_car_send(ID_TS_STATUS);
+            if(error_count > 0) {
+                can_car_send(ID_HV_ERRORS);
+            }
+
+            __HAL_TIM_SET_COMPARE(htim, TIM_CHANNEL_1, (pulse + TIM_MS_TO_TICKS(htim, VOLTS_READ_INTERVAL)));
             break;
         case HAL_TIM_ACTIVE_CHANNEL_2:
-            __HAL_TIM_SET_COMPARE(htim, TIM_CHANNEL_2, (pulse + TIM_MS_TO_TICKS(htim, TEMPS_READ_INTERVAL)));
-
             can_car_send(ID_HV_TEMP);
+
+            __HAL_TIM_SET_COMPARE(htim, TIM_CHANNEL_2, (pulse + TIM_MS_TO_TICKS(htim, TEMPS_READ_INTERVAL)));
             break;
         default:
             break;

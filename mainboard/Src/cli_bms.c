@@ -28,7 +28,7 @@
 #include <string.h>
 
 // TODO: don't count manually
-#define N_COMMANDS 13
+#define N_COMMANDS 14
 
 cli_command_func_t _cli_volts;
 cli_command_func_t _cli_volts_all;
@@ -43,6 +43,7 @@ cli_command_func_t _cli_current;
 cli_command_func_t _cli_dmesg;
 cli_command_func_t _cli_reset;
 cli_command_func_t _cli_imd;
+cli_command_func_t _cli_bms_can_forward;
 cli_command_func_t _cli_help;
 cli_command_func_t _cli_taba;
 
@@ -67,26 +68,30 @@ const char *error_names[ERROR_NUM_ERRORS] = {
     [ERROR_EEPROM_COMM]           = "EEPROM communication",
     [ERROR_EEPROM_WRITE]          = "EEPROM write"};
 
-char const *const feedback_names[FEEDBACK_MUX_N] = {
-    [FEEDBACK_CHECK_MUX_POS]     = "VREF",
-    [FEEDBACK_FROM_TSMS_POS]     = "FROM TSMS",
-    [FEEDBACK_TO_TSMS_POS]       = "TO TSMS",
-    [FEEDBACK_FROM_SD_POS]       = "FROM SHUTDOWN",
-    [FEEDBACK_LATCH_IMD_POS]     = "LATCH IMD",
-    [FEEDBACK_LATCH_BMS_POS]     = "LATCH BMS",
-    [FEEDBACK_IMD_FAULT_POS]     = "IMD FAULT",
-    [FEEDBACK_BMS_FAULT_POS]     = "BMS FAULT",
-    [FEEDBACK_TSAL_OVER60V_POS]  = "TSAL OVER 60V",
-    [FEEDBACK_AIRP_POS]          = "AIR POSITIVE",
-    [FEEDBACK_AIRN_POS]          = "AIR NEGATIVE",
-    //[FEEDBACK_PC_END_POS]        = "PRE-CHARGE END",
-    [FEEDBACK_RELAY_SD_POS]      = "RELAY LV",
-    [FEEDBACK_IMD_SD_POS]        = "IMD SHUTDOWN",
-    [FEEDBACK_BMS_SD_POS]        = "BMS SHUTDOWN",
-    [FEEDBACK_TS_ON_POS]         = "TS ON"};
+char const *const feedback_names[FEEDBACK_N] = {
+    [FEEDBACK_TSAL_GREEN_FAULT_POS]=            "FEEDBACK_TSAL_GREEN_FAULT_POS",
+    [FEEDBACK_IMD_LATCHED_POS]=                 "FEEDBACK_IMD_LATCHED_POS",
+    [FEEDBACK_TSAL_GREEN_FAULT_LATCHED_POS]=    "FEEDBACK_TSAL_GREEN_FAULT_LATCHED_POS",
+    [FEEDBACK_BMD_LATCHED_POS]=                 "FEEDBACK_BMD_LATCHED_POS",
+    [FEEDBACK_EXT_LATCHED_POS]=                 "FEEDBACK_EXT_LATCHED_POS",
+    [FEEDBACK_TSAL_GREEN_POS]=                  "FEEDBACK_TSAL_GREEN_POS",
+    [FEEDBACK_TS_OVER_60V_STATUS_POS]=          "FEEDBACK_TS_OVER_60V_STATUS_POS",
+    [FEEDBACK_AIRN_STATUS_POS]=                 "FEEDBACK_AIRN_STATUS_POS",
+    [FEEDBACK_AIRP_STATUS_POS]=                 "FEEDBACK_AIRP_STATUS_POS",
+    [FEEDBACK_AIRP_GATE_POS]=                   "FEEDBACK_AIRP_GATE_POS",
+    [FEEDBACK_AIRN_GATE_POS]=                   "FEEDBACK_AIRN_GATE_POS",
+    [FEEDBACK_PRECHARGE_STATUS_POS]=            "FEEDBACK_PRECHARGE_STATUS_POS",
+    [FEEDBACK_TSP_OVER_60V_STATUS_POS]=         "FEEDBACK_TSP_OVER_60V_STATUS_POS",
+    [FEEDBACK_CHECK_MUX_POS]=                   "FEEDBACK_CHECK_MUX_POS",
+    [FEEDBACK_SD_IN_POS]=                       "FEEDBACK_SD_IN_POS",
+    [FEEDBACK_SD_OUT_POS]=                      "FEEDBACK_SD_OUT_POS",
+    [FEEDBACK_RELAY_SD_POS]=                    "FEEDBACK_RELAY_SD_POS",
+    [FEEDBACK_IMD_FAULT_POS]=                   "FEEDBACK_IMD_FAULT_POS",
+    [FEEDBACK_SD_END_POS]=                      "FEEDBACK_SD_END_POS"
+};
 
 char *command_names[N_COMMANDS] =
-    {"volt", "temp", "status", "errors", "ts", "bal", "soc", "current", "dmesg", "reset", "imd", "?", "\ta"};
+    {"volt", "temp", "status", "errors", "ts", "bal", "soc", "current", "dmesg", "reset", "imd", "can_forward", "?", "\ta"};
 
 cli_command_func_t *commands[N_COMMANDS] = {
     &_cli_volts,
@@ -100,6 +105,7 @@ cli_command_func_t *commands[N_COMMANDS] = {
     &_cli_dmesg,
     &_cli_reset,
     &_cli_imd,
+    &_cli_bms_can_forward,
     &_cli_help,
     &_cli_taba};
 
@@ -285,7 +291,7 @@ void _cli_balance(uint16_t argc, char **argv, char *out) {
 
         board = atoi(argv[2]);
 
-        if(argc < 3) {
+        if(argc < 4) {
             sprintf(out, "wrong number of parameters\r\n");
             return;
         }
@@ -459,4 +465,39 @@ void _cli_imd(uint16_t argc, char **argv, char *out) {
      imd_get_duty_cycle_percentage(),
      imd_get_freq(),
      imd_get_period());
+}
+
+void _cli_bms_can_forward(uint16_t argc, char **argv, char *out) {
+    if(argc == 2) {
+        char *divider_index = strchr(argv[1], '#');
+        uint8_t payload[CAN_MAX_PAYLOAD_LENGTH] = {0};
+
+        if(divider_index == NULL) {
+            sprintf(out, "Errore di formattazione: ID#PAYLOAD\n\rPAYLOAD is hex encoded and is MSB...LSB\r\n");
+            return;
+        }
+        *divider_index = '\0';
+
+        if(strlen(divider_index+1) != 2*CAN_MAX_PAYLOAD_LENGTH) {
+            sprintf(out, "Errore di formattazione: ID#PAYLOAD\n\rPAYLOAD is hex encoded and is MSB...LSB\r\n");
+            return;
+        }
+
+        CAN_TxHeaderTypeDef header = {
+            .StdId = strtoul(argv[1], NULL, 16),
+            .DLC = CAN_MAX_PAYLOAD_LENGTH,
+            .ExtId = 0,
+            .RTR = 0,
+            .IDE = 0
+        };
+        *((uint64_t*)payload) = (uint64_t)strtoull(divider_index+1, NULL, 16);
+
+        can_send(&BMS_CAN, payload, &header);
+        *out = '\0';
+    }
+    else if (argc == 3 && !strcmp(argv[1], "update")) {
+        uint8_t board_index = atoi(argv[2]);
+        can_bms_send(ID_FW_UPDATE);
+        *out = '\0';
+    }
 }
