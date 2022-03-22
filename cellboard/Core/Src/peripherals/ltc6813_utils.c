@@ -20,6 +20,11 @@ size_t ltc6813_read_voltages(SPI_HandleTypeDef *hspi, voltage_t *volts) {
 
     cmd[0] = 0;  // Broadcast
 
+    if(ltc6813_poll_convertion(hspi, 10) == HAL_TIMEOUT) {
+        ERROR_SET(ERROR_LTC_COMM);
+        return 0;
+    }
+
     uint8_t count = 0;  // counts the cells
     for (uint8_t reg = 0; reg < LTC6813_REG_COUNT; reg++) {
         cmd[1]  = (uint8_t)rdcv_cmd[reg];
@@ -31,11 +36,9 @@ size_t ltc6813_read_voltages(SPI_HandleTypeDef *hspi, voltage_t *volts) {
 
         ltc6813_enable_cs(hspi);
         if (HAL_SPI_Transmit(hspi, cmd, 4, 10) != HAL_OK) {
-            // goto End;
+            ERROR_SET(ERROR_LTC_COMM);
+            return 0;
         }
-        while (hspi->State != HAL_SPI_STATE_READY)
-            ;
-        HAL_Delay(1);
         HAL_SPI_Receive(hspi, data, LTC6813_REG_CELL_COUNT * 2 + 2, 100);
 
         ltc6813_disable_cs(hspi);
@@ -62,9 +65,9 @@ size_t ltc6813_read_voltages(SPI_HandleTypeDef *hspi, voltage_t *volts) {
             for (uint8_t cell = 0; cell < LTC6813_REG_CELL_COUNT; cell++) {
                 // offset by register (3 slots) + cell //+ offset by ltc (18 slots)
                 uint16_t index = (reg * LTC6813_REG_CELL_COUNT) + cell;  //+(ltc * CELLBOARD_CELL_COUNT) ;
-
-                volts[index] =
-                    ltc6813_convert_voltage(&data[sizeof(voltage_t) * cell]);  //&data[sizeof(voltage_t) * cell]);
+                
+                volts[index] = 
+                    ltc6813_convert_voltage(data + (sizeof(voltage_t) * cell));  //&data[sizeof(voltage_t) * cell]);
                 //ltc6813_check_voltage(volts[index], index);
             
                 // Check if measured voltage is above max voltage or under min voltage
@@ -121,8 +124,4 @@ void ltc6813_set_balancing(SPI_HandleTypeDef *hspi, bms_balancing_cells cells, i
 
     ltc6813_wrcfg(hspi, WRCFGA, cfgar);
     ltc6813_wrcfg(hspi, WRCFGB, cfgbr);
-}
-
-uint16_t ltc6813_convert_voltage(uint8_t v_data[]) {
-    return v_data[0] + (v_data[1] << 8);
 }

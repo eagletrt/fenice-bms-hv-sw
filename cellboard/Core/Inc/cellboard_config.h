@@ -11,6 +11,8 @@
 
 #include "../../../fenice_config.h"
 
+#define TIM_MEASUREMENTS htim2
+
 //===========================================================================
 //=================================== LTC6813 ===============================
 //===========================================================================
@@ -38,7 +40,7 @@
 /**
  * Temperature measurement interval (ms)
  */
-#define TEMP_MEASURE_INTERVAL 300
+#define TEMP_MEASURE_INTERVAL 200
 
 #define TEMP_ADC_COUNT 6
 

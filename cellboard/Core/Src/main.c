@@ -33,6 +33,7 @@
 #include "ltc6813_utils.h"
 #include "temp.h"
 #include "volt.h"
+#include "measurements.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -107,6 +108,7 @@ int main(void)
   MX_SPI3_Init();
   MX_USART1_UART_Init();
   MX_TIM6_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
 
     cellboard_index = HAL_GPIO_ReadPin(ADDRESS_2_GPIO_Port, ADDRESS_2_Pin) |
@@ -131,6 +133,8 @@ int main(void)
     bal_fsm_init();
 
     can_init_with_filter();
+    
+    measurements_init(&TIM_MEASUREMENTS);
 
   // HAL_TIM_Base_Start_IT(&DISCHARGE_TIMER);
 
@@ -140,27 +144,10 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 
     while (1) {
-        if (HAL_GetTick() - volt_timer >= VOLT_MEASURE_INTERVAL - VOLT_MEASURE_TIME) {
-            volt_start_measure();
-        }
-
-        if (HAL_GetTick() - volt_timer >= VOLT_MEASURE_INTERVAL) {
-            volt_timer = HAL_GetTick();
-            volt_read();
-
-            can_send(TOPIC_VOLTAGE_INFO_FILTER);
-            // CAN_WAIT(&BMS_CAN);
-        }
-
-        if (HAL_GetTick() - temp_timer >= TEMP_MEASURE_INTERVAL) {
+        measurements_flags_check();
+        if (HAL_GetTick() - temp_timer >= 500) {
             temp_timer = HAL_GetTick();
 
-            temp_measure_all();
-            can_send(TOPIC_TEMPERATURE_INFO_FILTER);
-
-
-
-            
 
             char buf[5000] = {'\0'};
             uint16_t min   = volt_get_min();
@@ -215,6 +202,7 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
@@ -231,6 +219,7 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+
   /** Initializes the CPU, AHB and APB buses clocks
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
@@ -290,5 +279,3 @@ void assert_failed(uint8_t *file, uint32_t line)
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
