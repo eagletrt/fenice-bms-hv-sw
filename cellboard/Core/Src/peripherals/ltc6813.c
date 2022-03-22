@@ -34,7 +34,6 @@ void ltc6813_disable_cs(SPI_HandleTypeDef *spi) {
  * 					 Address     Mode    DCP
  *
  * @param	spi		The spi configuration structure
- * @param	dcp		false to read voltages; true to read temperatures
  */
 void ltc6813_adcv(SPI_HandleTypeDef *spi) {
     uint8_t cmd[4];
@@ -50,6 +49,44 @@ void ltc6813_adcv(SPI_HandleTypeDef *spi) {
     ltc6813_enable_cs(spi);
     HAL_SPI_Transmit(spi, cmd, 4, 100);
     ltc6813_disable_cs(spi);
+}
+
+/**
+ * @brief	Polls ADC Convertion
+ * @details	PLADC Command syntax:
+ *
+ * 					0     CMD0    7     CMD1      15 PEC  31
+ * 					|- - - - - - -|- - - - - - - -|- ... -|
+ * 					0 0 0 0 0 1 1 1 0 0 0 1 0 1 0 0
+ * 				    - - - - -
+ * 					 Address
+ *
+ * @param	spi		The spi configuration structure
+ */
+HAL_StatusTypeDef ltc6813_poll_convertion(SPI_HandleTypeDef *hspi, uint32_t timeout) {
+    uint8_t cmd[4];
+    uint16_t pec;
+    uint32_t tick;
+    cmd[0] = 0b00000111;
+    cmd[1] = 0b00010100;
+    pec = ltc6813_pec15(2, cmd);
+    cmd[2] = (uint8_t)(pec >> 8);
+    cmd[3] = (uint8_t)(pec);
+
+    ltc6813_wakeup_idle(hspi);
+    ltc6813_enable_cs(hspi);
+    HAL_SPI_Transmit(hspi, cmd, 4, 100);
+
+    tick = HAL_GetTick();
+    *(uint32_t*)cmd = 0;
+    do {
+        HAL_SPI_Receive(hspi, cmd, 4, 10);
+    } while (!(*(uint32_t*)cmd) && (HAL_GetTick() - tick < timeout)); //SDO is pulled down until the convertion is finished,
+                                                                        //so exit from this cicle when the received data is no more 0
+
+    ltc6813_disable_cs(hspi);
+
+    return *(uint32_t*)cmd ? HAL_OK : HAL_TIMEOUT;
 }
 
 void ltc6813_wrcfg(SPI_HandleTypeDef *hspi, wrcfg_register reg, uint8_t cfgr[8]) {

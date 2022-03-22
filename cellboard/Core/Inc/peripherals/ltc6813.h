@@ -140,6 +140,8 @@ void ltc6813_adcv(SPI_HandleTypeDef *spi);
 void ltc6813_enable_cs(SPI_HandleTypeDef *spi);
 void ltc6813_disable_cs(SPI_HandleTypeDef *spi);
 
+HAL_StatusTypeDef ltc6813_poll_convertion(SPI_HandleTypeDef *hspi, uint32_t timeout);
+
 void ltc6813_wakeup_idle(SPI_HandleTypeDef *hspi);
 
 void ltc6813_wrcfg(SPI_HandleTypeDef *hspi, wrcfg_register reg, uint8_t cfgr[8]);

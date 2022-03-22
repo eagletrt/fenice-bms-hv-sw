@@ -62,9 +62,9 @@ void temp_measure(uint8_t adc_index) {
 
         if (ADCTEMP_read_Temp(&ADC_I2C, adc_addresses[adc_index], sens, &temperatures[temp_index]) !=
             ADCTEMP_STATE_OK) {
-            ERROR_SET(ERROR_TEMP_COMM_0 + sens);
+            ERROR_SET(ERROR_TEMP_COMM_0 + adc_index);
         } else {
-            ERROR_UNSET(ERROR_TEMP_COMM_0 + sens);
+            ERROR_UNSET(ERROR_TEMP_COMM_0 + adc_index);
 
             max = MAX(temperatures[temp_index], max);
             min = MIN(temperatures[temp_index], min);

@@ -56,4 +56,4 @@ void ltc6813_set_balancing(SPI_HandleTypeDef *hspi, bms_balancing_cells cells, i
  *
  * @returns	Voltage [mV]
  */
-uint16_t ltc6813_convert_voltage(uint8_t v_data[]);
+#define ltc6813_convert_voltage(v_data) (*((voltage_t*)(v_data)))
