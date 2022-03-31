@@ -11,8 +11,6 @@
 
 #include "../../../fenice_config.h"
 
-#define TIM_MEASUREMENTS htim2
-
 //===========================================================================
 //=================================== LTC6813 ===============================
 //===========================================================================
@@ -59,7 +57,8 @@
  * Timers interval (ms)
  */
 
-#define DISCHARGE_TIMER htim6 
+#define TIM_DISCHARGE htim6 
+#define TIM_MEASUREMENTS htim2
 
 typedef uint16_t voltage_t;
 typedef float temperature_t;

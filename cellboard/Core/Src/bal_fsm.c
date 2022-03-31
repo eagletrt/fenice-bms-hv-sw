@@ -42,6 +42,8 @@ void bal_fsm_init() {
     state.run     = NULL;
     state.exit    = discharge_exit;
     fsm_set_state(bal.fsm, BAL_DISCHARGE, &state);
+
+    __HAL_TIM_SET_AUTORELOAD(&TIM_DISCHARGE, TIM_MS_TO_TICKS(&TIM_DISCHARGE, BAL_CYCLE_LENGTH));
 }
 
 void transition_callback(fsm handle) {
@@ -64,8 +66,8 @@ void off_handler(fsm handle, uint8_t event) {
 void discharge_entry(fsm handle) {
     ltc6813_set_balancing(&LTC6813_SPI, bal.cells, bal.cycle_length);
     //  Resetting and starting the DISCHARGE_TIMER
-    __HAL_TIM_SetCounter(&DISCHARGE_TIMER, 0U);
-    HAL_TIM_Base_Start_IT(&DISCHARGE_TIMER);
+    __HAL_TIM_SetCounter(&TIM_DISCHARGE, 0U);
+    HAL_TIM_Base_Start_IT(&TIM_DISCHARGE);
     //cli_bms_debug("Discharging cells", 18);
 }
 
@@ -78,7 +80,7 @@ void discharge_handler(fsm handle, uint8_t event) {
 }
 
 void discharge_exit(fsm handle) {
-    HAL_TIM_Base_Stop_IT(&DISCHARGE_TIMER);
+    HAL_TIM_Base_Stop_IT(&TIM_DISCHARGE);
 }
 /**
   * @brief  When DISCHARGE_TIMER elapses the discharge is complete 
@@ -86,10 +88,8 @@ void discharge_exit(fsm handle) {
   * @retval None
   */
 void bal_timers_handler(TIM_HandleTypeDef* htim, fsm handle){
-    if(htim->Instance == DISCHARGE_TIMER.Instance) {
-        memset(bal.cells, 0, sizeof(bal.cells));
-        fsm_trigger_event(bal.fsm, EV_BAL_STOP);
-    }
+    memset(bal.cells, 0, sizeof(bal.cells));
+    fsm_trigger_event(bal.fsm, EV_BAL_STOP);
 }
 
 uint8_t bal_is_cells_empty() {
