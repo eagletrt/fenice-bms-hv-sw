@@ -149,7 +149,7 @@ int main(void)
             temp_timer = HAL_GetTick();
 
 
-            char buf[5000] = {'\0'};
+            char buf[500] = {'\0'};
             uint16_t min   = volt_get_min();
 
             for (uint8_t i = 0; i < CELLBOARD_CELL_COUNT; i++) {
@@ -242,7 +242,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim){
    When DISCHARGE_TIMER elapses bal_timers_handler is called,
    when the function completes its work the DISCHARGE_TIMER is stopped
   */
-  if(htim->Instance == DISCHARGE_TIMER.Instance){
+  if(htim->Instance == TIM_DISCHARGE.Instance){
     bal_timers_handler(htim, bal.fsm);
   }
 }

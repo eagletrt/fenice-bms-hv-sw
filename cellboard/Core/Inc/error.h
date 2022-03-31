@@ -26,6 +26,8 @@ typedef enum {
     ERROR_TEMP_COMM_5,
 } error_types;
 
-extern uint8_t errors;
+typedef uint8_t error_t;
+
+extern error_t errors;
 
 #endif
