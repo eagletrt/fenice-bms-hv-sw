@@ -111,30 +111,32 @@ int main(void)
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
 
-    cellboard_index = HAL_GPIO_ReadPin(ADDRESS_2_GPIO_Port, ADDRESS_2_Pin) |
-                      HAL_GPIO_ReadPin(ADDRESS_1_GPIO_Port, ADDRESS_1_Pin) << 1 |
-                      HAL_GPIO_ReadPin(ADDRESS_0_GPIO_Port, ADDRESS_0_Pin) << 2;
+  cellboard_index = HAL_GPIO_ReadPin(ADDRESS_2_GPIO_Port, ADDRESS_2_Pin) |
+                    HAL_GPIO_ReadPin(ADDRESS_1_GPIO_Port, ADDRESS_1_Pin) << 1 |
+                    HAL_GPIO_ReadPin(ADDRESS_0_GPIO_Port, ADDRESS_0_Pin) << 2;
 
-    temp_init();
+  if(cellboard_index == 7) cellboard_index = 5;
 
-    //set temperature limits ( 0 - 60 )
-    temp_set_limits(1.0, CELL_MAX_TEMPERATURE);
+  temp_init();
 
-    // Blink led to signal cellboard index
-    for (uint8_t i = 0; i < cellboard_index; i++) {
-        HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
-        HAL_Delay(150);
-        HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
-        HAL_Delay(250);
-    }
-    HAL_Delay(300);
-    HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
+  //set temperature limits ( 0 - 60 )
+  temp_set_limits(1.0, CELL_MAX_TEMPERATURE);
 
-    bal_fsm_init();
+  // Blink led to signal cellboard index
+  for (uint8_t i = 0; i < cellboard_index; i++) {
+      HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
+      HAL_Delay(150);
+      HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
+      HAL_Delay(250);
+  }
+  HAL_Delay(300);
+  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
 
-    can_init_with_filter();
-    
-    measurements_init(&TIM_MEASUREMENTS);
+  bal_fsm_init();
+
+  can_init_with_filter();
+  
+  measurements_init(&TIM_MEASUREMENTS);
 
   // HAL_TIM_Base_Start_IT(&DISCHARGE_TIMER);
 
