@@ -75,6 +75,9 @@ void can_send(uint16_t topic_id) {
         }
 
         tx_header.DLC = serialize_bms_BOARD_STATUS(buffer, &errors, state);
+    
+        _can_send(&BMS_CAN, buffer, &tx_header);
+        return;
     } else if (topic_id == TOPIC_TEMPERATURE_INFO_FILTER) {
         switch(cellboard_index){
             case 0: 
@@ -111,6 +114,7 @@ void can_send(uint16_t topic_id) {
                 temp_serialize(temperatures[i+5])
             );
             _can_send(&BMS_CAN, buffer, &tx_header);
+            HAL_Delay(1);
         }
 
         return;
@@ -142,21 +146,17 @@ void can_send(uint16_t topic_id) {
         for(i=0; i<CELLBOARD_CELL_COUNT; i+=3){
             tx_header.DLC = serialize_bms_VOLTAGES(buffer, i, voltages[i], voltages[i+1], voltages[i+2]);
             _can_send(&BMS_CAN, buffer, &tx_header);
+            HAL_Delay(1);
         }
 
         return;
     }
-    
-    _can_send(&BMS_CAN, buffer, &tx_header);
 }
 
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
-    //void HAL_FDCAN_RxFifo0Callback(CAN_HandleTypeDef *hcan, uint32_t RxFifo0ITs) {
-    //if (hfdcan->Instance == FDCAN1 && RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) {
     uint8_t rx_data[8] = {'\0'};
     CAN_RxHeaderTypeDef rx_header;
     if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rx_header, rx_data) != HAL_OK) {
-        //if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rx_header, rx_data) != HAL_OK) {
         ERROR_SET(ERROR_CAN);
         return;
     }
@@ -167,7 +167,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
         bms_BALANCING balancing;
         deserialize_bms_BALANCING(rx_data, &balancing);
 
-        if(balancing.board_index != cellboard_index && !(cellboard_index==7 && balancing.board_index == 5)) return;
+        if(balancing.board_index != cellboard_index) return;
 
         memcpy(bal.cells, balancing.cells, sizeof(bal.cells));
         if(!bal_is_cells_empty()) {
@@ -184,7 +184,6 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 
         BootLoaderInit();
     }
-    
 }
 
 void can_init_with_filter(){
