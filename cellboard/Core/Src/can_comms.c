@@ -21,6 +21,8 @@
 #include <math.h>
 #include <string.h>
 
+#define RETRANSMITTION_MAX_ATTEMPTS     5
+uint8_t retransmittion_attempts[3] = {0};
 
 void _can_send(CAN_HandleTypeDef *hcan, uint8_t *buffer, CAN_TxHeaderTypeDef *header) {
     CAN_WAIT(hcan);
@@ -181,8 +183,8 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
         deserialize_bms_FW_UPDATE(rx_data, &fw_update);
 
         if(fw_update.board_index != cellboard_index) return;
-
-        BootLoaderInit();
+        
+        HAL_NVIC_SystemReset();
     }
 }
 
@@ -203,6 +205,59 @@ void can_init_with_filter(){
     filter.FilterActivation     = ENABLE;
 
     HAL_CAN_ConfigFilter(&BMS_CAN, &filter);
-    HAL_CAN_ActivateNotification(&BMS_CAN, CAN_IT_ERROR | CAN_IT_RX_FIFO0_MSG_PENDING );
+    HAL_CAN_ActivateNotification(&BMS_CAN, CAN_IT_RX_FIFO0_MSG_PENDING | CAN_IT_TX_MAILBOX_EMPTY | CAN_IT_LAST_ERROR_CODE | CAN_IT_ERROR );
     HAL_CAN_Start(&BMS_CAN);
+}
+
+void CAN_TxCallback(CAN_HandleTypeDef *hcan, uint32_t mailbox) {
+    switch (mailbox)
+    {
+        case CAN_TX_MAILBOX0:
+            retransmittion_attempts[0] = 0;
+            break;
+        case CAN_TX_MAILBOX1:
+            retransmittion_attempts[1] = 0;
+            break;
+        case CAN_TX_MAILBOX2:
+            retransmittion_attempts[2] = 0;
+            break;
+        default:
+            break;
+    }
+}
+
+void HAL_CAN_ErrorCallback(CAN_HandleTypeDef *hcan) {
+    if(hcan->ErrorCode & (HAL_CAN_ERROR_TX_ALST0 | HAL_CAN_ERROR_TX_TERR0)) ++retransmittion_attempts[0];
+    if(hcan->ErrorCode & (HAL_CAN_ERROR_TX_ALST1 | HAL_CAN_ERROR_TX_TERR1)) ++retransmittion_attempts[1];
+    if(hcan->ErrorCode & (HAL_CAN_ERROR_TX_ALST2 | HAL_CAN_ERROR_TX_TERR2)) ++retransmittion_attempts[2];
+
+    uint32_t mailboxes = 0;
+    if(retransmittion_attempts[0] >= RETRANSMITTION_MAX_ATTEMPTS) {
+        mailboxes |= CAN_TX_MAILBOX0;
+        retransmittion_attempts[0] = 0;
+    }
+    if(retransmittion_attempts[1] >= RETRANSMITTION_MAX_ATTEMPTS) {
+        mailboxes |= CAN_TX_MAILBOX1;
+        retransmittion_attempts[1] = 0;
+    }
+    if(retransmittion_attempts[2] >= RETRANSMITTION_MAX_ATTEMPTS) {
+        mailboxes |= CAN_TX_MAILBOX2;
+        retransmittion_attempts[1] = 0;
+    }
+
+    if(hcan->ErrorCode & (HAL_CAN_ERROR_BD | HAL_CAN_ERROR_BR)) mailboxes = CAN_TX_MAILBOX0 | CAN_TX_MAILBOX1 | CAN_TX_MAILBOX2;
+
+    if(mailboxes != 0) HAL_CAN_AbortTxRequest(hcan, mailboxes);
+}
+
+void HAL_CAN_TxMailbox0CompleteCallback(CAN_HandleTypeDef *hcan) {
+    CAN_TxCallback(hcan, CAN_TX_MAILBOX0);
+}
+
+void HAL_CAN_TxMailbox1CompleteCallback(CAN_HandleTypeDef *hcan) {
+    CAN_TxCallback(hcan, CAN_TX_MAILBOX1);
+}
+
+void HAL_CAN_TxMailbox2CompleteCallback(CAN_HandleTypeDef *hcan) {
+    CAN_TxCallback(hcan, CAN_TX_MAILBOX2);
 }

@@ -71,6 +71,7 @@ includeDirectories:
   - Core/Inc/**
   - Core/Lib/micro-libs/m95256/**
   - Core/Lib/micro-libs/fsm/**
+  - Core/Lib/micro-libs/blink/**
   - Core/Lib/can-cicd/naked_generator/**
   - Core/Lib/can-cicd/includes_generator/bms/**
 
@@ -85,6 +86,7 @@ sourceFiles:
   - Core/Src/**
   - Core/Lib/micro-libs/m95256/**
   - Core/Lib/micro-libs/fsm/**
+  - Core/Lib/micro-libs/blink/**
   - Core/Lib/can-cicd/naked_generator/**
   - Core/Lib/can-cicd/includes_generator/**
 

@@ -39,6 +39,7 @@ C_SOURCES =  \
 Core/Lib/can-cicd/naked_generator/bms/c/bms.c \
 Core/Lib/can-cicd/naked_generator/primary/c/primary.c \
 Core/Lib/can-cicd/naked_generator/secondary/c/secondary.c \
+Core/Lib/micro-libs/blink/blink.c \
 Core/Lib/micro-libs/fsm/fsm.c \
 Core/Lib/micro-libs/m95256/m95256.c \
 Core/Src/bal_fsm.c \
@@ -48,6 +49,7 @@ Core/Src/can_comms.c \
 Core/Src/error.c \
 Core/Src/gpio.c \
 Core/Src/i2c.c \
+Core/Src/index_blink.c \
 Core/Src/main.c \
 Core/Src/measurements.c \
 Core/Src/peripherals/adctemp.c \
@@ -160,6 +162,7 @@ C_INCLUDES =  \
 -ICore/Lib/can-cicd/naked_generator/bms/c \
 -ICore/Lib/can-cicd/naked_generator/primary/c \
 -ICore/Lib/can-cicd/naked_generator/secondary/c \
+-ICore/Lib/micro-libs/blink \
 -ICore/Lib/micro-libs/fsm \
 -ICore/Lib/micro-libs/m95256 \
 -IDrivers/CMSIS/Device/ST/STM32L4xx/Include \
