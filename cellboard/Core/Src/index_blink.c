@@ -23,6 +23,6 @@ void index_blink_init(GPIO_TypeDef *led_port, uint16_t led_pin, bool repeat) {
   blink_pattern[pattern_count-1] = 1000;  // Big off
 
   BLINK_SET_PATTERN(led_blink, blink_pattern, pattern_count);
-  BLINK_SET_ENABLE(led_blink, true);
+  BLINK_SET_ENABLE(led_blink, cellboard_index); //true unless cell index is 0
   BLINK_SET_REPEAT(led_blink, repeat);
 }
