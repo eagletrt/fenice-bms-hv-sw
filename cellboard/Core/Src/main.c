@@ -34,6 +34,7 @@
 #include "temp.h"
 #include "volt.h"
 #include "measurements.h"
+#include "index_blink.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -122,21 +123,13 @@ int main(void)
   //set temperature limits ( 0 - 60 )
   temp_set_limits(1.0, CELL_MAX_TEMPERATURE);
 
-  // Blink led to signal cellboard index
-  for (uint8_t i = 0; i < cellboard_index; i++) {
-      HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
-      HAL_Delay(150);
-      HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
-      HAL_Delay(250);
-  }
-  HAL_Delay(300);
-  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
-
   bal_fsm_init();
 
   can_init_with_filter();
   
   measurements_init(&TIM_MEASUREMENTS);
+
+  index_blink_init(LED_GPIO_Port, LED_Pin, true);
 
   // HAL_TIM_Base_Start_IT(&DISCHARGE_TIMER);
 
@@ -146,41 +139,44 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 
     while (1) {
-        measurements_flags_check();
+      index_blink_run();
+      measurements_flags_check();
+      #if UART_LOGGING
         if (HAL_GetTick() - temp_timer >= 500) {
-            temp_timer = HAL_GetTick();
+          temp_timer = HAL_GetTick();
 
 
-            char buf[500] = {'\0'};
-            uint16_t min   = volt_get_min();
+          char buf[500] = {'\0'};
+          uint16_t min   = volt_get_min();
 
-            for (uint8_t i = 0; i < CELLBOARD_CELL_COUNT; i++) {
-                sprintf(buf + strlen(buf), "%3u %-.3fV", i, (float)voltages[i] / 10000);
+          for (uint8_t i = 0; i < CELLBOARD_CELL_COUNT; i++) {
+              sprintf(buf + strlen(buf), "%3u %-.3fV", i, (float)voltages[i] / 10000);
 
-                if (getBit(bal.cells, i))
-                  sprintf(buf + strlen(buf), " D");
+              if (getBit(bal.cells, i))
+                sprintf(buf + strlen(buf), " D");
 
-                if (min == i) {
-                    sprintf(buf + strlen(buf), " M");
-                }
-                sprintf(buf + strlen(buf), "\r\n");
-                //if (i % LTC6813_REG_CELL_COUNT == 0) {
-                //    sprintf(buf + strlen(buf), "\r\n");
-                //}
-                //sprintf(buf + strlen(buf), "[%3u %-.3f V] ", i, (float)voltages[i] / 10000);
-            }
-            sprintf(buf + strlen(buf), "Threshold: %d mV", BAL_MAX_VOLTAGE_THRESHOLD / 10);
-            sprintf(buf + strlen(buf), "\r\nBAL: %li", fsm_get_state(bal.fsm));
-            if (errors != 0) {
-                sprintf(buf + strlen(buf), "\r\nERRORS: %x", errors);
-            }
-            sprintf(buf + strlen(buf), "\r\n\n");
-            HAL_UART_Transmit_IT(&CLI_UART, (uint8_t *)buf, strlen(buf));
-            //HAL_Delay(200);
-            //fsm_trigger_event(bal.fsm, EV_BAL_CHECK_TIMER);
+              if (min == i) {
+                  sprintf(buf + strlen(buf), " M");
+              }
+              sprintf(buf + strlen(buf), "\r\n");
+              //if (i % LTC6813_REG_CELL_COUNT == 0) {
+              //    sprintf(buf + strlen(buf), "\r\n");
+              //}
+              //sprintf(buf + strlen(buf), "[%3u %-.3f V] ", i, (float)voltages[i] / 10000);
+          }
+          sprintf(buf + strlen(buf), "Threshold: %d mV", BAL_MAX_VOLTAGE_THRESHOLD / 10);
+          sprintf(buf + strlen(buf), "\r\nBAL: %li", fsm_get_state(bal.fsm));
+          if (errors != 0) {
+              sprintf(buf + strlen(buf), "\r\nERRORS: %x", errors);
+          }
+          sprintf(buf + strlen(buf), "\r\n\n");
+          HAL_UART_Transmit_IT(&CLI_UART, (uint8_t *)buf, strlen(buf));
+          //HAL_Delay(200);
+          //fsm_trigger_event(bal.fsm, EV_BAL_CHECK_TIMER);
         }
+      #endif
 
-        fsm_run(bal.fsm);
+      fsm_run(bal.fsm);
 
     /* USER CODE END WHILE */
 
