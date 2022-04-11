@@ -14,6 +14,8 @@
 #include "main.h"
 #include "spi.h"
 
+#define CONV_COEFF 38.03703704f //(10MOhm + 270kOhm) / 270kOhm
+
 struct voltage {
     voltage_t bus;
     voltage_t internal;
@@ -36,13 +38,17 @@ void voltage_init() {
     }
 }
 
+voltage_t _voltage_conv_adc_to_voltage(voltage_t v) {
+    return CONV_COEFF*v;
+}
+
 void voltage_measure(voltage_t voltages[2]) {
     ADC124S021_CH chs[2]    = {ADC124_BUS_CHANNEL, ADC124_INTERNAL_CHANNEL};
     voltage_t sum           = 0;
 
     if(voltages != NULL || adc124s021_read_channels(&SPI_ADC124S, chs, 2, voltages)) {
-        voltage.bus = voltages[0];
-        voltage.internal = voltages[1];
+        voltage.bus = _voltage_conv_adc_to_voltage(voltages[0]);
+        voltage.internal = _voltage_conv_adc_to_voltage(voltages[1]);
     }
 
 
@@ -56,7 +62,7 @@ void voltage_measure(voltage_t voltages[2]) {
     } else {
         error_reset(ERROR_INT_VOLTAGE_MISMATCH, 0);
     }
-    voltage.internal = MAX(voltages[1], sum);  // TODO: is this a good thing?
+    //voltage.internal = MAX(voltages[1], sum);  // TODO: is this a good thing?
 }
 
 voltage_t *voltage_get_cells() {
