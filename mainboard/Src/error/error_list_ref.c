@@ -46,6 +46,7 @@ llist_node error_int_voltage_mismatch[1]            = {NULL};
 llist_node error_cellboard_comm[LTC6813_COUNT]      = {NULL};
 llist_node error_cellboard_internal[LTC6813_COUNT]  = {NULL};
 llist_node error_feedback[FEEDBACK_N]               = {NULL};
+llist_node error_feedback_circuitry[FEEDBACK_N]     = {NULL};
 llist_node error_eeprom_comm[1]                     = {NULL};
 llist_node error_eeprom_write[1]                    = {NULL};
 
@@ -63,6 +64,7 @@ llist_node *const error_list_ref_array[ERROR_NUM_ERRORS] = {
     [ERROR_CELLBOARD_COMM]        = error_cellboard_comm,
     [ERROR_CELLBOARD_INTERNAL]    = error_cellboard_internal,
     [ERROR_FEEDBACK]              = error_feedback,
+    [ERROR_FEEDBACK_CIRCUITRY]    = error_feedback_circuitry,
     [ERROR_EEPROM_COMM]           = error_eeprom_comm,
     [ERROR_EEPROM_WRITE]          = error_eeprom_write
 

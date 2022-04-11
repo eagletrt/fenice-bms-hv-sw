@@ -39,6 +39,7 @@ const error_timeout error_timeouts[ERROR_NUM_ERRORS] = {
     [ERROR_CELLBOARD_COMM]        = 500,
     [ERROR_CELLBOARD_INTERNAL]    = 500,
     [ERROR_FEEDBACK]              = SOFT,
+    [ERROR_FEEDBACK_CIRCUITRY]    = SOFT,
     [ERROR_EEPROM_COMM]           = SOFT,
     [ERROR_EEPROM_WRITE]          = SOFT};
 
