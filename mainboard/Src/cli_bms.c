@@ -28,7 +28,7 @@
 #include <string.h>
 
 // TODO: don't count manually
-#define N_COMMANDS 14
+#define N_COMMANDS 15
 
 cli_command_func_t _cli_volts;
 cli_command_func_t _cli_volts_all;
@@ -43,7 +43,8 @@ cli_command_func_t _cli_current;
 cli_command_func_t _cli_dmesg;
 cli_command_func_t _cli_reset;
 cli_command_func_t _cli_imd;
-cli_command_func_t _cli_bms_can_forward;
+cli_command_func_t _cli_can_forward;
+cli_command_func_t _cli_feedbacks;
 cli_command_func_t _cli_help;
 cli_command_func_t _cli_taba;
 
@@ -65,33 +66,34 @@ const char *error_names[ERROR_NUM_ERRORS] = {
     [ERROR_CELLBOARD_COMM]        = "cellboard communication",
     [ERROR_CELLBOARD_INTERNAL]    = "cellboard internal",
     [ERROR_FEEDBACK]              = "feedback",
+    [ERROR_FEEDBACK_CIRCUITRY]    = "feedback_circuitry",
     [ERROR_EEPROM_COMM]           = "EEPROM communication",
     [ERROR_EEPROM_WRITE]          = "EEPROM write"};
 
 char const *const feedback_names[FEEDBACK_N] = {
-    [FEEDBACK_TSAL_GREEN_FAULT_POS]=            "FEEDBACK_TSAL_GREEN_FAULT_POS",
-    [FEEDBACK_IMD_LATCHED_POS]=                 "FEEDBACK_IMD_LATCHED_POS",
-    [FEEDBACK_TSAL_GREEN_FAULT_LATCHED_POS]=    "FEEDBACK_TSAL_GREEN_FAULT_LATCHED_POS",
-    [FEEDBACK_BMD_LATCHED_POS]=                 "FEEDBACK_BMD_LATCHED_POS",
-    [FEEDBACK_EXT_LATCHED_POS]=                 "FEEDBACK_EXT_LATCHED_POS",
-    [FEEDBACK_TSAL_GREEN_POS]=                  "FEEDBACK_TSAL_GREEN_POS",
-    [FEEDBACK_TS_OVER_60V_STATUS_POS]=          "FEEDBACK_TS_OVER_60V_STATUS_POS",
-    [FEEDBACK_AIRN_STATUS_POS]=                 "FEEDBACK_AIRN_STATUS_POS",
-    [FEEDBACK_AIRP_STATUS_POS]=                 "FEEDBACK_AIRP_STATUS_POS",
-    [FEEDBACK_AIRP_GATE_POS]=                   "FEEDBACK_AIRP_GATE_POS",
-    [FEEDBACK_AIRN_GATE_POS]=                   "FEEDBACK_AIRN_GATE_POS",
-    [FEEDBACK_PRECHARGE_STATUS_POS]=            "FEEDBACK_PRECHARGE_STATUS_POS",
-    [FEEDBACK_TSP_OVER_60V_STATUS_POS]=         "FEEDBACK_TSP_OVER_60V_STATUS_POS",
-    [FEEDBACK_CHECK_MUX_POS]=                   "FEEDBACK_CHECK_MUX_POS",
-    [FEEDBACK_SD_IN_POS]=                       "FEEDBACK_SD_IN_POS",
-    [FEEDBACK_SD_OUT_POS]=                      "FEEDBACK_SD_OUT_POS",
-    [FEEDBACK_RELAY_SD_POS]=                    "FEEDBACK_RELAY_SD_POS",
-    [FEEDBACK_IMD_FAULT_POS]=                   "FEEDBACK_IMD_FAULT_POS",
-    [FEEDBACK_SD_END_POS]=                      "FEEDBACK_SD_END_POS"
+    [FEEDBACK_TSAL_GREEN_FAULT_POS]=            "FEEDBACK_TSAL_GREEN_FAULT",
+    [FEEDBACK_IMD_LATCHED_POS]=                 "FEEDBACK_IMD_LATCHED",
+    [FEEDBACK_TSAL_GREEN_FAULT_LATCHED_POS]=    "FEEDBACK_TSAL_GREEN_FAULT_LATCHED",
+    [FEEDBACK_BMD_LATCHED_POS]=                 "FEEDBACK_BMD_LATCHED",
+    [FEEDBACK_EXT_LATCHED_POS]=                 "FEEDBACK_EXT_LATCHED",
+    [FEEDBACK_TSAL_GREEN_POS]=                  "FEEDBACK_TSAL_GREEN",
+    [FEEDBACK_TS_OVER_60V_STATUS_POS]=          "FEEDBACK_TS_OVER_60V_STATUS",
+    [FEEDBACK_AIRN_STATUS_POS]=                 "FEEDBACK_AIRN_STATUS",
+    [FEEDBACK_AIRP_STATUS_POS]=                 "FEEDBACK_AIRP_STATUS",
+    [FEEDBACK_AIRP_GATE_POS]=                   "FEEDBACK_AIRP_GATE",
+    [FEEDBACK_AIRN_GATE_POS]=                   "FEEDBACK_AIRN_GATE",
+    [FEEDBACK_PRECHARGE_STATUS_POS]=            "FEEDBACK_PRECHARGE_STATUS",
+    [FEEDBACK_TSP_OVER_60V_STATUS_POS]=         "FEEDBACK_TSP_OVER_60V_STATUS",
+    [FEEDBACK_CHECK_MUX_POS]=                   "FEEDBACK_CHECK_MUX",
+    [FEEDBACK_SD_IN_POS]=                       "FEEDBACK_SD_IN",
+    [FEEDBACK_SD_OUT_POS]=                      "FEEDBACK_SD_OUT",
+    [FEEDBACK_RELAY_SD_POS]=                    "FEEDBACK_RELAY_SD",
+    [FEEDBACK_IMD_FAULT_POS]=                   "FEEDBACK_IMD_FAULT",
+    [FEEDBACK_SD_END_POS]=                      "FEEDBACK_SD_END"
 };
 
 char *command_names[N_COMMANDS] =
-    {"volt", "temp", "status", "errors", "ts", "bal", "soc", "current", "dmesg", "reset", "imd", "can_forward", "?", "\ta"};
+    {"volt", "temp", "status", "errors", "ts", "bal", "soc", "current", "dmesg", "reset", "imd", "can_forward", "feedbacks", "?", "\ta"};
 
 cli_command_func_t *commands[N_COMMANDS] = {
     &_cli_volts,
@@ -105,7 +107,8 @@ cli_command_func_t *commands[N_COMMANDS] = {
     &_cli_dmesg,
     &_cli_reset,
     &_cli_imd,
-    &_cli_bms_can_forward,
+    &_cli_can_forward,
+    &_cli_feedbacks,
     &_cli_help,
     &_cli_taba};
 
@@ -137,14 +140,14 @@ void cli_bms_debug(char *text, size_t length) {
         char out[300] = {'\0'};
         float tick = (float)HAL_GetTick() / 1000;
         // add prefix
-        sprintf(out, "[%f] ", tick);
+        sprintf(out, "[%.2f] ", tick);
 
         strcat(out, text);
         length += strlen(out);
 
         // add suffix
-        sprintf(out + length, "\r\n");
-        length += 2;
+        sprintf(out + length, "\r\n> ");
+        length += 4;
 
         cli_print(&cli_bms, out, length);
     }
@@ -182,7 +185,7 @@ void _cli_volts(uint16_t argc, char **argv, char *out) {
 
 void _cli_volts_all(uint16_t argc, char **argv, char *out) {
     out[0] = '\0';
-
+    voltage_t *cells = voltage_get_cells();
     for (uint8_t i = 0; i < PACK_CELL_COUNT; i++) {
         if (i % LTC6813_CELL_COUNT == 0) {
             sprintf(out + strlen(out), "\r\n%-3d", i / LTC6813_CELL_COUNT);
@@ -190,7 +193,7 @@ void _cli_volts_all(uint16_t argc, char **argv, char *out) {
             sprintf(out + strlen(out), "\r\n%-3s", "");
         }
 
-        sprintf(out + strlen(out), "[%3u %-.3fv] ", i, (float)voltage_get_cells()[i] / 10000);
+        sprintf(out + strlen(out), "[%3u %-.3fv] ", i, (float)cells[i] / 10000);
     }
 
     sprintf(out + strlen(out), "\r\n");
@@ -200,13 +203,13 @@ void _cli_temps(uint16_t argc, char **argv, char *out) {
     if (strcmp(argv[1], "") == 0) {
         sprintf(
             out,
-            "average.....%.1f °C\r\nmax.........%2u "
-            "C\r\nmin.........%2u °C\r\n"
-            "delta.......%2u °C\r\n",
+            "average.....%.2f °C\r\nmax.........%.2f "
+            "C\r\nmin.........%.2f °C\r\n"
+            "delta.......%.2f °C\r\n",
             (float)temperature_get_average() / 10,
-            temperature_get_max() / 4,
-            temperature_get_min() / 4,
-            (temperature_get_max() - temperature_get_min()) / 4);
+            temperature_get_max() / 4.0f,
+            temperature_get_min() / 4.0f,
+            (temperature_get_max() - temperature_get_min()) / 4.0f);
     } else if (strcmp(argv[1], "all") == 0) {
         _cli_temps_all(argc, &argv[1], out);
     } else {
@@ -395,7 +398,7 @@ void _cli_ts(uint16_t argc, char **argv, char *out) {
 }
 
 void _cli_current(uint16_t argc, char **argv, char *out) {
-    if (argc == 0) {
+    if (argc == 1) {
         sprintf(
             out,
             "Hall 50A:\t%.1fA\r\n"
@@ -467,9 +470,24 @@ void _cli_imd(uint16_t argc, char **argv, char *out) {
      imd_get_period());
 }
 
-void _cli_bms_can_forward(uint16_t argc, char **argv, char *out) {
-    if(argc == 2) {
-        char *divider_index = strchr(argv[1], '#');
+void _cli_can_forward(uint16_t argc, char **argv, char *out) {
+    if(argc == 3) {
+        CAN_HandleTypeDef *can;
+        if(!strcmp(argv[1], "bms")) {
+            can = &BMS_CAN;
+        } else if(!strcmp(argv[1], "primary")) {
+            can = &CAR_CAN;
+        } else {
+            sprintf(
+                out,
+                "Unknown parameter: %s\r\n\n"
+                "valid parameters:\r\n"
+                "- bms: bms internal network\r\n",
+                "- primary: car primary network\r\n",
+                argv[1]);
+            return;
+        }
+        char *divider_index = strchr(argv[2], '#');
         uint8_t payload[CAN_MAX_PAYLOAD_LENGTH] = {0};
 
         if(divider_index == NULL) {
@@ -478,26 +496,39 @@ void _cli_bms_can_forward(uint16_t argc, char **argv, char *out) {
         }
         *divider_index = '\0';
 
-        if(strlen(divider_index+1) != 2*CAN_MAX_PAYLOAD_LENGTH) {
+        if(strlen(divider_index+1) % 2 != 0) {
             sprintf(out, "Errore di formattazione: ID#PAYLOAD\n\rPAYLOAD is hex encoded and is MSB...LSB\r\n");
             return;
         }
 
         CAN_TxHeaderTypeDef header = {
-            .StdId = strtoul(argv[1], NULL, 16),
-            .DLC = CAN_MAX_PAYLOAD_LENGTH,
+            .StdId = strtoul(argv[2], NULL, 16),
+            .DLC = strlen(divider_index+1)/2,
             .ExtId = 0,
             .RTR = 0,
             .IDE = 0
         };
         *((uint64_t*)payload) = (uint64_t)strtoull(divider_index+1, NULL, 16);
-
-        can_send(&BMS_CAN, payload, &header);
+        can_send(can, payload, &header);
         *out = '\0';
+    } else {
+            sprintf(
+                out,
+                "Invalid command format\r\n\n"
+                "valid format:\r\n"
+                "can_forward <network> <id>#<payload>\r\n",
+                argv[1]);
     }
-    else if (argc == 3 && !strcmp(argv[1], "update")) {
-        uint8_t board_index = atoi(argv[2]);
-        can_bms_send(ID_FW_UPDATE);
-        *out = '\0';
+}
+
+void _cli_feedbacks(uint16_t argc, char **argv, char *out) {
+    FEEDBACK_STATE f[FEEDBACK_N];
+    feedback_get_feedback_states(f);
+    *out = '\0';
+    for(uint8_t i=0; i<FEEDBACK_N; ++i) {
+        sprintf(out + strlen(out), "%02d - %s: %s\n\r", i, feedback_names[i],
+            f[i] == FEEDBACK_STATE_H ? "1" :
+            f[i] == FEEDBACK_STATE_L ? "0" :
+            "error");
     }
 }
