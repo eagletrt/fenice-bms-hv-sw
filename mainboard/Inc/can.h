@@ -37,8 +37,7 @@ extern CAN_HandleTypeDef hcan1;
 extern CAN_HandleTypeDef hcan2;
 
 /* USER CODE BEGIN Private defines */
-#define CAR_CAN hcan2
-#define BMS_CAN hcan1
+
 /* USER CODE END Private defines */
 
 void MX_CAN1_Init(void);

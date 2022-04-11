@@ -25,9 +25,12 @@
 #define SPI_EEPROM      hspi2
 #define SPI_ADC124S     hspi1
 
-#define ADC_HALL50      hadc3
-#define ADC_HALL300     hadc2
+#define ADC_HALL50      hadc2
+#define ADC_HALL300     hadc3
 #define ADC_MUX         hadc1
+
+#define CAR_CAN         hcan1
+#define BMS_CAN         hcan2
 
 #define STATE_LED_GPIO  LED2_GPIO_Port
 #define STATE_LED_PIN   LED2_Pin
