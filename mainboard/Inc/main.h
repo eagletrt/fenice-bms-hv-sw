@@ -49,9 +49,7 @@ extern "C" {
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
-void check_timers();
-void read_volts();
-void read_temps();
+
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
@@ -63,13 +61,12 @@ void read_temps();
 #define MUX_A1_GPIO_Port GPIOC
 #define MUX_A0_Pin GPIO_PIN_1
 #define MUX_A0_GPIO_Port GPIOC
-#define ITS_CH1_Pin GPIO_PIN_2
-#define ITS_CH1_GPIO_Port GPIOC
-#define ITS_CH2_Pin GPIO_PIN_3
+#define ITS_CH2_Pin GPIO_PIN_2
 #define ITS_CH2_GPIO_Port GPIOC
+#define ITS_CH1_Pin GPIO_PIN_3
+#define ITS_CH1_GPIO_Port GPIOC
 #define FB_SD_END_Pin GPIO_PIN_0
 #define FB_SD_END_GPIO_Port GPIOA
-#define FB_SD_END_EXTI_IRQn EXTI0_IRQn
 #define FB_RELAY_SD_Pin GPIO_PIN_1
 #define FB_RELAY_SD_GPIO_Port GPIOA
 #define FB_IMD_FAULT_Pin GPIO_PIN_2
