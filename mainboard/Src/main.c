@@ -143,6 +143,8 @@ int main(void)
         fsm_run(bms.fsm);
         fsm_run(bal.fsm);
 
+        measures_check_flags();
+
         cli_loop(&cli_bms);
     }
     return 0;
