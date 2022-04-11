@@ -1,7 +1,7 @@
 #include "adc124s021.h"
 
-#define ADC124S021_VREF 3.33f
-#define ADC124S021_CONV_VALUE_TO_VOLTAGE_T(x) (100*(x)*ADC124S021_VREF/4096)
+#define ADC124S021_VREF 3.3f
+#define ADC124S021_CONV_VALUE_TO_VOLTAGE_T(x) ((x)*(100*ADC124S021_VREF/4095))
 
 void _adc124s021_cs_enable(SPI_HandleTypeDef *spi, GPIO_TypeDef *port, uint16_t pin) {
     HAL_GPIO_WritePin(port, pin, GPIO_PIN_RESET);
