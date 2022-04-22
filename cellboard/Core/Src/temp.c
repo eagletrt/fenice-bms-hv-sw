@@ -34,11 +34,12 @@ static const uint8_t adc_addresses[6] = {
 void temp_init() {
     //initialize all ADCs
     for (uint8_t i = 0; i < TEMP_ADC_COUNT; i++) {
+        uint8_t retry = 1;
         uint32_t time = HAL_GetTick();
-        while (ADCTEMP_init_ADC(&hi2c1, adc_addresses[i], ADCTEMP_MONITORING_CONTINIOUS) != ADCTEMP_STATE_OK) {
+        while (ADCTEMP_init_ADC(&hi2c1, adc_addresses[i], ADCTEMP_MONITORING_CONTINIOUS) != ADCTEMP_STATE_OK && retry) {
             if (HAL_GetTick() - time >= TEMP_INIT_TIMEOUT) {
                 ERROR_SET(ERROR_TEMP_COMM_0 + i);
-                return;
+                retry = 0;
             } else {
                 ERROR_UNSET(ERROR_TEMP_COMM_0 + i);
             }

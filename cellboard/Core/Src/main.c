@@ -47,6 +47,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define UART_LOGGING 0
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -130,7 +131,6 @@ int main(void)
   measurements_init(&TIM_MEASUREMENTS);
 
   index_blink_init(LED_GPIO_Port, LED_Pin, true);
-
   // HAL_TIM_Base_Start_IT(&DISCHARGE_TIMER);
 
   /* USER CODE END 2 */
@@ -147,6 +147,7 @@ int main(void)
 
 
           char buf[500] = {'\0'};
+          sprintf(buf, "[%.2f]\r\n", HAL_GetTick()/1000.0);
           uint16_t min   = volt_get_min();
 
           for (uint8_t i = 0; i < CELLBOARD_CELL_COUNT; i++) {
@@ -231,6 +232,10 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+
+  /** Enables the Clock Security System
+  */
+  HAL_RCC_EnableCSS();
 }
 
 /* USER CODE BEGIN 4 */

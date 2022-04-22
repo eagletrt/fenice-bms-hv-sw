@@ -69,12 +69,6 @@ size_t ltc6813_read_voltages(SPI_HandleTypeDef *hspi, voltage_t *volts) {
                 volts[index] = 
                     ltc6813_convert_voltage(data + (sizeof(voltage_t) * cell));  //&data[sizeof(voltage_t) * cell]);
                 //ltc6813_check_voltage(volts[index], index);
-            
-                // Check if measured voltage is above max voltage or under min voltage
-                if(volts[index] > CELL_MAX_VOLTAGE || volts[index] < CELL_MIN_VOLTAGE){
-                    ERROR_SET(ERROR_LTC_COMM);
-                    HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
-                }
                 
                 count++;
             }
