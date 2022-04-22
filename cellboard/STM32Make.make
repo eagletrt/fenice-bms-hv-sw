@@ -42,6 +42,7 @@ Core/Lib/can-cicd/naked_generator/secondary/c/secondary.c \
 Core/Lib/micro-libs/blink/blink.c \
 Core/Lib/micro-libs/fsm/fsm.c \
 Core/Lib/micro-libs/m95256/m95256.c \
+Core/Lib/micro-libs/timer-utils/timer_utils.c \
 Core/Src/bal_fsm.c \
 Core/Src/bootloader.c \
 Core/Src/can.c \
@@ -165,6 +166,7 @@ C_INCLUDES =  \
 -ICore/Lib/micro-libs/blink \
 -ICore/Lib/micro-libs/fsm \
 -ICore/Lib/micro-libs/m95256 \
+-ICore/Lib/micro-libs/timer-utils \
 -IDrivers/CMSIS/Device/ST/STM32L4xx/Include \
 -IDrivers/CMSIS/Include \
 -IDrivers/STM32L4xx_HAL_Driver/Inc \
