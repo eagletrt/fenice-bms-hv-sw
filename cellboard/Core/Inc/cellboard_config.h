@@ -57,7 +57,7 @@
  * Timers interval (ms)
  */
 
-#define TIM_DISCHARGE htim6 
+#define TIM_DISCHARGE htim16 
 #define TIM_MEASUREMENTS htim2
 
 typedef uint16_t voltage_t;

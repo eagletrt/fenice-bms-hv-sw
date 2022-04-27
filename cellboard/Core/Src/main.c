@@ -109,8 +109,8 @@ int main(void)
   MX_SPI1_Init();
   MX_SPI3_Init();
   MX_USART1_UART_Init();
-  MX_TIM6_Init();
   MX_TIM2_Init();
+  MX_TIM16_Init();
   /* USER CODE BEGIN 2 */
 
   cellboard_index = HAL_GPIO_ReadPin(ADDRESS_2_GPIO_Port, ADDRESS_2_Pin) |
@@ -141,6 +141,7 @@ int main(void)
     while (1) {
       index_blink_run();
       measurements_flags_check();
+      #define UART_LOGGING 1
       #if UART_LOGGING
         if (HAL_GetTick() - temp_timer >= 500) {
           temp_timer = HAL_GetTick();
