@@ -37,7 +37,7 @@ const error_timeout error_timeouts[ERROR_NUM_ERRORS] = {
     [ERROR_ADC_TIMEOUT]           = SOFT,
     [ERROR_INT_VOLTAGE_MISMATCH]  = SOFT,
     [ERROR_CELLBOARD_COMM]        = 500,
-    [ERROR_CELLBOARD_INTERNAL]    = 500,
+    [ERROR_CELLBOARD_INTERNAL]    = SOFT,
     [ERROR_FEEDBACK]              = SOFT,
     [ERROR_FEEDBACK_CIRCUITRY]    = SOFT,
     [ERROR_EEPROM_COMM]           = SOFT,
@@ -78,8 +78,8 @@ bool error_set_timer(error_t *error) {
     if (error != NULL && error->state == STATE_WARNING && error_timeouts[error->id] < SOFT) {
         // Set counter period register to the delta
         volatile uint16_t delta = get_timeout_delta(error);
-        uint16_t pulse          = __HAL_TIM_GET_COUNTER(&HTIM_ERR);
-        __HAL_TIM_SET_COMPARE(&HTIM_ERR, TIM_CHANNEL_1, pulse + TIM_MS_TO_TICKS(&HTIM_ERR, delta));
+        uint16_t cnt          = __HAL_TIM_GET_COUNTER(&HTIM_ERR);
+        __HAL_TIM_SET_COMPARE(&HTIM_ERR, TIM_CHANNEL_1, cnt + TIM_MS_TO_TICKS(&HTIM_ERR, delta));
         __HAL_TIM_CLEAR_FLAG(&HTIM_ERR, TIM_IT_CC1);
         HAL_TIM_OC_Start_IT(&HTIM_ERR, TIM_CHANNEL_1);
 
@@ -171,12 +171,6 @@ bool error_reset(error_id id, uint8_t offset) {
     if (*error_list_ref_array_element(id, offset) != NULL) {
         error_t *error = (error_t *)(*error_list_ref_array_element(id, offset));
 
-        // Check if error is fatal; in that case do not remove it
-        if (error->state == STATE_FATAL) {
-            //error->state = ERROR_NOT_ACTIVE;
-            return true;
-        }
-
         // If we are removing the first error, re-set the timer to the second error
         if (error_equals(llist_get_head(er_list), (llist_node)error)) {
             error_t *tmp = NULL;
@@ -226,8 +220,7 @@ void error_dump(error_t errors[]) {
 }
 
 void _error_handle_tim_oc_irq() {
-    //HAL_GPIO_WritePin(GPIO1_GPIO_Port, GPIO1_Pin, GPIO_PIN_RESET);
-    //fsm_trigger_event(bms.fsm, BMS_EV_HALT);
     fsm_transition(bms.fsm, BMS_FAULT);
     error_set_fatal(error_get_top());
+    HAL_TIM_OC_Stop_IT(&HTIM_ERR, TIM_CHANNEL_1);
 }
