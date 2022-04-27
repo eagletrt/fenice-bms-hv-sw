@@ -69,6 +69,7 @@ Src/energy/energy.c \
 Src/energy/soc.c \
 Src/error/error.c \
 Src/error/error_list_ref.c \
+Src/fans_buzzer.c \
 Src/feedback.c \
 Src/gpio.c \
 Src/imd.c \
@@ -95,7 +96,9 @@ lib/micro-libs/fsm/fsm.c \
 lib/micro-libs/llist/llist.c \
 lib/micro-libs/m95256/m95256.c \
 lib/micro-libs/priority-queue/priority_queue.c \
-lib/micro-libs/priority-queue/priority_queue_fast_insert.c
+lib/micro-libs/priority-queue/priority_queue_fast_insert.c \
+lib/micro-libs/pwm/pwm.c \
+lib/micro-libs/timer-utils/timer_utils.c
 
 
 CPP_SOURCES = \
@@ -187,7 +190,9 @@ C_INCLUDES =  \
 -Ilib/micro-libs/fsm \
 -Ilib/micro-libs/llist \
 -Ilib/micro-libs/m95256 \
--Ilib/micro-libs/priority-queue
+-Ilib/micro-libs/priority-queue \
+-Ilib/micro-libs/pwm \
+-Ilib/micro-libs/timer-utils
 
 
 
