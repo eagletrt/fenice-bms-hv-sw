@@ -53,8 +53,8 @@ void _on_handler(fsm FSM, uint8_t event);
 void _on_exit(fsm FSM);
 
 void _fault_entry(fsm FSM);
-void _fault_run(fsm FSM);
 void _fault_handler(fsm FSM, uint8_t event);
+void _fault_exit(fsm FSM);
 
 void _start_pc_check_timer() {
     uint32_t cnt = __HAL_TIM_GET_COUNTER(&HTIM_BMS);
@@ -75,6 +75,7 @@ void _start_pc_timeout_timer() {
 void _start_fb_check_timer() {
     uint32_t cnt = __HAL_TIM_GET_COUNTER(&HTIM_BMS);
     __HAL_TIM_SET_COMPARE(&HTIM_BMS, TIM_CHANNEL_3, (cnt + TIM_MS_TO_TICKS(&HTIM_BMS, FB_CHECK_INTERVAL_MS)));
+    __HAL_TIM_CLEAR_FLAG(&HTIM_BMS, TIM_IT_CC3); //clears existing interrupts on channel 1
 
     HAL_TIM_OC_Start_IT(&HTIM_BMS, TIM_CHANNEL_3);
 }
@@ -143,8 +144,7 @@ void bms_fsm_init() {
 
     state.handler = _fault_handler;
     state.entry   = _fault_entry;
-    state.run     = _fault_run;
-    state.exit    = NULL;
+    state.exit    = _fault_exit;
     fsm_set_state(bms.fsm, BMS_FAULT, &state);
 
     //HAL_TIM_Base_Start_IT(&HTIM_BMS);
@@ -369,24 +369,22 @@ void _on_exit(fsm FSM) {
 void _fault_entry(fsm FSM) {
     pack_set_fault(BMS_FAULT_ON_VALUE);
     pack_set_default_off();
+    _start_fb_check_timer();
 
-    //HAL_GPIO_WritePin(GPIO4_GPIO_Port, GPIO4_Pin, GPIO_PIN_SET);
-    //can_send_error(&hcan, data->error, data->error_index, &data->pack);
-    //cli_bms_debug("HALT", 5);
-}
-
-void _fault_run(fsm FSM) {
-    if (error_get_fatal() == 0) {
-        fsm_trigger_event(FSM, BMS_EV_NO_ERRORS);
-    }
+    cli_bms_debug("fault state", 11);
 }
 
 void _fault_handler(fsm FSM, uint8_t event) {
     switch (event) {
-        case BMS_EV_NO_ERRORS:
-            fsm_transition(FSM, BMS_IDLE);
+        case BMS_EV_FB_CHECK:
+            if(error_get_fatal() == 0 && feedback_check(FEEDBACK_FAULT_EXIT_MASK, FEEDBACK_FAULT_EXIT_VAL) == 0)
+                fsm_transition(FSM, BMS_IDLE);
             break;
     }
+}
+
+void _fault_exit(fsm FSM) {
+    _stop_fb_check_timer();
 }
 
 void _bms_handle_tim_oc_irq(TIM_HandleTypeDef *htim) {
