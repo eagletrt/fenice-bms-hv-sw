@@ -24,6 +24,7 @@ enum { EV_BAL_STOP = 0, EV_BAL_START, EV_BAL_CHECK_TIMER, BAL_EV_NUM };
 typedef struct {
     fsm fsm;
 
+    uint8_t is_s_pin_high;
     bms_balancing_cells cells;
     uint32_t discharge_time;
     uint32_t cycle_length;
@@ -33,6 +34,7 @@ extern bal_fsm bal;
 
 void bal_fsm_init();
 void bal_timers_handler(TIM_HandleTypeDef* htim, fsm handle);
+void bal_oc_timer_handler(TIM_HandleTypeDef *htim);
 uint8_t bal_is_cells_empty();
 
 #endif

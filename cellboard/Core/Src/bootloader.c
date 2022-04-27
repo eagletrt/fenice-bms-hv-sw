@@ -5,6 +5,7 @@
 #include "usart.h"
 #include "tim.h"
 #include "main.h"
+#include "cellboard_config.h"
 
 void BootLoaderInit() {
     void (*SysMemBootJump)(void) = (void (*)(void)) (*((uint32_t*)(BOOTLOADER_ADDR + 4)));
@@ -15,7 +16,7 @@ void BootLoaderInit() {
     HAL_SPI_DeInit(&hspi1);
     HAL_SPI_DeInit(&hspi3);
     HAL_UART_DeInit(&huart1);
-    HAL_TIM_Base_DeInit(&htim6);
+    HAL_TIM_Base_DeInit(&TIM_DISCHARGE);
     HAL_RCC_DeInit();
     SysTick->CTRL = 0;
     SysTick->LOAD = 0;
