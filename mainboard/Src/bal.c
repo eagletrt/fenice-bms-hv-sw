@@ -39,7 +39,7 @@ uint8_t _max_index(uint16_t data[], size_t count) {
 uint16_t _min_index(voltage_t data[], size_t count) {
 	uint16_t min_value_index = 0;
 	for (uint16_t i = 0; i < count; i++) {
-		if (data[i] < data[min_value_index])
+		if (data[i] < data[min_value_index] && data[i] > 0)
 			min_value_index = i;
 	}
 

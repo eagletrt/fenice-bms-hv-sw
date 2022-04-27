@@ -5,7 +5,7 @@ uint32_t icValRising = 0, icValFalling = 0;
 uint8_t isRisingEdge = 1;
 
 void imd_init() {
-    __HAL_TIM_CLEAR_FLAG(&HTIM_BMS, TIM_IT_CC4); //clears existing interrupts on channel 4
+    __HAL_TIM_CLEAR_FLAG(&HTIM_IMD, TIM_IT_CC4); //clears existing interrupts on channel 4
     HAL_TIM_IC_Start_IT(&HTIM_IMD, TIM_CHANNEL_4);
 }
 
