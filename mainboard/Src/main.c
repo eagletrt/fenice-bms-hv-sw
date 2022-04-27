@@ -32,6 +32,7 @@
 #include "imd.h"
 #include "feedback.h"
 #include "adc124s021.h"
+#include "fans_buzzer.h"
 
 #include <string.h>
 #include <m95256.h>
@@ -113,6 +114,7 @@ int main(void)
   MX_TIM10_Init();
   MX_SPI1_Init();
   MX_ADC2_Init();
+  MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
     HAL_GPIO_WritePin(EEPROM_HOLD_GPIO_Port, EEPROM_HOLD_Pin, GPIO_PIN_SET);
     current_start_measure();
@@ -123,7 +125,6 @@ int main(void)
     voltage_init();
     bal_fsm_init();
     bms_fsm_init();
-    current_read(0);
     current_zero();
     soc_init();
     can_bms_init();
@@ -131,6 +132,7 @@ int main(void)
     measures_init();
     imd_init();
     feedback_init();
+    fans_init();
 
   /* USER CODE END 2 */
 
