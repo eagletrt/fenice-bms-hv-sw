@@ -29,8 +29,10 @@ extern "C" {
 #include "main.h"
 
 /* USER CODE BEGIN Includes */
-
+#include "timer_utils.h"
 /* USER CODE END Includes */
+
+extern TIM_HandleTypeDef htim1;
 
 extern TIM_HandleTypeDef htim2;
 
@@ -46,22 +48,9 @@ extern TIM_HandleTypeDef htim10;
 
 /* USER CODE BEGIN Private defines */
 
-/**
- * @brief     Check whether the timer is placed in either APB1 or APB2 bus
- * 
- * @param     __HANDLE__ TIM Handle
- * @return    True if the timer is on APB1 bus false if it is on APB2 
- */
-#define _M_GET_TIM_APB_PLACEMENT(__HANDLE__) (((__HANDLE__)->Instance < (TIM_TypeDef *)APB2PERIPH_BASE) ? 1U : 0U)
-
-#define TIM_GET_FREQ(TIM)             (uint32_t)(TIM_GetInternalClkFreq((TIM)) / ((TIM)->Instance->PSC + 1))
-
-#define TIM_MS_TO_TICKS(TIM, MS)      (uint32_t)(((uint64_t)TIM_GET_FREQ((TIM)) * (MS)) / 1000)
-
-#define TIM_TICKS_TO_MS(TIM, TICKS)   (uint32_t)(((uint64_t)(TICKS) * 1000) / TIM_GET_FREQ((TIM)))
-
 /* USER CODE END Private defines */
 
+void MX_TIM1_Init(void);
 void MX_TIM2_Init(void);
 void MX_TIM3_Init(void);
 void MX_TIM4_Init(void);
@@ -69,10 +58,10 @@ void MX_TIM5_Init(void);
 void MX_TIM8_Init(void);
 void MX_TIM10_Init(void);
 
+void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
+
 /* USER CODE BEGIN Prototypes */
 
-uint16_t TIM_computePulse(TIM_HandleTypeDef *htim, uint32_t chFrequency);
-uint32_t TIM_GetInternalClkFreq(TIM_HandleTypeDef *htim);
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

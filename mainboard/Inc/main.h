@@ -75,10 +75,10 @@ void Error_Handler(void);
 #define MUX_IN_GPIO_Port GPIOA
 #define CS_ADC_Pin GPIO_PIN_4
 #define CS_ADC_GPIO_Port GPIOC
-#define BUZZER_Pin GPIO_PIN_0
-#define BUZZER_GPIO_Port GPIOB
-#define FANS_Pin GPIO_PIN_1
-#define FANS_GPIO_Port GPIOB
+#define BUZZER_PWM_Pin GPIO_PIN_0
+#define BUZZER_PWM_GPIO_Port GPIOB
+#define FANS_PWM_Pin GPIO_PIN_1
+#define FANS_PWM_GPIO_Port GPIOB
 #define IMD_PWM_Pin GPIO_PIN_2
 #define IMD_PWM_GPIO_Port GPIOB
 #define HANDCART_Pin GPIO_PIN_12
