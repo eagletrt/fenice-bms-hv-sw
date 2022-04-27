@@ -22,13 +22,14 @@
 #include "can.h"
 #include "can_comm.h"
 #include "imd.h"
+#include "fans_buzzer.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 // TODO: don't count manually
-#define N_COMMANDS 15
+#define N_COMMANDS 16
 
 cli_command_func_t _cli_volts;
 cli_command_func_t _cli_volts_all;
@@ -47,6 +48,7 @@ cli_command_func_t _cli_can_forward;
 cli_command_func_t _cli_feedbacks;
 cli_command_func_t _cli_help;
 cli_command_func_t _cli_taba;
+cli_command_func_t _cli_sborat;
 
 const char *bms_state_names[BMS_NUM_STATES] =
     {[BMS_IDLE] = "idle", [BMS_PRECHARGE] = "precharge", [BMS_ON] = "run", [BMS_FAULT] = "fault"};
@@ -93,7 +95,7 @@ char const *const feedback_names[FEEDBACK_N] = {
 };
 
 char *command_names[N_COMMANDS] =
-    {"volt", "temp", "status", "errors", "ts", "bal", "soc", "current", "dmesg", "reset", "imd", "can_forward", "feedbacks", "?", "\ta"};
+    {"volt", "temp", "status", "errors", "ts", "bal", "soc", "current", "dmesg", "reset", "imd", "can_forward", "feedbacks", "?", "\ta", "sbor@"};
 
 cli_command_func_t *commands[N_COMMANDS] = {
     &_cli_volts,
@@ -110,7 +112,8 @@ cli_command_func_t *commands[N_COMMANDS] = {
     &_cli_can_forward,
     &_cli_feedbacks,
     &_cli_help,
-    &_cli_taba};
+    &_cli_taba,
+    &_cli_sborat};
 
 cli_t cli_bms;
 bool dmesg_ena = true;
@@ -449,7 +452,7 @@ void _cli_taba(uint16_t argc, char **argv, char *out) {
 
 void _cli_help(uint16_t argc, char **argv, char *out) {
     sprintf(out, "command list:\r\n");
-    for (uint8_t i = 0; i < N_COMMANDS - 1; i++) {
+    for (uint8_t i = 0; i < N_COMMANDS - 2; i++) {
         sprintf(out + strlen(out), "- %s\r\n", cli_bms.cmds.names[i]);
     }
 }
@@ -482,7 +485,7 @@ void _cli_can_forward(uint16_t argc, char **argv, char *out) {
                 out,
                 "Unknown parameter: %s\r\n\n"
                 "valid parameters:\r\n"
-                "- bms: bms internal network\r\n",
+                "- bms: bms internal network\r\n"
                 "- primary: car primary network\r\n",
                 argv[1]);
             return;
@@ -516,8 +519,7 @@ void _cli_can_forward(uint16_t argc, char **argv, char *out) {
                 out,
                 "Invalid command format\r\n\n"
                 "valid format:\r\n"
-                "can_forward <network> <id>#<payload>\r\n",
-                argv[1]);
+                "can_forward <network> <id>#<payload>\r\n");
     }
 }
 
@@ -531,4 +533,9 @@ void _cli_feedbacks(uint16_t argc, char **argv, char *out) {
             f[i] == FEEDBACK_STATE_L ? "0" :
             "error");
     }
+}
+
+void _cli_sborat(uint16_t argc, char **argv, char *out) {
+    BUZ_sborati(&HTIM_PWM);
+    *out = '\0';
 }

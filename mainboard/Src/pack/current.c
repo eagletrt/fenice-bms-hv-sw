@@ -61,7 +61,7 @@ uint32_t current_read(uint16_t shunt_adc_val) {
     current[CURRENT_SENSOR_SHUNT]   = _current_convert_shunt((float)shunt_adc_val);
 
     // Check for over-current
-    error_toggle_check(current_get_current_from_sensor(CURRENT_SENSOR_300) > PACK_MAX_CURRENT, ERROR_OVER_CURRENT, 0);
+    error_toggle_check(current_get_current() > PACK_MAX_CURRENT, ERROR_OVER_CURRENT, 0);
 
     return time;
 }
@@ -79,7 +79,7 @@ void current_zero() {
 
 current_t current_get_current() {
     if(current[CURRENT_SENSOR_SHUNT] < 4 && current[CURRENT_SENSOR_50] < 4) return current[CURRENT_SENSOR_SHUNT];
-    if(current[CURRENT_SENSOR_50] < 50 && current[CURRENT_SENSOR_300] < 50) return current[CURRENT_SENSOR_50];
+    if(current[CURRENT_SENSOR_50] < 34 && current[CURRENT_SENSOR_300] < 35) return current[CURRENT_SENSOR_50];
     return current[CURRENT_SENSOR_300];
 }
 current_t *current_get_current_sensors() {

@@ -4,6 +4,7 @@
 #include "spi.h"
 #include "can_comm.h"
 #include "bms_fsm.h"
+#include "pwm.h"
 
 measures_flags_t flags;
 
@@ -25,6 +26,7 @@ void measures_check_flags() {
         if(error_count > 0) {
             can_car_send(ID_HV_ERRORS);
         }
+        can_cellboards_check();
         flags &= ~_20MS_INTERVAL_FLAG;
     }
     if(flags & _200MS_INTERVAL_FLAG) {
