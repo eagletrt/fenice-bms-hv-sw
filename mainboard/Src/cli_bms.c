@@ -23,13 +23,14 @@
 #include "can_comm.h"
 #include "imd.h"
 #include "fans_buzzer.h"
+#include "mainboard_config.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 // TODO: don't count manually
-#define N_COMMANDS 16
+#define N_COMMANDS 18
 
 cli_command_func_t _cli_volts;
 cli_command_func_t _cli_volts_all;
@@ -46,7 +47,9 @@ cli_command_func_t _cli_reset;
 cli_command_func_t _cli_imd;
 cli_command_func_t _cli_can_forward;
 cli_command_func_t _cli_feedbacks;
+cli_command_func_t _cli_watch;
 cli_command_func_t _cli_help;
+cli_command_func_t _cli_sigterm;
 cli_command_func_t _cli_taba;
 cli_command_func_t _cli_sborat;
 
@@ -95,7 +98,7 @@ char const *const feedback_names[FEEDBACK_N] = {
 };
 
 char *command_names[N_COMMANDS] =
-    {"volt", "temp", "status", "errors", "ts", "bal", "soc", "current", "dmesg", "reset", "imd", "can_forward", "feedbacks", "?", "\ta", "sbor@"};
+    {"volt", "temp", "status", "errors", "ts", "bal", "soc", "current", "dmesg", "reset", "imd", "can_forward", "feedbacks", "watch", "?", "\003", "\ta", "sbor@"};
 
 cli_command_func_t *commands[N_COMMANDS] = {
     &_cli_volts,
@@ -111,7 +114,9 @@ cli_command_func_t *commands[N_COMMANDS] = {
     &_cli_imd,
     &_cli_can_forward,
     &_cli_feedbacks,
+    &_cli_watch,
     &_cli_help,
+    &_cli_sigterm,
     &_cli_taba,
     &_cli_sborat};
 
@@ -158,8 +163,8 @@ void cli_bms_debug(char *text, size_t length) {
 
 void _cli_volts(uint16_t argc, char **argv, char *out) {
     if (strcmp(argv[1], "") == 0) {
-        voltage_t max = voltage_get_cell_max();
-        voltage_t min = voltage_get_cell_min();
+        voltage_t max = voltage_get_cell_max(NULL);
+        voltage_t min = voltage_get_cell_min(NULL);
         sprintf(
             out,
             "bus.......%.2f V\r\n"
@@ -189,6 +194,9 @@ void _cli_volts(uint16_t argc, char **argv, char *out) {
 void _cli_volts_all(uint16_t argc, char **argv, char *out) {
     out[0] = '\0';
     voltage_t *cells = voltage_get_cells();
+    uint8_t max_index, min_index;
+    voltage_get_cell_max(&max_index);
+    voltage_get_cell_min(&min_index);
     for (uint8_t i = 0; i < PACK_CELL_COUNT; i++) {
         if (i % LTC6813_CELL_COUNT == 0) {
             sprintf(out + strlen(out), "\r\n%-3d", i / LTC6813_CELL_COUNT);
@@ -196,7 +204,19 @@ void _cli_volts_all(uint16_t argc, char **argv, char *out) {
             sprintf(out + strlen(out), "\r\n%-3s", "");
         }
 
-        sprintf(out + strlen(out), "[%3u %-.3fv] ", i, (float)cells[i] / 10000);
+        if(i == max_index) {
+            if(getBit(bal.cells[i/CELLBOARD_CELL_COUNT], i%CELLBOARD_CELL_COUNT)) {
+                sprintf(out + strlen(out), RED_BG_ON_YELLOW_FG("[%3u %-.3fv]") " ", i, (float)cells[i] / 10000);
+            } else {
+                sprintf(out + strlen(out), RED_BG("[%3u %-.3fv]") " ", i, (float)cells[i] / 10000);
+            }
+        }else if(getBit(bal.cells[i/CELLBOARD_CELL_COUNT], i%CELLBOARD_CELL_COUNT)) {
+                sprintf(out + strlen(out), YELLOW_BG("[%3u %-.3fv]") " ", i, (float)cells[i] / 10000);
+        } else if(i == min_index) {
+            sprintf(out + strlen(out), CYAN_BG("[%3u %-.3fv]") " ", i, (float)cells[i] / 10000);
+        } else {
+            sprintf(out + strlen(out), "[%3u %-.3fv] ", i, (float)cells[i] / 10000);
+        }
     }
 
     sprintf(out + strlen(out), "\r\n");
@@ -271,6 +291,7 @@ void _cli_status(uint16_t argc, char **argv, char *out) {
 
 void _cli_balance(uint16_t argc, char **argv, char *out) {
     if (strcmp(argv[1], "on") == 0) {
+        if(argc > 2) bal.target = atoi(argv[2]);
         fsm_trigger_event(bal.fsm, EV_BAL_START);
         sprintf(out, "enabling balancing\r\n");
     } else if (strcmp(argv[1], "off") == 0) {
@@ -452,7 +473,7 @@ void _cli_taba(uint16_t argc, char **argv, char *out) {
 
 void _cli_help(uint16_t argc, char **argv, char *out) {
     sprintf(out, "command list:\r\n");
-    for (uint8_t i = 0; i < N_COMMANDS - 2; i++) {
+    for (uint8_t i = 0; i < N_COMMANDS - 3; i++) {
         sprintf(out + strlen(out), "- %s\r\n", cli_bms.cmds.names[i]);
     }
 }
@@ -538,4 +559,62 @@ void _cli_feedbacks(uint16_t argc, char **argv, char *out) {
 void _cli_sborat(uint16_t argc, char **argv, char *out) {
     BUZ_sborati(&HTIM_PWM);
     *out = '\0';
+}
+
+char watch_buf[BUF_SIZE] = {'\0'};
+
+void _cli_sigterm(uint16_t argc, char **argv, char *out) {
+    if(HTIM_CLI.State == HAL_TIM_STATE_BUSY) {
+        HAL_TIM_Base_Stop_IT(&HTIM_CLI);
+        *watch_buf = '\0';
+        sprintf(out, "\r\n");
+    } else {
+        sprintf(out, "^C\r\n");
+    }
+}
+
+void _cli_watch(uint16_t argc, char **argv, char *out) {
+    if(!strcmp(argv[1], "stop")) {
+        *watch_buf = '\0';
+        HAL_TIM_Base_Stop_IT(&HTIM_CLI);
+    } else {
+        uint16_t interval = atoi(argv[1]);
+        if(interval == 0) interval = 500;
+        for(uint8_t i=2; i<argc; ++i) {
+            sprintf(watch_buf + strlen(watch_buf), "%s ", argv[i]);
+        }
+        __HAL_TIM_SetAutoreload(&HTIM_CLI, TIM_MS_TO_TICKS(&HTIM_CLI, interval));
+        HAL_TIM_Base_Start_IT(&HTIM_CLI);
+    }
+
+    *out = '\0';
+}
+
+void _cli_timer_handler(TIM_HandleTypeDef *htim) {
+    // TODO: Make this better
+    char tx_buf[4000] = "\0";
+
+    sprintf(tx_buf, "%c[2JExecuting %severy %.0fms\r\n", 0x1B, watch_buf, TIM_TICKS_TO_MS(&HTIM_CLI, __HAL_TIM_GetAutoreload(&HTIM_CLI)));
+
+    char *argv[BUF_SIZE] = {'\0'};
+    uint16_t argc        = _cli_get_args(watch_buf, argv);
+
+    // Check which command corresponds with the buffer
+    for (uint16_t i = 0; i < N_COMMANDS; i++) {
+        //size_t len = strlen(cli->cmds.names[i]);
+
+        if (strcmp(argv[0], command_names[i]) == 0) {
+            commands[i](argc, argv, tx_buf + strlen(tx_buf));
+            break;
+        }
+    }
+
+    sprintf(tx_buf + strlen(tx_buf), "\r\nPress CTRL+C to stop");
+
+    // restore watch_buf after splitting it in _cli_get_args
+    for(uint16_t i=0; i<argc-1; ++i) {
+        watch_buf[strlen(watch_buf)] = ' ';
+    }
+
+    HAL_UART_Transmit(&CLI_UART, (uint8_t*)tx_buf, strlen(tx_buf), 100);
 }
