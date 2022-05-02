@@ -13,7 +13,16 @@
 
 #include <inttypes.h>
 
-typedef struct config *config_t;
+#define CONFIG_VERSION_TYPE uint32_t
+#define CONFIG_VERSION_SIZE sizeof(CONFIG_VERSION_TYPE)
+
+typedef struct config {
+    CONFIG_VERSION_TYPE version;
+    uint16_t address;
+    bool dirty;
+    size_t size;
+    uint8_t data[EEPROM_BUFFER_SIZE - CONFIG_VERSION_SIZE];
+} config_t;
 
 /**
  * @brief Initializes a config instance
@@ -35,7 +44,7 @@ bool config_init(config_t *config, uint16_t address, uint32_t version, void *def
  * @return true Write successfull
  * @return false Error
  */
-bool config_write(config_t config);
+bool config_write(config_t *config);
 
 /**
  * @brief Reads a config from EEPROM
@@ -44,7 +53,7 @@ bool config_write(config_t config);
  * @return true Read successfull
  * @return false Error
  */
-bool config_read(config_t config);
+bool config_read(config_t *config);
 
 /**
  * @brief Returns the config data
@@ -54,7 +63,7 @@ bool config_read(config_t config);
  * @param config The config handle
  * @return void* The data
  */
-void *config_get(config_t config);
+void *config_get(config_t *config);
 
 /**
  * @brief Writes in the data register of the config handle
@@ -64,6 +73,6 @@ void *config_get(config_t config);
  * @param config The config handle
  * @param data data to write
  */
-void config_set(config_t config, void *data);
+void config_set(config_t *config, void *data);
 
 #endif

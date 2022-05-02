@@ -40,15 +40,15 @@ void cooldown_handler(fsm FSM, uint8_t event);
 void cooldown_exit(fsm FSM);
 
 voltage_t bal_get_threshold() {
-    return ((bal_params *)config_get(config))->threshold;
+    return ((bal_params *)config_get(&config))->threshold;
 }
 
 void bal_set_threshold(uint16_t thresh) {
-    bal_params params = *(bal_params *)config_get(config);
+    bal_params params = *(bal_params *)config_get(&config);
     params.threshold  = thresh;
 
-    config_set(config, &params);
-    config_write(config);
+    config_set(&config, &params);
+    config_write(&config);
 }
 
 void bal_fsm_init() {
@@ -57,6 +57,7 @@ void bal_fsm_init() {
 
     bal.cycle_length = TIM_MS_TO_TICKS(&HTIM_BAL, BAL_CYCLE_LENGTH);
     bal.fsm          = fsm_init(BAL_NUM_STATES, BAL_EV_NUM, NULL, NULL);
+    bal.target       = 0;
 
     fsm_state state;
     state.run     = NULL;
@@ -84,6 +85,7 @@ void bal_fsm_init() {
 }
 
 void off_entry(fsm FSM) {
+    bal.target = 0;
     HAL_TIM_OC_Stop_IT(&HTIM_BAL, TIM_CHANNEL_1);
     HAL_TIM_OC_Stop_IT(&HTIM_BAL, TIM_CHANNEL_2);
     cli_bms_debug("disabling balancing", 20);
@@ -104,7 +106,7 @@ void off_handler(fsm FSM, uint8_t event) {
 }
 
 void compute_entry(fsm FSM) {
-    if ( bal_get_cells_to_discharge(voltage_get_cells(), PACK_CELL_COUNT, bal_get_threshold(), bal.cells, LTC6813_COUNT) != 0) {
+    if ( bal_get_cells_to_discharge(voltage_get_cells(), PACK_CELL_COUNT, bal_get_threshold(), bal.cells, LTC6813_COUNT, bal.target) != 0) {
         fsm_transition(FSM, BAL_DISCHARGE);
         return;
     }
