@@ -36,15 +36,15 @@ void soc_init() {
     config_init(&soc_config, ENERGY_ADDR, ENERGY_VERSION, &soc_params_default, sizeof(soc_params));
 
     // Save the loaded values in soc instances
-    energy_set_count(&energy_total, ((soc_params *)config_get(soc_config))->total_joule);
+    energy_set_count(&energy_total, ((soc_params *)config_get(&soc_config))->total_joule);
     energy_set_time(&energy_total, HAL_GetTick());
 
-    energy_set_count(&energy_last_charge, ((soc_params *)config_get(soc_config))->charge_joule);
+    energy_set_count(&energy_last_charge, ((soc_params *)config_get(&soc_config))->charge_joule);
     energy_set_time(&energy_last_charge, HAL_GetTick());
 }
 
 void soc_sample_energy(uint32_t timestamp) {
-    soc_params params = *(soc_params *)config_get(soc_config);
+    soc_params params = *(soc_params *)config_get(&soc_config);
 
     // Sample current values for SoC calculation
     energy_sample_energy(&energy_total, (current_get_current() * voltage_get_internal()) / 10.0f, timestamp);
@@ -55,9 +55,9 @@ void soc_sample_energy(uint32_t timestamp) {
     params.total_joule  = energy_get_joule(energy_total);
 
     // Save energy values to EEPROM
-    config_set(soc_config, &params);
+    config_set(&soc_config, &params);
     // TODO: make async writes (don't block this function)
-    config_write(soc_config);
+    config_write(&soc_config);
 }
 
 void soc_reset_soc() {
