@@ -15,25 +15,26 @@
 //=================================== General ===============================
 //===========================================================================
 
-#define HTIM_ERR        htim1
-#define HTIM_IMD        htim2
-#define HTIM_PWM        htim3
-#define HTIM_MEASURES   htim4
-#define HTIM_BAL        htim5
-#define HTIM_BMS        htim8
-#define HTIM_MUX        htim10
+#define HTIM_ERR      htim1
+#define HTIM_IMD      htim2
+#define HTIM_PWM      htim3
+#define HTIM_MEASURES htim4
+#define HTIM_BAL      htim5
+#define HTIM_CLI      htim6
+#define HTIM_BMS      htim8
+#define HTIM_MUX      htim10
 
-#define SPI_EEPROM      hspi2
-#define SPI_ADC124S     hspi1
+#define SPI_EEPROM  hspi2
+#define SPI_ADC124S hspi1
 
-#define ADC_HALL50      hadc2
-#define ADC_HALL300     hadc3
-#define ADC_MUX         hadc1
+#define ADC_HALL50  hadc2
+#define ADC_HALL300 hadc3
+#define ADC_MUX     hadc1
 
-#define CAR_CAN         hcan1
-#define BMS_CAN         hcan2
+#define CAR_CAN hcan1
+#define BMS_CAN hcan2
 
-#define STATE_LED_GPIO  LED2_GPIO_Port
-#define STATE_LED_PIN   LED2_Pin
+#define STATE_LED_GPIO LED2_GPIO_Port
+#define STATE_LED_PIN  LED2_Pin
 
 #endif
