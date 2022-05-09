@@ -49,3 +49,5 @@ float soc_get_energy_total();
  * @return float current value in Wh
  */
 float soc_get_energy_last_charge();
+
+void soc_save_to_eeprom();

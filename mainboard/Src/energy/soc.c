@@ -56,6 +56,9 @@ void soc_sample_energy(uint32_t timestamp) {
 
     // Save energy values to EEPROM
     config_set(&soc_config, &params);
+}
+
+void soc_save_to_eeprom() {
     // TODO: make async writes (don't block this function)
     config_write(&soc_config);
 }
