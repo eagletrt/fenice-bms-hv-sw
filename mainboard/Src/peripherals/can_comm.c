@@ -105,7 +105,7 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
 
     if (id == ID_HV_VOLTAGE) {
         tx_header.DLC = serialize_primary_HV_VOLTAGE(
-            buffer, voltage_get_internal(), voltage_get_bus(), voltage_get_cell_max(), voltage_get_cell_min());
+            buffer, voltage_get_internal(), voltage_get_bus(), voltage_get_cell_max(NULL), voltage_get_cell_min(NULL));
     } else if (id == ID_HV_CURRENT) {
         tx_header.DLC = serialize_primary_HV_CURRENT(buffer, current_get_current(), current_get_current() * voltage_get_bus());
     } else if (id == ID_TS_STATUS) {
@@ -188,9 +188,10 @@ HAL_StatusTypeDef can_bms_send(uint16_t id) {
     tx_header.StdId = id;
     
     if(id == ID_BALANCING) {
+        uint8_t *distr = bms_get_cellboard_distribution();
         register uint16_t i;
-        for(i=0; i<LTC6813_COUNT; ++i){
-            tx_header.DLC = serialize_bms_BALANCING(buffer, i, bal.cells[i]);
+        for(i=0; i<CELLBOARD_COUNT; ++i){
+            tx_header.DLC = serialize_bms_BALANCING(buffer, distr[i], bal.cells[i]);
             can_send(&BMS_CAN, buffer, &tx_header);
         }
         return HAL_OK; //TODO: ugly
@@ -223,27 +224,27 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
             {
             case ID_VOLTAGES_0:
                 ++cellboards_msgs.cellboard0;
-                offset = VOLTAGE_CELLBOARD_0_OFFSET;
+                offset = voltage_get_cellboard_offset(0);
                 break;
             case ID_VOLTAGES_1:
                 ++cellboards_msgs.cellboard1;
-                offset = VOLTAGE_CELLBOARD_1_OFFSET;
+                offset = voltage_get_cellboard_offset(1);
                 break;
             case ID_VOLTAGES_2:
                 ++cellboards_msgs.cellboard2;
-                offset = VOLTAGE_CELLBOARD_2_OFFSET;
+                offset = voltage_get_cellboard_offset(2);
                 break;
             case ID_VOLTAGES_3:
                 ++cellboards_msgs.cellboard3;
-                offset = VOLTAGE_CELLBOARD_3_OFFSET;
+                offset = voltage_get_cellboard_offset(3);
                 break;
             case ID_VOLTAGES_4:
                 ++cellboards_msgs.cellboard4;
-                offset = VOLTAGE_CELLBOARD_4_OFFSET;
+                offset = voltage_get_cellboard_offset(4);
                 break;
             case ID_VOLTAGES_5:
                 ++cellboards_msgs.cellboard5;
-                offset = VOLTAGE_CELLBOARD_5_OFFSET;
+                offset = voltage_get_cellboard_offset(5);
                 break;
             default:
                 break;
@@ -258,27 +259,27 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
             {
             case ID_TEMPERATURES_0:
                 ++cellboards_msgs.cellboard0;
-                offset = TEMP_CELLBOARD_0_OFFSET;
+                offset = temperature_get_cellboard_offset(0);
                 break;
             case ID_TEMPERATURES_1:
                 ++cellboards_msgs.cellboard1;
-                offset = TEMP_CELLBOARD_1_OFFSET;
+                offset = temperature_get_cellboard_offset(1);
                 break;
             case ID_TEMPERATURES_2:
                 ++cellboards_msgs.cellboard2;
-                offset = TEMP_CELLBOARD_2_OFFSET;
+                offset = temperature_get_cellboard_offset(2);
                 break;
             case ID_TEMPERATURES_3:
                 ++cellboards_msgs.cellboard3;
-                offset = TEMP_CELLBOARD_3_OFFSET;
+                offset = temperature_get_cellboard_offset(3);
                 break;
             case ID_TEMPERATURES_4:
                 ++cellboards_msgs.cellboard4;
-                offset = TEMP_CELLBOARD_4_OFFSET;
+                offset = temperature_get_cellboard_offset(4);
                 break;
             case ID_TEMPERATURES_5:
                 ++cellboards_msgs.cellboard5;
-                offset = TEMP_CELLBOARD_5_OFFSET;
+                offset = temperature_get_cellboard_offset(5);
                 break;
             default:
                 break;

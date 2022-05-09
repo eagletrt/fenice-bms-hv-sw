@@ -15,7 +15,16 @@
 #include "fsm.h"
 
 #include <stdbool.h>
-typedef enum { BMS_IDLE = 0, BMS_TS_ON, BMS_AIRN_CLOSE, BMS_AIRN_STATUS, BMS_PRECHARGE, BMS_ON, BMS_FAULT, BMS_NUM_STATES } bms_states;
+typedef enum {
+    BMS_IDLE = 0,
+    BMS_TS_ON,
+    BMS_AIRN_CLOSE,
+    BMS_AIRN_STATUS,
+    BMS_PRECHARGE,
+    BMS_ON,
+    BMS_FAULT,
+    BMS_NUM_STATES
+} bms_states;
 typedef enum {
     BMS_EV_FAULT = 0,
     BMS_EV_TS_OFF,
@@ -37,6 +46,8 @@ typedef struct {
 extern bms_fsm bms;
 
 void bms_fsm_init();
+uint8_t *bms_get_cellboard_distribution();
+void bms_set_cellboard_distribution(uint8_t distribution[static 6]);
 
 void _bms_handle_tim_oc_irq(TIM_HandleTypeDef *htim);
 #endif
