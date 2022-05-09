@@ -1,0 +1,2 @@
+*/Src/*.c filter=clang_format
+*/Inc/*.h filter=clang_format
