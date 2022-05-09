@@ -42,7 +42,8 @@ bool config_init(config_t *config, uint16_t address, uint32_t version, void *def
 bool config_read(config_t *config) {
     uint8_t buffer[EEPROM_BUFFER_SIZE] = {0};
 
-    if (m95256_ReadBuffer(eeprom, buffer, config->address, config->size + CONFIG_VERSION_SIZE) == EEPROM_STATUS_COMPLETE) {
+    if (m95256_ReadBuffer(eeprom, buffer, config->address, config->size + CONFIG_VERSION_SIZE) ==
+        EEPROM_STATUS_COMPLETE) {
         error_reset(ERROR_EEPROM_COMM, 0);
 
         // Check if EEPROM's version matches config's
@@ -61,8 +62,8 @@ bool config_read(config_t *config) {
 bool config_write(config_t *config) {
     if (config->dirty) {
         uint8_t buffer[EEPROM_BUFFER_SIZE] = {0};
-        memcpy(buffer, &(config->version), CONFIG_VERSION_SIZE);                   // Copy version
-        memcpy(buffer + CONFIG_VERSION_SIZE, config->data, config->size);          // Copy data after version
+        memcpy(buffer, &(config->version), CONFIG_VERSION_SIZE);           // Copy version
+        memcpy(buffer + CONFIG_VERSION_SIZE, config->data, config->size);  // Copy data after version
 
         if (m95256_WriteBuffer(eeprom, buffer, config->address, config->size + CONFIG_VERSION_SIZE) ==
             EEPROM_STATUS_COMPLETE) {
@@ -70,8 +71,9 @@ bool config_write(config_t *config) {
 
             // Read just-written data and compare for errors
             uint8_t testbuf[EEPROM_BUFFER_SIZE] = {0};
-            if (m95256_ReadBuffer(eeprom, testbuf, config->address, config->size + CONFIG_VERSION_SIZE) == EEPROM_STATUS_COMPLETE) {
-                if (memcmp(buffer, testbuf, CONFIG_VERSION_SIZE) == 0 ) {
+            if (m95256_ReadBuffer(eeprom, testbuf, config->address, config->size + CONFIG_VERSION_SIZE) ==
+                EEPROM_STATUS_COMPLETE) {
+                if (memcmp(buffer, testbuf, CONFIG_VERSION_SIZE) == 0) {
                     error_reset(ERROR_EEPROM_WRITE, 0);
                     config->dirty = false;
                     return true;
@@ -94,6 +96,6 @@ void *config_get(config_t *config) {
 }
 
 void config_set(config_t *config, void *data) {
-    memcpy(config->data, data, config->size);   // Copy data
+    memcpy(config->data, data, config->size);  // Copy data
     config->dirty = true;
 }

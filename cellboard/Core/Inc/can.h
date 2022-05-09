@@ -37,10 +37,11 @@ extern CAN_HandleTypeDef hcan1;
 /* USER CODE BEGIN Private defines */
 #define BMS_CAN hcan1
 
-#define CAN_WAIT(C)                                                           \
-    {                                                                         \
-        while (HAL_CAN_GetTxMailboxesFreeLevel((C)) == 0);                    \
-    }                                                                                                   
+#define CAN_WAIT(C)                                       \
+    {                                                     \
+        while (HAL_CAN_GetTxMailboxesFreeLevel((C)) == 0) \
+            ;                                             \
+    }
 /* USER CODE END Private defines */
 
 void MX_CAN1_Init(void);
@@ -54,4 +55,3 @@ void MX_CAN1_Init(void);
 #endif
 
 #endif /* __CAN_H__ */
-

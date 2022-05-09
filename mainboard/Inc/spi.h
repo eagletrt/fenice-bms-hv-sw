@@ -53,4 +53,3 @@ void spi_disable_cs(SPI_HandleTypeDef *spi, GPIO_TypeDef *gpio, uint16_t pin);
 #endif
 
 #endif /* __SPI_H__ */
-

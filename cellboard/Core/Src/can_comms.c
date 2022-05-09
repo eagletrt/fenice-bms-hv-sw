@@ -9,19 +9,19 @@
 #include "can_comms.h"
 
 #include "bal_fsm.h"
+#include "bootloader.h"
 #include "can.h"
 #include "cellboard_config.h"
 #include "error.h"
 #include "main.h"
+#include "spi.h"
 #include "temp.h"
 #include "volt.h"
-#include "spi.h"
-#include "bootloader.h"
 
 #include <math.h>
 #include <string.h>
 
-#define RETRANSMITTION_MAX_ATTEMPTS     5
+#define RETRANSMITTION_MAX_ATTEMPTS 5
 uint8_t retransmittion_attempts[3] = {0};
 
 void _can_send(CAN_HandleTypeDef *hcan, uint8_t *buffer, CAN_TxHeaderTypeDef *header) {
@@ -42,7 +42,7 @@ void can_send(uint16_t topic_id) {
     tx_header.IDE   = CAN_ID_STD;
     tx_header.RTR   = CAN_RTR_DATA;
 
-    if(topic_id == TOPIC_STATUS_FILTER){
+    if (topic_id == TOPIC_STATUS_FILTER) {
         bms_balancing_status state = BAL_OFF;
         switch (fsm_get_state(bal.fsm)) {
             case BAL_OFF:
@@ -53,100 +53,103 @@ void can_send(uint16_t topic_id) {
                 break;
         }
 
-        switch(cellboard_index){
+        switch (cellboard_index) {
             case 0:
                 tx_header.StdId = ID_BOARD_STATUS_0;
                 break;
-            case 1: 
+            case 1:
                 tx_header.StdId = ID_BOARD_STATUS_1;
                 break;
-            case 2: 
+            case 2:
                 tx_header.StdId = ID_BOARD_STATUS_2;
                 break;
-            case 3: 
+            case 3:
                 tx_header.StdId = ID_BOARD_STATUS_3;
                 break;
-            case 4: 
+            case 4:
                 tx_header.StdId = ID_BOARD_STATUS_4;
                 break;
             case 7:
-            case 5: 
+            case 5:
                 tx_header.StdId = ID_BOARD_STATUS_5;
                 break;
-            default: return;
+            default:
+                return;
         }
 
         tx_header.DLC = serialize_bms_BOARD_STATUS(buffer, &errors, state);
-    
+
         _can_send(&BMS_CAN, buffer, &tx_header);
         return;
     } else if (topic_id == TOPIC_TEMPERATURE_INFO_FILTER) {
-        switch(cellboard_index){
-            case 0: 
+        switch (cellboard_index) {
+            case 0:
                 tx_header.StdId = ID_TEMPERATURES_0;
                 break;
-            case 1: 
+            case 1:
                 tx_header.StdId = ID_TEMPERATURES_1;
                 break;
-            case 2: 
+            case 2:
                 tx_header.StdId = ID_TEMPERATURES_2;
                 break;
-            case 3: 
+            case 3:
                 tx_header.StdId = ID_TEMPERATURES_3;
                 break;
-            case 4: 
+            case 4:
                 tx_header.StdId = ID_TEMPERATURES_4;
                 break;
             case 7:
-            case 5: 
+            case 5:
                 tx_header.StdId = ID_TEMPERATURES_5;
                 break;
-            default: return;
+            default:
+                return;
         }
 
         register uint8_t i;
-        for(i=0; i<CELLBOARD_TEMP_SENSOR_COUNT; i+=6){
-
-            tx_header.DLC = serialize_bms_TEMPERATURES(buffer, i, 
+        for (i = 0; i < CELLBOARD_TEMP_SENSOR_COUNT; i += 6) {
+            tx_header.DLC = serialize_bms_TEMPERATURES(
+                buffer,
+                i,
                 temp_serialize(temperatures[i]),
-                temp_serialize(temperatures[i+1]),
-                temp_serialize(temperatures[i+2]),
-                temp_serialize(temperatures[i+3]),
-                temp_serialize(temperatures[i+4]),
-                temp_serialize(temperatures[i+5])
-            );
+                temp_serialize(temperatures[i + 1]),
+                temp_serialize(temperatures[i + 2]),
+                temp_serialize(temperatures[i + 3]),
+                temp_serialize(temperatures[i + 4]),
+                temp_serialize(temperatures[i + 5]));
             _can_send(&BMS_CAN, buffer, &tx_header);
             HAL_Delay(1);
         }
 
         return;
     } else if (topic_id == TOPIC_VOLTAGE_INFO_FILTER) {
-        switch(cellboard_index){
-            case 0: 
+        switch (cellboard_index) {
+            case 0:
                 tx_header.StdId = ID_VOLTAGES_0;
                 break;
             case 1:
                 tx_header.StdId = ID_VOLTAGES_1;
                 break;
-            case 2: 
-                tx_header.StdId = ID_VOLTAGES_2; 
+            case 2:
+                tx_header.StdId = ID_VOLTAGES_2;
                 break;
-            case 3: 
-                tx_header.StdId = ID_VOLTAGES_3; 
+            case 3:
+                tx_header.StdId = ID_VOLTAGES_3;
                 break;
-            case 4: 
-                tx_header.StdId = ID_VOLTAGES_4; 
+            case 4:
+                tx_header.StdId = ID_VOLTAGES_4;
                 break;
             case 7:
-            case 5: 
-                tx_header.StdId = ID_VOLTAGES_5; 
+            case 5:
+                tx_header.StdId = ID_VOLTAGES_5;
                 break;
-            default: return;
+            default:
+                return;
         }
 
         register uint8_t i;
-        for(i=0; i<CELLBOARD_CELL_COUNT; i+=3){
-            tx_header.DLC = serialize_bms_VOLTAGES(buffer, i, voltages[i], voltages[i+1], voltages[i+2]);
+        for (i = 0; i < CELLBOARD_CELL_COUNT; i += 3) {
+            tx_header.DLC = serialize_bms_VOLTAGES(buffer, i, voltages[i], voltages[i + 1], voltages[i + 2]);
             _can_send(&BMS_CAN, buffer, &tx_header);
             HAL_Delay(1);
         }
@@ -165,36 +168,37 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 
     ERROR_UNSET(ERROR_CAN);
 
-    if(rx_header.StdId == ID_BALANCING){
+    if (rx_header.StdId == ID_BALANCING) {
         bms_BALANCING balancing;
         deserialize_bms_BALANCING(rx_data, &balancing);
 
-        if(balancing.board_index != cellboard_index) return;
+        if (balancing.board_index != cellboard_index)
+            return;
 
         memcpy(bal.cells, balancing.cells, sizeof(bal.cells));
-        if(!bal_is_cells_empty()) {
+        if (!bal_is_cells_empty()) {
             fsm_trigger_event(bal.fsm, EV_BAL_START);
         } else {
             fsm_trigger_event(bal.fsm, EV_BAL_STOP);
         }
-    }
-    else if(rx_header.StdId == ID_FW_UPDATE) {
+    } else if (rx_header.StdId == ID_FW_UPDATE) {
         bms_FW_UPDATE fw_update;
         deserialize_bms_FW_UPDATE(rx_data, &fw_update);
 
-        if(fw_update.board_index != cellboard_index) return;
-        
+        if (fw_update.board_index != cellboard_index)
+            return;
+
         HAL_NVIC_SystemReset();
     }
 }
 
-void can_init_with_filter(){
+void can_init_with_filter() {
     CAN_FilterTypeDef filter;
     filter.FilterMode       = CAN_FILTERMODE_IDMASK;
-    filter.FilterIdLow      = TOPIC_BALANCING_FILTER << 5;                 // Take all ids from 0
-    filter.FilterIdHigh     = TOPIC_FW_UPDATE_FILTER << 5;                  // to 2^11 - 1
-    filter.FilterMaskIdHigh = TOPIC_FW_UPDATE_MASK << 5;                 // Don't care on can id bits
-    filter.FilterMaskIdLow  = TOPIC_BALANCING_MASK << 5;                 // Don't care on can id bits
+    filter.FilterIdLow      = TOPIC_BALANCING_FILTER << 5;  // Take all ids from 0
+    filter.FilterIdHigh     = TOPIC_FW_UPDATE_FILTER << 5;  // to 2^11 - 1
+    filter.FilterMaskIdHigh = TOPIC_FW_UPDATE_MASK << 5;    // Don't care on can id bits
+    filter.FilterMaskIdLow  = TOPIC_BALANCING_MASK << 5;    // Don't care on can id bits
     /* HAL considers IdLow and IdHigh not as just the ID of the can message but
         as the combination of: 
         STDID + RTR + IDE + 4 most significant bits of EXTID
@@ -205,13 +209,13 @@ void can_init_with_filter(){
     filter.FilterActivation     = ENABLE;
 
     HAL_CAN_ConfigFilter(&BMS_CAN, &filter);
-    HAL_CAN_ActivateNotification(&BMS_CAN, CAN_IT_RX_FIFO0_MSG_PENDING | CAN_IT_TX_MAILBOX_EMPTY | CAN_IT_LAST_ERROR_CODE | CAN_IT_ERROR );
+    HAL_CAN_ActivateNotification(
+        &BMS_CAN, CAN_IT_RX_FIFO0_MSG_PENDING | CAN_IT_TX_MAILBOX_EMPTY | CAN_IT_LAST_ERROR_CODE | CAN_IT_ERROR);
     HAL_CAN_Start(&BMS_CAN);
 }
 
 void CAN_TxCallback(CAN_HandleTypeDef *hcan, uint32_t mailbox) {
-    switch (mailbox)
-    {
+    switch (mailbox) {
         case CAN_TX_MAILBOX0:
             retransmittion_attempts[0] = 0;
             break;
@@ -227,27 +231,32 @@ void CAN_TxCallback(CAN_HandleTypeDef *hcan, uint32_t mailbox) {
 }
 
 void HAL_CAN_ErrorCallback(CAN_HandleTypeDef *hcan) {
-    if(hcan->ErrorCode & (HAL_CAN_ERROR_TX_ALST0 | HAL_CAN_ERROR_TX_TERR0)) ++retransmittion_attempts[0];
-    if(hcan->ErrorCode & (HAL_CAN_ERROR_TX_ALST1 | HAL_CAN_ERROR_TX_TERR1)) ++retransmittion_attempts[1];
-    if(hcan->ErrorCode & (HAL_CAN_ERROR_TX_ALST2 | HAL_CAN_ERROR_TX_TERR2)) ++retransmittion_attempts[2];
+    if (hcan->ErrorCode & (HAL_CAN_ERROR_TX_ALST0 | HAL_CAN_ERROR_TX_TERR0))
+        ++retransmittion_attempts[0];
+    if (hcan->ErrorCode & (HAL_CAN_ERROR_TX_ALST1 | HAL_CAN_ERROR_TX_TERR1))
+        ++retransmittion_attempts[1];
+    if (hcan->ErrorCode & (HAL_CAN_ERROR_TX_ALST2 | HAL_CAN_ERROR_TX_TERR2))
+        ++retransmittion_attempts[2];
 
     uint32_t mailboxes = 0;
-    if(retransmittion_attempts[0] >= RETRANSMITTION_MAX_ATTEMPTS) {
+    if (retransmittion_attempts[0] >= RETRANSMITTION_MAX_ATTEMPTS) {
         mailboxes |= CAN_TX_MAILBOX0;
         retransmittion_attempts[0] = 0;
     }
-    if(retransmittion_attempts[1] >= RETRANSMITTION_MAX_ATTEMPTS) {
+    if (retransmittion_attempts[1] >= RETRANSMITTION_MAX_ATTEMPTS) {
         mailboxes |= CAN_TX_MAILBOX1;
         retransmittion_attempts[1] = 0;
     }
-    if(retransmittion_attempts[2] >= RETRANSMITTION_MAX_ATTEMPTS) {
+    if (retransmittion_attempts[2] >= RETRANSMITTION_MAX_ATTEMPTS) {
         mailboxes |= CAN_TX_MAILBOX2;
         retransmittion_attempts[1] = 0;
     }
 
-    if(hcan->ErrorCode & (HAL_CAN_ERROR_BD | HAL_CAN_ERROR_BR)) mailboxes = CAN_TX_MAILBOX0 | CAN_TX_MAILBOX1 | CAN_TX_MAILBOX2;
+    if (hcan->ErrorCode & (HAL_CAN_ERROR_BD | HAL_CAN_ERROR_BR))
+        mailboxes = CAN_TX_MAILBOX0 | CAN_TX_MAILBOX1 | CAN_TX_MAILBOX2;
 
-    if(mailboxes != 0) HAL_CAN_AbortTxRequest(hcan, mailboxes);
+    if (mailboxes != 0)
+        HAL_CAN_AbortTxRequest(hcan, mailboxes);
 }
 
 void HAL_CAN_TxMailbox0CompleteCallback(CAN_HandleTypeDef *hcan) {

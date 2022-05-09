@@ -1,5 +1,6 @@
-#include <string.h>
 #include "blink.h"
+
+#include <string.h>
 
 #define index_blink_run() blink_run(&led_blink);
 

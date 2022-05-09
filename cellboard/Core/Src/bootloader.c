@@ -1,15 +1,16 @@
 #include "bootloader.h"
+
 #include "can.h"
-#include "i2c.h"
-#include "spi.h"
-#include "usart.h"
-#include "tim.h"
-#include "main.h"
 #include "cellboard_config.h"
+#include "i2c.h"
+#include "main.h"
+#include "spi.h"
+#include "tim.h"
+#include "usart.h"
 
 void BootLoaderInit() {
-    void (*SysMemBootJump)(void) = (void (*)(void)) (*((uint32_t*)(BOOTLOADER_ADDR + 4)));
-    uint32_t msp_addr = *(uint32_t*)BOOTLOADER_ADDR;
+    void (*SysMemBootJump)(void) = (void (*)(void))(*((uint32_t *)(BOOTLOADER_ADDR + 4)));
+    uint32_t msp_addr            = *(uint32_t *)BOOTLOADER_ADDR;
 
     HAL_CAN_DeInit(&hcan1);
     HAL_I2C_DeInit(&hi2c1);
@@ -29,5 +30,6 @@ void BootLoaderInit() {
 
     SysMemBootJump();
 
-    while(1);
+    while (1)
+        ;
 }

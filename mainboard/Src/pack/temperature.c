@@ -8,10 +8,10 @@
 
 #include "pack/temperature.h"
 
+#include "bms_fsm.h"
 #include "error/error.h"
 #include "main.h"
 #include "mainboard_config.h"
-#include "bms_fsm.h"
 
 #include <inttypes.h>
 #include <math.h>
@@ -60,17 +60,25 @@ temperature_t temperature_get_average() {
     return (temperature_t)round(average / PACK_TEMP_COUNT);
 }
 
-void temperature_set_cells(uint8_t index, temperature_t t1, temperature_t t2, temperature_t t3, temperature_t t4, temperature_t t5, temperature_t t6) {
-    temperatures[index] = t1;
-    temperatures[index+1] = t2;
-    temperatures[index+2] = t3;
-    temperatures[index+3] = t4;
-    temperatures[index+4] = t5;
-    temperatures[index+5] = t6;
+void temperature_set_cells(
+    uint8_t index,
+    temperature_t t1,
+    temperature_t t2,
+    temperature_t t3,
+    temperature_t t4,
+    temperature_t t5,
+    temperature_t t6) {
+    temperatures[index]     = t1;
+    temperatures[index + 1] = t2;
+    temperatures[index + 2] = t3;
+    temperatures[index + 3] = t4;
+    temperatures[index + 4] = t5;
+    temperatures[index + 5] = t6;
 }
 
 uint8_t temperature_get_cellboard_offset(uint8_t cellboard_index) {
     uint8_t index = 0;
-    while(bms_get_cellboard_distribution()[index] != cellboard_index) ++index;
-    return index*TEMP_SENSOR_COUNT;
+    while (bms_get_cellboard_distribution()[index] != cellboard_index)
+        ++index;
+    return index * TEMP_SENSOR_COUNT;
 }

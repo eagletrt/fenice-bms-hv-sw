@@ -11,10 +11,10 @@
 #define BAL_FSM_H
 
 //#include "bal.h"
+#include "can_comms.h"
 #include "cellboard_config.h"
 #include "fsm.h"
 #include "tim.h"
-#include "can_comms.h"
 
 #include <inttypes.h>
 
@@ -33,7 +33,7 @@ typedef struct {
 extern bal_fsm bal;
 
 void bal_fsm_init();
-void bal_timers_handler(TIM_HandleTypeDef* htim, fsm handle);
+void bal_timers_handler(TIM_HandleTypeDef *htim, fsm handle);
 void bal_oc_timer_handler(TIM_HandleTypeDef *htim);
 uint8_t bal_is_cells_empty();
 

@@ -8,6 +8,7 @@
  */
 
 #include "bal_fsm.h"
+
 #include "can_comms.h"
 #include "ltc6813_utils.h"
 #include "main.h"
@@ -26,8 +27,8 @@ void discharge_exit(fsm handle);
 void transition_callback(fsm handle);
 
 void bal_fsm_init() {
-    bal.cycle_length = DCTO_30S;
-    bal.fsm          = fsm_init(BAL_NUM_STATES, BAL_EV_NUM, NULL, transition_callback);
+    bal.cycle_length  = DCTO_30S;
+    bal.fsm           = fsm_init(BAL_NUM_STATES, BAL_EV_NUM, NULL, transition_callback);
     bal.is_s_pin_high = 0;
 
     fsm_state state;
@@ -68,7 +69,7 @@ void discharge_entry(fsm handle) {
     bal.is_s_pin_high = 1;
     ltc6813_set_balancing(&LTC6813_SPI, bal.cells, bal.cycle_length);
     //  Resetting and starting the DISCHARGE_TIMER
-    __HAL_TIM_SetCounter(&TIM_DISCHARGE, 0U); 
+    __HAL_TIM_SetCounter(&TIM_DISCHARGE, 0U);
     __HAL_TIM_SetCompare(&TIM_DISCHARGE, TIM_CHANNEL_1, TIM_MS_TO_TICKS(&TIM_DISCHARGE, BAL_TIME_ON));
     __HAL_TIM_CLEAR_IT(&TIM_DISCHARGE, TIM_IT_UPDATE);
     HAL_TIM_Base_Start_IT(&TIM_DISCHARGE);
@@ -94,15 +95,15 @@ void discharge_exit(fsm handle) {
   *         so the cells_length will be set to zero
   * @retval None
   */
-void bal_timers_handler(TIM_HandleTypeDef* htim, fsm handle){
+void bal_timers_handler(TIM_HandleTypeDef *htim, fsm handle) {
     memset(bal.cells, 0, sizeof(bal.cells));
     fsm_trigger_event(bal.fsm, EV_BAL_STOP);
 }
 
 void bal_oc_timer_handler(TIM_HandleTypeDef *htim) {
-    if(htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1) {
+    if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1) {
         uint32_t cmp = __HAL_TIM_GetCompare(htim, TIM_CHANNEL_1);
-        if(bal.is_s_pin_high){
+        if (bal.is_s_pin_high) {
             bms_balancing_cells cells = bms_balancing_cells_default;
             ltc6813_set_balancing(&LTC6813_SPI, cells, 0);
             __HAL_TIM_SetCompare(htim, TIM_CHANNEL_1, cmp + TIM_MS_TO_TICKS(htim, BAL_TIME_OFF));

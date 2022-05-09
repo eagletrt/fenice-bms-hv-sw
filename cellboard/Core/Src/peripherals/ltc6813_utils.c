@@ -20,7 +20,7 @@ size_t ltc6813_read_voltages(SPI_HandleTypeDef *hspi, voltage_t *volts) {
 
     cmd[0] = 0;  // Broadcast
 
-    if(ltc6813_poll_convertion(hspi, 10) == HAL_TIMEOUT) {
+    if (ltc6813_poll_convertion(hspi, 10) == HAL_TIMEOUT) {
         ERROR_SET(ERROR_LTC_COMM);
         return 0;
     }
@@ -65,11 +65,11 @@ size_t ltc6813_read_voltages(SPI_HandleTypeDef *hspi, voltage_t *volts) {
             for (uint8_t cell = 0; cell < LTC6813_REG_CELL_COUNT; cell++) {
                 // offset by register (3 slots) + cell //+ offset by ltc (18 slots)
                 uint16_t index = (reg * LTC6813_REG_CELL_COUNT) + cell;  //+(ltc * CELLBOARD_CELL_COUNT) ;
-                
-                volts[index] = 
+
+                volts[index] =
                     ltc6813_convert_voltage(data + (sizeof(voltage_t) * cell));  //&data[sizeof(voltage_t) * cell]);
                 //ltc6813_check_voltage(volts[index], index);
-                
+
                 count++;
             }
         } else {
@@ -82,8 +82,8 @@ size_t ltc6813_read_voltages(SPI_HandleTypeDef *hspi, voltage_t *volts) {
 }
 
 void ltc6813_build_dcc(bms_balancing_cells cells, uint8_t cfgar[8], uint8_t cfgbr[8]) {
-    for(uint8_t i = 0; i < LTC6813_CELL_COUNT; ++i) {
-        if(getBit(cells, i)) {
+    for (uint8_t i = 0; i < LTC6813_CELL_COUNT; ++i) {
+        if (getBit(cells, i)) {
             if (i < 8) {
                 cfgar[4] |= dcc[i];
             } else if (i >= 8 && i < 12) {

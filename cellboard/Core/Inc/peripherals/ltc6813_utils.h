@@ -8,9 +8,9 @@
  */
 #pragma once
 
+#include "can_comms.h"
 #include "cellboard_config.h"
 #include "ltc6813.h"
-#include "can_comms.h"
 
 #include <inttypes.h>
 #include <main.h>
@@ -56,4 +56,4 @@ void ltc6813_set_balancing(SPI_HandleTypeDef *hspi, bms_balancing_cells cells, i
  *
  * @returns	Voltage [mV]
  */
-#define ltc6813_convert_voltage(v_data) (*((voltage_t*)(v_data)))
+#define ltc6813_convert_voltage(v_data) (*((voltage_t *)(v_data)))

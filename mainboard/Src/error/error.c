@@ -8,9 +8,9 @@
 
 #include "error/error.h"
 
+#include "bms_fsm.h"
 #include "error/error_list_ref.h"
 #include "mainboard_config.h"
-#include "bms_fsm.h"
 #include "tim.h"
 
 #include <stdlib.h>
@@ -78,7 +78,7 @@ bool error_set_timer(error_t *error) {
     if (error != NULL && error->state == STATE_WARNING && error_timeouts[error->id] < SOFT) {
         // Set counter period register to the delta
         volatile uint16_t delta = get_timeout_delta(error);
-        uint16_t cnt          = __HAL_TIM_GET_COUNTER(&HTIM_ERR);
+        uint16_t cnt            = __HAL_TIM_GET_COUNTER(&HTIM_ERR);
         __HAL_TIM_SET_COMPARE(&HTIM_ERR, TIM_CHANNEL_1, cnt + TIM_MS_TO_TICKS(&HTIM_ERR, delta));
         __HAL_TIM_CLEAR_FLAG(&HTIM_ERR, TIM_IT_CC1);
         HAL_TIM_OC_Start_IT(&HTIM_ERR, TIM_CHANNEL_1);
@@ -194,8 +194,8 @@ bool error_reset(error_id id, uint8_t offset) {
     return false;
 }
 
-int8_t error_is_fatal(llist_node n){
-    if(((error_t*)n)->state == STATE_FATAL){
+int8_t error_is_fatal(llist_node n) {
+    if (((error_t *)n)->state == STATE_FATAL) {
         return 1;
     }
     return 0;

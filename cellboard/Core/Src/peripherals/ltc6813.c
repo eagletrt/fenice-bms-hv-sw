@@ -65,7 +65,7 @@ HAL_StatusTypeDef ltc6813_poll_convertion(SPI_HandleTypeDef *hspi, uint32_t time
     uint32_t tick;
     cmd[0] = 0b00000111;
     cmd[1] = 0b00010100;
-    pec = ltc6813_pec15(2, cmd);
+    pec    = ltc6813_pec15(2, cmd);
     cmd[2] = (uint8_t)(pec >> 8);
     cmd[3] = (uint8_t)(pec);
 
@@ -73,16 +73,17 @@ HAL_StatusTypeDef ltc6813_poll_convertion(SPI_HandleTypeDef *hspi, uint32_t time
     ltc6813_enable_cs(hspi);
     HAL_SPI_Transmit(hspi, cmd, 4, 100);
 
-    tick = HAL_GetTick();
-    *(uint32_t*)cmd = 0;
+    tick             = HAL_GetTick();
+    *(uint32_t *)cmd = 0;
     do {
         HAL_SPI_Receive(hspi, cmd, 4, 10);
-    } while (!(*(uint32_t*)cmd) && (HAL_GetTick() - tick < timeout)); //SDO is pulled down until the convertion is finished,
-                                                                        //so exit from this cicle when the received data is no more 0
+    } while (!(*(uint32_t *)cmd) &&
+             (HAL_GetTick() - tick < timeout));  //SDO is pulled down until the convertion is finished,
+                                                 //so exit from this cicle when the received data is no more 0
 
     ltc6813_disable_cs(hspi);
 
-    return *(uint32_t*)cmd ? HAL_OK : HAL_TIMEOUT;
+    return *(uint32_t *)cmd ? HAL_OK : HAL_TIMEOUT;
 }
 
 void ltc6813_wrcfg(SPI_HandleTypeDef *hspi, wrcfg_register reg, uint8_t cfgr[8]) {

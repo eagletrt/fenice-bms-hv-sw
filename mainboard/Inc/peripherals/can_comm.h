@@ -8,13 +8,12 @@
 
 #pragma once
 
-#include "../primary/ids.h"
+#include "../../bms/c/bms.h"
 #include "../../primary/c/primary.h"
 #include "../bms/ids.h"
-#include "../../bms/c/bms.h"
+#include "../primary/ids.h"
 #include "can.h"
 #include "pack/voltage.h"
-
 
 #define CAN_1MBIT_PRE 3
 #define CAN_1MBIT_BS1 CAN_BS1_12TQ
@@ -26,10 +25,11 @@
 
 typedef enum { CAN_BITRATE_1MBIT, CAN_BITRATE_125KBIT } CAN_Bitrate;
 
-#define CAN_WAIT(C)                                                                                     \
-    {                                                                                                   \
-        while (HAL_CAN_GetTxMailboxesFreeLevel(C) == 0);                                                \
-    } 
+#define CAN_WAIT(C)                                     \
+    {                                                   \
+        while (HAL_CAN_GetTxMailboxesFreeLevel(C) == 0) \
+            ;                                           \
+    }
 
 #define CAN_SLAVE_START_FILTER_BANK 14
 

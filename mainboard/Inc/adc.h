@@ -54,4 +54,3 @@ void MX_ADC3_Init(void);
 #endif
 
 #endif /* __ADC_H__ */
-
