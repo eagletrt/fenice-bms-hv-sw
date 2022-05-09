@@ -13,7 +13,15 @@
 #include "mainboard_config.h"
 #include "tim.h"
 
-typedef enum { IMD_SC, IMD_NORMAL, IMD_UNDER_VOLTAGE, IMD_START_MEASURE, IMD_DEVICE_ERROR, IMD_EARTH_FAULT } IMD_STATE;
+typedef enum {
+    IMD_SC,
+    IMD_NORMAL,
+    IMD_UNDER_VOLTAGE,
+    IMD_START_MEASURE,
+    IMD_DEVICE_ERROR,
+    IMD_EARTH_FAULT,
+    IMD_STATES_N
+} IMD_STATE;
 
 void imd_init();
 /**
@@ -52,4 +60,4 @@ IMD_STATE imd_get_state();
  *          IMD_DEVICE_ERROR    ==> 1 when valid, -1 when not
  *          IMD_EARTH_FAULT     ==> 1 when valid, -1 when not
  */
-int16_t imd_get_details();
+int32_t imd_get_details();
