@@ -8,22 +8,24 @@
 
 #pragma once
 
+#include "energy/soc.h"
 #include "main.h"
-#include "tim.h"
-#include "usart.h"
+#include "mainboard_config.h"
 #include "pack/current.h"
 #include "pack/voltage.h"
-#include "energy/soc.h"
-#include "mainboard_config.h"
+#include "tim.h"
+#include "usart.h"
 
-#define _20MS_INTERVAL      20
-#define _200MS_INTERVAL     200
-#define _500MS_INTERVAL     500
+#define _20MS_INTERVAL  20
+#define _200MS_INTERVAL 200
+#define _500MS_INTERVAL 500
+#define _5S_INTERVAL    5000
 
 enum {
-    _20MS_INTERVAL_FLAG = 0b00000001,
+    _20MS_INTERVAL_FLAG  = 0b00000001,
     _200MS_INTERVAL_FLAG = 0b00000010,
-    _500MS_INTERVAL_FLAG = 0b00000100
+    _500MS_INTERVAL_FLAG = 0b00000100,
+    _5S_INTERVAL_FLAG    = 0b00001000
 };
 
 typedef uint8_t measures_flags_t;
