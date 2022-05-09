@@ -24,8 +24,8 @@ void energy_init(energy_t *handle) {
     energy_set_count(*handle, 0);
     energy_set_time(*handle, 0);
     */
-   energy_set_count(handle, 0);
-   energy_set_time(handle, 0);
+    energy_set_count(handle, 0);
+    energy_set_time(handle, 0);
 }
 
 void energy_set_count(energy_t *handle, float energy) {

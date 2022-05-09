@@ -8,11 +8,12 @@
  */
 #include "pack/current.h"
 
-#include <math.h>
 #include "adc.h"
 #include "error.h"
 #include "main.h"
 #include "mainboard_config.h"
+
+#include <math.h>
 
 #define MEASURE_SAMPLE_SIZE 128
 
@@ -21,14 +22,14 @@ uint16_t adc_300[MEASURE_SAMPLE_SIZE] = {0};
 
 current_t current[CURRENT_SENSOR_NUM] = {0.f};
 
-float V0L = 0, V0H = 0; //voltage offset (Vout(0A))
+float V0L = 0, V0H = 0;  //voltage offset (Vout(0A))
 
 current_t _current_convert_low(float volt) {
     return (499.f / 300.f / 40e-3f) * (volt - V0L);
 }
 
 current_t _current_convert_high(float volt) {
-    return (499.f/ 300.f / 6.67e-3f) * (volt - V0H);
+    return (499.f / 300.f / 6.67e-3f) * (volt - V0H);
 }
 
 current_t _current_convert_shunt(float volt) {
@@ -50,15 +51,15 @@ uint32_t current_read(uint16_t shunt_adc_val) {
     }
 
     // Convert Hall-low (50A)
-    volatile float volt             = avg_50 * (3.3f / 4095 / MEASURE_SAMPLE_SIZE);
-    current[CURRENT_SENSOR_50]      = _current_convert_low(volt);
+    volatile float volt        = avg_50 * (3.3f / 4095 / MEASURE_SAMPLE_SIZE);
+    current[CURRENT_SENSOR_50] = _current_convert_low(volt);
 
     // Convert Hall-high (300A)
-    volt                            = avg_300 * (3.3f / 4095 / MEASURE_SAMPLE_SIZE);
-    current[CURRENT_SENSOR_300]     = _current_convert_high(volt);
+    volt                        = avg_300 * (3.3f / 4095 / MEASURE_SAMPLE_SIZE);
+    current[CURRENT_SENSOR_300] = _current_convert_high(volt);
 
     // Convert Shunt
-    current[CURRENT_SENSOR_SHUNT]   = _current_convert_shunt((float)shunt_adc_val);
+    current[CURRENT_SENSOR_SHUNT] = _current_convert_shunt((float)shunt_adc_val);
 
     // Check for over-current
     error_toggle_check(current_get_current() > PACK_MAX_CURRENT, ERROR_OVER_CURRENT, 0);
@@ -67,7 +68,7 @@ uint32_t current_read(uint16_t shunt_adc_val) {
 }
 
 void current_zero() {
-    uint32_t avg_50 = 0;
+    uint32_t avg_50  = 0;
     uint32_t avg_300 = 0;
     for (size_t i = 0; i < MEASURE_SAMPLE_SIZE; ++i) {
         avg_50 += adc_50[i];
@@ -78,16 +79,18 @@ void current_zero() {
 }
 
 current_t current_get_current() {
-    if(current[CURRENT_SENSOR_SHUNT] < 4 && current[CURRENT_SENSOR_50] < 4) return current[CURRENT_SENSOR_SHUNT];
-    if(current[CURRENT_SENSOR_50] < 34 && current[CURRENT_SENSOR_300] < 35) return current[CURRENT_SENSOR_50];
+    if (current[CURRENT_SENSOR_SHUNT] < 4 && current[CURRENT_SENSOR_50] < 4)
+        return current[CURRENT_SENSOR_SHUNT];
+    if (current[CURRENT_SENSOR_50] < 34 && current[CURRENT_SENSOR_300] < 35)
+        return current[CURRENT_SENSOR_50];
     return current[CURRENT_SENSOR_300];
 }
 current_t *current_get_current_sensors() {
     return current;
 }
 
-current_t current_get_current_from_sensor(uint8_t sensor){
-    if(sensor >= CURRENT_SENSOR_NUM){
+current_t current_get_current_from_sensor(uint8_t sensor) {
+    if (sensor >= CURRENT_SENSOR_NUM) {
         return -1;
     }
     return current[sensor];

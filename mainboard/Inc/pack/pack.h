@@ -13,20 +13,20 @@
 
 #include <inttypes.h>
 
-#define TS_ON_VALUE             GPIO_PIN_SET
-#define TS_OFF_VALUE            GPIO_PIN_RESET
+#define TS_ON_VALUE  GPIO_PIN_SET
+#define TS_OFF_VALUE GPIO_PIN_RESET
 
-#define AIRN_OFF_VALUE          GPIO_PIN_SET
-#define AIRN_ON_VALUE           GPIO_PIN_RESET
+#define AIRN_OFF_VALUE GPIO_PIN_SET
+#define AIRN_ON_VALUE  GPIO_PIN_RESET
 
-#define AIRP_OFF_VALUE          GPIO_PIN_SET
-#define AIRP_ON_VALUE           GPIO_PIN_RESET
+#define AIRP_OFF_VALUE GPIO_PIN_SET
+#define AIRP_ON_VALUE  GPIO_PIN_RESET
 
-#define PRECHARGE_OFF_VALUE     GPIO_PIN_SET
-#define PRECHARGE_ON_VALUE      GPIO_PIN_RESET
+#define PRECHARGE_OFF_VALUE GPIO_PIN_SET
+#define PRECHARGE_ON_VALUE  GPIO_PIN_RESET
 
-#define BMS_FAULT_OFF_VALUE     GPIO_PIN_SET
-#define BMS_FAULT_ON_VALUE      GPIO_PIN_RESET
+#define BMS_FAULT_OFF_VALUE GPIO_PIN_SET
+#define BMS_FAULT_ON_VALUE  GPIO_PIN_RESET
 
 void pack_set_ts_on(uint8_t value);
 void pack_set_airn_off(uint8_t value);

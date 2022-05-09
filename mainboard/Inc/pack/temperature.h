@@ -25,5 +25,12 @@ temperature_t *temperature_get_all();
 temperature_t temperature_get_max();
 temperature_t temperature_get_min();
 temperature_t temperature_get_average();
-void temperature_set_cells(uint8_t index, temperature_t t1, temperature_t t2, temperature_t t3, temperature_t t4, temperature_t t5, temperature_t t6);
+void temperature_set_cells(
+    uint8_t index,
+    temperature_t t1,
+    temperature_t t2,
+    temperature_t t3,
+    temperature_t t4,
+    temperature_t t5,
+    temperature_t t6);
 uint8_t temperature_get_cellboard_offset(uint8_t cellboard_index);
