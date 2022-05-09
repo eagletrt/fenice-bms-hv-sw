@@ -9,6 +9,7 @@
 
 #include "pack/voltage.h"
 #include "peripherals/adc124s021.h"
+#include "bms_fsm.h"
 
 #include "error/error.h"
 #include "main.h"
@@ -69,20 +70,26 @@ voltage_t *voltage_get_cells() {
     return voltage.cells;
 }
 
-voltage_t voltage_get_cell_max() {
-    voltage_t max_volt = 0;
-    for (size_t i = 0; i < PACK_CELL_COUNT; i++) {
-        max_volt = MAX(max_volt, voltage.cells[i]);
+voltage_t voltage_get_cell_max(uint8_t *index) {
+    voltage_t max_volt_index = 0;
+    for (size_t i = 1; i < PACK_CELL_COUNT; i++) {
+        if(voltage.cells[i] > voltage.cells[max_volt_index])
+            max_volt_index = i;
     }
-    return max_volt;
+
+    if(index != NULL) *index = max_volt_index;
+    return voltage.cells[max_volt_index];
 }
 
-voltage_t voltage_get_cell_min() {
-    voltage_t min_volt = UINT16_MAX;
-    for (size_t i = 0; i < PACK_CELL_COUNT; i++) {
-        min_volt = MIN(min_volt, voltage.cells[i]);
+voltage_t voltage_get_cell_min(uint8_t *index) {
+    voltage_t min_volt_index = 0;
+    for (size_t i = 1; i < PACK_CELL_COUNT; i++) {
+        if(voltage.cells[i] < voltage.cells[min_volt_index] && voltage.cells[i] != 0)
+            min_volt_index = i;
     }
-    return min_volt;
+
+    if(index != NULL) *index = min_volt_index;
+    return voltage.cells[min_volt_index];
 }
 
 voltage_t voltage_get_bus() {
@@ -97,4 +104,10 @@ void voltage_set_cells(uint16_t index, voltage_t v1, voltage_t v2, voltage_t v3)
     voltage.cells[index] = v1;
     voltage.cells[index+1] = v2;
     voltage.cells[index+2] = v3;
+}
+
+uint8_t voltage_get_cellboard_offset(uint8_t cellboard_index) {
+    uint8_t index = 0;
+    while(bms_get_cellboard_distribution()[index] != cellboard_index) ++index;
+    return index*CELLBOARD_CELL_COUNT;
 }

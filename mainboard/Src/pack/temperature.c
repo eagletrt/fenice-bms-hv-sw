@@ -11,6 +11,7 @@
 #include "error/error.h"
 #include "main.h"
 #include "mainboard_config.h"
+#include "bms_fsm.h"
 
 #include <inttypes.h>
 #include <math.h>
@@ -66,4 +67,10 @@ void temperature_set_cells(uint8_t index, temperature_t t1, temperature_t t2, te
     temperatures[index+3] = t4;
     temperatures[index+4] = t5;
     temperatures[index+5] = t6;
+}
+
+uint8_t temperature_get_cellboard_offset(uint8_t cellboard_index) {
+    uint8_t index = 0;
+    while(bms_get_cellboard_distribution()[index] != cellboard_index) ++index;
+    return index*TEMP_SENSOR_COUNT;
 }

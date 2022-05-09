@@ -15,13 +15,6 @@
 
 typedef uint16_t voltage_t;
 
-typedef enum { VOLTAGE_CELLBOARD_0_OFFSET = 0, 
-    VOLTAGE_CELLBOARD_1_OFFSET = LTC6813_CELL_COUNT*1, 
-    VOLTAGE_CELLBOARD_2_OFFSET = LTC6813_CELL_COUNT*2, 
-    VOLTAGE_CELLBOARD_3_OFFSET = LTC6813_CELL_COUNT*3, 
-    VOLTAGE_CELLBOARD_4_OFFSET = LTC6813_CELL_COUNT*4, 
-    VOLTAGE_CELLBOARD_5_OFFSET = LTC6813_CELL_COUNT*5} VOLTAGE_CELLBOARD_START_INDEX;
-
 void voltage_init();
 
 /**
@@ -30,8 +23,9 @@ void voltage_init();
 void voltage_measure(voltage_t voltages[2]);
 
 voltage_t *voltage_get_cells();
-voltage_t voltage_get_cell_max();
-voltage_t voltage_get_cell_min();
+voltage_t voltage_get_cell_max(uint8_t *index);
+voltage_t voltage_get_cell_min(uint8_t *index);
 voltage_t voltage_get_bus();
 voltage_t voltage_get_internal();
 void voltage_set_cells(uint16_t index, voltage_t v1, voltage_t v2, voltage_t v3);
+uint8_t voltage_get_cellboard_offset(uint8_t cellboard_index);
