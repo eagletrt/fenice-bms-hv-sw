@@ -17,6 +17,8 @@
 //=================================== General ===============================
 //===========================================================================
 
+#define DISCHARGE_R     10//Ohm
+#define CELL_CAPACITY   3.9//Ah
 /**
  * Maximum can payload. for CAN 2.0A is 8 bytes
  */
@@ -153,14 +155,16 @@ static const uint8_t TEMP_SENSOR_ADDRESS_CODING[TEMP_SENSORS_PER_STRIP] = {000, 
 /**
  *  How much does a balancing cycle last (ms)
  */
-#define BAL_CYCLE_LENGTH    30000
-#define BAL_TIME_ON         1000
-#define BAL_TIME_OFF        1000
+#define BAL_CYCLE_LENGTH        30000
+#define BAL_TIME_ON             1000
+#define BAL_TIME_OFF            1000
 
 /**
  *  How much to wait for voltages to stabilize after a balancing cycle [ms]
  */
-#define BAL_COOLDOWN_DELAY 5000
+#define BAL_COOLDOWN_DELAY      5000
+
+#define DISCHARGE_DUTY_CYCLE    (((float)BAL_CYCLE_LENGTH*BAL_TIME_ON/(BAL_TIME_ON+BAL_TIME_OFF))/(BAL_CYCLE_LENGTH+BAL_COOLDOWN_DELAY))
 
 // @section Pre-charge
 
