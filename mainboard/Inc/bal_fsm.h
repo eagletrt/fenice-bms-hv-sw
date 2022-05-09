@@ -11,8 +11,8 @@
 #define BAL_FSM_H
 
 #include "bal.h"
-#include "fsm.h"
 #include "can_comm.h"
+#include "fsm.h"
 #include "tim.h"
 
 enum { BAL_OFF, BAL_COMPUTE, BAL_DISCHARGE, BAL_COOLDOWN, BAL_NUM_STATES };
@@ -24,6 +24,7 @@ typedef struct {
     bms_balancing_status status[LTC6813_COUNT];
     uint32_t discharge_time;
     uint32_t cycle_length;
+    voltage_t target;
 } bal_fsm;
 
 extern bal_fsm bal;
