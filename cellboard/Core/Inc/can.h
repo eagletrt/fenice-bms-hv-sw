@@ -37,10 +37,12 @@ extern CAN_HandleTypeDef hcan1;
 /* USER CODE BEGIN Private defines */
 #define BMS_CAN hcan1
 
-#define CAN_WAIT(C)                                       \
-    {                                                     \
-        while (HAL_CAN_GetTxMailboxesFreeLevel((C)) == 0) \
-            ;                                             \
+#define CAN_WAIT(C)                                             \
+    {                                                           \
+        uint32_t tick = HAL_GetTick();                          \
+        while (HAL_CAN_GetTxMailboxesFreeLevel(C) == 0) {       \
+            if(HAL_GetTick() > tick + 10) return HAL_TIMEOUT;   \
+        }                                                       \
     }
 /* USER CODE END Private defines */
 

@@ -152,22 +152,24 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         }
         tx_header.DLC = serialize_primary_HV_CELL_BALANCING_STATUS(buffer, bal_status);
     } else if (id == ID_HV_CELLS_TEMP) {
+        uint8_t status = 0;
         temperature_t *temps = temperature_get_all();
         for (uint8_t i = 0; i < PACK_TEMP_COUNT; i += 6) {
             tx_header.DLC = serialize_primary_HV_CELLS_TEMP(
                 buffer, i, temps[i], temps[i + 1], temps[i + 2], temps[i + 3], temps[i + 4], temps[i + 5], 0);
-            can_send(&CAR_CAN, buffer, &tx_header);
+            status += can_send(&CAR_CAN, buffer, &tx_header);
             HAL_Delay(1);
         }
-        return HAL_OK;
+        return status == 0 ? HAL_OK : HAL_ERROR;
     } else if (id == ID_HV_CELLS_VOLTAGE) {
+        uint8_t status = 0;
         voltage_t *volts = voltage_get_cells();
         for (uint8_t i = 0; i < PACK_CELL_COUNT; i += 3) {
             tx_header.DLC = serialize_primary_HV_CELLS_VOLTAGE(buffer, i, volts[i], volts[i + 1], volts[i + 2]);
-            can_send(&CAR_CAN, buffer, &tx_header);
+            status += can_send(&CAR_CAN, buffer, &tx_header);
             HAL_Delay(1);
         }
-        return HAL_OK;
+        return status == 0 ? HAL_OK : HAL_ERROR;
     } else {
         return HAL_ERROR;
     }
@@ -181,19 +183,20 @@ HAL_StatusTypeDef can_bms_send(uint16_t id) {
     tx_header.StdId = id;
 
     if (id == ID_BALANCING) {
+        uint8_t status = 0;
         uint8_t *distr = bms_get_cellboard_distribution();
         register uint16_t i;
         for (i = 0; i < CELLBOARD_COUNT; ++i) {
             tx_header.DLC = serialize_bms_BALANCING(buffer, distr[i], bal.cells[i]);
-            can_send(&BMS_CAN, buffer, &tx_header);
+            status += can_send(&BMS_CAN, buffer, &tx_header);
         }
-        return HAL_OK;  //TODO: ugly
+        return status == 0 ? HAL_OK : HAL_ERROR;  //TODO: ugly
     } else if (id == ID_FW_UPDATE) {
         tx_header.DLC = serialize_bms_FW_UPDATE(buffer, 0);  //TODO: set board_index
-        can_send(&BMS_CAN, buffer, &tx_header);
+        return can_send(&BMS_CAN, buffer, &tx_header);
+    } else {
+        return HAL_ERROR;
     }
-
-    return can_send(&BMS_CAN, buffer, &tx_header);
 }
 
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {

@@ -25,10 +25,12 @@
 
 typedef enum { CAN_BITRATE_1MBIT, CAN_BITRATE_125KBIT } CAN_Bitrate;
 
-#define CAN_WAIT(C)                                     \
-    {                                                   \
-        while (HAL_CAN_GetTxMailboxesFreeLevel(C) == 0) \
-            ;                                           \
+#define CAN_WAIT(C)                                             \
+    {                                                           \
+        uint32_t tick = HAL_GetTick();                          \
+        while (HAL_CAN_GetTxMailboxesFreeLevel(C) == 0) {       \
+            if(HAL_GetTick() > tick + 10) return HAL_TIMEOUT;   \
+        }                                                       \
     }
 
 #define CAN_SLAVE_START_FILTER_BANK 14
