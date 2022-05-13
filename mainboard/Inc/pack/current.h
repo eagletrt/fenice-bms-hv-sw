@@ -52,3 +52,5 @@ current_t *current_get_zero();
  * @brief Returns the current flowing through the specified sensor
  */
 current_t current_get_current_from_sensor(uint8_t sensor);
+
+void current_check_errors();

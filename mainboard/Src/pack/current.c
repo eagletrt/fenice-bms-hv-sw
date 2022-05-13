@@ -95,3 +95,7 @@ current_t current_get_current_from_sensor(uint8_t sensor) {
     }
     return current[sensor];
 }
+
+void current_check_errors() {
+    error_toggle_check(current[CURRENT_SENSOR_300] > PACK_MAX_CURRENT, ERROR_OVER_CURRENT, 0);
+}

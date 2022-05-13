@@ -23,13 +23,9 @@ void temperature_init() {
     memset(temperatures, 0, sizeof(temperatures));
 }
 
-void temperature_check() {
+void temperature_check_errors() {
     for (size_t i = 0; i < PACK_TEMP_COUNT; i++) {
-        if (temperatures[i] > CELL_MAX_TEMPERATURE) {
-            error_set(ERROR_CELL_OVER_TEMPERATURE, i, HAL_GetTick());
-        } else {
-            error_reset(ERROR_CELL_OVER_TEMPERATURE, i);
-        }
+        error_toggle_check(temperatures[i] > CELL_MAX_TEMPERATURE, ERROR_CELL_OVER_TEMPERATURE, i);
     }
 }
 
