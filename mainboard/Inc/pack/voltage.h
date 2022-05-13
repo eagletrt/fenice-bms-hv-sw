@@ -29,3 +29,4 @@ voltage_t voltage_get_bus();
 voltage_t voltage_get_internal();
 void voltage_set_cells(uint16_t index, voltage_t v1, voltage_t v2, voltage_t v3);
 uint8_t voltage_get_cellboard_offset(uint8_t cellboard_index);
+void voltage_check_errors();

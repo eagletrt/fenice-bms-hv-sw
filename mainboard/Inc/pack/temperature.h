@@ -19,7 +19,7 @@ void temperature_init();
  * @brief	Updates the pack's temperature stats
  * @details It updates *_temperature variables with the data of the pack
  */
-void temperature_check();
+void temperature_check_errors();
 
 temperature_t *temperature_get_all();
 temperature_t temperature_get_max();

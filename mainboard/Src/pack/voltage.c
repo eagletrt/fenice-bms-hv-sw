@@ -14,6 +14,7 @@
 #include "main.h"
 #include "peripherals/adc124s021.h"
 #include "spi.h"
+#include "mainboard_config.h"
 
 #define CONV_COEFF 38.03703704f  //(10MOhm + 270kOhm) / 270kOhm
 
@@ -53,11 +54,11 @@ void voltage_measure(voltage_t voltages[2]) {
     }
 
     for (uint16_t i = 0; i < PACK_CELL_COUNT; i++) {
-        sum += voltage.cells[i];
+        sum += voltage.cells[i] / 100;
     }
 
     // Check if difference between readings from the ADC and cellboards is greater than 10V
-    if (MAX(voltages[1], sum) - MIN(voltages[1], sum) > 10 * 100) {
+    if (MAX(voltage.internal, sum) - MIN(voltage.internal, sum) > 10 * 100) {
         error_set(ERROR_INT_VOLTAGE_MISMATCH, 0, HAL_GetTick());
     } else {
         error_reset(ERROR_INT_VOLTAGE_MISMATCH, 0);
@@ -112,4 +113,12 @@ uint8_t voltage_get_cellboard_offset(uint8_t cellboard_index) {
     while (bms_get_cellboard_distribution()[index] != cellboard_index)
         ++index;
     return index * CELLBOARD_CELL_COUNT;
+}
+
+void voltage_check_errors() {
+    for(uint8_t i=0; i<PACK_CELL_COUNT; ++i) {
+        error_toggle_check(voltage.cells[i] > CELL_MAX_VOLTAGE, ERROR_CELL_OVER_VOLTAGE, i);
+        error_toggle_check(voltage.cells[i] < CELL_MIN_VOLTAGE, ERROR_CELL_UNDER_VOLTAGE, i);
+        error_toggle_check(voltage.cells[i] < CELL_WARN_VOLTAGE, ERROR_CELL_LOW_VOLTAGE, i);
+    }
 }

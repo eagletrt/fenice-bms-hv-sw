@@ -6,6 +6,7 @@
 #include "pwm.h"
 #include "soc.h"
 #include "spi.h"
+#include "temperature.h"
 #include "voltage.h"
 
 measures_flags_t flags;
@@ -23,21 +24,25 @@ void measures_init() {
     HAL_TIM_OC_Start_IT(&HTIM_MEASURES, TIM_CHANNEL_2);
     HAL_TIM_OC_Start_IT(&HTIM_MEASURES, TIM_CHANNEL_3);
     HAL_TIM_OC_Start_IT(&HTIM_MEASURES, TIM_CHANNEL_4);
+    flags = 0;
 }
 
 void measures_check_flags() {
     if (flags & _20MS_INTERVAL_FLAG) {
         measures_voltage_current_soc();
+        voltage_check_errors();
+        current_check_errors();
+        can_cellboards_check();
         can_car_send(ID_HV_VOLTAGE);
         can_car_send(ID_HV_CURRENT);
         can_car_send(ID_TS_STATUS);
         if (error_count > 0) {
             can_car_send(ID_HV_ERRORS);
         }
-        can_cellboards_check();
         flags &= ~_20MS_INTERVAL_FLAG;
     }
     if (flags & _200MS_INTERVAL_FLAG) {
+        temperature_check_errors();
         can_car_send(ID_HV_TEMP);
         flags &= ~_200MS_INTERVAL_FLAG;
     }
