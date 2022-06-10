@@ -33,4 +33,4 @@ void pack_set_airn_off(uint8_t value);
 void pack_set_airp_off(uint8_t value);
 void pack_set_precharge(uint8_t value);
 void pack_set_fault(uint8_t value);
-void pack_set_default_off();
+void pack_set_default_off(uint16_t prech_delay);

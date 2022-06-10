@@ -15,10 +15,10 @@
 #include "pack/pack.h"
 #include "tim.h"
 
-#define feedback_analog_threshold_h    11.0f
-#define feedback_analog_threshold_l    0.2f
-#define feedback_check_mux_threshold_h 3.4f
-#define feedback_check_mux_threshold_l 3.2f
+#define feedback_analog_threshold_h    9.5f / 4.3f
+#define feedback_analog_threshold_l    0.4f / 4.3f
+#define feedback_check_mux_threshold_h 3.5f / 4.3f
+#define feedback_check_mux_threshold_l 3.1f / 4.3f
 
 uint16_t feedback_adc_values[FEEDBACK_N] = {0};
 uint8_t fb_index                         = FEEDBACK_MUX_N - 1;
@@ -39,8 +39,9 @@ bool _is_adc_value_high(uint8_t index) {
 bool _is_adc_value_low(uint8_t index) {
     float val = FEEDBACK_CONVERT_ADC_TO_VOLTAGE(feedback_adc_values[index]);
 
-    if (index >= FEEDBACK_MUX_N)
-        val /= 4.3f;
+    if (index == FEEDBACK_SD_IN_POS || index == FEEDBACK_SD_OUT_POS || index == FEEDBACK_SD_END_POS) {
+        return val < 0.5f;
+    }
 
     return val < feedback_analog_threshold_l;
 }
@@ -54,27 +55,29 @@ bool _is_check_mux_ok() {
     return val > feedback_check_mux_threshold_l && val < feedback_check_mux_threshold_h;
 }
 
-void feedback_get_feedback_states(FEEDBACK_STATE *out_value) {
+void feedback_get_feedback_states(feedback_feed_t *out_value) {
     for (uint8_t i = 0; i < FEEDBACK_N; ++i) {
         feedback_t fb_i = 1U << i;
 
+        out_value[i].voltage = FEEDBACK_CONVERT_ADC_TO_VOLTAGE(feedback_adc_values[i]);
+
         if (fb_i == FEEDBACK_CHECK_MUX) {
             if (_is_check_mux_ok()) {
-                out_value[i] = FEEDBACK_STATE_H;
+                out_value[i].state = FEEDBACK_STATE_H;
             } else {
-                out_value[i] = FEEDBACK_STATE_ERROR;
+                out_value[i].state = FEEDBACK_STATE_ERROR;
             }
             continue;
         }
 
         if (_is_adc_value_valid(i)) {     //if the adc value is valid
             if (_is_adc_value_high(i)) {  //adc value is H
-                out_value[i] = FEEDBACK_STATE_H;
+                out_value[i].state = FEEDBACK_STATE_H;
             } else {  //adc value is L
-                out_value[i] = FEEDBACK_STATE_L;
+                out_value[i].state = FEEDBACK_STATE_L;
             }
         } else {  //adc value is not valid, circuitry error
-            out_value[i] = FEEDBACK_STATE_ERROR;
+            out_value[i].state = FEEDBACK_STATE_ERROR;
         }
     }
 }
@@ -86,7 +89,7 @@ feedback_t feedback_check(feedback_t fb_check_mask, feedback_t fb_value) {
         feedback_t fb_i     = 1U << i;
         feedback_t fb_i_val = fb_value & fb_i;
 
-        if (fb_i == FEEDBACK_CHECK_MUX) {
+        if (fb_i == FEEDBACK_CHECK_MUX && fb_i & fb_check_mask) {
             if (_is_check_mux_ok()) {
                 error_reset(ERROR_FEEDBACK_CIRCUITRY, i);
             } else {
