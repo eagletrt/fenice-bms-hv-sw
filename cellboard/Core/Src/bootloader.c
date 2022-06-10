@@ -8,7 +8,7 @@
 #include "tim.h"
 #include "usart.h"
 
-void BootLoaderInit() {
+void JumpToBlt() {
     void (*SysMemBootJump)(void) = (void (*)(void))(*((uint32_t *)(BOOTLOADER_ADDR + 4)));
     uint32_t msp_addr            = *(uint32_t *)BOOTLOADER_ADDR;
 
@@ -19,6 +19,7 @@ void BootLoaderInit() {
     HAL_UART_DeInit(&huart1);
     HAL_TIM_Base_DeInit(&TIM_DISCHARGE);
     HAL_RCC_DeInit();
+    HAL_DeInit();
     SysTick->CTRL = 0;
     SysTick->LOAD = 0;
     SysTick->VAL  = 0;

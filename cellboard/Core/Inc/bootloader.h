@@ -6,6 +6,6 @@
  * @author		Federico Carbone [federico.carbone@studenti.unitn.it]
  */
 
-#define BOOTLOADER_ADDR 0x1FFF0000
+#define BOOTLOADER_ADDR 0x8000000
 
-void BootLoaderInit();
+void JumpToBlt();

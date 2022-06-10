@@ -73,8 +73,7 @@ includeDirectories:
   - Core/Lib/micro-libs/fsm/**
   - Core/Lib/micro-libs/blink/**
   - Core/Lib/micro-libs/timer-utils/**
-  - Core/Lib/can-cicd/naked_generator/**
-  - Core/Lib/can-cicd/includes_generator/bms/**
+  - Core/Lib/can-cicd/lib/**
 
 
 # Files that should be included in the compilation.
@@ -89,8 +88,7 @@ sourceFiles:
   - Core/Lib/micro-libs/fsm/**
   - Core/Lib/micro-libs/blink/**
   - Core/Lib/micro-libs/timer-utils/**
-  - Core/Lib/can-cicd/naked_generator/**
-  - Core/Lib/can-cicd/includes_generator/**
+  - Core/Lib/can-cicd/lib/**
 
 
 # When no makefile is present it will show a warning pop-up.
