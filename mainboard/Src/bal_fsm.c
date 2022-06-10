@@ -53,7 +53,7 @@ void bal_set_threshold(uint16_t thresh) {
 
 void bal_fsm_init() {
     memset(bal.cells, 0, sizeof(bal.cells));
-    memset(bal.status, bms_balancing_status_OFF, sizeof(bal.status));
+    memset(bal.status, bms_BalancingStatus_OFF, sizeof(bal.status));
 
     bal.cycle_length = TIM_MS_TO_TICKS(&HTIM_BAL, BAL_CYCLE_LENGTH);
     bal.fsm          = fsm_init(BAL_NUM_STATES, BAL_EV_NUM, NULL, NULL);
@@ -89,8 +89,8 @@ void off_entry(fsm FSM) {
     HAL_TIM_OC_Stop_IT(&HTIM_BAL, TIM_CHANNEL_1);
     HAL_TIM_OC_Stop_IT(&HTIM_BAL, TIM_CHANNEL_2);
     cli_bms_debug("disabling balancing", 20);
-    memset(bal.cells, 0, sizeof(bms_balancing_cells) * LTC6813_COUNT);
-    can_bms_send(ID_BALANCING);
+    memset(bal.cells, 0, sizeof(bms_BalancingCells) * LTC6813_COUNT);
+    can_bms_send(bms_id_BALANCING);
 }
 
 void off_handler(fsm FSM, uint8_t event) {
@@ -99,21 +99,20 @@ void off_handler(fsm FSM, uint8_t event) {
             fsm_transition(FSM, BAL_COMPUTE);
             break;
         case EV_BAL_STOP:
-            memset(bal.cells, 0, sizeof(bms_balancing_cells) * LTC6813_COUNT);
-            can_bms_send(ID_BALANCING);
+            memset(bal.cells, 0, sizeof(bms_BalancingCells) * LTC6813_COUNT);
+            can_bms_send(bms_id_BALANCING);
             break;
     }
 }
 
 void compute_entry(fsm FSM) {
     if (bal_get_cells_to_discharge(
-            voltage_get_cells(), PACK_CELL_COUNT, bal_get_threshold() - 10, bal.cells, LTC6813_COUNT, bal.target) !=
-        0) {
+            voltage_get_cells(), PACK_CELL_COUNT, bal_get_threshold(), bal.cells, LTC6813_COUNT, bal.target) != 0) {
         fsm_transition(FSM, BAL_DISCHARGE);
         return;
     }
     cli_bms_debug("Non si può fare meglio di così.", 34);
-    can_bms_send(ID_BALANCING);
+    can_bms_send(bms_id_BALANCING);
     fsm_transition(FSM, BAL_OFF);
 }
 
@@ -127,7 +126,7 @@ void discharge_entry(fsm FSM) {
     __HAL_TIM_SET_COMPARE(&HTIM_BAL, TIM_CHANNEL_1, __HAL_TIM_GET_COUNTER(&HTIM_BAL) + bal.cycle_length);
     HAL_TIM_OC_Start_IT(&HTIM_BAL, TIM_CHANNEL_1);
 
-    can_bms_send(ID_BALANCING);
+    can_bms_send(bms_id_BALANCING);
     cli_bms_debug("Discharging cells", 18);
 }
 
@@ -141,12 +140,12 @@ void discharge_handler(fsm FSM, uint8_t event) {
                 if (bal_get_cells_to_discharge(
                         voltage_get_cells(),
                         PACK_CELL_COUNT,
-                        bal_get_threshold(),
+                        bal_get_threshold() + 5,
                         bal.cells,
                         LTC6813_COUNT,
                         bal.target) == 0) {
                     cli_bms_debug("Non si può fare meglio di così.", 34);
-                    can_bms_send(ID_BALANCING);
+                    can_bms_send(bms_id_BALANCING);
                     fsm_transition(FSM, BAL_OFF);
                 } else {
                     fsm_transition(FSM, BAL_COOLDOWN);
@@ -163,7 +162,7 @@ void discharge_exit(fsm FSM) {
 }
 
 void cooldown_entry(fsm FSM) {
-    memset(bal.cells, 0, sizeof(bms_balancing_cells) * LTC6813_COUNT);
+    memset(bal.cells, 0, sizeof(bms_BalancingCells) * LTC6813_COUNT);
     HAL_TIM_OC_Stop_IT(&HTIM_BAL, TIM_CHANNEL_2);
     __HAL_TIM_SET_COMPARE(
         &HTIM_BAL, TIM_CHANNEL_2, __HAL_TIM_GET_COUNTER(&HTIM_BAL) + TIM_MS_TO_TICKS(&HTIM_BAL, BAL_COOLDOWN_DELAY));
@@ -188,7 +187,7 @@ void cooldown_exit(fsm FSM) {
 }
 
 uint8_t bal_are_cells_off_status() {
-    bms_balancing_status off[LTC6813_COUNT] = {bms_balancing_status_OFF};
+    bms_BalancingStatus off[LTC6813_COUNT] = {bms_BalancingStatus_OFF};
     return memcmp(bal.status, off, sizeof(bal.status)) == 0;
 }
 

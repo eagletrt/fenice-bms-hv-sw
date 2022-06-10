@@ -1,16 +1,18 @@
 #include "adc124s021.h"
 
 #define ADC124S021_VREF                       3.3f
-#define ADC124S021_CONV_VALUE_TO_VOLTAGE_T(x) ((x) * (100 * ADC124S021_VREF / 4095))
+#define ADC124S021_CONV_VALUE_TO_VOLTAGE_T(x) ((x) * (ADC124S021_VREF / 4095))
 
 void _adc124s021_cs_enable(SPI_HandleTypeDef *spi, GPIO_TypeDef *port, uint16_t pin) {
     HAL_GPIO_WritePin(port, pin, GPIO_PIN_RESET);
-    while (spi->State != HAL_SPI_STATE_READY)
+    uint32_t tick = HAL_GetTick();
+    while (spi->State != HAL_SPI_STATE_READY && HAL_GetTick() - tick < 5)
         ;
 }
 
 void _adc124s021_cs_disable(SPI_HandleTypeDef *spi, GPIO_TypeDef *port, uint16_t pin) {
-    while (spi->State != HAL_SPI_STATE_READY)
+    uint32_t tick = HAL_GetTick();
+    while (spi->State != HAL_SPI_STATE_READY && HAL_GetTick() - tick < 5)
         ;
     HAL_GPIO_WritePin(port, pin, GPIO_PIN_SET);
 }
@@ -31,7 +33,7 @@ voltage_t adc124S021_read_channel(SPI_HandleTypeDef *spi, ADC124S021_CH channel)
     return ADC124S021_CONV_VALUE_TO_VOLTAGE_T(rcv);
 }
 
-bool adc124s021_read_channels(SPI_HandleTypeDef *spi, ADC124S021_CH *channels, uint8_t ch_number, voltage_t *data_out) {
+bool adc124s021_read_channels(SPI_HandleTypeDef *spi, ADC124S021_CH *channels, uint8_t ch_number, float *data_out) {
     uint8_t cmd[10], i;
     uint16_t rcv;
     cmd[1] = cmd[3] = cmd[5] = cmd[7] = cmd[8] = cmd[9] = 0XFF;

@@ -32,24 +32,27 @@ void measures_check_flags() {
         measures_voltage_current_soc();
         voltage_check_errors();
         current_check_errors();
-        can_cellboards_check();
-        can_car_send(ID_HV_VOLTAGE);
-        can_car_send(ID_HV_CURRENT);
-        can_car_send(ID_TS_STATUS);
+        can_car_send(primary_id_HV_VOLTAGE);
+        can_car_send(primary_id_HV_CURRENT);
+        can_car_send(primary_id_TS_STATUS);
         if (error_count > 0) {
-            can_car_send(ID_HV_ERRORS);
+            can_car_send(primary_id_HV_ERRORS);
         }
         flags &= ~_20MS_INTERVAL_FLAG;
     }
     if (flags & _200MS_INTERVAL_FLAG) {
+        can_cellboards_check();
         temperature_check_errors();
-        can_car_send(ID_HV_TEMP);
+        can_car_send(primary_id_HV_TEMP);
         flags &= ~_200MS_INTERVAL_FLAG;
     }
     if (flags & _500MS_INTERVAL_FLAG && bms.handcart_connected) {
-        can_car_send(ID_HV_CELLS_TEMP);
-        can_car_send(ID_HV_CELLS_VOLTAGE);
-        can_car_send(ID_HV_CELL_BALANCING_STATUS);
+        if (bms.handcart_connected) {
+            can_car_send(primary_id_HV_CELLS_TEMP);
+            can_car_send(primary_id_HV_CELLS_VOLTAGE);
+            can_car_send(primary_id_HV_CELL_BALANCING_STATUS);
+        }
+        can_car_send(primary_id_HV_CAN_FORWARD_STATUS);
         flags &= ~_500MS_INTERVAL_FLAG;
     }
     if (flags & _5S_INTERVAL_FLAG) {
@@ -59,11 +62,11 @@ void measures_check_flags() {
 }
 
 void measures_voltage_current_soc() {
-    ADC124S021_CH chs[3]         = {ADC124_BUS_CHANNEL, ADC124_INTERNAL_CHANNEL, ADC124_SHUNT_CHANNEL};
-    voltage_t adc124_measures[3] = {0};
+    ADC124S021_CH chs[3]     = {ADC124_BUS_CHANNEL, ADC124_INTERNAL_CHANNEL, ADC124_SHUNT_CHANNEL};
+    float adc124_measures[3] = {0};
     if (adc124s021_read_channels(&SPI_ADC124S, chs, 3, adc124_measures)) {
         voltage_measure(adc124_measures);
-        current_read((uint16_t)adc124_measures[2]);
+        current_read(adc124_measures[2]);
     }
     soc_sample_energy(HAL_GetTick());
 }
