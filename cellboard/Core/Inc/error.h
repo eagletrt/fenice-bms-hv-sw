@@ -24,9 +24,10 @@ typedef enum {
     ERROR_TEMP_COMM_3,
     ERROR_TEMP_COMM_4,
     ERROR_TEMP_COMM_5,
+    ERROR_OPEN_WIRE
 } error_types;
 
-typedef uint8_t error_t;
+typedef uint16_t error_t;
 
 extern error_t errors;
 

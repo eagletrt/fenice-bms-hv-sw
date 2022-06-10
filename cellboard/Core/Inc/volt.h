@@ -16,6 +16,10 @@ extern voltage_t voltages[CELLBOARD_CELL_COUNT];
 void volt_start_measure();
 void volt_read();
 
+void volt_start_open_wire_check(uint8_t status);
+void volt_read_open_wire(uint8_t status);
+void volt_open_wire_check();
+
 /**
  * @brief Returns the lower-voltage cell
  * 

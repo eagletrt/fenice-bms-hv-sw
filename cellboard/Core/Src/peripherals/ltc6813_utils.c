@@ -10,6 +10,7 @@
 #include "peripherals/ltc6813_utils.h"
 
 #include "main.h"
+#include "../Lib/can/lib/bms/c/network.h"
 
 #include <math.h>
 
@@ -57,7 +58,6 @@ size_t ltc6813_read_voltages(SPI_HandleTypeDef *hspi, voltage_t *volts) {
         data[7]          = (uint8_t)emu_pec;
 #endif
 
-        //for (uint8_t ltc = 0; ltc < CELLBOARD_COUNT; ltc++) {
         if (ltc6813_pec15(6, data) == (uint16_t)(data[6] * 256 + data[7])) {
             ERROR_UNSET(ERROR_LTC_COMM);
 
@@ -65,6 +65,8 @@ size_t ltc6813_read_voltages(SPI_HandleTypeDef *hspi, voltage_t *volts) {
             for (uint8_t cell = 0; cell < LTC6813_REG_CELL_COUNT; cell++) {
                 // offset by register (3 slots) + cell //+ offset by ltc (18 slots)
                 uint16_t index = (reg * LTC6813_REG_CELL_COUNT) + cell;  //+(ltc * CELLBOARD_CELL_COUNT) ;
+
+                if(ltc6813_convert_voltage(data + (sizeof(voltage_t) * cell)) == 0xFFFF) continue;
 
                 volts[index] =
                     ltc6813_convert_voltage(data + (sizeof(voltage_t) * cell));  //&data[sizeof(voltage_t) * cell]);
@@ -75,15 +77,13 @@ size_t ltc6813_read_voltages(SPI_HandleTypeDef *hspi, voltage_t *volts) {
         } else {
             ERROR_SET(ERROR_LTC_COMM);
         }
-        //}
     }
-
     return count;
 }
 
-void ltc6813_build_dcc(bms_balancing_cells cells, uint8_t cfgar[8], uint8_t cfgbr[8]) {
+void ltc6813_build_dcc(bms_BalancingCells cells, uint8_t cfgar[8], uint8_t cfgbr[8]) {
     for (uint8_t i = 0; i < LTC6813_CELL_COUNT; ++i) {
-        if (getBit(cells, i)) {
+        if (CANLIB_BITTEST(cells, i)) {
             if (i < 8) {
                 cfgar[4] |= dcc[i];
             } else if (i >= 8 && i < 12) {
@@ -105,7 +105,7 @@ void ltc6813_build_dcc(bms_balancing_cells cells, uint8_t cfgar[8], uint8_t cfgb
     cfgbr[7] = (uint8_t)(pec);
 }
 
-void ltc6813_set_balancing(SPI_HandleTypeDef *hspi, bms_balancing_cells cells, int dcto) {
+void ltc6813_set_balancing(SPI_HandleTypeDef *hspi, bms_BalancingCells cells, int dcto) {
     uint8_t cfgar[8] = {0};
     uint8_t cfgbr[8] = {0};
 

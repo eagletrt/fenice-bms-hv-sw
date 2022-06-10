@@ -6,11 +6,16 @@
 
 measurements_flag_t flags;
 
+uint8_t open_wire_check_status = 0;
+
 void measurements_init(TIM_HandleTypeDef *htim) {
     __HAL_TIM_SetCompare(
         htim, VOLTS_START_CONVERTION_CHANNEL, TIM_MS_TO_TICKS(htim, VOLT_MEASURE_INTERVAL - VOLT_MEASURE_TIME));
     __HAL_TIM_SetCompare(htim, VOLTS_READ_CHANNEL, TIM_MS_TO_TICKS(htim, VOLT_MEASURE_INTERVAL));
     __HAL_TIM_SetCompare(htim, TEMPS_READ_CHANNEL, TIM_MS_TO_TICKS(htim, TEMP_MEASURE_INTERVAL));
+    __HAL_TIM_CLEAR_IT(htim, TIM_IT_CC1);
+    __HAL_TIM_CLEAR_IT(htim, TIM_IT_CC2);
+    __HAL_TIM_CLEAR_IT(htim, TIM_IT_CC3);
     HAL_TIM_OC_Start_IT(htim, VOLTS_START_CONVERTION_CHANNEL);
     HAL_TIM_OC_Start_IT(htim, VOLTS_READ_CHANNEL);
     HAL_TIM_OC_Start_IT(htim, TEMPS_READ_CHANNEL);
@@ -19,18 +24,29 @@ void measurements_init(TIM_HandleTypeDef *htim) {
 
 void measurements_flags_check() {
     if (flags & MEASUREMENTS_VOLTS_START_CONVERTION_FLAG) {
-        volt_start_measure();
+        if (open_wire_check_status) {
+            volt_start_open_wire_check(open_wire_check_status);
+        } else {
+            volt_start_measure();
+        }
         flags &= ~MEASUREMENTS_VOLTS_START_CONVERTION_FLAG;
     }
     if (flags & MEASUREMENTS_VOLTS_READ_FLAG) {
-        volt_read();
-        can_send(TOPIC_VOLTAGE_INFO_FILTER);
+        if (open_wire_check_status) {
+            volt_read_open_wire(open_wire_check_status);
+            if (open_wire_check_status == 4)
+                volt_open_wire_check();
+        } else {
+            volt_read();
+            can_send(bms_topic_filter_VOLTAGE_INFO);
+        }
+        open_wire_check_status = (open_wire_check_status + 1) % 5;
         flags &= ~MEASUREMENTS_VOLTS_READ_FLAG;
     }
     if (flags & MEASUREMENTS_TEMPS_READ_FLAG) {
         temp_measure_all();
-        can_send(TOPIC_TEMPERATURE_INFO_FILTER);
-        can_send(TOPIC_STATUS_FILTER);
+        can_send(bms_topic_filter_TEMPERATURE_INFO);
+        can_send(0);
         flags &= ~MEASUREMENTS_TEMPS_READ_FLAG;
     }
 }
