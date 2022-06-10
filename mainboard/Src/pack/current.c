@@ -5,6 +5,7 @@
  * @date    Sep 24, 2021
  *
  * @author  Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @author  Federico Carbone [federico.carbone@studenti.unitn.it]
  */
 #include "pack/current.h"
 
@@ -33,7 +34,7 @@ current_t _current_convert_high(float volt) {
 }
 
 current_t _current_convert_shunt(float volt) {
-    return (volt - 46) / (1e-4f * 500 * 100);
+    return (volt - 0.468205124) / (1e-4f * 500);
 }
 
 void current_start_measure() {
@@ -41,7 +42,7 @@ void current_start_measure() {
     HAL_ADC_Start_DMA(&ADC_HALL300, (uint32_t *)adc_300, MEASURE_SAMPLE_SIZE);
 }
 
-uint32_t current_read(uint16_t shunt_adc_val) {
+uint32_t current_read(float shunt_adc_val) {
     uint32_t time    = HAL_GetTick();
     uint32_t avg_50  = 0;
     uint32_t avg_300 = 0;
@@ -59,7 +60,7 @@ uint32_t current_read(uint16_t shunt_adc_val) {
     current[CURRENT_SENSOR_300] = _current_convert_high(volt);
 
     // Convert Shunt
-    current[CURRENT_SENSOR_SHUNT] = _current_convert_shunt((float)shunt_adc_val);
+    current[CURRENT_SENSOR_SHUNT] = _current_convert_shunt(shunt_adc_val);
 
     // Check for over-current
     error_toggle_check(current_get_current() > PACK_MAX_CURRENT, ERROR_OVER_CURRENT, 0);

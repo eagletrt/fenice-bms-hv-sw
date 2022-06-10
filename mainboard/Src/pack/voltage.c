@@ -16,11 +16,15 @@
 #include "spi.h"
 #include "mainboard_config.h"
 
-#define CONV_COEFF 38.03703704f  //(10MOhm + 270kOhm) / 270kOhm
+#include <string.h>
+#include <math.h>
+
+#define CONV_COEFF 140.86f  //(10MOhm + 71.5kOhm) / 71.5kOhm
 
 struct voltage {
-    voltage_t bus;
-    voltage_t internal;
+    float vts_p;
+    float vbat_adc;
+    float vbat_sum;
     voltage_t cells[PACK_CELL_COUNT];
 };
 
@@ -32,37 +36,33 @@ struct voltage voltage;
  *
  */
 void voltage_init() {
-    voltage.bus      = 0;
-    voltage.internal = 0;
+    voltage.vts_p      = 0;
+    voltage.vbat_adc = 0;
 
-    for (size_t i = 0; i < PACK_CELL_COUNT; i++) {
-        voltage.cells[i] = 0;
-    }
+    memset(voltage.cells, 0, sizeof(voltage.cells));
 }
 
-voltage_t _voltage_conv_adc_to_voltage(voltage_t v) {
+float _voltage_conv_adc_to_voltage(voltage_t v) {
     return CONV_COEFF * v;
 }
 
-void voltage_measure(voltage_t voltages[2]) {
+void voltage_measure(float voltages[2]) {
     ADC124S021_CH chs[2] = {ADC124_BUS_CHANNEL, ADC124_INTERNAL_CHANNEL};
-    voltage_t sum        = 0;
+    voltage.vbat_sum        = 0;
 
     if (voltages != NULL || adc124s021_read_channels(&SPI_ADC124S, chs, 2, voltages)) {
-        voltage.bus      = _voltage_conv_adc_to_voltage(voltages[0]);
-        voltage.internal = _voltage_conv_adc_to_voltage(voltages[1]);
+        voltage.vts_p      = _voltage_conv_adc_to_voltage(voltages[0]);
+        voltage.vbat_adc = _voltage_conv_adc_to_voltage(voltages[1]);
     }
 
     for (uint16_t i = 0; i < PACK_CELL_COUNT; i++) {
-        sum += voltage.cells[i] / 100;
+        voltage.vbat_sum += voltage.cells[i];
     }
+    voltage.vbat_sum /= 10000;
 
     // Check if difference between readings from the ADC and cellboards is greater than 10V
-    if (MAX(voltage.internal, sum) - MIN(voltage.internal, sum) > 10 * 100) {
-        error_set(ERROR_INT_VOLTAGE_MISMATCH, 0, HAL_GetTick());
-    } else {
-        error_reset(ERROR_INT_VOLTAGE_MISMATCH, 0);
-    }
+    error_toggle_check(fabsf(voltage.vbat_adc - voltage.vbat_sum) > 10, ERROR_INT_VOLTAGE_MISMATCH, 0);
+
     //voltage.internal = MAX(voltages[1], sum);  // TODO: is this a good thing?
 }
 
@@ -94,12 +94,16 @@ voltage_t voltage_get_cell_min(uint8_t *index) {
     return voltage.cells[min_volt_index];
 }
 
-voltage_t voltage_get_bus() {
-    return voltage.bus;
+float voltage_get_vts_p() {
+    return voltage.vts_p;
 }
 
-voltage_t voltage_get_internal() {
-    return voltage.internal;
+float voltage_get_vbat_adc() {
+    return voltage.vbat_adc;
+}
+
+float voltage_get_vbat_sum() {
+    return voltage.vbat_sum;
 }
 
 void voltage_set_cells(uint16_t index, voltage_t v1, voltage_t v2, voltage_t v3) {
@@ -117,8 +121,8 @@ uint8_t voltage_get_cellboard_offset(uint8_t cellboard_index) {
 
 void voltage_check_errors() {
     for(uint8_t i=0; i<PACK_CELL_COUNT; ++i) {
-        error_toggle_check(voltage.cells[i] > CELL_MAX_VOLTAGE, ERROR_CELL_OVER_VOLTAGE, i);
-        error_toggle_check(voltage.cells[i] < CELL_MIN_VOLTAGE, ERROR_CELL_UNDER_VOLTAGE, i);
-        error_toggle_check(voltage.cells[i] < CELL_WARN_VOLTAGE, ERROR_CELL_LOW_VOLTAGE, i);
+        error_toggle_check(voltage.cells[i] > CELL_MAX_VOLTAGE, ERROR_CELL_OVER_VOLTAGE, 0);
+        error_toggle_check(voltage.cells[i] < CELL_MIN_VOLTAGE, ERROR_CELL_UNDER_VOLTAGE, 0);
+        error_toggle_check(voltage.cells[i] < CELL_WARN_VOLTAGE, ERROR_CELL_LOW_VOLTAGE, 0);
     }
 }
