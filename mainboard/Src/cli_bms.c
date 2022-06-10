@@ -30,7 +30,7 @@
 #include <string.h>
 
 // TODO: don't count manually
-#define N_COMMANDS 20
+#define N_COMMANDS 21
 
 cli_command_func_t _cli_volts;
 cli_command_func_t _cli_volts_all;
@@ -50,6 +50,7 @@ cli_command_func_t _cli_feedbacks;
 cli_command_func_t _cli_watch;
 cli_command_func_t _cli_cellboard_distribution;
 cli_command_func_t _cli_fans;
+cli_command_func_t _cli_pack;
 cli_command_func_t _cli_help;
 cli_command_func_t _cli_sigterm;
 cli_command_func_t _cli_taba;
@@ -62,13 +63,13 @@ const char *bal_state_names[BAL_NUM_STATES] =
     {[BAL_OFF] = "off", [BAL_COMPUTE] = "computing", [BAL_DISCHARGE] = "discharging", [BAL_COOLDOWN] = "cooldown"};
 
 const char *error_names[ERROR_NUM_ERRORS] = {
+    [ERROR_CELL_LOW_VOLTAGE]      = "low-voltage",
     [ERROR_CELL_UNDER_VOLTAGE]    = "under-voltage",
     [ERROR_CELL_OVER_VOLTAGE]     = "over-voltage",
     [ERROR_CELL_OVER_TEMPERATURE] = "over-temperature",
+    [ERROR_CELL_HIGH_TEMPERATURE] = "high-temperature",
     [ERROR_OVER_CURRENT]          = "over-current",
     [ERROR_CAN]                   = "CAN",
-    [ERROR_ADC_INIT]              = "ADC init",
-    [ERROR_ADC_TIMEOUT]           = "ADC timeout",
     [ERROR_INT_VOLTAGE_MISMATCH]  = "internal voltage mismatch",
     [ERROR_CELLBOARD_COMM]        = "cellboard communication",
     [ERROR_CELLBOARD_INTERNAL]    = "cellboard internal",
@@ -81,7 +82,7 @@ char const *const feedback_names[FEEDBACK_N] = {
     [FEEDBACK_TSAL_GREEN_FAULT_POS]         = "FEEDBACK_TSAL_GREEN_FAULT",
     [FEEDBACK_IMD_LATCHED_POS]              = "FEEDBACK_IMD_LATCHED",
     [FEEDBACK_TSAL_GREEN_FAULT_LATCHED_POS] = "FEEDBACK_TSAL_GREEN_FAULT_LATCHED",
-    [FEEDBACK_BMD_LATCHED_POS]              = "FEEDBACK_BMD_LATCHED",
+    [FEEDBACK_BMS_LATCHED_POS]              = "FEEDBACK_BMS_LATCHED",
     [FEEDBACK_EXT_LATCHED_POS]              = "FEEDBACK_EXT_LATCHED",
     [FEEDBACK_TSAL_GREEN_POS]               = "FEEDBACK_TSAL_GREEN",
     [FEEDBACK_TS_OVER_60V_STATUS_POS]       = "FEEDBACK_TS_OVER_60V_STATUS",
@@ -108,13 +109,14 @@ char const *const imd_state_names[IMD_STATES_N] = {
 
 char *command_names[N_COMMANDS] = {"volt",       "temp",  "status", "errors", "ts",          "bal",       "soc",
                                    "current",    "dmesg", "reset",  "imd",    "can_forward", "feedbacks", "watch",
-                                   "cell_distr", "fans",  "?",      "\003",   "\ta",         "sbor@"};
+                                   "cell_distr", "fans",  "pack",   "?",      "\003",        "\ta",       "sbor@"};
 
 cli_command_func_t *commands[N_COMMANDS] = {
-    &_cli_volts,   &_cli_temps,       &_cli_status,    &_cli_errors, &_cli_ts,
-    &_cli_balance, &_cli_soc,         &_cli_current,   &_cli_dmesg,  &_cli_reset,
-    &_cli_imd,     &_cli_can_forward, &_cli_feedbacks, &_cli_watch,  &_cli_cellboard_distribution,
-    &_cli_fans,    &_cli_help,        &_cli_sigterm,   &_cli_taba,   &_cli_sborat};
+    &_cli_volts,   &_cli_temps,       &_cli_status,    &_cli_errors,  &_cli_ts,
+    &_cli_balance, &_cli_soc,         &_cli_current,   &_cli_dmesg,   &_cli_reset,
+    &_cli_imd,     &_cli_can_forward, &_cli_feedbacks, &_cli_watch,   &_cli_cellboard_distribution,
+    &_cli_fans,    &_cli_pack,        &_cli_help,      &_cli_sigterm, &_cli_taba,
+    &_cli_sborat};
 
 cli_t cli_bms;
 bool dmesg_ena = true;
@@ -163,15 +165,17 @@ void _cli_volts(uint16_t argc, char **argv, char *out) {
         voltage_t min = voltage_get_cell_min(NULL);
         sprintf(
             out,
-            "bus.......%.2f V\r\n"
-            "internal..%.2f V\r\n"
-            "average...%.2f V\r\n"
-            "max.......%.3f V\r\n"
-            "min.......%.3f V\r\n"
-            "delta.....%.3f V\r\n",
-            (float)voltage_get_bus() / 100,
-            (float)voltage_get_internal() / 100,
-            (float)voltage_get_internal() / PACK_CELL_COUNT / 100,
+            "vts_p.......%.2f V\r\n"
+            "vbat_adc....%.2f V\r\n"
+            "vbat_sum....%.2f V\r\n"
+            "average.....%.2f V\r\n"
+            "max.........%.3f V\r\n"
+            "min.........%.3f V\r\n"
+            "delta.......%.3f V\r\n",
+            voltage_get_vts_p(),
+            voltage_get_vbat_adc(),
+            voltage_get_vbat_sum(),
+            voltage_get_vbat_adc() / PACK_CELL_COUNT,
             (float)max / 10000,
             (float)min / 10000,
             (float)(max - min) / 10000);
@@ -216,7 +220,7 @@ void _cli_volts_all(uint16_t argc, char **argv, char *out) {
                 sprintf(out + strlen(out), "[%3u %-.3fV] ", i, cell_v);
         } else {
             if (i == max_index) {
-                if (getBit(bal.cells[i / CELLBOARD_CELL_COUNT], i % CELLBOARD_CELL_COUNT)) {
+                if (CANLIB_BITTEST(bal.cells[i / CELLBOARD_CELL_COUNT], i % CELLBOARD_CELL_COUNT)) {
                     total_power += cell_v * cell_v;
                     sprintf(
                         out + strlen(out),
@@ -227,7 +231,7 @@ void _cli_volts_all(uint16_t argc, char **argv, char *out) {
                 } else {
                     sprintf(out + strlen(out), RED_BG("[%3u %-.3fV 0.00W]") " ", i, cell_v);
                 }
-            } else if (getBit(bal.cells[i / CELLBOARD_CELL_COUNT], i % CELLBOARD_CELL_COUNT)) {
+            } else if (CANLIB_BITTEST(bal.cells[i / CELLBOARD_CELL_COUNT], i % CELLBOARD_CELL_COUNT)) {
                 total_power += cell_v * cell_v;
                 sprintf(
                     out + strlen(out),
@@ -267,9 +271,9 @@ void _cli_temps(uint16_t argc, char **argv, char *out) {
             "C\r\nmin.........%.2f °C\r\n"
             "delta.......%.2f °C\r\n",
             (float)temperature_get_average() / 10,
-            temperature_get_max() / 4.0f,
-            temperature_get_min() / 4.0f,
-            (temperature_get_max() - temperature_get_min()) / 4.0f);
+            temperature_get_max() / 2.56 - 20,
+            temperature_get_min() / 2.56 - 20,
+            (temperature_get_max() - temperature_get_min()) / 2.56 - 20);
     } else if (strcmp(argv[1], "all") == 0) {
         _cli_temps_all(argc, &argv[1], out);
     } else {
@@ -292,7 +296,7 @@ void _cli_temps_all(uint16_t argc, char **argv, char *out) {
         } else if (i % (TEMP_SENSOR_COUNT / 4) == 0 && i > 0) {
             sprintf(out + strlen(out), "\r\n%-3s", "");
         }
-        sprintf(out + strlen(out), "[%3u %2u °C] ", i, temp_all[i] / 4);
+        sprintf(out + strlen(out), "[%3u %2u °C] ", i, (uint8_t)(temp_all[i] / 2.56 - 20));
     }
 
     sprintf(out + strlen(out), "\r\n");
@@ -337,22 +341,22 @@ void _cli_balance(uint16_t argc, char **argv, char *out) {
         sprintf(out, "disabling balancing\r\n");
     } else if (strcmp(argv[1], "thr") == 0) {
         if (argv[2] != NULL) {
-            voltage_t thresh = atoi(argv[2]) * 10;
+            voltage_t thresh = atoff(argv[2]) * 10;
             if (thresh <= BAL_MAX_VOLTAGE_THRESHOLD) {
                 bal_set_threshold(thresh);
             }
         }
-        sprintf(out, "balancing threshold is %u mV\r\n", bal_get_threshold() / 10);
+        sprintf(out, "balancing threshold is %.2f mV\r\n", bal_get_threshold() / 10.0);
     } else if (strcmp(argv[1], "test") == 0) {
         CAN_TxHeaderTypeDef tx_header;
         uint8_t buffer[CAN_MAX_PAYLOAD_LENGTH];
         uint8_t board;
-        bms_balancing_cells cells = bms_balancing_cells_default;
+        bms_BalancingCells cells = bms_BalancingCells_DEFAULT;
 
         tx_header.ExtId = 0;
         tx_header.IDE   = CAN_ID_STD;
         tx_header.RTR   = CAN_RTR_DATA;
-        tx_header.StdId = ID_BALANCING;
+        tx_header.StdId = bms_id_BALANCING;
 
         board = atoi(argv[2]);
 
@@ -366,11 +370,12 @@ void _cli_balance(uint16_t argc, char **argv, char *out) {
         uint8_t c;
         for (uint8_t i = 3; i < argc; ++i) {
             c = atoi(argv[i]);
-            setBit(cells, c, 1);
+            CANLIB_BITSET(cells, c);
             sprintf(out + strlen(out), "%u,", c);
         }
 
-        tx_header.DLC = serialize_bms_BALANCING(buffer, board, cells);
+        tx_header.DLC = bms_BALANCING_SIZE;
+        bms_serialize_BALANCING(buffer, cells, board);
         can_send(&BMS_CAN, buffer, &tx_header);
 
         sprintf(out + strlen(out) - 1, "]\r\non board %d\r\n", board);
@@ -412,11 +417,12 @@ void _cli_soc(uint16_t argc, char **argv, char *out) {
 }
 
 void _cli_errors(uint16_t argc, char **argv, char *out) {
+    *out           = 0;
     uint16_t count = error_count();
-    error_t errors[count];
+    error_t errors[100];
     error_dump(errors);
 
-    uint32_t now = HAL_GetTick();
+    volatile uint32_t now = HAL_GetTick();
     sprintf(out, "total %u\r\n", count);
     for (uint16_t i = 0; i < count; i++) {
         sprintf(
@@ -579,18 +585,19 @@ void _cli_can_forward(uint16_t argc, char **argv, char *out) {
 }
 
 void _cli_feedbacks(uint16_t argc, char **argv, char *out) {
-    FEEDBACK_STATE f[FEEDBACK_N];
+    feedback_feed_t f[FEEDBACK_N];
     feedback_get_feedback_states(f);
     *out = '\0';
     for (uint8_t i = 0; i < FEEDBACK_N; ++i) {
         sprintf(
             out + strlen(out),
-            "%02d - %s: %s\n\r",
+            "%02d - %s: %s, %.4f\n\r",
             i,
             feedback_names[i],
-            f[i] == FEEDBACK_STATE_H   ? "1"
-            : f[i] == FEEDBACK_STATE_L ? "0"
-                                       : "E");
+            f[i].state == FEEDBACK_STATE_H   ? "1"
+            : f[i].state == FEEDBACK_STATE_L ? "0"
+                                             : "E",
+            f[i].voltage);
     }
 }
 
@@ -640,11 +647,11 @@ void _cli_timer_handler(TIM_HandleTypeDef *htim) {
     cli_watch_flush_tx = 1;
 }
 
+char tx_buf[4096]   = {'\0'};
+char print_buf[256] = {'\0'};
+char *save_ptr      = NULL;
 void cli_watch_flush_handler() {
-    static char tx_buf[4096]   = "\0";
-    static char print_buf[256] = {'\0'};
-    static char *save_ptr      = NULL;
-    char *argv[BUF_SIZE]       = {'\0'};
+    char *argv[BUF_SIZE] = {NULL};
     uint16_t argc;
     char *to_print;
 
@@ -760,5 +767,36 @@ void _cli_fans(uint16_t argc, char **argv, char *out) {
         }
     } else {
         sprintf(out, "Invalid sintax.\r\n Use this way: fans <perc>\r\n");
+    }
+}
+
+void _cli_pack(uint16_t argc, char **argv, char *out) {
+    if (argc == 3) {
+        uint8_t value;
+        if (!strcmp(argv[1], "airn")) {
+            if (!strcmp(argv[2], "on")) {
+                value = AIRN_ON_VALUE;
+            } else {
+                value = AIRN_OFF_VALUE;
+            }
+            pack_set_airn_off(value);
+        } else if (!strcmp(argv[1], "airp")) {
+            if (!strcmp(argv[2], "on")) {
+                value = AIRP_ON_VALUE;
+            } else {
+                value = AIRP_OFF_VALUE;
+            }
+            pack_set_airp_off(value);
+        } else if (!strcmp(argv[1], "precharge")) {
+            if (!strcmp(argv[2], "on")) {
+                value = PRECHARGE_ON_VALUE;
+            } else {
+                value = PRECHARGE_OFF_VALUE;
+            }
+            pack_set_precharge(value);
+        }
+
+        sprintf(out, "%s setted %s\r\n", argv[1], argv[2]);
+    } else if (argc == 2) {
     }
 }
