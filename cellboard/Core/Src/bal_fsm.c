@@ -49,11 +49,11 @@ void bal_fsm_init() {
 }
 
 void transition_callback(fsm handle) {
-    can_send(TOPIC_STATUS_FILTER);
+    can_send(0); //TODO: sborato
 }
 
 void off_entry(fsm handle) {
-    bms_balancing_cells cells = bms_balancing_cells_default;
+    bms_BalancingCells cells = bms_BalancingCells_DEFAULT;
     ltc6813_set_balancing(&LTC6813_SPI, cells, 0);
 }
 
@@ -96,7 +96,7 @@ void discharge_exit(fsm handle) {
   * @retval None
   */
 void bal_timers_handler(TIM_HandleTypeDef *htim, fsm handle) {
-    memset(bal.cells, 0, sizeof(bal.cells));
+    bal.cells = bms_BalancingCells_DEFAULT;
     fsm_trigger_event(bal.fsm, EV_BAL_STOP);
 }
 
@@ -104,7 +104,7 @@ void bal_oc_timer_handler(TIM_HandleTypeDef *htim) {
     if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1) {
         uint32_t cmp = __HAL_TIM_GetCompare(htim, TIM_CHANNEL_1);
         if (bal.is_s_pin_high) {
-            bms_balancing_cells cells = bms_balancing_cells_default;
+            bms_BalancingCells cells = bms_BalancingCells_DEFAULT;
             ltc6813_set_balancing(&LTC6813_SPI, cells, 0);
             __HAL_TIM_SetCompare(htim, TIM_CHANNEL_1, cmp + TIM_MS_TO_TICKS(htim, BAL_TIME_OFF));
             bal.is_s_pin_high = 0;
@@ -117,6 +117,5 @@ void bal_oc_timer_handler(TIM_HandleTypeDef *htim) {
 }
 
 uint8_t bal_is_cells_empty() {
-    bms_balancing_cells empty = bms_balancing_cells_default;
-    return memcmp(bal.cells, &empty, sizeof(bal.cells)) == 0;
+    return bal.cells == bms_BalancingCells_DEFAULT;
 }

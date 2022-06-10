@@ -25,7 +25,7 @@ typedef struct {
     fsm fsm;
 
     uint8_t is_s_pin_high;
-    bms_balancing_cells cells;
+    bms_BalancingCells cells;
     uint32_t discharge_time;
     uint32_t cycle_length;
 } bal_fsm;

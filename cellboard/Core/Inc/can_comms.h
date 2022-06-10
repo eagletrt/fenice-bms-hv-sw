@@ -8,8 +8,8 @@
 
 #ifndef _CAN_COMMS_
 
-#include "../../bms/c/bms.h"
-#include "../bms/ids.h"
+#include "../Lib/can/lib/bms/c/ids.h"
+#include "../Lib/can/lib/bms/c/network.h"
 
 void can_send(uint16_t id);
 void can_init_with_filter();

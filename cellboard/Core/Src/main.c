@@ -48,7 +48,6 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define UART_LOGGING 0
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -142,8 +141,7 @@ int main(void) {
     while (1) {
         index_blink_run();
         measurements_flags_check();
-#define UART_LOGGING 1
-#if UART_LOGGING
+#ifdef UART_LOGGING
         if (HAL_GetTick() - temp_timer >= 500) {
             temp_timer = HAL_GetTick();
 
@@ -154,7 +152,7 @@ int main(void) {
             for (uint8_t i = 0; i < CELLBOARD_CELL_COUNT; i++) {
                 sprintf(buf + strlen(buf), "%3u %-.3fV", i, (float)voltages[i] / 10000);
 
-                if (getBit(bal.cells, i))
+                if (CANLIB_BITTEST(bal.cells, i))
                     sprintf(buf + strlen(buf), " D");
 
                 if (min == i) {

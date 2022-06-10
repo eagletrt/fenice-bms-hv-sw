@@ -28,8 +28,8 @@
  */
 #define LTC6813_REG_CELL_COUNT 3
 
-#define VOLT_MEASURE_INTERVAL 20
-#define VOLT_MEASURE_TIME     4
+#define VOLT_MEASURE_INTERVAL 8
+#define VOLT_MEASURE_TIME     5
 
 //===========================================================================
 //================================= Temperature =============================

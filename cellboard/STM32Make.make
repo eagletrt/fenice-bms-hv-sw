@@ -36,9 +36,6 @@ BUILD_DIR = build
 ######################################
 # C sources
 C_SOURCES =  \
-Core/Lib/can-cicd/naked_generator/bms/c/bms.c \
-Core/Lib/can-cicd/naked_generator/primary/c/primary.c \
-Core/Lib/can-cicd/naked_generator/secondary/c/secondary.c \
 Core/Lib/micro-libs/blink/blink.c \
 Core/Lib/micro-libs/fsm/fsm.c \
 Core/Lib/micro-libs/m95256/m95256.c \
@@ -159,10 +156,6 @@ AS_INCLUDES = \
 C_INCLUDES =  \
 -ICore/Inc \
 -ICore/Inc/peripherals \
--ICore/Lib/can-cicd/includes_generator/bms \
--ICore/Lib/can-cicd/naked_generator/bms/c \
--ICore/Lib/can-cicd/naked_generator/primary/c \
--ICore/Lib/can-cicd/naked_generator/secondary/c \
 -ICore/Lib/micro-libs/blink \
 -ICore/Lib/micro-libs/fsm \
 -ICore/Lib/micro-libs/m95256 \
