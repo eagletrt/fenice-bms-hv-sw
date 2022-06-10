@@ -4,6 +4,7 @@
  *
  * @date    Apr 11, 2019
  * @author  Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @author  Federico Carbone [federico.carbone@studenti.unitn.it]
  */
 
 #include "pack/temperature.h"
@@ -25,7 +26,8 @@ void temperature_init() {
 
 void temperature_check_errors() {
     for (size_t i = 0; i < PACK_TEMP_COUNT; i++) {
-        error_toggle_check(temperatures[i] > CELL_MAX_TEMPERATURE, ERROR_CELL_OVER_TEMPERATURE, i);
+        error_toggle_check(temperatures[i] > CELL_MAX_TEMPERATURE - 10, ERROR_CELL_OVER_TEMPERATURE, 0);
+        error_toggle_check(temperatures[i] > CELL_MAX_TEMPERATURE, ERROR_CELL_OVER_TEMPERATURE, 0);
     }
 }
 
@@ -35,7 +37,7 @@ temperature_t *temperature_get_all() {
 temperature_t temperature_get_max() {
     temperature_t max_temp = 0;
     for (size_t i = 0; i < PACK_TEMP_COUNT; i++) {
-        max_temp = MAX(max_temp, temperatures[i]);
+        max_temp = MAX(max_temp, (float)(temperatures[i]));
     }
     return max_temp;
 }
@@ -49,11 +51,11 @@ temperature_t temperature_get_min() {
 }
 
 temperature_t temperature_get_average() {
-    size_t average = 0;
+    float average = 0;
     for (size_t i = 0; i < PACK_TEMP_COUNT; i++) {
         average += temperatures[i];
     }
-    return (temperature_t)round(average / PACK_TEMP_COUNT);
+    return (temperature_t)roundf(average / PACK_TEMP_COUNT);
 }
 
 void temperature_set_cells(
