@@ -56,12 +56,12 @@ uint16_t _min_index(voltage_t data[], size_t count) {
  * @param	out	output array
  * @param	out_index	length of output (initialize to 0 please)
  */
-void _bal_hateville_solution(uint16_t DP[], uint16_t i, bms_balancing_cells cells[], uint16_t *out_index) {
+void _bal_hateville_solution(uint16_t DP[], uint16_t i, bms_BalancingCells cells[], uint16_t *out_index) {
     if (i == 0) {
         return;
     } else if (i == 1) {
         if (DP[1] > 0) {
-            flipBit(cells[0], 0);
+            CANLIB_BITSET(cells[0], 0);
             ++(*out_index);
         }
         return;
@@ -70,7 +70,7 @@ void _bal_hateville_solution(uint16_t DP[], uint16_t i, bms_balancing_cells cell
         return;
     } else {
         _bal_hateville_solution(DP, i - 2, cells, out_index);
-        flipBit(cells[(i - 1) / LTC6813_CELL_COUNT], ((i - 1) % LTC6813_CELL_COUNT));
+        CANLIB_BITSET(cells[(i - 1) / LTC6813_CELL_COUNT], ((i - 1) % LTC6813_CELL_COUNT));
         ++(*out_index);
 
         return;
@@ -88,7 +88,7 @@ void _bal_hateville_solution(uint16_t DP[], uint16_t i, bms_balancing_cells cell
  * 
  * @returns	length of the solution array
  */
-uint16_t _bal_hateville(uint16_t D[], uint16_t count, bms_balancing_cells solution[]) {
+uint16_t _bal_hateville(uint16_t D[], uint16_t count, bms_BalancingCells solution[]) {
     uint16_t DP[PACK_CELL_COUNT + 1];
 
     DP[0] = 0;
@@ -109,7 +109,7 @@ uint16_t bal_get_cells_to_discharge(
     voltage_t volts[],
     uint16_t volts_count,
     voltage_t threshold,
-    bms_balancing_cells cells[],
+    bms_BalancingCells cells[],
     uint16_t cells_count,
     voltage_t target) {
     uint16_t len = 0;
@@ -120,11 +120,11 @@ uint16_t bal_get_cells_to_discharge(
     else
         min_volt = target;
 
-    memset(cells, 0, sizeof(bms_balancing_cells) * cells_count);
+    memset(cells, 0, sizeof(bms_BalancingCells) * cells_count);
 
     for (uint16_t i = 0; i < volts_count; i++) {
         if (max(0, (int32_t)volts[i] - (min_volt + threshold))) {
-            flipBit(cells[i / CELLBOARD_CELL_COUNT], i % CELLBOARD_CELL_COUNT);
+            CANLIB_BITSET(cells[i / CELLBOARD_CELL_COUNT], i % CELLBOARD_CELL_COUNT);
             ++len;
         }
     }
@@ -175,6 +175,6 @@ uint16_t bal_compute_imbalance(voltage_t volts[], uint16_t count, voltage_t thre
     return indexes;
 }
 
-uint16_t bal_exclude_neighbors(uint16_t data[], uint16_t count, bms_balancing_cells cells[]) {
+uint16_t bal_exclude_neighbors(uint16_t data[], uint16_t count, bms_BalancingCells cells[]) {
     return _bal_hateville(data, count, cells);
 }

@@ -17,7 +17,6 @@
 #include <stdbool.h>
 typedef enum {
     BMS_IDLE = 0,
-    BMS_TS_ON,
     BMS_AIRN_CLOSE,
     BMS_AIRN_STATUS,
     BMS_PRECHARGE,
