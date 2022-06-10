@@ -126,8 +126,8 @@ static const uint8_t TEMP_SENSOR_ADDRESS_CODING[TEMP_SENSORS_PER_STRIP] = {000, 
 /**
  * Cell's limit voltages (mV * 10)
  */
-#define CELL_WARN_VOLTAGE 28000
-#define CELL_MIN_VOLTAGE  30000
+#define CELL_MIN_VOLTAGE 28000
+#define CELL_WARN_VOLTAGE  30000
 #define CELL_MAX_VOLTAGE  42000
 
 /**
