@@ -4,6 +4,7 @@
  *
  * @date    Apr 11, 2019
  * @author  Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @author  Federico Carbone [federico.carbone@studenti.unitn.it]
  */
 
 #pragma once
