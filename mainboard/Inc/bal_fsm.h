@@ -20,8 +20,8 @@ enum { EV_BAL_STOP, EV_BAL_START, EV_BAL_COOLDOWN_START, EV_BAL_COOLDOWN_END, BA
 
 typedef struct {
     fsm fsm;
-    bms_balancing_cells cells[LTC6813_COUNT];
-    bms_balancing_status status[LTC6813_COUNT];
+    bms_BalancingCells cells[LTC6813_COUNT];
+    bms_BalancingStatus status[LTC6813_COUNT];
     uint32_t discharge_time;
     uint32_t cycle_length;
     voltage_t target;

@@ -47,8 +47,8 @@ void soc_sample_energy(uint32_t timestamp) {
     soc_params params = *(soc_params *)config_get(&soc_config);
 
     // Sample current values for SoC calculation
-    energy_sample_energy(&energy_total, (current_get_current() * voltage_get_internal()) / 10.0f, timestamp);
-    energy_sample_energy(&energy_last_charge, (current_get_current() * voltage_get_internal()) / 10.0f, timestamp);
+    energy_sample_energy(&energy_total, (current_get_current() * voltage_get_vbat_adc()) / 10.0f, timestamp);
+    energy_sample_energy(&energy_last_charge, (current_get_current() * voltage_get_vbat_adc()) / 10.0f, timestamp);
 
     // Update newly-calculated energy values to the energy structure
     params.charge_joule = energy_get_joule(energy_last_charge);

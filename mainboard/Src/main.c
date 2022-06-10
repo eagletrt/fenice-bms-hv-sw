@@ -33,6 +33,7 @@
 #include "mainboard_config.h"
 #include "measures.h"
 #include "pack/current.h"
+#include "pack/pack.h"
 #include "soc.h"
 
 #include <m95256.h>
@@ -135,6 +136,8 @@ int main(void) {
     feedback_init();
     fans_init();
 
+    DBGMCU->APB2FZ = DBGMCU_APB2_FZ_DBG_TIM8_STOP;
+
     /* USER CODE END 2 */
 
     /* Infinite loop */
@@ -148,6 +151,8 @@ int main(void) {
 
         measures_check_flags();
         cli_watch_flush_handler();
+        if (HAL_GetTick() > 1500 && !HAL_GPIO_ReadPin(BMS_FAULT_GPIO_Port, BMS_FAULT_Pin))
+            HAL_GPIO_WritePin(BMS_FAULT_GPIO_Port, BMS_FAULT_Pin, BMS_FAULT_OFF_VALUE);
 
         cli_loop(&cli_bms);
     }

@@ -37,13 +37,13 @@ void tear_down(void* fixture) {
  * @brief Fakes a balancing cycle by randomly decreasing cell voltages.
  */
 uint16_t balance(struct data* data, uint16_t max_count) {
-	bms_balancing_cells cells[LTC6813_COUNT] = {0};
+	bms_BalancingCells cells[LTC6813_COUNT] = {0};
 	// set a maximum count to prevent killer loops
 	while (max_count > 0 && bal_get_cells_to_discharge(data->voltages, PACK_CELL_COUNT, data->threshold, cells, LTC6813_COUNT) > 0) {
 		max_count--;
 
 		for (uint16_t i = 0; i < PACK_CELL_COUNT; i++) {
-			if (getBit(cells[i / LTC6813_CELL_COUNT], (i % LTC6813_CELL_COUNT))) {
+			if (CANLIB_BITTEST(cells[i / LTC6813_CELL_COUNT], (i % LTC6813_CELL_COUNT))) {
 				data->voltages[i] -= munit_rand_int_range(1, 3);
 			}
 		}

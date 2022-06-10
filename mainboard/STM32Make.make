@@ -61,6 +61,7 @@ Src/adc.c \
 Src/bal.c \
 Src/bal_fsm.c \
 Src/bms_fsm.c \
+Src/bootloader.c \
 Src/can.c \
 Src/cli_bms.c \
 Src/config.c \
@@ -87,9 +88,6 @@ Src/stm32f4xx_it.c \
 Src/system_stm32f4xx.c \
 Src/tim.c \
 Src/usart.c \
-lib/can/naked_generator/bms/c/bms.c \
-lib/can/naked_generator/primary/c/primary.c \
-lib/can/naked_generator/secondary/c/secondary.c \
 lib/micro-libs/blink/blink.c \
 lib/micro-libs/cli/cli.c \
 lib/micro-libs/fsm/fsm.c \
@@ -179,12 +177,9 @@ C_INCLUDES =  \
 -IInc/error \
 -IInc/pack \
 -IInc/peripherals \
--Ilib/can/includes_generator/bms \
--Ilib/can/includes_generator/primary \
--Ilib/can/includes_generator/secondary \
--Ilib/can/naked_generator/bms/c \
--Ilib/can/naked_generator/primary/c \
--Ilib/can/naked_generator/secondary/c \
+-Ilib/can/lib/bms/c \
+-Ilib/can/lib/primary/c \
+-Ilib/can/lib/secondary/c \
 -Ilib/micro-libs/blink \
 -Ilib/micro-libs/cli \
 -Ilib/micro-libs/fsm \
