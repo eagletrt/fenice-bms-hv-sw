@@ -18,6 +18,21 @@ void ltc6813_disable_cs(SPI_HandleTypeDef *spi) {
     HAL_GPIO_WritePin(LTC_CS_GPIO_Port, LTC_CS_Pin, GPIO_PIN_SET);
 }
 
+//1 1 1 0 0 0 1 0 0 0 1
+void ltc6813_clrcell(SPI_HandleTypeDef *spi) {
+    uint8_t cmd[4];
+    uint16_t cmd_pec;
+    cmd[0]  = (uint8_t)0b00000111;
+    cmd[1]  = (uint8_t)0b00010001;
+    cmd_pec = ltc6813_pec15(2, cmd);
+    cmd[2]  = (uint8_t)(cmd_pec >> 8);
+    cmd[3]  = (uint8_t)(cmd_pec);
+
+    ltc6813_enable_cs(spi);
+    HAL_SPI_Transmit(spi, cmd, 4, 100);
+    ltc6813_disable_cs(spi);
+}
+
 /**
  * @brief	Starts the LTC6813 ADC voltage conversion
  * @details	According to the datasheet, this command should take 2,335µs.
@@ -36,6 +51,36 @@ void ltc6813_adcv(SPI_HandleTypeDef *spi) {
     uint16_t cmd_pec;
     cmd[0]  = (uint8_t)0b00000011;
     cmd[1]  = (uint8_t)0b01100000;
+    cmd_pec = ltc6813_pec15(2, cmd);
+    cmd[2]  = (uint8_t)(cmd_pec >> 8);
+    cmd[3]  = (uint8_t)(cmd_pec);
+
+    ltc6813_wakeup_idle(spi);
+
+    ltc6813_clrcell(spi);
+    ltc6813_enable_cs(spi);
+    HAL_SPI_Transmit(spi, cmd, 4, 100);
+    ltc6813_disable_cs(spi);
+}
+
+/**
+ * @brief	Starts the LTC6813 ADC open wire check
+ * @details	According to the datasheet, this command should take 2335µs.
+ * 					ADOW Command syntax:
+ *
+ * 					0     CMD0    7     CMD1      15 PEC  31
+ * 					|- - - - - - -|- - - - - - - -|- ... -|
+ * 					0 0 0 0 0 0 1 1 0 X 1 X 1 0 0 0
+ * 				    - - - - -     - - -   -
+ * 					 Address     Mode PUP DCP
+ *
+ * @param	spi		The spi configuration structure
+ */
+void ltc6813_adow(SPI_HandleTypeDef *spi, LTC6813_ADOW_PUP pup) {
+    uint8_t cmd[4];
+    uint16_t cmd_pec;
+    cmd[0]  = (uint8_t)0b00000011;
+    cmd[1]  = (uint8_t)0b00101000 | pup;
     cmd_pec = ltc6813_pec15(2, cmd);
     cmd[2]  = (uint8_t)(cmd_pec >> 8);
     cmd[3]  = (uint8_t)(cmd_pec);

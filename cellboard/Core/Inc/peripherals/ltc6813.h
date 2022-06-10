@@ -17,6 +17,8 @@
 #include <main.h>
 #include <stdbool.h>
 
+typedef enum { LTC6813_ADOW_PUP_ACTIVE = 0b01000000, LTC6813_ADOW_PUP_INACTIVE = 0b00000000 } LTC6813_ADOW_PUP;
+
 /** @brief Table used to calculate the pec for messaging */
 static const uint16_t crcTable[256] = {
     0x0,    0xc599, 0xceab, 0xb32,  0xd8cf, 0x1d56, 0x1664, 0xd3fd, 0xf407, 0x319e, 0x3aac, 0xff35, 0x2cc8, 0xe951,
@@ -136,6 +138,7 @@ typedef enum { WRCFGA = 0, WRCFGB = 1 } wrcfg_register;
 extern uint8_t GPIO_CONFIG;  // GPIO CONFIG
 
 void ltc6813_adcv(SPI_HandleTypeDef *spi);
+void ltc6813_adow(SPI_HandleTypeDef *spi, LTC6813_ADOW_PUP pup);
 
 void ltc6813_enable_cs(SPI_HandleTypeDef *spi);
 void ltc6813_disable_cs(SPI_HandleTypeDef *spi);
