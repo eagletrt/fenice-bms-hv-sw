@@ -39,10 +39,6 @@ void bms_blink_led();
 void _idle_entry(fsm FSM);
 void _idle_handler(fsm FSM, uint8_t event);
 
-void _ts_on_entry(fsm FSM);
-void _ts_on_handler(fsm FSM, uint8_t event);
-void _ts_on_exit(fsm FSM);
-
 void _airn_close_entry(fsm FSM);
 void _airn_close_handler(fsm FSM, uint8_t event);
 void _airn_close_exit(fsm FSM);
@@ -66,7 +62,7 @@ void _fault_exit(fsm FSM);
 void _start_pc_check_timer() {
     uint32_t cnt = __HAL_TIM_GET_COUNTER(&HTIM_BMS);
     __HAL_TIM_SET_COMPARE(&HTIM_BMS, TIM_CHANNEL_1, (cnt + TIM_MS_TO_TICKS(&HTIM_BMS, PRECHARGE_CHECK_INTERVAL)));
-    __HAL_TIM_CLEAR_FLAG(&HTIM_BMS, TIM_IT_CC1);  //clears existing interrupts on channel 1
+    __HAL_TIM_CLEAR_IT(&HTIM_BMS, TIM_IT_CC1);  //clears existing interrupts on channel 1
 
     HAL_TIM_OC_Start_IT(&HTIM_BMS, TIM_CHANNEL_1);
 }
@@ -74,7 +70,7 @@ void _start_pc_check_timer() {
 void _start_pc_timeout_timer() {
     uint32_t cnt = __HAL_TIM_GET_COUNTER(&HTIM_BMS);
     __HAL_TIM_SET_COMPARE(&HTIM_BMS, TIM_CHANNEL_2, (cnt + TIM_MS_TO_TICKS(&HTIM_BMS, PRECHARGE_TIMEOUT)));
-    __HAL_TIM_CLEAR_FLAG(&HTIM_BMS, TIM_IT_CC2);  //clears existing interrupts on channel 1
+    __HAL_TIM_CLEAR_IT(&HTIM_BMS, TIM_IT_CC2);  //clears existing interrupts on channel 1
 
     HAL_TIM_OC_Start_IT(&HTIM_BMS, TIM_CHANNEL_2);
 }
@@ -82,7 +78,7 @@ void _start_pc_timeout_timer() {
 void _start_fb_check_timer() {
     uint32_t cnt = __HAL_TIM_GET_COUNTER(&HTIM_BMS);
     __HAL_TIM_SET_COMPARE(&HTIM_BMS, TIM_CHANNEL_3, (cnt + TIM_MS_TO_TICKS(&HTIM_BMS, FB_CHECK_INTERVAL_MS)));
-    __HAL_TIM_CLEAR_FLAG(&HTIM_BMS, TIM_IT_CC3);  //clears existing interrupts on channel 1
+    __HAL_TIM_CLEAR_IT(&HTIM_BMS, TIM_IT_CC3);  //clears existing interrupts on channel 1
 
     HAL_TIM_OC_Start_IT(&HTIM_BMS, TIM_CHANNEL_3);
 }
@@ -90,7 +86,7 @@ void _start_fb_check_timer() {
 void _start_fb_timeout_timer() {
     uint32_t cnt = __HAL_TIM_GET_COUNTER(&HTIM_BMS);
     __HAL_TIM_SET_COMPARE(&HTIM_BMS, TIM_CHANNEL_4, (cnt + TIM_MS_TO_TICKS(&HTIM_BMS, FB_TIMEOUT_MS)));
-    __HAL_TIM_CLEAR_FLAG(&HTIM_BMS, TIM_IT_CC4);  //clears existing interrupts on channel 1
+    __HAL_TIM_CLEAR_IT(&HTIM_BMS, TIM_IT_CC4);  //clears existing interrupts on channel 1
 
     HAL_TIM_OC_Start_IT(&HTIM_BMS, TIM_CHANNEL_4);
 }
@@ -131,11 +127,6 @@ void bms_fsm_init() {
     state.exit    = NULL;
     fsm_set_state(bms.fsm, BMS_IDLE, &state);
 
-    state.handler = _ts_on_handler;
-    state.entry   = _ts_on_entry;
-    state.exit    = _ts_on_exit;
-    fsm_set_state(bms.fsm, BMS_TS_ON, &state);
-
     state.handler = _airn_close_handler;
     state.entry   = _airn_close_entry;
     state.exit    = _airn_close_exit;
@@ -170,8 +161,6 @@ void bms_fsm_init() {
     HAL_GPIO_WritePin(bms.led.port, bms.led.pin, GPIO_PIN_RESET);
     bms_set_led_blinker();
 
-    HAL_GPIO_WritePin(BMS_FAULT_GPIO_Port, BMS_FAULT_Pin, GPIO_PIN_RESET);
-
     uint8_t cell_distr_default[CELLBOARD_COUNT] = {0, 1, 2, 3, 4, 5};
     config_init(&cellboard_distribution, CELLBOARD_DISTR_ADDR, CELLBOARD_DISTR_VER, cell_distr_default, 6);
 }
@@ -197,17 +186,16 @@ void bms_set_led_blinker() {
     blink_reset(&(bms.led));
     HAL_GPIO_WritePin(bms.led.port, bms.led.pin, GPIO_PIN_SET);
 
-    can_car_send(ID_TS_STATUS);
+    can_car_send(primary_id_TS_STATUS);
 }
 void bms_blink_led() {
     blink_run(&bms.led);
 }
 
 void _idle_entry(fsm FSM) {
-    can_car_send(ID_TS_STATUS);
+    can_car_send(primary_id_TS_STATUS);
 
-    pack_set_fault(BMS_FAULT_OFF_VALUE);
-    pack_set_default_off();
+    pack_set_default_off(0);
 
     _start_fb_check_timer();
 
@@ -217,7 +205,8 @@ void _idle_entry(fsm FSM) {
 void _idle_handler(fsm FSM, uint8_t event) {
     switch (event) {
         case BMS_EV_TS_ON:
-            fsm_transition(FSM, BMS_TS_ON);
+            if (feedback_check(FEEDBACK_TS_OFF_MASK, FEEDBACK_TS_OFF_VAL) == 0)
+                fsm_transition(FSM, BMS_AIRN_CLOSE);
             break;
         case BMS_EV_FAULT:
             fsm_transition(FSM, BMS_FAULT);
@@ -231,40 +220,11 @@ void _idle_exit(fsm FSM) {
     _stop_fb_check_timer();
 }
 
-void _ts_on_entry(fsm FSM) {
-    _start_fb_check_timer();
-    _start_fb_timeout_timer();
-
-    current_zero();  //calculate Voffset of the hall sensor just before closing the airs
-
-    cli_bms_debug("ts on state", 11);
-}
-
-void _ts_on_handler(fsm FSM, uint8_t event) {
-    switch (event) {
-        case BMS_EV_FAULT:
-            fsm_transition(FSM, BMS_FAULT);
-            break;
-        case BMS_EV_FB_CHECK:
-            //feedback_read(FEEDBACK_TS_ON_VAL);
-            if (feedback_check(FEEDBACK_TS_ON_MASK, FEEDBACK_TS_ON_VAL) == 0) {
-                pack_set_ts_on(TS_ON_VALUE);
-                fsm_transition(FSM, BMS_AIRN_CLOSE);
-            }
-            break;
-        case BMS_EV_FB_TIMEOUT:
-            fsm_transition(FSM, BMS_IDLE);
-    }
-}
-
-void _ts_on_exit(fsm FSM) {
-    _stop_fb_check_timer();
-    _stop_fb_timeout_timer();
-}
-
 void _airn_close_entry(fsm FSM) {
     _start_fb_check_timer();
     _start_fb_timeout_timer();
+
+    current_zero();
 
     cli_bms_debug("airn close state", 16);
 }
@@ -281,6 +241,7 @@ void _airn_close_handler(fsm FSM, uint8_t event) {
             }
             break;
         case BMS_EV_FB_TIMEOUT:
+            pack_set_default_off(0);
             fsm_transition(FSM, BMS_IDLE);
             break;
     }
@@ -310,6 +271,7 @@ void _airn_status_handler(fsm FSM, uint8_t event) {
             }
             break;
         case BMS_EV_FB_TIMEOUT:
+            pack_set_default_off(0);
             fsm_transition(FSM, BMS_IDLE);
             break;
     }
@@ -320,9 +282,15 @@ void _airn_status_exit(fsm FSM) {
     _stop_fb_timeout_timer();
 }
 
+uint32_t tick;
+
 void _precharge_entry(fsm FSM) {
     _start_pc_check_timer();
     _start_pc_timeout_timer();
+    _start_fb_check_timer();
+    _start_fb_timeout_timer();
+
+    tick = HAL_GetTick();
 
     cli_bms_debug("Entered precharge", 18);
 }
@@ -334,19 +302,36 @@ void _precharge_handler(fsm FSM, uint8_t event) {
             // send timeout warning
             //NB there's no break; !!!!
         case BMS_EV_TS_OFF:
+            pack_set_default_off(0);
+            fsm_transition(FSM, BMS_IDLE);
+            break;
+
+        case BMS_EV_FB_CHECK:
+            if (feedback_check(FEEDBACK_PC_ON_MASK, FEEDBACK_PC_ON_VAL) == 0) {
+                _stop_fb_timeout_timer();
+            }
+            break;
+
+        case BMS_EV_FB_TIMEOUT:
+            cli_bms_debug("Precharge FB timeout", 20);
+            pack_set_default_off(0);
             fsm_transition(FSM, BMS_IDLE);
             break;
 
         case BMS_EV_PRECHARGE_CHECK:
             char c[5] = {'\0'};
-            itoa(voltage_get_bus() / voltage_get_internal() * PRECHARGE_VOLTAGE_THRESHOLD, c, 10);
+            snprintf(c, 5, "%4.2f", voltage_get_vts_p() / (voltage_get_vbat_adc() * PRECHARGE_VOLTAGE_THRESHOLD));
             cli_bms_debug(c, 5);
 
-            if (voltage_get_bus() > 0 && voltage_get_bus() >= voltage_get_internal() * PRECHARGE_VOLTAGE_THRESHOLD &&
-                feedback_check(FEEDBACK_PC_ON_MASK, FEEDBACK_PC_ON_VAL) == 0) {
+            if (HAL_GetTick() - tick > 1000 ||
+                (!bms.handcart_connected && voltage_get_vts_p() > 0 &&
+                 voltage_get_vts_p() >= voltage_get_vbat_adc() * PRECHARGE_VOLTAGE_THRESHOLD) ||
+                (bms.handcart_connected && voltage_get_vts_p() > 0 &&
+                 voltage_get_vts_p() >= voltage_get_vbat_adc() * PRECHARGE_VOLTAGE_THRESHOLD_CARELINO)) {
                 pack_set_airp_off(AIRP_ON_VALUE);
-                fsm_transition(bms.fsm, BMS_ON);
+                _stop_fb_check_timer();
                 cli_bms_debug("Precharge ok", 18);
+                fsm_transition(bms.fsm, BMS_ON);
             }
             break;
         case BMS_EV_FAULT:
@@ -358,34 +343,52 @@ void _precharge_handler(fsm FSM, uint8_t event) {
 void _precharge_exit(fsm FSM) {
     _stop_pc_check_timer();
     _stop_pc_timeout_timer();
+    _stop_fb_check_timer();
 }
 
 void _on_entry(fsm FSM) {
-    _start_fb_check_timer();
+    _start_fb_timeout_timer();
 
     cli_bms_debug("on state", 8);
 }
 
 void _on_handler(fsm FSM, uint8_t event) {
+    volatile feedback_t f;
     switch (event) {
         case BMS_EV_TS_OFF:
+            pack_set_default_off(0);
             fsm_transition(FSM, BMS_IDLE);
             break;
         case BMS_EV_FAULT:
             fsm_transition(FSM, BMS_FAULT);
             break;
         case BMS_EV_FB_CHECK:
-            feedback_check(FEEDBACK_ON_MASK, FEEDBACK_ON_VAL);
+            f = feedback_check(FEEDBACK_ON_MASK, FEEDBACK_ON_VAL);
+            if (f != 0) {
+                pack_set_default_off(0);
+                fsm_transition(FSM, BMS_IDLE);
+            }
+            break;
+        case BMS_EV_FB_TIMEOUT:
+            f = feedback_check(FEEDBACK_ON_MASK, FEEDBACK_ON_VAL);
+            if (f != 0) {
+                pack_set_default_off(0);
+                fsm_transition(FSM, BMS_IDLE);
+                return;
+            }
+            _start_fb_check_timer();
+            break;
     }
 }
 
 void _on_exit(fsm FSM) {
+    _stop_fb_timeout_timer();
     _stop_fb_check_timer();
 }
 
 void _fault_entry(fsm FSM) {
     pack_set_fault(BMS_FAULT_ON_VALUE);
-    pack_set_default_off();
+    pack_set_default_off(0);
     _start_fb_check_timer();
 
     cli_bms_debug("fault state", 11);
@@ -402,6 +405,7 @@ void _fault_handler(fsm FSM, uint8_t event) {
 
 void _fault_exit(fsm FSM) {
     _stop_fb_check_timer();
+    pack_set_fault(BMS_FAULT_OFF_VALUE);
 }
 
 void _bms_handle_tim_oc_irq(TIM_HandleTypeDef *htim) {
