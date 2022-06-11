@@ -40,6 +40,8 @@ cFlags: []
 cxxFlags: []
 assemblyFlags: 
   - -specs=nosys.specs
+linkerFlags:
+  - -u_printf_float
 
 
 # libraries to be included. The -l prefix to the library will be automatically added.
@@ -69,8 +71,9 @@ includeDirectories:
   - Core/Inc/**
   - Core/Lib/micro-libs/m95256/**
   - Core/Lib/micro-libs/fsm/**
-  - Core/Lib/can-cicd/naked_generator/**
-  - Core/Lib/can-cicd/includes_generator/bms/**
+  - Core/Lib/micro-libs/blink/**
+  - Core/Lib/micro-libs/timer-utils/**
+  - Core/Lib/can-cicd/lib/**
 
 
 # Files that should be included in the compilation.
@@ -83,8 +86,9 @@ sourceFiles:
   - Core/Src/**
   - Core/Lib/micro-libs/m95256/**
   - Core/Lib/micro-libs/fsm/**
-  - Core/Lib/can-cicd/naked_generator/**
-  - Core/Lib/can-cicd/includes_generator/**
+  - Core/Lib/micro-libs/blink/**
+  - Core/Lib/micro-libs/timer-utils/**
+  - Core/Lib/can-cicd/lib/**
 
 
 # When no makefile is present it will show a warning pop-up.

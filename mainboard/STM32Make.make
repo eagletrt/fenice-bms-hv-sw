@@ -61,6 +61,7 @@ Src/adc.c \
 Src/bal.c \
 Src/bal_fsm.c \
 Src/bms_fsm.c \
+Src/bootloader.c \
 Src/can.c \
 Src/cli_bms.c \
 Src/config.c \
@@ -69,32 +70,33 @@ Src/energy/energy.c \
 Src/energy/soc.c \
 Src/error/error.c \
 Src/error/error_list_ref.c \
+Src/fans_buzzer.c \
 Src/feedback.c \
 Src/gpio.c \
+Src/imd.c \
 Src/main.c \
+Src/measures.c \
 Src/pack/current.c \
 Src/pack/pack.c \
 Src/pack/temperature.c \
 Src/pack/voltage.c \
+Src/peripherals/adc124s021.c \
 Src/peripherals/can_comm.c \
-Src/peripherals/si8900.c \
 Src/spi.c \
 Src/stm32f4xx_hal_msp.c \
 Src/stm32f4xx_it.c \
-Src/super_fsm.c \
 Src/system_stm32f4xx.c \
 Src/tim.c \
 Src/usart.c \
-lib/can/naked_generator/Primary/c/Primary.c \
-lib/can/naked_generator/Secondary/c/Secondary.c \
-lib/can/naked_generator/bms/c/bms.c \
 lib/micro-libs/blink/blink.c \
 lib/micro-libs/cli/cli.c \
 lib/micro-libs/fsm/fsm.c \
 lib/micro-libs/llist/llist.c \
 lib/micro-libs/m95256/m95256.c \
 lib/micro-libs/priority-queue/priority_queue.c \
-lib/micro-libs/priority-queue/priority_queue_fast_insert.c
+lib/micro-libs/priority-queue/priority_queue_fast_insert.c \
+lib/micro-libs/pwm/pwm.c \
+lib/micro-libs/timer-utils/timer_utils.c
 
 
 CPP_SOURCES = \
@@ -155,6 +157,12 @@ C_DEFS =  \
 -DUSE_HAL_DRIVER
 
 
+# CXX defines
+CXX_DEFS =  \
+-DSTM32F446xx \
+-DUSE_HAL_DRIVER
+
+
 # AS includes
 AS_INCLUDES = \
 
@@ -169,18 +177,17 @@ C_INCLUDES =  \
 -IInc/error \
 -IInc/pack \
 -IInc/peripherals \
--Ilib/can/includes_generator/Primary \
--Ilib/can/includes_generator/Secondary \
--Ilib/can/includes_generator/bms \
--Ilib/can/naked_generator/Primary/c \
--Ilib/can/naked_generator/Secondary/c \
--Ilib/can/naked_generator/bms/c \
+-Ilib/can/lib/bms/c \
+-Ilib/can/lib/primary/c \
+-Ilib/can/lib/secondary/c \
 -Ilib/micro-libs/blink \
 -Ilib/micro-libs/cli \
 -Ilib/micro-libs/fsm \
 -Ilib/micro-libs/llist \
 -Ilib/micro-libs/m95256 \
--Ilib/micro-libs/priority-queue
+-Ilib/micro-libs/priority-queue \
+-Ilib/micro-libs/pwm \
+-Ilib/micro-libs/timer-utils
 
 
 
@@ -189,6 +196,8 @@ ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffuncti
 
 CFLAGS = $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
 
+CXXFLAGS = $(MCU) $(CXX_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections -feliminate-unused-debug-types
+
 ifeq ($(DEBUG), 1)
 CFLAGS += -g -gdwarf-2
 endif
@@ -196,11 +205,11 @@ endif
 # Add additional flags
 CFLAGS += 
 ASFLAGS += -specs=nosys.specs 
-CXXFLAGS = 
-CXXFLAGS += -feliminate-unused-debug-types
+CXXFLAGS += 
 
 # Generate dependency information
 CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
+CXXFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 
 #######################################
 # LDFLAGS
@@ -214,7 +223,7 @@ LIBDIR = \
 
 
 # Additional LD Flags from config file
-ADDITIONALLDFLAGS = -specs=nosys.specs 
+ADDITIONALLDFLAGS = -specs=nano.specs -u_printf_float 
 
 LDFLAGS = $(MCU) $(ADDITIONALLDFLAGS) -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections
 
@@ -228,6 +237,7 @@ all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET
 # list of cpp program objects
 OBJECTS = $(addprefix $(BUILD_DIR)/,$(notdir $(CPP_SOURCES:.cpp=.o)))
 vpath %.cpp $(sort $(dir $(CPP_SOURCES)))
+
 # list of C objects
 OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(C_SOURCES:.c=.o)))
 vpath %.c $(sort $(dir $(C_SOURCES)))
@@ -236,7 +246,10 @@ OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(ASM_SOURCES:.s=.o)))
 vpath %.s $(sort $(dir $(ASM_SOURCES)))
 
 $(BUILD_DIR)/%.o: %.cpp STM32Make.make | $(BUILD_DIR) 
-	$(CXX) -c $(CXXFLAGS) $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.cpp=.lst)) $< -o $@
+	$(CXX) -c $(CXXFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.cpp=.lst)) $< -o $@
+
+$(BUILD_DIR)/%.o: %.cxx STM32Make.make | $(BUILD_DIR) 
+	$(CXX) -c $(CXXFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.cxx=.lst)) $< -o $@
 
 $(BUILD_DIR)/%.o: %.c STM32Make.make | $(BUILD_DIR) 
 	$(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@

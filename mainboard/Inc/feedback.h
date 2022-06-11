@@ -1,44 +1,134 @@
 /**
- * @file		feedback.h
- * @brief		Feedback parsing utilities
+ * @file	feedback.h
+ * @brief	Feedback parsing utilities
  *
- * @date		Mar 16, 2021
+ * @date	Mar 16, 2021
  * @author      Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @author  	Federico Carbone [federico.carbone@studenti.unitn.it]
  */
 
 #pragma once
 
 #include "error.h"
-
-#include <inttypes.h>
 #include "fenice_config.h"
 
-typedef uint16_t feedback_t;
+#include <inttypes.h>
 
-extern feedback_t feedback;
+#define MUX_INTERVAL_MS 0.1
 
+#define FB_CHECK_INTERVAL_MS 2
+#define FB_TIMEOUT_MS        100
+
+typedef uint32_t feedback_t;
+
+extern uint64_t feedback;
+
+#define FEEDBACK_TS_OFF_HIGH                                                                                     \
+    (FEEDBACK_CHECK_MUX /* | FEEDBACK_TSAL_GREEN_FAULT_LATCHED*/ | FEEDBACK_BMS_LATCHED | FEEDBACK_IMD_LATCHED | \
+     FEEDBACK_IMD_FAULT /* | FEEDBACK_TSAL_GREEN*/ | FEEDBACK_TSAL_GREEN_FAULT | FEEDBACK_AIRN_STATUS |          \
+     FEEDBACK_AIRP_STATUS | FEEDBACK_SD_IN | FEEDBACK_SD_OUT)
+#define FEEDBACK_TS_OFF_LOW (FEEDBACK_AIRN_GATE | FEEDBACK_AIRP_GATE | FEEDBACK_RELAY_SD)
+
+#define FEEDBACK_TS_OFF_VAL  (FEEDBACK_TS_OFF_HIGH)
+#define FEEDBACK_TS_OFF_MASK ((FEEDBACK_TS_OFF_HIGH) | (FEEDBACK_TS_OFF_LOW))
+
+#define FEEDBACK_AIRN_CLOSE_HIGH                                                                                 \
+    (FEEDBACK_CHECK_MUX /* | FEEDBACK_TSAL_GREEN_FAULT_LATCHED*/ | FEEDBACK_BMS_LATCHED | FEEDBACK_IMD_LATCHED | \
+     FEEDBACK_IMD_FAULT /* | FEEDBACK_TSAL_GREEN*/ | FEEDBACK_TSAL_GREEN_FAULT | FEEDBACK_AIRN_STATUS |          \
+     FEEDBACK_AIRP_STATUS | FEEDBACK_SD_IN | FEEDBACK_SD_OUT | FEEDBACK_SD_END)
+#define FEEDBACK_AIRN_CLOSE_LOW (FEEDBACK_AIRN_GATE | FEEDBACK_AIRP_GATE | FEEDBACK_RELAY_SD)
+
+#define FEEDBACK_AIRN_CLOSE_VAL  (FEEDBACK_AIRN_CLOSE_HIGH)
+#define FEEDBACK_AIRN_CLOSE_MASK ((FEEDBACK_AIRN_CLOSE_HIGH) | (FEEDBACK_AIRN_CLOSE_LOW))
+
+#define FEEDBACK_AIRN_STATUS_HIGH                                                                                  \
+    (FEEDBACK_CHECK_MUX /* | FEEDBACK_TSAL_GREEN_FAULT_LATCHED*/ | FEEDBACK_BMS_LATCHED | FEEDBACK_IMD_LATCHED |   \
+     FEEDBACK_IMD_FAULT | FEEDBACK_TSAL_GREEN_FAULT | FEEDBACK_AIRN_GATE | FEEDBACK_AIRP_STATUS | FEEDBACK_SD_IN | \
+     FEEDBACK_SD_OUT | FEEDBACK_SD_END)
+#define FEEDBACK_AIRN_STATUS_LOW \
+    (FEEDBACK_AIRN_STATUS | FEEDBACK_AIRP_GATE | FEEDBACK_RELAY_SD /* | FEEDBACK_TSAL_GREEN*/)
+
+#define FEEDBACK_AIRN_STATUS_VAL  (FEEDBACK_AIRN_STATUS_HIGH)
+#define FEEDBACK_AIRN_STATUS_MASK ((FEEDBACK_AIRN_STATUS_HIGH) | (FEEDBACK_AIRN_STATUS_LOW))
+
+#define FEEDBACK_PC_ON_HIGH                                                                                        \
+    (FEEDBACK_CHECK_MUX /* | FEEDBACK_TSAL_GREEN_FAULT_LATCHED*/ | FEEDBACK_BMS_LATCHED | FEEDBACK_IMD_LATCHED |   \
+     FEEDBACK_IMD_FAULT | FEEDBACK_TSAL_GREEN_FAULT | FEEDBACK_AIRN_GATE | FEEDBACK_AIRP_STATUS | FEEDBACK_SD_IN | \
+     FEEDBACK_SD_OUT | FEEDBACK_SD_END)
+#define FEEDBACK_PC_ON_LOW                                                   \
+    (FEEDBACK_AIRN_STATUS | FEEDBACK_AIRP_GATE | FEEDBACK_PRECHARGE_STATUS | \
+     FEEDBACK_RELAY_SD /* | FEEDBACK_TSAL_GREEN*/)
+
+#define FEEDBACK_PC_ON_VAL  (FEEDBACK_PC_ON_HIGH)
+#define FEEDBACK_PC_ON_MASK ((FEEDBACK_PC_ON_HIGH) | (FEEDBACK_PC_ON_LOW))
+
+#define FEEDBACK_ON_HIGH (FEEDBACK_CHECK_MUX | FEEDBACK_AIRN_GATE | FEEDBACK_AIRP_GATE)
+#define FEEDBACK_ON_LOW                                                          \
+    (FEEDBACK_AIRN_STATUS | FEEDBACK_AIRP_STATUS | FEEDBACK_TS_OVER_60V_STATUS | \
+     FEEDBACK_TSP_OVER_60V_STATUS /* | FEEDBACK_TSAL_GREEN*/)
+
+#define FEEDBACK_ON_VAL  (FEEDBACK_ON_HIGH)
+#define FEEDBACK_ON_MASK ((FEEDBACK_ON_HIGH) | (FEEDBACK_ON_LOW))
+
+#define FEEDBACK_FAULT_EXIT_HIGH (FEEDBACK_CHECK_MUX | FEEDBACK_AIRN_STATUS | FEEDBACK_AIRP_STATUS)
+#define FEEDBACK_FAULT_EXIT_LOW  (FEEDBACK_AIRN_GATE | FEEDBACK_AIRP_GATE)
+
+#define FEEDBACK_FAULT_EXIT_VAL  (FEEDBACK_FAULT_EXIT_HIGH)
+#define FEEDBACK_FAULT_EXIT_MASK ((FEEDBACK_FAULT_EXIT_HIGH) | (FEEDBACK_FAULT_EXIT_LOW))
+
+/*
 // Feedbacks to check after TS OFF
-#define FEEDBACK_TS_OFF_VAL FEEDBACK_VREF
-#define FEEDBACK_TS_OFF_MASK \
-    FEEDBACK_VREF | FEEDBACK_AIR_POSITIVE | FEEDBACK_AIR_NEGATIVE | FEEDBACK_PC_END | FEEDBACK_TS_ON
+#define FEEDBACK_TS_OFF_VAL \
+        FEEDBACK_CHECK_MUX| FEEDBACK_TSAL_GREEN | FEEDBACK_AIRN_STATUS
 
-// Feedback states before closing AIR- and trigger PC
-#define FEEDBACK_IDLE_TS_ON_TRIGGER_VAL                                                                    \
-    (FEEDBACK_VREF | FEEDBACK_FROM_TSMS | FEEDBACK_TO_TSMS | FEEDBACK_FROM_SHUTDOWN | FEEDBACK_LATCH_IMD | \
-     FEEDBACK_LATCH_BMS | FEEDBACK_IMD_FAULT | FEEDBACK_BMS_FAULT)
-#define FEEDBACK_IDLE_TS_ON_TRIGGER_MASK FEEDBACK_ALL
+#define FEEDBACK_TS_OFF_MASK 
+        FEEDBACK_TS_OFF_VAL | FEEDBACK_PC_END | FEEDBACK_AIRN_GATE | FEEDBACK_AIRP_GATE | FEEDBACK_AIRN_STATUS
 
-// Feedback states after closing AIR-
-#define FEEDBACK_TO_PRECHARGE_VAL                                                                          \
-    (FEEDBACK_IDLE_TS_ON_TRIGGER_VAL | FEEDBACK_AIR_NEGATIVE | FEEDBACK_RELAY_LV | FEEDBACK_IMD_SHUTDOWN | \
-     FEEDBACK_BMS_FAULT | FEEDBACK_BMS_SHUTDOWN | FEEDBACK_TS_ON)
-#define FEEDBACK_TO_PRECHARGE_MASK FEEDBACK_ALL &(~FEEDBACK_TSAL_HV)
 
-#define FEEDBACK_ON_VAL  FEEDBACK_TO_PRECHARGE_VAL | FEEDBACK_TSAL_HV
+
+#define FEEDBACK_TS_ON_VAL \
+        FEEDBACK_CHECK_MUX | FEEDBACK_IMD_FAULT
+
+#define FEEDBACK_TS_ON_MASK \
+        FEEDBACK_TS_ON_VAL | FEEDBACK_AIRN_GATE | FEEDBACK_AIRP_GATE
+
+
+
+#define FEEDBACK_AIRN_CLOSE_VAL \
+        FEEDBACK_CHECK_MUX
+
+#define FEEDBACK_AIRN_CLOSE_MASK \
+        FEEDBACK_AIRN_CLOSE_VAL | FEEDBACK_AIRN_GATE | FEEDBACK_AIRP_GATE
+
+
+
+#define FEEDBACK_PC_ON_VAL \
+        FEEDBACK_CHECK_MUX | FEEDBACK_AIRN_GATE \
+        | FEEDBACK_IMD_FAULT
+
+#define FEEDBACK_PC_ON_MASK \
+        FEEDBACK_PC_ON_VAL | FEEDBACK_AIRP_GATE
+
+
+#define FEEDBACK_ON_VAL \
+        FEEDBACK_CHECK_MUX | FEEDBACK_AIRP_GATE | FEEDBACK_AIRN_GATE
+        
 #define FEEDBACK_ON_MASK FEEDBACK_ALL
+*/
 
-bool feedback_check(feedback_t fb_check_mask, feedback_t fb_value, error_id error_id);
-void feedback_read(feedback_t fb_mask);
-bool feedback_check_charge();
-bool feedback_check_precharge();
-bool feedback_check_on();
+#define FEEDBACK_CONVERT_ADC_TO_VOLTAGE(VALUE) ((VALUE) * (3.3F / 4095))
+
+typedef enum { FEEDBACK_STATE_H, FEEDBACK_STATE_L, FEEDBACK_STATE_ERROR } FEEDBACK_STATE;
+
+typedef struct {
+    FEEDBACK_STATE state;
+    float voltage;
+} feedback_feed_t;
+
+void feedback_init();
+void feedback_get_feedback_states(feedback_feed_t *out_value);
+feedback_t feedback_check(feedback_t fb_check_mask, feedback_t fb_value);
+
+void feedback_set_next_mux_index();
+void _feedback_handle_tim_elapsed_irq();
+void _feedback_handle_adc_cnv_cmpl_irq();

@@ -28,8 +28,8 @@
  */
 #define LTC6813_REG_CELL_COUNT 3
 
-#define VOLT_MEASURE_INTERVAL 20
-#define VOLT_MEASURE_TIME     4
+#define VOLT_MEASURE_INTERVAL 8
+#define VOLT_MEASURE_TIME     5
 
 //===========================================================================
 //================================= Temperature =============================
@@ -38,7 +38,7 @@
 /**
  * Temperature measurement interval (ms)
  */
-#define TEMP_MEASURE_INTERVAL 300
+#define TEMP_MEASURE_INTERVAL 200
 
 #define TEMP_ADC_COUNT 6
 
@@ -57,7 +57,8 @@
  * Timers interval (ms)
  */
 
-#define DISCHARGE_TIMER htim6 
+#define TIM_DISCHARGE    htim16
+#define TIM_MEASUREMENTS htim2
 
 typedef uint16_t voltage_t;
 typedef float temperature_t;

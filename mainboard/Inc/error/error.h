@@ -10,7 +10,6 @@
 #ifndef ERROR_H
 #define ERROR_H
 
-#include "../../lib/can/naked_generator/Primary/c/Primary.h"
 #include "llist.h"
 
 #include <inttypes.h>
@@ -40,14 +39,13 @@ typedef enum {
     ERROR_OVER_CURRENT,
     ERROR_CAN,
 
-    ERROR_ADC_INIT,
-    ERROR_ADC_TIMEOUT,
     ERROR_INT_VOLTAGE_MISMATCH,
 
     ERROR_CELLBOARD_COMM,
     ERROR_CELLBOARD_INTERNAL,
 
     ERROR_FEEDBACK,
+    ERROR_FEEDBACK_CIRCUITRY,
 
     ERROR_EEPROM_COMM,
     ERROR_EEPROM_WRITE,
@@ -87,5 +85,7 @@ size_t error_get_fatal();
 size_t error_count();
 void error_dump(error_t errors[]);
 bool compare_timeouts(error_t *a, error_t *b);
+
+void _error_handle_tim_oc_irq();
 
 #endif /* ERROR_H_ */

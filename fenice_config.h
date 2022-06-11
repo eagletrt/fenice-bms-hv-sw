@@ -17,6 +17,8 @@
 //=================================== General ===============================
 //===========================================================================
 
+#define DISCHARGE_R     10//Ohm
+#define CELL_CAPACITY   3.9//Ah
 /**
  * Maximum can payload. for CAN 2.0A is 8 bytes
  */
@@ -38,9 +40,6 @@
 //===========================================================================
 
 #define LTC6813_PERIPHERAL hspi1
-
-// Set to 1 to emulate the LTC daisy chain
-#define LTC6813_EMU 1
 
 /**
  * Number of daisy chained LTCs
@@ -87,7 +86,7 @@
 /**
  * How many strips in each bus
  */
-#define TEMP_STRIPS_PER_BUS 1
+#define TEMP_STRIPS_PER_BUS 6
 /**
  * How many sensors are on a strip
  */
@@ -127,9 +126,9 @@ static const uint8_t TEMP_SENSOR_ADDRESS_CODING[TEMP_SENSORS_PER_STRIP] = {000, 
 /**
  * Cell's limit voltages (mV * 10)
  */
-#define CELL_WARN_VOLTAGE 28000
-#define CELL_MIN_VOLTAGE  25000
-#define CELL_MAX_VOLTAGE  42250
+#define CELL_MIN_VOLTAGE 28000
+#define CELL_WARN_VOLTAGE  30000
+#define CELL_MAX_VOLTAGE  42000
 
 /**
  * Maximum cell temperature (°C)
@@ -156,12 +155,16 @@ static const uint8_t TEMP_SENSOR_ADDRESS_CODING[TEMP_SENSORS_PER_STRIP] = {000, 
 /**
  *  How much does a balancing cycle last (ms)
  */
-#define BAL_CYCLE_LENGTH 30000
+#define BAL_CYCLE_LENGTH        30000
+#define BAL_TIME_ON             1000
+#define BAL_TIME_OFF            1000
 
 /**
  *  How much to wait for voltages to stabilize after a balancing cycle [ms]
  */
-#define BAL_COOLDOWN_DELAY 8000
+#define BAL_COOLDOWN_DELAY      5000
+
+#define DISCHARGE_DUTY_CYCLE    (((float)BAL_CYCLE_LENGTH*BAL_TIME_ON/(BAL_TIME_ON+BAL_TIME_OFF))/(BAL_CYCLE_LENGTH+BAL_COOLDOWN_DELAY))
 
 // @section Pre-charge
 
@@ -169,52 +172,61 @@ static const uint8_t TEMP_SENSOR_ADDRESS_CODING[TEMP_SENSORS_PER_STRIP] = {000, 
 #define PRECHARGE_CHECK_INTERVAL    100U
 #define PRECHARGE_VOLTAGE_THRESHOLD 0.95
 
-/**
- * Feedback bit set bit position 
- */
-enum {
-    FEEDBACK_VREF_POS,
-    FEEDBACK_FROM_TSMS_POS,
-    FEEDBACK_TO_TSMS_POS,
-    FEEDBACK_FROM_SHUTDOWN_POS,
-    FEEDBACK_LATCH_IMD_POS,
-    FEEDBACK_LATCH_BMS_POS,
-    FEEDBACK_IMD_FAULT_POS,
-    FEEDBACK_BMS_FAULT_POS,
-    FEEDBACK_TSAL_HV_POS,
-    FEEDBACK_AIR_POSITIVE_POS,
-    FEEDBACK_AIR_NEGATIVE_POS,
-    FEEDBACK_PC_END_POS,
-    FEEDBACK_RELAY_LV_POS,
-    FEEDBACK_IMD_SHUTDOWN_POS,
-    FEEDBACK_BMS_SHUTDOWN_POS,
-    FEEDBACK_TS_ON_POS,
 
-    //do not move FEEDBACK_N
-    FEEDBACK_N,
+enum {
+    FEEDBACK_TSAL_GREEN_FAULT_POS,
+    FEEDBACK_IMD_LATCHED_POS,
+    FEEDBACK_TSAL_GREEN_FAULT_LATCHED_POS,
+    FEEDBACK_BMD_LATCHED_POS,
+    FEEDBACK_EXT_LATCHED_POS,
+    FEEDBACK_TSAL_GREEN_POS,
+    FEEDBACK_TS_OVER_60V_STATUS_POS,
+    FEEDBACK_AIRN_STATUS_POS,
+    FEEDBACK_AIRP_STATUS_POS,
+    FEEDBACK_AIRP_GATE_POS,
+    FEEDBACK_AIRN_GATE_POS,
+    FEEDBACK_PRECHARGE_STATUS_POS,
+    FEEDBACK_TSP_OVER_60V_STATUS_POS,
+    FEEDBACK_CHECK_MUX_POS,
+    FEEDBACK_SD_IN_POS,
+    FEEDBACK_SD_OUT_POS,
+
+    FEEDBACK_MUX_N
+};
+
+enum {
+    FEEDBACK_RELAY_SD_POS = FEEDBACK_MUX_N,
+    FEEDBACK_IMD_FAULT_POS,
+    FEEDBACK_SD_END_POS,
+
+    FEEDBACK_N
 };
 
 /**
  * Feedback bit sets 
  */
-#define FEEDBACK_NULL          0
-#define FEEDBACK_VREF          ((feedback_t)1 << FEEDBACK_VREF_POS)
-#define FEEDBACK_FROM_TSMS     ((feedback_t)1 << FEEDBACK_FROM_TSMS_POS)
-#define FEEDBACK_TO_TSMS       ((feedback_t)1 << FEEDBACK_TO_TSMS_POS)
-#define FEEDBACK_FROM_SHUTDOWN ((feedback_t)1 << FEEDBACK_FROM_SHUTDOWN_POS)
-#define FEEDBACK_LATCH_IMD     ((feedback_t)1 << FEEDBACK_LATCH_IMD_POS)
-#define FEEDBACK_LATCH_BMS     ((feedback_t)1 << FEEDBACK_LATCH_BMS_POS)
-#define FEEDBACK_IMD_FAULT     ((feedback_t)1 << FEEDBACK_IMD_FAULT_POS)
-#define FEEDBACK_BMS_FAULT     ((feedback_t)1 << FEEDBACK_BMS_FAULT_POS)
-#define FEEDBACK_TSAL_HV       ((feedback_t)1 << FEEDBACK_TSAL_HV_POS)
-#define FEEDBACK_AIR_POSITIVE  ((feedback_t)1 << FEEDBACK_AIR_POSITIVE_POS)
-#define FEEDBACK_AIR_NEGATIVE  ((feedback_t)1 << FEEDBACK_AIR_NEGATIVE_POS)
-#define FEEDBACK_PC_END        ((feedback_t)1 << FEEDBACK_PC_END_POS)
-#define FEEDBACK_RELAY_LV      ((feedback_t)1 << FEEDBACK_RELAY_LV_POS)
-#define FEEDBACK_IMD_SHUTDOWN  ((feedback_t)1 << FEEDBACK_IMD_SHUTDOWN_POS)
-#define FEEDBACK_BMS_SHUTDOWN  ((feedback_t)1 << FEEDBACK_BMS_SHUTDOWN_POS)
-#define FEEDBACK_TS_ON         ((feedback_t)1 << FEEDBACK_TS_ON_POS)
-#define FEEDBACK_ALL           (feedback_t)(((feedback_t)1 << FEEDBACK_N) - 1)
+#define FEEDBACK_NULL                           0
+#define FEEDBACK_TSAL_GREEN_FAULT               ((feedback_t)1 << FEEDBACK_TSAL_GREEN_FAULT_POS)
+#define FEEDBACK_IMD_LATCHED                    ((feedback_t)1 << FEEDBACK_IMD_LATCHED_POS)
+#define FEEDBACK_TSAL_GREEN_FAULT_LATCHED       ((feedback_t)1 << FEEDBACK_TSAL_GREEN_FAULT_LATCHED_POS)
+#define FEEDBACK_BMD_LATCHED                    ((feedback_t)1 << FEEDBACK_BMD_LATCHED_POS)
+#define FEEDBACK_EXT_LATCHED                    ((feedback_t)1 << FEEDBACK_EXT_LATCHED_POS)
+#define FEEDBACK_TSAL_GREEN                     ((feedback_t)1 << FEEDBACK_TSAL_GREEN_POS)
+#define FEEDBACK_TS_OVER_60V_STATUS             ((feedback_t)1 << FEEDBACK_TS_OVER_60V_STATUS_POS)
+#define FEEDBACK_AIRN_STATUS                    ((feedback_t)1 << FEEDBACK_AIRN_STATUS_POS)
+#define FEEDBACK_AIRP_STATUS                    ((feedback_t)1 << FEEDBACK_AIRP_STATUS_POS)
+#define FEEDBACK_AIRP_GATE                      ((feedback_t)1 << FEEDBACK_AIRP_GATE_POS)
+#define FEEDBACK_AIRN_GATE                      ((feedback_t)1 << FEEDBACK_AIRN_GATE_POS)
+#define FEEDBACK_PRECHARGE_STATUS               ((feedback_t)1 << FEEDBACK_PRECHARGE_STATUS_POS)
+#define FEEDBACK_TSP_OVER_60V_STATUS            ((feedback_t)1 << FEEDBACK_TSP_OVER_60V_STATUS_POS)
+#define FEEDBACK_CHECK_MUX                      ((feedback_t)1 << FEEDBACK_CHECK_MUX_POS)
+#define FEEDBACK_SD_IN                          ((feedback_t)1 << FEEDBACK_SD_IN_POS)
+#define FEEDBACK_SD_OUT                         ((feedback_t)1 << FEEDBACK_SD_OUT_POS)
+#define FEEDBACK_RELAY_SD                       ((feedback_t)1 << FEEDBACK_RELAY_SD_POS)
+#define FEEDBACK_IMD_FAULT                      ((feedback_t)1 << FEEDBACK_IMD_FAULT_POS)
+#define FEEDBACK_SD_END                         ((feedback_t)1 << FEEDBACK_SD_END_POS)
+#define FEEDBACK_ALL                            (feedback_t)(((feedback_t)1 << (FEEDBACK_N)) - 1)
+
 
 //===========================================================================
 //=========================== S160 current transducer =======================
@@ -228,27 +240,6 @@ enum {
 
 //Sensitivity of the 300A sensor
 #define S160_300A_SENS 40
-
-//===========================================================================
-//=============================== SI8900 Settings ===========================
-//===========================================================================
-
-/**
- * Max time to wait for the sensor to initialize (auto-baudrate detection)
-*/
-#define SI8900_INIT_TIMEOUT 400
-
-/**
- * Max time to wait for a voltage reading
- * 
- * Keep it low, it will pause the main loop
-*/
-#define SI8900_TIMEOUT 5
-
-/**
- * Reference voltage of the ADC
-*/
-#define SI8900_VREF 3.33
 
 /*
  * If the cli should echo the input

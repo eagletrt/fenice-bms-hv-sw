@@ -13,14 +13,24 @@
 
 #include <inttypes.h>
 
-void pack_init();
+#define TS_ON_VALUE  GPIO_PIN_SET
+#define TS_OFF_VALUE GPIO_PIN_RESET
 
-/**
- * @brief	Updates the pack's temperature stats
- * @details It updates *_temperature variables with the data of the pack
- */
-void pack_update_temperature_stats();
+#define AIRN_OFF_VALUE GPIO_PIN_SET
+#define AIRN_ON_VALUE  GPIO_PIN_RESET
 
-bool pack_set_ts_off();
-bool pack_set_pc_start();
-bool pack_set_precharge_end();
+#define AIRP_OFF_VALUE GPIO_PIN_SET
+#define AIRP_ON_VALUE  GPIO_PIN_RESET
+
+#define PRECHARGE_OFF_VALUE GPIO_PIN_SET
+#define PRECHARGE_ON_VALUE  GPIO_PIN_RESET
+
+#define BMS_FAULT_OFF_VALUE GPIO_PIN_SET
+#define BMS_FAULT_ON_VALUE  GPIO_PIN_RESET
+
+void pack_set_ts_on(uint8_t value);
+void pack_set_airn_off(uint8_t value);
+void pack_set_airp_off(uint8_t value);
+void pack_set_precharge(uint8_t value);
+void pack_set_fault(uint8_t value);
+void pack_set_default_off(uint16_t prech_delay);

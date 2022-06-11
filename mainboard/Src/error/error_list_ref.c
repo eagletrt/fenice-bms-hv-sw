@@ -17,6 +17,8 @@
 
 #include "error/error_list_ref.h"
 
+#include "feedback.h"
+
 #include <stdio.h>
 
 /*  
@@ -30,40 +32,37 @@
     node_t* error_list_ref_<insert the relative data name in data.c>;
 */
 
-llist_node error_list_ref_voltages[PACK_CELL_COUNT]     = {NULL};
-llist_node error_list_ref_low_voltages[PACK_CELL_COUNT] = {NULL};
-
-llist_node error_list_ref_temperatures[PACK_TEMP_COUNT]      = {NULL};
-llist_node error_list_ref_high_temperatures[PACK_TEMP_COUNT] = {NULL};
-
+llist_node error_list_ref_under_voltages[1]     = {NULL};
+llist_node error_list_ref_over_voltages[1]     = {NULL};
+llist_node error_list_ref_low_voltages[1] = {NULL};
+llist_node error_list_ref_temperatures[1]      = {NULL};
+llist_node error_list_ref_high_temperatures[1] = {NULL};
 llist_node error_list_ref_current[1]                = {NULL};
 llist_node error_list_ref_cellboards[LTC6813_COUNT] = {NULL};
 llist_node error_list_ref_can[1]                    = {NULL};
-llist_node error_adc_init[1]                        = {NULL};
-llist_node error_adc_timeout[1]                     = {NULL};
-llist_node error_int_voltage_mismatch[1]            = {NULL};
-llist_node error_cellboard_comm[LTC6813_COUNT]      = {NULL};
-llist_node error_cellboard_internal[LTC6813_COUNT]  = {NULL};
-llist_node error_feedback[1]                        = {NULL};
-llist_node error_eeprom_comm[1]                     = {NULL};
-llist_node error_eeprom_write[1]                    = {NULL};
+llist_node error_list_ref_int_voltage_mismatch[1]            = {NULL};
+llist_node error_list_ref_cellboard_comm[LTC6813_COUNT]      = {NULL};
+llist_node error_list_ref_cellboard_internal[LTC6813_COUNT]  = {NULL};
+llist_node error_list_ref_feedback[FEEDBACK_N]               = {NULL};
+llist_node error_list_ref_feedback_circuitry[FEEDBACK_N]     = {NULL};
+llist_node error_list_ref_eeprom_comm[1]                     = {NULL};
+llist_node error_list_ref_eeprom_write[1]                    = {NULL};
 
 llist_node *const error_list_ref_array[ERROR_NUM_ERRORS] = {
     [ERROR_CELL_LOW_VOLTAGE]      = error_list_ref_low_voltages,
-    [ERROR_CELL_UNDER_VOLTAGE]    = error_list_ref_voltages,
-    [ERROR_CELL_OVER_VOLTAGE]     = error_list_ref_voltages,
-    [ERROR_CELL_HIGH_TEMPERATURE] = error_list_ref_temperatures,
+    [ERROR_CELL_UNDER_VOLTAGE]    = error_list_ref_under_voltages,
+    [ERROR_CELL_OVER_VOLTAGE]     = error_list_ref_over_voltages,
+    [ERROR_CELL_HIGH_TEMPERATURE] = error_list_ref_high_temperatures,
     [ERROR_CELL_OVER_TEMPERATURE] = error_list_ref_temperatures,
     [ERROR_OVER_CURRENT]          = error_list_ref_current,
     [ERROR_CAN]                   = error_list_ref_can,
-    [ERROR_ADC_INIT]              = error_adc_init,
-    [ERROR_ADC_TIMEOUT]           = error_adc_timeout,
-    [ERROR_INT_VOLTAGE_MISMATCH]  = error_int_voltage_mismatch,
-    [ERROR_CELLBOARD_COMM]        = error_cellboard_comm,
-    [ERROR_CELLBOARD_INTERNAL]    = error_cellboard_internal,
-    [ERROR_FEEDBACK]              = error_feedback,
-    [ERROR_EEPROM_COMM]           = error_eeprom_comm,
-    [ERROR_EEPROM_WRITE]          = error_eeprom_write
+    [ERROR_INT_VOLTAGE_MISMATCH]  = error_list_ref_int_voltage_mismatch,
+    [ERROR_CELLBOARD_COMM]        = error_list_ref_cellboard_comm,
+    [ERROR_CELLBOARD_INTERNAL]    = error_list_ref_cellboard_internal,
+    [ERROR_FEEDBACK]              = error_list_ref_feedback,
+    [ERROR_FEEDBACK_CIRCUITRY]    = error_list_ref_feedback_circuitry,
+    [ERROR_EEPROM_COMM]           = error_list_ref_eeprom_comm,
+    [ERROR_EEPROM_WRITE]          = error_list_ref_eeprom_write
 
 };
 

@@ -15,13 +15,21 @@
 #include "fsm.h"
 
 #include <stdbool.h>
-typedef enum { BMS_IDLE = 0, BMS_PRECHARGE, BMS_ON, BMS_HALT, BMS_NUM_STATES } bms_states;
 typedef enum {
-    BMS_EV_HALT = 0,
+    BMS_IDLE = 0,
+    BMS_AIRN_CLOSE,
+    BMS_AIRN_STATUS,
+    BMS_PRECHARGE,
+    BMS_ON,
+    BMS_FAULT,
+    BMS_NUM_STATES
+} bms_states;
+typedef enum {
+    BMS_EV_FAULT = 0,
     BMS_EV_TS_OFF,
     BMS_EV_TS_ON,
-    BMS_EV_VOLT_MEASURE,
-    BMS_EV_TEMP_MEASURE,
+    BMS_EV_FB_CHECK,
+    BMS_EV_FB_TIMEOUT,
     BMS_EV_PRECHARGE_CHECK,
     BMS_EV_PRECHARGE_TIMEOUT,
     BMS_EV_NO_ERRORS,
@@ -31,9 +39,14 @@ typedef enum {
 typedef struct {
     fsm fsm;
     blink_t led;
+    bool handcart_connected;
 } bms_fsm;
 
 extern bms_fsm bms;
 
 void bms_fsm_init();
+uint8_t *bms_get_cellboard_distribution();
+void bms_set_cellboard_distribution(uint8_t distribution[static 6]);
+
+void _bms_handle_tim_oc_irq(TIM_HandleTypeDef *htim);
 #endif

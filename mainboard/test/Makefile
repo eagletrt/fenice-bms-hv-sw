@@ -1,4 +1,4 @@
-INC:=. munit ../Inc ../Inc
+INC:=. munit ../lib/can/naked_generator/bms/c ../Inc
 INC_PARAMS:=$(addprefix -I, $(INC))
 vpath %.h $(INC)
 
@@ -39,4 +39,4 @@ $(BUILD_DIR)/%.o: %.c | $(BUILD_DIR)
 clean:
 	rm -f $(TARGET) $(OBJ)
 	rm -f $(OBJ:.o=.gcda) $(OBJ:.o=.gcno)
-	rm -d $(BUILD_DIR)
+	rm -rd $(BUILD_DIR)

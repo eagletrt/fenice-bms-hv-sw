@@ -5,6 +5,7 @@
  * @date    Sep 24, 2021
  *
  * @author  Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @author  Federico Carbone [federico.carbone@studenti.unitn.it]
  */
 #pragma once
 
@@ -24,7 +25,7 @@ void current_start_measure();
  * 
  * @return uint32_t The timestamp at which the measurement occurred
  */
-uint32_t current_read();
+uint32_t current_read(float shunt_adc_val);
 
 /**
  * @brief Zeroes the Hall-effect sensor
@@ -52,3 +53,5 @@ current_t *current_get_zero();
  * @brief Returns the current flowing through the specified sensor
  */
 current_t current_get_current_from_sensor(uint8_t sensor);
+
+void current_check_errors();

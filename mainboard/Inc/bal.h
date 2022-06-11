@@ -11,8 +11,8 @@
 #ifndef BAL_H
 #define BAL_H
 
+#include "../lib/can/lib/bms/c/network.h"
 #include "mainboard_config.h"
-#include "can_comm.h"
 #include "pack/voltage.h"
 
 #include <inttypes.h>
@@ -32,7 +32,13 @@
  * 
  * @returns amount of cells to be discharged
  */
-uint16_t bal_get_cells_to_discharge(voltage_t volts[], uint16_t volts_count, voltage_t threshold, bms_balancing_cells cells[], uint16_t cells_count);
+uint16_t bal_get_cells_to_discharge(
+    voltage_t volts[],
+    uint16_t volts_count,
+    voltage_t threshold,
+    bms_BalancingCells cells[],
+    uint16_t cells_count,
+    voltage_t target);
 
 /**
  * @brief	Computes the cells with voltage exceeding the given threshold + lowest cell voltage
@@ -46,6 +52,12 @@ uint16_t bal_get_cells_to_discharge(voltage_t volts[], uint16_t volts_count, vol
  * @returns amount of cells to be discharged
  */
 uint16_t bal_compute_imbalance(voltage_t volts[], uint16_t count, voltage_t threshold, uint16_t cells[]);
+uint16_t bal_compute_imbalance_with_target(
+    voltage_t volts[],
+    uint16_t count,
+    voltage_t threshold,
+    uint16_t cells[],
+    voltage_t target);
 
 /**
  * @brief	Exclude adjacent cells to work around an hardware limitation on Fenice
@@ -56,5 +68,5 @@ uint16_t bal_compute_imbalance(voltage_t volts[], uint16_t count, voltage_t thre
  * 
  * @returns	amount of cells to be discharged
  */
-uint16_t bal_exclude_neighbors(uint16_t indexes[], uint16_t count, bms_balancing_cells cells[]);
+uint16_t bal_exclude_neighbors(uint16_t indexes[], uint16_t count, bms_BalancingCells cells[]);
 #endif

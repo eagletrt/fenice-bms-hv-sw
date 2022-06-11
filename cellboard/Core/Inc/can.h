@@ -1,3 +1,4 @@
+/* USER CODE BEGIN Header */
 /**
   ******************************************************************************
   * @file    can.h
@@ -6,16 +7,16 @@
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; Copyright (c) 2021 STMicroelectronics.
-  * All rights reserved.</center></h2>
+  * Copyright (c) 2022 STMicroelectronics.
+  * All rights reserved.
   *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
+  * This software is licensed under terms that can be found in the LICENSE file
+  * in the root directory of this software component.
+  * If no LICENSE file comes with this software, it is provided AS-IS.
   *
   ******************************************************************************
   */
+/* USER CODE END Header */
 /* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __CAN_H__
 #define __CAN_H__
@@ -36,12 +37,14 @@ extern CAN_HandleTypeDef hcan1;
 /* USER CODE BEGIN Private defines */
 #define BMS_CAN hcan1
 
-#define CAN_WAIT(C)                                                         \
-    {                                                                       \
-        uint32_t tick = HAL_GetTick();                                      \
-        while (HAL_GetTick() - tick < 10 &&                                 \
-                HAL_CAN_GetTxMailboxesFreeLevel(C) == 0);                   \
-    }                                                                                                   
+#define CAN_WAIT(C)                                       \
+    do {                                                  \
+        uint32_t tick = HAL_GetTick();                    \
+        while (HAL_CAN_GetTxMailboxesFreeLevel(C) == 0) { \
+            if (HAL_GetTick() > tick + 10)                \
+                return HAL_TIMEOUT;                       \
+        }                                                 \
+    } while(false)
 /* USER CODE END Private defines */
 
 void MX_CAN1_Init(void);
@@ -55,5 +58,3 @@ void MX_CAN1_Init(void);
 #endif
 
 #endif /* __CAN_H__ */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

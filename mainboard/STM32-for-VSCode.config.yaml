@@ -32,6 +32,8 @@ cFlags: []
 cxxFlags: []
 assemblyFlags: 
   - -specs=nosys.specs
+linkerFlags:
+  - -u_printf_float
 
 
 # libraries to be included. The -l prefix to the library will be automatically added.
@@ -58,14 +60,15 @@ excludes:
 # If a CubeMX makefile is present it will automatically include the include directories from that makefile.
 includeDirectories: 
   - Inc/**
-  - lib/can/naked_generator/**
-  - lib/can/includes_generator/**
+  - lib/can/lib/**
   - lib/micro-libs/llist/**
   - lib/micro-libs/priority-queue/**
   - lib/micro-libs/fsm/**
   - lib/micro-libs/cli/**
   - lib/micro-libs/m95256/**
   - lib/micro-libs/blink/**
+  - lib/micro-libs/pwm/**
+  - lib/micro-libs/timer-utils/**
 
 
 # Files that should be included in the compilation.
@@ -75,14 +78,15 @@ includeDirectories:
 # these should be escaped with a: \ or the name should be in double quotes e.g. "HARDWARE_DRIVER*.c"
 sourceFiles:  
   - Src/**
-  - lib/can/naked_generator/**
-  - lib/can/includes_generator/**
+  - lib/can/lib/**
   - lib/micro-libs/llist/**
   - lib/micro-libs/priority-queue/**
   - lib/micro-libs/fsm/**
   - lib/micro-libs/cli/**
   - lib/micro-libs/m95256/**
   - lib/micro-libs/blink/**
+  - lib/micro-libs/pwm/**
+  - lib/micro-libs/timer-utils/**
 
 
 # When no makefile is present it will show a warning pop-up.
