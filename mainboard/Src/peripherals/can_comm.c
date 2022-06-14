@@ -88,8 +88,16 @@ void can_car_init() {
     can_tx_header_init();
 }
 
+HAL_StatusTypeDef CAN_WAIT(CAN_HandleTypeDef *hcan, uint8_t timeout) {
+    uint32_t tick = HAL_GetTick();
+    while (HAL_CAN_GetTxMailboxesFreeLevel(hcan) == 0) {
+        if(HAL_GetTick() - tick > timeout) return HAL_TIMEOUT;
+    }
+    return HAL_OK;
+}
+
 HAL_StatusTypeDef can_send(CAN_HandleTypeDef *hcan, uint8_t *buffer, CAN_TxHeaderTypeDef *header) {
-    CAN_WAIT(hcan);
+    if(CAN_WAIT(hcan, 3) != HAL_OK) return HAL_TIMEOUT;
 
     HAL_StatusTypeDef status = HAL_CAN_AddTxMessage(hcan, header, buffer, NULL);
     if (status != HAL_OK) {
@@ -117,7 +125,7 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         conv_volts.bus_voltage = voltage_get_vts_p();
         conv_volts.pack_voltage = voltage_get_vbat_adc();
 
-        primary_conversion_to_raw_HV_VOLTAGE(&raw_volts, &conv_volts);
+        primary_conversion_to_raw_struct_HV_VOLTAGE(&raw_volts, &conv_volts);
 
         raw_volts.max_cell_voltage = voltage_get_cell_max(NULL);
         raw_volts.min_cell_voltage = voltage_get_cell_min(NULL);
@@ -130,7 +138,7 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         conv_curr.current = current_get_current();
         conv_curr.power = current_get_current() * voltage_get_vts_p();
 
-        primary_conversion_to_raw_HV_CURRENT(&raw_curr, &conv_curr);
+        primary_conversion_to_raw_struct_HV_CURRENT(&raw_curr, &conv_curr);
 
         tx_header.DLC = primary_serialize_struct_HV_CURRENT(buffer, &raw_curr);
     } else if (id == primary_id_TS_STATUS) {
@@ -206,6 +214,8 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
     } else if (id == primary_id_HV_CAN_FORWARD_STATUS) {
         tx_header.DLC = can_forward ? primary_serialize_HV_CAN_FORWARD_STATUS(buffer, primary_Toggle_ON) :
                                         primary_serialize_HV_CAN_FORWARD_STATUS(buffer, primary_Toggle_OFF);
+    } else if (id == primary_id_HV_VERSION) {
+        tx_header.DLC = primary_serialize_HV_VERSION(buffer, 1, 1);
     } else {
         return HAL_ERROR;
     }
@@ -247,9 +257,11 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
     }
 
     if (hcan->Instance == BMS_CAN.Instance) {
-        if (can_forward) {
+        if (can_forward && (rx_header.StdId >= bms_id_FLASH_CELLBOARD_0_TX && rx_header.StdId <= bms_id_FLASH_CELLBOARD_5_RX)) {
+            uint8_t forward_data[8];
             tx_header.StdId = rx_header.StdId;
             tx_header.DLC = rx_header.DLC;
+            *((uint64_t*)forward_data) = *((uint64_t*)rx_data);
             can_send(&CAR_CAN, rx_data, &tx_header);
             return;
         }
@@ -387,7 +399,7 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
     }
 
     if (hcan->Instance == CAR_CAN.Instance) {
-        if (can_forward && rx_header.StdId != primary_id_HV_CAN_FORWARD) {
+        if (can_forward && (rx_header.StdId >= bms_id_FLASH_CELLBOARD_0_TX && rx_header.StdId <= bms_id_FLASH_CELLBOARD_5_RX)) {
             uint8_t forward_data[8];
             tx_header.StdId = rx_header.StdId;
             tx_header.DLC = rx_header.DLC;
