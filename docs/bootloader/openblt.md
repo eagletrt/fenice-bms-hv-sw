@@ -1,6 +1,6 @@
 # OpenBlt
 
-Both cellboards' and mainboard's bootloaders are derived from openblt sources (https://github.com/feaser/openblt). Actually Core sources and Target specific sources have copied in the BLT folder. The whole bootloader configuration happens in the blt_conf.h header file, exception made for the flashLayout[] variable found in flash.c, where the flash layout is specified.
+Both cellboards' and mainboard's bootloaders are derived from openblt sources -> [OpenBlt Github](https://github.com/feaser/openblt). Actually Core sources and Target specific sources have copied in the BLT folder. The whole bootloader configuration happens in the blt_conf.h header file, exception made for the flashLayout[] variable found in flash.c, where the flash layout is specified.
 
 ## Build and flash the bootloader
 
@@ -11,7 +11,7 @@ Building and flashing theese bootloaders is straightforward. Being STM32CubeMX p
 There are 2 main modification to be done on the firmware side in order to operate with the openblt bootloader.
 
 - Modify the linker file (.ld file in the root directory) and shift the program in the flash. This can be done by changing the FLASH (rx) (line 63) accordingly with what specified in the previously mentioned flash.c file (eg. ```ORIGIN = 0x8004000```). Take care of reducing the flash size too (eg. ```LENGHT = 496K```).
-- Convert the .bin build file to .srec format. This can be achieved with this tool: https://github.com/arkku/srec.  
+- Convert the .bin build file to .srec format. This can be achieved with this tool: [arkku/srec](https://github.com/arkku/srec).  
 Example: ```bin2srec -a 0x8004000 (or anithing specified by the linker file) -i %.bin -o %.srec```
 
 ## Flash the firmware
