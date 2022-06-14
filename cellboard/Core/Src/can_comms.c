@@ -120,7 +120,7 @@ void can_send(uint16_t topic_id) {
             conv_temps.temp4 = temperatures[i+4];
             conv_temps.temp5 = temperatures[i+5];
 
-            bms_conversion_to_raw_TEMPERATURES(&raw_temps, &conv_temps);
+            bms_conversion_to_raw_struct_TEMPERATURES(&raw_temps, &conv_temps);
 
             tx_header.DLC = bms_serialize_struct_TEMPERATURES(buffer, &raw_temps);
             _can_send(&BMS_CAN, buffer, &tx_header);
