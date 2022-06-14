@@ -9,6 +9,9 @@
 #include "usart.h"
 
 void JumpToBlt() {
+
+    HAL_NVIC_SystemReset();
+    /*
     void (*SysMemBootJump)(void) = (void (*)(void))(*((uint32_t *)(BOOTLOADER_ADDR + 4)));
     uint32_t msp_addr            = *(uint32_t *)BOOTLOADER_ADDR;
 
@@ -33,4 +36,5 @@ void JumpToBlt() {
 
     while (1)
         ;
+        */
 }

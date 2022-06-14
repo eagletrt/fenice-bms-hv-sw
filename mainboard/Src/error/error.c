@@ -25,7 +25,7 @@
  * 	- 500ms for voltages and current
  * 	- 1s for temperatures
  */
-const error_timeout error_timeouts[ERROR_NUM_ERRORS] = {
+const uint32_t error_timeouts[ERROR_NUM_ERRORS] = {
     [ERROR_CELL_LOW_VOLTAGE]      = SOFT,
     [ERROR_CELL_UNDER_VOLTAGE]    = 450,
     [ERROR_CELL_OVER_VOLTAGE]     = 450,
@@ -47,8 +47,11 @@ llist er_list = NULL;
  * @returns The time left before the error becomes fatal
  */
 uint32_t get_timeout_delta(error_t *error) {
-    uint32_t delta = error->timestamp + error_timeouts[error->id] - HAL_GetTick();
-    return delta <= error_timeouts[error->id] ? delta : 0;
+    uint32_t current_tick = HAL_GetTick();
+    if(error_timeouts[error->id] == SOFT) return SOFT;
+    if(error->timestamp + error_timeouts[error->id] <= current_tick) return 0;
+
+    return error->timestamp + error_timeouts[error->id] - current_tick;
 }
 
 bool error_equals(llist_node a, llist_node b) {

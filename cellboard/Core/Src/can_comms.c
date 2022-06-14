@@ -24,8 +24,19 @@
 #define RETRANSMISSION_MAX_ATTEMPTS 5
 uint8_t retransmission_attempts[3] = {0};
 
+HAL_StatusTypeDef CAN_WAIT(CAN_HandleTypeDef *hcan, uint8_t timeout) {
+    uint32_t tick = HAL_GetTick();
+    while (HAL_CAN_GetTxMailboxesFreeLevel(hcan) == 0) {
+        if (HAL_GetTick() - tick > timeout)
+            return HAL_TIMEOUT;
+    }
+    return HAL_OK;
+}
+
 HAL_StatusTypeDef _can_send(CAN_HandleTypeDef *hcan, uint8_t *buffer, CAN_TxHeaderTypeDef *header) {
-    CAN_WAIT(hcan);
+    if(CAN_WAIT(hcan, 3) != HAL_OK) {
+        return HAL_TIMEOUT;
+    }
 
     HAL_StatusTypeDef status = HAL_CAN_AddTxMessage(hcan, header, buffer, NULL);
     if (status == HAL_OK) {
@@ -120,7 +131,7 @@ void can_send(uint16_t topic_id) {
             conv_temps.temp4 = temperatures[i+4];
             conv_temps.temp5 = temperatures[i+5];
 
-            bms_conversion_to_raw_TEMPERATURES(&raw_temps, &conv_temps);
+            bms_conversion_to_raw_struct_TEMPERATURES(&raw_temps, &conv_temps);
 
             tx_header.DLC = bms_serialize_struct_TEMPERATURES(buffer, &raw_temps);
             _can_send(&BMS_CAN, buffer, &tx_header);

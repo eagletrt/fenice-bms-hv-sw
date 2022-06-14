@@ -12,7 +12,7 @@
 measures_flags_t flags;
 
 void measures_init() {
-    __HAL_TIM_SET_COMPARE(&HTIM_MEASURES, TIM_CHANNEL_1, TIM_MS_TO_TICKS(&HTIM_MEASURES, _20MS_INTERVAL));
+    __HAL_TIM_SET_COMPARE(&HTIM_MEASURES, TIM_CHANNEL_1, TIM_MS_TO_TICKS(&HTIM_MEASURES, _50MS_INTERVAL));
     __HAL_TIM_SET_COMPARE(&HTIM_MEASURES, TIM_CHANNEL_2, TIM_MS_TO_TICKS(&HTIM_MEASURES, _200MS_INTERVAL));
     __HAL_TIM_SET_COMPARE(&HTIM_MEASURES, TIM_CHANNEL_3, TIM_MS_TO_TICKS(&HTIM_MEASURES, _500MS_INTERVAL));
     __HAL_TIM_SET_COMPARE(&HTIM_MEASURES, TIM_CHANNEL_4, TIM_MS_TO_TICKS(&HTIM_MEASURES, _5S_INTERVAL));
@@ -28,17 +28,17 @@ void measures_init() {
 }
 
 void measures_check_flags() {
-    if (flags & _20MS_INTERVAL_FLAG) {
+    if (flags & _50MS_INTERVAL_FLAG) {
         measures_voltage_current_soc();
         voltage_check_errors();
         current_check_errors();
         can_car_send(primary_id_HV_VOLTAGE);
         can_car_send(primary_id_HV_CURRENT);
         can_car_send(primary_id_TS_STATUS);
-        if (error_count > 0) {
+        if (error_count() > 0) {
             can_car_send(primary_id_HV_ERRORS);
         }
-        flags &= ~_20MS_INTERVAL_FLAG;
+        flags &= ~_50MS_INTERVAL_FLAG;
     }
     if (flags & _200MS_INTERVAL_FLAG) {
         can_cellboards_check();
@@ -46,13 +46,14 @@ void measures_check_flags() {
         can_car_send(primary_id_HV_TEMP);
         flags &= ~_200MS_INTERVAL_FLAG;
     }
-    if (flags & _500MS_INTERVAL_FLAG && bms.handcart_connected) {
+    if (flags & _500MS_INTERVAL_FLAG) {
         if (bms.handcart_connected) {
             can_car_send(primary_id_HV_CELLS_TEMP);
             can_car_send(primary_id_HV_CELLS_VOLTAGE);
             can_car_send(primary_id_HV_CELL_BALANCING_STATUS);
         }
         can_car_send(primary_id_HV_CAN_FORWARD_STATUS);
+        can_car_send(primary_id_HV_VERSION);
         flags &= ~_500MS_INTERVAL_FLAG;
     }
     if (flags & _5S_INTERVAL_FLAG) {
@@ -75,8 +76,8 @@ void _measures_handle_tim_oc_irq(TIM_HandleTypeDef *htim) {
     uint32_t cnt = __HAL_TIM_GetCounter(htim);
     switch (htim->Channel) {
         case HAL_TIM_ACTIVE_CHANNEL_1:
-            __HAL_TIM_SET_COMPARE(htim, TIM_CHANNEL_1, (cnt + TIM_MS_TO_TICKS(htim, _20MS_INTERVAL)));
-            flags |= _20MS_INTERVAL_FLAG;
+            __HAL_TIM_SET_COMPARE(htim, TIM_CHANNEL_1, (cnt + TIM_MS_TO_TICKS(htim, _50MS_INTERVAL)));
+            flags |= _50MS_INTERVAL_FLAG;
             break;
         case HAL_TIM_ACTIVE_CHANNEL_2:
             __HAL_TIM_SET_COMPARE(htim, TIM_CHANNEL_2, (cnt + TIM_MS_TO_TICKS(htim, _200MS_INTERVAL)));

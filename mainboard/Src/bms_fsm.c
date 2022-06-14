@@ -93,18 +93,22 @@ void _start_fb_timeout_timer() {
 
 void _stop_pc_check_timer() {
     HAL_TIM_OC_Stop_IT(&HTIM_BMS, TIM_CHANNEL_1);
+    __HAL_TIM_CLEAR_IT(&HTIM_BMS, TIM_IT_CC1);
 }
 
 void _stop_pc_timeout_timer() {
     HAL_TIM_OC_Stop_IT(&HTIM_BMS, TIM_CHANNEL_2);
+    __HAL_TIM_CLEAR_IT(&HTIM_BMS, TIM_IT_CC2);
 }
 
 void _stop_fb_check_timer() {
     HAL_TIM_OC_Stop_IT(&HTIM_BMS, TIM_CHANNEL_3);
+    __HAL_TIM_CLEAR_IT(&HTIM_BMS, TIM_IT_CC3);
 }
 
 void _stop_fb_timeout_timer() {
     HAL_TIM_OC_Stop_IT(&HTIM_BMS, TIM_CHANNEL_4);
+    __HAL_TIM_CLEAR_IT(&HTIM_BMS, TIM_IT_CC4);
 }
 
 uint8_t *bms_get_cellboard_distribution() {
@@ -323,7 +327,7 @@ void _precharge_handler(fsm FSM, uint8_t event) {
             snprintf(c, 5, "%4.2f", voltage_get_vts_p() / (voltage_get_vbat_adc() * PRECHARGE_VOLTAGE_THRESHOLD));
             cli_bms_debug(c, 5);
 
-            if (HAL_GetTick() - tick > 1000 ||
+            if (HAL_GetTick() - tick > 10000 ||
                 (!bms.handcart_connected && voltage_get_vts_p() > 0 &&
                  voltage_get_vts_p() >= voltage_get_vbat_adc() * PRECHARGE_VOLTAGE_THRESHOLD) ||
                 (bms.handcart_connected && voltage_get_vts_p() > 0 &&
@@ -353,7 +357,6 @@ void _on_entry(fsm FSM) {
 }
 
 void _on_handler(fsm FSM, uint8_t event) {
-    volatile feedback_t f;
     switch (event) {
         case BMS_EV_TS_OFF:
             pack_set_default_off(0);
@@ -363,15 +366,13 @@ void _on_handler(fsm FSM, uint8_t event) {
             fsm_transition(FSM, BMS_FAULT);
             break;
         case BMS_EV_FB_CHECK:
-            f = feedback_check(FEEDBACK_ON_MASK, FEEDBACK_ON_VAL);
-            if (f != 0) {
+            if (feedback_check(FEEDBACK_ON_MASK, FEEDBACK_ON_VAL) != 0) {
                 pack_set_default_off(0);
                 fsm_transition(FSM, BMS_IDLE);
             }
             break;
         case BMS_EV_FB_TIMEOUT:
-            f = feedback_check(FEEDBACK_ON_MASK, FEEDBACK_ON_VAL);
-            if (f != 0) {
+            if (feedback_check(FEEDBACK_ON_MASK, FEEDBACK_ON_VAL) != 0) {
                 pack_set_default_off(0);
                 fsm_transition(FSM, BMS_IDLE);
                 return;
