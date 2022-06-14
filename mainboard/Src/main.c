@@ -136,8 +136,6 @@ int main(void) {
     feedback_init();
     fans_init();
 
-    DBGMCU->APB2FZ = DBGMCU_APB2_FZ_DBG_TIM8_STOP;
-
     /* USER CODE END 2 */
 
     /* Infinite loop */

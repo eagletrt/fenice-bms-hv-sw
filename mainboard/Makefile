@@ -93,6 +93,7 @@ SZ = $(PREFIX)size
 endif
 HEX = $(CP) -O ihex
 BIN = $(CP) -O binary -S
+SHIFTED_ADDR = $(shell cat STM32F446RETx_FLASH_shifted.ld| grep "FLASH (rx)      : ORIGIN = " | awk  '{print $6}' | sed 's/.$//')
  
 #######################################
 # CFLAGS
@@ -128,7 +129,7 @@ C_INCLUDES =  \
 -IDrivers/STM32F4xx_HAL_Driver/Inc \
 -IDrivers/STM32F4xx_HAL_Driver/Inc/Legacy \
 -IDrivers/CMSIS/Device/ST/STM32F4xx/Include \
--IDrivers/CMSIS/Include
+-IDrivers/CMSIS/Include \
 
 
 # compile gcc flags
@@ -150,11 +151,13 @@ CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 #######################################
 # link script
 LDSCRIPT = STM32F446RETx_FLASH.ld
+LDSCRIPT_SHIFTED = STM32F446RETx_FLASH_shifted.ld
 
 # libraries
 LIBS = -lc -lm -lnosys 
 LIBDIR = 
 LDFLAGS = $(MCU) -specs=nano.specs -u _printf_float -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections
+LDFLAGS_SHIFTED = $(MCU) -specs=nano.specs -u _printf_float -T$(LDSCRIPT_SHIFTED) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections
 
 # default action: build all
 all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET).bin
@@ -185,6 +188,20 @@ $(BUILD_DIR)/%.hex: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
 	
 $(BUILD_DIR)/%.bin: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
 	$(BIN) $< $@	
+
+#shifted
+$(BUILD_DIR)/$(TARGET)_shifted.elf: $(OBJECTS) Makefile
+	$(CC) $(OBJECTS) $(LDFLAGS_SHIFTED) -o $@
+	$(SZ) $@
+
+$(BUILD_DIR)/%_shifted.hex: $(BUILD_DIR)/%_shifted.elf | $(BUILD_DIR)
+	$(HEX) $< $@
+	
+$(BUILD_DIR)/%_shifted.bin: $(BUILD_DIR)/%_shifted.elf | $(BUILD_DIR)
+	$(BIN) $< $@	
+
+$(BUILD_DIR)/%.srec: $(BUILD_DIR)/%_shifted.bin | $(BUILD_DIR)
+	bin2srec -a SHIFTED_ADDR -i $(BUILD_DIR)/%_shifted.bin -o $@
 	
 $(BUILD_DIR):
 	mkdir $@		
