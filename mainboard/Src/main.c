@@ -31,10 +31,10 @@
 #include "feedback.h"
 #include "imd.h"
 #include "mainboard_config.h"
-#include "measures.h"
 #include "pack/current.h"
 #include "pack/pack.h"
 #include "soc.h"
+#include "timebase.h"
 
 #include <m95256.h>
 #include <string.h>
@@ -105,7 +105,6 @@ int main(void) {
     MX_SPI2_Init();
     MX_TIM2_Init();
     MX_TIM3_Init();
-    MX_TIM4_Init();
     MX_USART1_UART_Init();
     MX_DMA_Init();
     MX_ADC3_Init();
@@ -117,6 +116,7 @@ int main(void) {
     MX_ADC2_Init();
     MX_TIM1_Init();
     MX_TIM6_Init();
+    MX_TIM7_Init();
     /* USER CODE BEGIN 2 */
     HAL_GPIO_WritePin(EEPROM_HOLD_GPIO_Port, EEPROM_HOLD_Pin, GPIO_PIN_SET);
     current_start_measure();
@@ -131,7 +131,7 @@ int main(void) {
     soc_init();
     can_bms_init();
     can_car_init();
-    measures_init();
+    timebase_init();
     imd_init();
     feedback_init();
     fans_init();
@@ -147,7 +147,7 @@ int main(void) {
         fsm_run(bms.fsm);
         fsm_run(bal.fsm);
 
-        measures_check_flags();
+        timebase_check_flags();
         cli_watch_flush_handler();
         if (HAL_GetTick() > 1500 && !HAL_GPIO_ReadPin(BMS_FAULT_GPIO_Port, BMS_FAULT_Pin))
             HAL_GPIO_WritePin(BMS_FAULT_GPIO_Port, BMS_FAULT_Pin, BMS_FAULT_OFF_VALUE);

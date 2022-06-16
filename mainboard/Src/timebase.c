@@ -1,0 +1,91 @@
+#include "timebase.h"
+
+#include "adc124s021.h"
+#include "bms_fsm.h"
+#include "can_comm.h"
+#include "cli_bms.h"
+#include "pwm.h"
+#include "soc.h"
+#include "spi.h"
+#include "temperature.h"
+#include "voltage.h"
+
+timebase_flags_t flags;
+uint32_t repetition_counter;
+
+void timebase_init() {
+    __HAL_TIM_SetAutoreload(&HTIM_TIMEBASE, TIM_MS_TO_TICKS(&HTIM_TIMEBASE, 10));
+    __HAL_TIM_CLEAR_IT(&HTIM_TIMEBASE, TIM_IT_UPDATE);
+    HAL_TIM_Base_Start_IT(&HTIM_TIMEBASE);
+    flags              = 0;
+    repetition_counter = 0;
+}
+
+void timebase_check_flags() {
+    if (flags & _10MS_INTERVAL_FLAG) {
+        flags &= ~_10MS_INTERVAL_FLAG;
+    }
+    if (flags & _50MS_INTERVAL_FLAG) {
+        timebase_voltage_current_soc();
+        voltage_check_errors();
+        current_check_errors();
+        can_car_send(primary_id_HV_VOLTAGE);
+        can_car_send(primary_id_HV_CURRENT);
+        can_car_send(primary_id_TS_STATUS);
+        if (error_count() > 0) {
+            can_car_send(primary_id_HV_ERRORS);
+        }
+        flags &= ~_50MS_INTERVAL_FLAG;
+    }
+    if (flags & _100MS_INTERVAL_FLAG) {
+        can_cellboards_check();
+        temperature_check_errors();
+        can_car_send(primary_id_HV_TEMP);
+        can_car_send(primary_id_SHUTDOWN_STATUS);
+        flags &= ~_100MS_INTERVAL_FLAG;
+    }
+    if (flags & _500MS_INTERVAL_FLAG) {
+        if (bms.handcart_connected) {
+            can_car_send(primary_id_HV_CELLS_TEMP);
+            can_car_send(primary_id_HV_CELLS_VOLTAGE);
+            can_car_send(primary_id_HV_CELL_BALANCING_STATUS);
+        }
+        can_car_send(primary_id_HV_CAN_FORWARD_STATUS);
+        flags &= ~_500MS_INTERVAL_FLAG;
+    }
+    if (flags & _1S_INTERVAL_FLAG) {
+        can_car_send(primary_id_HV_VERSION);
+        flags &= ~_1S_INTERVAL_FLAG;
+    }
+    if (flags & _5S_INTERVAL_FLAG) {
+        soc_save_to_eeprom();
+        flags &= ~_5S_INTERVAL_FLAG;
+    }
+}
+
+void timebase_voltage_current_soc() {
+    ADC124S021_CH chs[3]     = {ADC124_BUS_CHANNEL, ADC124_INTERNAL_CHANNEL, ADC124_SHUNT_CHANNEL};
+    float adc124_timebase[3] = {0};
+    if (adc124s021_read_channels(&SPI_ADC124S, chs, 3, adc124_timebase)) {
+        voltage_measure(adc124_timebase);
+        current_read(adc124_timebase[2]);
+    }
+    soc_sample_energy(HAL_GetTick());
+}
+
+void _timebase_handle_tim_elapsed_handler(TIM_HandleTypeDef *htim) {
+    ++repetition_counter;
+
+    if (!(repetition_counter * _BASE_INTERVAL % _10MS_INTERVAL))
+        flags |= _10MS_INTERVAL_FLAG;
+    if (!(repetition_counter * _BASE_INTERVAL % _50MS_INTERVAL))
+        flags |= _50MS_INTERVAL_FLAG;
+    if (!(repetition_counter * _BASE_INTERVAL % _100MS_INTERVAL))
+        flags |= _100MS_INTERVAL_FLAG;
+    if (!(repetition_counter * _BASE_INTERVAL % _500MS_INTERVAL))
+        flags |= _500MS_INTERVAL_FLAG;
+    if (!(repetition_counter * _BASE_INTERVAL % _1S_INTERVAL))
+        flags |= _1S_INTERVAL_FLAG;
+    if (!(repetition_counter * _BASE_INTERVAL % _5S_INTERVAL))
+        flags |= _5S_INTERVAL_FLAG;
+}

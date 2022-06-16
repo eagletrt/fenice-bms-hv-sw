@@ -75,7 +75,6 @@ Src/feedback.c \
 Src/gpio.c \
 Src/imd.c \
 Src/main.c \
-Src/measures.c \
 Src/pack/current.c \
 Src/pack/pack.c \
 Src/pack/temperature.c \
@@ -87,6 +86,7 @@ Src/stm32f4xx_hal_msp.c \
 Src/stm32f4xx_it.c \
 Src/system_stm32f4xx.c \
 Src/tim.c \
+Src/timebase.c \
 Src/usart.c \
 lib/micro-libs/blink/blink.c \
 lib/micro-libs/cli/cli.c \
