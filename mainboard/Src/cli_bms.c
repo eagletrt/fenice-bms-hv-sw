@@ -10,6 +10,7 @@
 
 #include "cli_bms.h"
 
+#include "adc124s021.h"
 #include "bal_fsm.h"
 #include "bms_fsm.h"
 #include "can.h"
@@ -23,6 +24,7 @@
 #include "pack/temperature.h"
 #include "pack/voltage.h"
 #include "soc.h"
+#include "spi.h"
 #include "usart.h"
 
 #include <stdio.h>
@@ -160,20 +162,25 @@ void cli_bms_debug(char *text, size_t length) {
 }
 
 void _cli_volts(uint16_t argc, char **argv, char *out) {
+    float adc_vals[2]    = {0.0};
+    ADC124S021_CH chs[2] = {ADC124_BUS_CHANNEL, ADC124_INTERNAL_CHANNEL};
+    adc124s021_read_channels(&SPI_ADC124S, chs, 2, adc_vals);
     if (strcmp(argv[1], "") == 0) {
         voltage_t max = voltage_get_cell_max(NULL);
         voltage_t min = voltage_get_cell_min(NULL);
         sprintf(
             out,
-            "vts_p.......%.2f V\r\n"
-            "vbat_adc....%.2f V\r\n"
+            "vts_p.......%.2f V --> %.4f\r\n"
+            "vbat_adc....%.2f V --> %.4f\r\n"
             "vbat_sum....%.2f V\r\n"
             "average.....%.2f V\r\n"
             "max.........%.3f V\r\n"
             "min.........%.3f V\r\n"
             "delta.......%.3f V\r\n",
             voltage_get_vts_p(),
+            adc_vals[0],
             voltage_get_vbat_adc(),
+            adc_vals[1],
             voltage_get_vbat_sum(),
             voltage_get_vbat_adc() / PACK_CELL_COUNT,
             (float)max / 10000,
@@ -422,7 +429,7 @@ void _cli_errors(uint16_t argc, char **argv, char *out) {
     error_t errors[100];
     error_dump(errors);
 
-    volatile uint32_t now = HAL_GetTick();
+    uint32_t now = HAL_GetTick();
     sprintf(out, "total %u\r\n", count);
     for (uint16_t i = 0; i < count; i++) {
         sprintf(
