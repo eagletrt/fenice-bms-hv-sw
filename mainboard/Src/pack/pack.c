@@ -31,10 +31,9 @@ void pack_set_fault(uint8_t value) {
     HAL_GPIO_WritePin(BMS_FAULT_GPIO_Port, BMS_FAULT_Pin, value);
 }
 
-void pack_set_default_off(uint16_t prech_delay) {
-    pack_set_ts_on(TS_ON_VALUE);
-    pack_set_airn_off(AIRN_OFF_VALUE);
+void pack_set_default_off() {
     pack_set_airp_off(AIRP_OFF_VALUE);
-    if(prech_delay) HAL_Delay(prech_delay);
+    pack_set_airn_off(AIRN_OFF_VALUE);
     pack_set_precharge(PRECHARGE_OFF_VALUE);
+    pack_set_ts_on(TS_ON_VALUE);
 }
