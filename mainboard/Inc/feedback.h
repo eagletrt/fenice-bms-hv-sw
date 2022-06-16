@@ -16,7 +16,7 @@
 
 #define MUX_INTERVAL_MS 0.1
 
-#define FB_CHECK_INTERVAL_MS 2
+#define FB_CHECK_INTERVAL_MS 5
 #define FB_TIMEOUT_MS        100
 
 typedef uint32_t feedback_t;
