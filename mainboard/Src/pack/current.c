@@ -52,7 +52,7 @@ uint32_t current_read(float shunt_adc_val) {
     }
 
     // Convert Hall-low (50A)
-    volatile float volt        = avg_50 * (3.3f / 4095 / MEASURE_SAMPLE_SIZE);
+    float volt        = avg_50 * (3.3f / 4095 / MEASURE_SAMPLE_SIZE);
     current[CURRENT_SENSOR_50] = _current_convert_low(volt);
 
     // Convert Hall-high (300A)
