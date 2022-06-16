@@ -18,6 +18,7 @@
 #include "mainboard_config.h"
 #include "usart.h"
 #include "bootloader.h"
+#include "feedback.h"
 
 #include <string.h>
 
@@ -161,7 +162,7 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         }
         tx_header.DLC = primary_serialize_TS_STATUS(buffer, status);
     } else if (id == primary_id_HV_TEMP) {
-        tx_header.DLC = primary_serialize_HV_TEMP(buffer, (uint16_t)temperature_get_average() / 2.56 * 655.36, (uint16_t)temperature_get_max() / 2.56 * 655.36, (uint16_t)temperature_get_min() / 2.56 * 655.36);
+        tx_header.DLC = primary_serialize_HV_TEMP(buffer, (uint8_t)temperature_get_average(), (uint8_t)temperature_get_max(), (uint8_t)temperature_get_min());
     } else if (id == primary_id_HV_ERRORS) {
         primary_HvErrors warnings = 0;
         primary_HvErrors errors = 0;
@@ -216,6 +217,9 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
                                         primary_serialize_HV_CAN_FORWARD_STATUS(buffer, primary_Toggle_OFF);
     } else if (id == primary_id_HV_VERSION) {
         tx_header.DLC = primary_serialize_HV_VERSION(buffer, 1, 1);
+    } else if (id == primary_id_SHUTDOWN_STATUS) {
+        feedback_t f = feedback_check(FEEDBACK_SD_END | FEEDBACK_SD_IN, FEEDBACK_SD_END | FEEDBACK_SD_IN);
+        tx_header.DLC = primary_serialize_SHUTDOWN_STATUS(buffer, f & FEEDBACK_SD_IN, f & FEEDBACK_SD_END);
     } else {
         return HAL_ERROR;
     }
