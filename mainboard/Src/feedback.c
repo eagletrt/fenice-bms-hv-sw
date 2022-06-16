@@ -16,9 +16,9 @@
 #include "tim.h"
 
 #define feedback_analog_threshold_h    9.5f / 4.3f
-#define feedback_analog_threshold_l    0.4f / 4.3f
-#define feedback_check_mux_threshold_h 3.5f / 4.3f
-#define feedback_check_mux_threshold_l 3.1f / 4.3f
+#define feedback_analog_threshold_l    2.5f / 4.3f
+#define feedback_check_mux_threshold_h 3.7f / 4.3f
+#define feedback_check_mux_threshold_l 2.8f / 4.3f
 
 uint16_t feedback_adc_values[FEEDBACK_N] = {0};
 uint8_t fb_index                         = FEEDBACK_MUX_N - 1;
