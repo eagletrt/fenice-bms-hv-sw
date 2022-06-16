@@ -19,7 +19,7 @@
 #include <string.h>
 #include <math.h>
 
-#define CONV_COEFF 140.86f  //(10MOhm + 71.5kOhm) / 71.5kOhm
+#define CONV_COEFF 280.7202797f  //(10MOhm + 35.75kOhm) / 35.75kOhm
 
 struct voltage {
     float vts_p;
@@ -42,7 +42,7 @@ void voltage_init() {
     memset(voltage.cells, 0, sizeof(voltage.cells));
 }
 
-float _voltage_conv_adc_to_voltage(voltage_t v) {
+float _voltage_conv_adc_to_voltage(float v) {
     return CONV_COEFF * v;
 }
 
