@@ -306,6 +306,7 @@ void _precharge_handler(fsm FSM, uint8_t event) {
             // send timeout warning
             //NB there's no break; !!!!
         case BMS_EV_TS_OFF:
+            cli_bms_debug("requested TSOFF", 15);
             pack_set_default_off(0);
             fsm_transition(FSM, BMS_IDLE);
             break;
@@ -327,11 +328,10 @@ void _precharge_handler(fsm FSM, uint8_t event) {
             snprintf(c, 5, "%4.2f", voltage_get_vts_p() / (voltage_get_vbat_adc() * PRECHARGE_VOLTAGE_THRESHOLD));
             cli_bms_debug(c, 5);
 
-            if (HAL_GetTick() - tick > 10000 ||
-                (!bms.handcart_connected && voltage_get_vts_p() > 0 &&
-                 voltage_get_vts_p() >= voltage_get_vbat_adc() * PRECHARGE_VOLTAGE_THRESHOLD) ||
-                (bms.handcart_connected && voltage_get_vts_p() > 0 &&
-                 voltage_get_vts_p() >= voltage_get_vbat_adc() * PRECHARGE_VOLTAGE_THRESHOLD_CARELINO)) {
+            if ((!bms.handcart_connected && (voltage_get_vts_p() > 0) &&
+                 (voltage_get_vts_p() >= voltage_get_vbat_adc() * PRECHARGE_VOLTAGE_THRESHOLD)) ||
+                (bms.handcart_connected && (voltage_get_vts_p() > 0) &&
+                 (voltage_get_vts_p() >= voltage_get_vbat_adc() * PRECHARGE_VOLTAGE_THRESHOLD_CARELINO))) {
                 pack_set_airp_off(AIRP_ON_VALUE);
                 _stop_fb_check_timer();
                 cli_bms_debug("Precharge ok", 18);
@@ -345,6 +345,7 @@ void _precharge_handler(fsm FSM, uint8_t event) {
 }
 
 void _precharge_exit(fsm FSM) {
+    pack_set_precharge(PRECHARGE_OFF_VALUE);
     _stop_pc_check_timer();
     _stop_pc_timeout_timer();
     _stop_fb_check_timer();
@@ -359,6 +360,7 @@ void _on_entry(fsm FSM) {
 void _on_handler(fsm FSM, uint8_t event) {
     switch (event) {
         case BMS_EV_TS_OFF:
+            cli_bms_debug("requested TSOFF", 15);
             pack_set_default_off(0);
             fsm_transition(FSM, BMS_IDLE);
             break;
@@ -366,14 +368,20 @@ void _on_handler(fsm FSM, uint8_t event) {
             fsm_transition(FSM, BMS_FAULT);
             break;
         case BMS_EV_FB_CHECK:
-            if (feedback_check(FEEDBACK_ON_MASK, FEEDBACK_ON_VAL) != 0) {
+            feedback_t f = feedback_check(FEEDBACK_ON_MASK, FEEDBACK_ON_VAL);
+            if (f != 0) {
                 pack_set_default_off(0);
+                char buf[64];
+                sprintf(buf, "failed fb check, %lx", f);
+                cli_bms_debug(buf, strlen(buf));
                 fsm_transition(FSM, BMS_IDLE);
             }
             break;
         case BMS_EV_FB_TIMEOUT:
             if (feedback_check(FEEDBACK_ON_MASK, FEEDBACK_ON_VAL) != 0) {
                 pack_set_default_off(0);
+                _stop_fb_timeout_timer();
+                cli_bms_debug("failed fb timeout", 17);
                 fsm_transition(FSM, BMS_IDLE);
                 return;
             }
@@ -383,7 +391,6 @@ void _on_handler(fsm FSM, uint8_t event) {
 }
 
 void _on_exit(fsm FSM) {
-    _stop_fb_timeout_timer();
     _stop_fb_check_timer();
 }
 

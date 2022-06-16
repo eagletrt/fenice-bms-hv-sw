@@ -168,9 +168,9 @@ static const uint8_t TEMP_SENSOR_ADDRESS_CODING[TEMP_SENSORS_PER_STRIP] = {000, 
 
 // @section Pre-charge
 
-#define PRECHARGE_TIMEOUT                    10000U
+#define PRECHARGE_TIMEOUT                    20000U
 #define PRECHARGE_CHECK_INTERVAL             100U
-#define PRECHARGE_VOLTAGE_THRESHOLD          0.95f
+#define PRECHARGE_VOLTAGE_THRESHOLD          0.93f
 #define PRECHARGE_VOLTAGE_THRESHOLD_CARELINO 0.90f
 
 enum {
