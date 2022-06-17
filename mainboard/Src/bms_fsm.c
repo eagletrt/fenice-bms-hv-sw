@@ -239,7 +239,8 @@ void _airn_close_handler(fsm FSM, uint8_t event) {
             fsm_transition(FSM, BMS_FAULT);
             break;
         case BMS_EV_FB_CHECK:
-            if (feedback_check(FEEDBACK_AIRN_CLOSE_MASK, FEEDBACK_AIRN_CLOSE_VAL) == 0) {
+            if (feedback_check(FEEDBACK_AIRN_CLOSE_MASK, FEEDBACK_AIRN_CLOSE_VAL) == 0 &&
+                voltage_get_vbat_adc() > 100) {
                 pack_set_airn_off(AIRN_ON_VALUE);
                 fsm_transition(FSM, BMS_AIRN_STATUS);
             }

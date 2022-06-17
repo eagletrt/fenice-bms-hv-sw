@@ -10,6 +10,14 @@
 #include "temperature.h"
 #include "voltage.h"
 
+#define SEND_CAN_CAR_MSG_ATTEMPTS 10
+#define SEND_CAN_CAR_MSG(id)                                                  \
+    do {                                                                      \
+        uint8_t i = 0;                                                        \
+        while (i++ < SEND_CAN_CAR_MSG_ATTEMPTS && can_car_send(id) != HAL_OK) \
+            ;                                                                 \
+    } while (0)
+
 timebase_flags_t flags;
 uint32_t repetition_counter;
 
@@ -29,32 +37,32 @@ void timebase_check_flags() {
         timebase_voltage_current_soc();
         voltage_check_errors();
         current_check_errors();
-        can_car_send(primary_id_HV_VOLTAGE);
-        can_car_send(primary_id_HV_CURRENT);
-        can_car_send(primary_id_TS_STATUS);
+        SEND_CAN_CAR_MSG(primary_id_HV_VOLTAGE);
+        SEND_CAN_CAR_MSG(primary_id_HV_CURRENT);
+        SEND_CAN_CAR_MSG(primary_id_TS_STATUS);
         if (error_count() > 0) {
-            can_car_send(primary_id_HV_ERRORS);
+            SEND_CAN_CAR_MSG(primary_id_HV_ERRORS);
         }
         flags &= ~_50MS_INTERVAL_FLAG;
     }
     if (flags & _100MS_INTERVAL_FLAG) {
         can_cellboards_check();
         temperature_check_errors();
-        can_car_send(primary_id_HV_TEMP);
-        can_car_send(primary_id_SHUTDOWN_STATUS);
+        SEND_CAN_CAR_MSG(primary_id_HV_TEMP);
+        SEND_CAN_CAR_MSG(primary_id_SHUTDOWN_STATUS);
         flags &= ~_100MS_INTERVAL_FLAG;
     }
     if (flags & _500MS_INTERVAL_FLAG) {
         if (bms.handcart_connected) {
-            can_car_send(primary_id_HV_CELLS_TEMP);
-            can_car_send(primary_id_HV_CELLS_VOLTAGE);
-            can_car_send(primary_id_HV_CELL_BALANCING_STATUS);
+            SEND_CAN_CAR_MSG(primary_id_HV_CELLS_TEMP);
+            SEND_CAN_CAR_MSG(primary_id_HV_CELLS_VOLTAGE);
+            SEND_CAN_CAR_MSG(primary_id_HV_CELL_BALANCING_STATUS);
         }
-        can_car_send(primary_id_HV_CAN_FORWARD_STATUS);
+        SEND_CAN_CAR_MSG(primary_id_HV_CAN_FORWARD_STATUS);
         flags &= ~_500MS_INTERVAL_FLAG;
     }
     if (flags & _1S_INTERVAL_FLAG) {
-        can_car_send(primary_id_HV_VERSION);
+        SEND_CAN_CAR_MSG(primary_id_HV_VERSION);
         flags &= ~_1S_INTERVAL_FLAG;
     }
     if (flags & _5S_INTERVAL_FLAG) {
