@@ -22,7 +22,7 @@ timebase_flags_t flags;
 uint32_t repetition_counter;
 
 void timebase_init() {
-    __HAL_TIM_SetAutoreload(&HTIM_TIMEBASE, TIM_MS_TO_TICKS(&HTIM_TIMEBASE, 10));
+    __HAL_TIM_SetAutoreload(&HTIM_TIMEBASE, TIM_MS_TO_TICKS(&HTIM_TIMEBASE, _BASE_INTERVAL));
     __HAL_TIM_CLEAR_IT(&HTIM_TIMEBASE, TIM_IT_UPDATE);
     HAL_TIM_Base_Start_IT(&HTIM_TIMEBASE);
     flags              = 0;
@@ -37,32 +37,32 @@ void timebase_check_flags() {
         timebase_voltage_current_soc();
         voltage_check_errors();
         current_check_errors();
-        SEND_CAN_CAR_MSG(primary_id_HV_VOLTAGE);
-        SEND_CAN_CAR_MSG(primary_id_HV_CURRENT);
-        SEND_CAN_CAR_MSG(primary_id_TS_STATUS);
+        SEND_CAN_CAR_MSG(primary_ID_HV_VOLTAGE);
+        SEND_CAN_CAR_MSG(primary_ID_HV_CURRENT);
+        SEND_CAN_CAR_MSG(primary_ID_TS_STATUS);
         if (error_count() > 0) {
-            SEND_CAN_CAR_MSG(primary_id_HV_ERRORS);
+            SEND_CAN_CAR_MSG(primary_ID_HV_ERRORS);
         }
         flags &= ~_50MS_INTERVAL_FLAG;
     }
     if (flags & _100MS_INTERVAL_FLAG) {
         can_cellboards_check();
         temperature_check_errors();
-        SEND_CAN_CAR_MSG(primary_id_HV_TEMP);
-        SEND_CAN_CAR_MSG(primary_id_SHUTDOWN_STATUS);
+        SEND_CAN_CAR_MSG(primary_ID_HV_TEMP);
+        SEND_CAN_CAR_MSG(primary_ID_SHUTDOWN_STATUS);
         flags &= ~_100MS_INTERVAL_FLAG;
     }
     if (flags & _500MS_INTERVAL_FLAG) {
         if (bms.handcart_connected) {
-            SEND_CAN_CAR_MSG(primary_id_HV_CELLS_TEMP);
-            SEND_CAN_CAR_MSG(primary_id_HV_CELLS_VOLTAGE);
-            SEND_CAN_CAR_MSG(primary_id_HV_CELL_BALANCING_STATUS);
+            SEND_CAN_CAR_MSG(primary_ID_HV_CELLS_TEMP);
+            SEND_CAN_CAR_MSG(primary_ID_HV_CELLS_VOLTAGE);
+            SEND_CAN_CAR_MSG(primary_ID_HV_CELL_BALANCING_STATUS);
         }
-        SEND_CAN_CAR_MSG(primary_id_HV_CAN_FORWARD_STATUS);
+        SEND_CAN_CAR_MSG(primary_ID_HV_CAN_FORWARD_STATUS);
         flags &= ~_500MS_INTERVAL_FLAG;
     }
     if (flags & _1S_INTERVAL_FLAG) {
-        SEND_CAN_CAR_MSG(primary_id_HV_VERSION);
+        SEND_CAN_CAR_MSG(primary_ID_HV_VERSION);
         flags &= ~_1S_INTERVAL_FLAG;
     }
     if (flags & _5S_INTERVAL_FLAG) {

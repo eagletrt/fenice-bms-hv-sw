@@ -21,13 +21,13 @@
 #include "can.h"
 
 /* USER CODE BEGIN 0 */
-#define bms_IMPLEMENTATION
+#define bms_NETWORK_IMPLEMENTATION
 #define bms_IDS_IMPLEMENTATION
 
 #include "../Lib/can/lib/bms/c/ids.h"
 #include "../Lib/can/lib/bms/c/network.h"
 
-#undef bms_IMPLEMENTATION
+#undef bms_NETWORK_IMPLEMENTATION
 #undef bms_IDS_IMPLEMENTATION
 /* USER CODE END 0 */
 

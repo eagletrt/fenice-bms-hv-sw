@@ -90,7 +90,7 @@ void off_entry(fsm FSM) {
     HAL_TIM_OC_Stop_IT(&HTIM_BAL, TIM_CHANNEL_2);
     cli_bms_debug("disabling balancing", 20);
     memset(bal.cells, 0, sizeof(bms_BalancingCells) * LTC6813_COUNT);
-    can_bms_send(bms_id_BALANCING);
+    can_bms_send(bms_ID_BALANCING);
 }
 
 void off_handler(fsm FSM, uint8_t event) {
@@ -100,7 +100,7 @@ void off_handler(fsm FSM, uint8_t event) {
             break;
         case EV_BAL_STOP:
             memset(bal.cells, 0, sizeof(bms_BalancingCells) * LTC6813_COUNT);
-            can_bms_send(bms_id_BALANCING);
+            can_bms_send(bms_ID_BALANCING);
             break;
     }
 }
@@ -112,7 +112,7 @@ void compute_entry(fsm FSM) {
         return;
     }
     cli_bms_debug("Non si può fare meglio di così.", 34);
-    can_bms_send(bms_id_BALANCING);
+    can_bms_send(bms_ID_BALANCING);
     fsm_transition(FSM, BAL_OFF);
 }
 
@@ -126,7 +126,7 @@ void discharge_entry(fsm FSM) {
     __HAL_TIM_SET_COMPARE(&HTIM_BAL, TIM_CHANNEL_1, __HAL_TIM_GET_COUNTER(&HTIM_BAL) + bal.cycle_length);
     HAL_TIM_OC_Start_IT(&HTIM_BAL, TIM_CHANNEL_1);
 
-    can_bms_send(bms_id_BALANCING);
+    can_bms_send(bms_ID_BALANCING);
     cli_bms_debug("Discharging cells", 18);
 }
 
@@ -145,7 +145,7 @@ void discharge_handler(fsm FSM, uint8_t event) {
                         LTC6813_COUNT,
                         bal.target) == 0) {
                     cli_bms_debug("Non si può fare meglio di così.", 34);
-                    can_bms_send(bms_id_BALANCING);
+                    can_bms_send(bms_ID_BALANCING);
                     fsm_transition(FSM, BAL_OFF);
                 } else {
                     fsm_transition(FSM, BAL_COOLDOWN);

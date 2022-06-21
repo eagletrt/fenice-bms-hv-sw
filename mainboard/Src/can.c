@@ -22,19 +22,19 @@
 
 /* USER CODE BEGIN 0 */
 
-#define bms_IMPLEMENTATION
 #define bms_IDS_IMPLEMENTATION
-#define primary_IMPLEMENTATION
+#define bms_NETWORK_IMPLEMENTATION
 #define primary_IDS_IMPLEMENTATION
+#define primary_NETWORK_IMPLEMENTATION
 
 #include "../lib/can/lib/bms/c/ids.h"
 #include "../lib/can/lib/bms/c/network.h"
 #include "../lib/can/lib/primary/c/ids.h"
 #include "../lib/can/lib/primary/c/network.h"
 
-#undef bms_IMPLEMENTATION
+#undef bms_NETWORK_IMPLEMENTATION
 #undef bms_IDS_IMPLEMENTATION
-#undef primary_IMPLEMENTATION
+#undef primary_NETWORK_IMPLEMENTATION
 #undef primary_IDS_IMPLEMENTATION
 
 /* USER CODE END 0 */
