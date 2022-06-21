@@ -38,15 +38,15 @@ void measurements_flags_check() {
                 volt_open_wire_check();
         } else {
             volt_read();
-            can_send(bms_topic_filter_VOLTAGE_INFO);
+            can_send(bms_TOPIC_FILTER_VOLTAGE_INFO);
         }
         open_wire_check_status = (open_wire_check_status + 1) % 5;
         flags &= ~MEASUREMENTS_VOLTS_READ_FLAG;
     }
     if (flags & MEASUREMENTS_TEMPS_READ_FLAG) {
         temp_measure_all();
-        can_send(bms_topic_filter_TEMPERATURE_INFO);
-        can_send(0);
+        can_send(bms_TOPIC_FILTER_TEMPERATURE_INFO);
+        can_send(bms_TOPIC_FILTER_STATUS);
         flags &= ~MEASUREMENTS_TEMPS_READ_FLAG;
     }
 }

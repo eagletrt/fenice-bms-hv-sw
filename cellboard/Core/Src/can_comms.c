@@ -55,7 +55,7 @@ void can_send(uint16_t topic_id) {
     tx_header.IDE   = CAN_ID_STD;
     tx_header.RTR   = CAN_RTR_DATA;
 
-    if (topic_id == 0/*bms_topic_filter_STATUS*/) {
+    if (topic_id == bms_TOPIC_FILTER_STATUS) {
         bms_BalancingStatus state = BAL_OFF;
         switch (fsm_get_state(bal.fsm)) {
             case BAL_OFF:
@@ -68,23 +68,23 @@ void can_send(uint16_t topic_id) {
 
         switch (cellboard_index) {
             case 0:
-                tx_header.StdId = bms_id_BOARD_STATUS_CELLBOARD0;
+                tx_header.StdId = bms_ID_BOARD_STATUS_CELLBOARD0;
                 break;
             case 1:
-                tx_header.StdId = bms_id_BOARD_STATUS_CELLBOARD1;
+                tx_header.StdId = bms_ID_BOARD_STATUS_CELLBOARD1;
                 break;
             case 2:
-                tx_header.StdId = bms_id_BOARD_STATUS_CELLBOARD2;
+                tx_header.StdId = bms_ID_BOARD_STATUS_CELLBOARD2;
                 break;
             case 3:
-                tx_header.StdId = bms_id_BOARD_STATUS_CELLBOARD3;
+                tx_header.StdId = bms_ID_BOARD_STATUS_CELLBOARD3;
                 break;
             case 4:
-                tx_header.StdId = bms_id_BOARD_STATUS_CELLBOARD4;
+                tx_header.StdId = bms_ID_BOARD_STATUS_CELLBOARD4;
                 break;
             case 7:
             case 5:
-                tx_header.StdId = bms_id_BOARD_STATUS_CELLBOARD5;
+                tx_header.StdId = bms_ID_BOARD_STATUS_CELLBOARD5;
                 break;
             default:
                 return;
@@ -94,26 +94,26 @@ void can_send(uint16_t topic_id) {
 
         _can_send(&BMS_CAN, buffer, &tx_header);
         return;
-    } else if (topic_id == bms_topic_filter_TEMPERATURE_INFO) {
+    } else if (topic_id == bms_TOPIC_FILTER_TEMPERATURE_INFO) {
         switch (cellboard_index) {
             case 0:
-                tx_header.StdId = bms_id_TEMPERATURES_CELLBOARD0;
+                tx_header.StdId = bms_ID_TEMPERATURES_CELLBOARD0;
                 break;
             case 1:
-                tx_header.StdId = bms_id_TEMPERATURES_CELLBOARD1;
+                tx_header.StdId = bms_ID_TEMPERATURES_CELLBOARD1;
                 break;
             case 2:
-                tx_header.StdId = bms_id_TEMPERATURES_CELLBOARD2;
+                tx_header.StdId = bms_ID_TEMPERATURES_CELLBOARD2;
                 break;
             case 3:
-                tx_header.StdId = bms_id_TEMPERATURES_CELLBOARD3;
+                tx_header.StdId = bms_ID_TEMPERATURES_CELLBOARD3;
                 break;
             case 4:
-                tx_header.StdId = bms_id_TEMPERATURES_CELLBOARD4;
+                tx_header.StdId = bms_ID_TEMPERATURES_CELLBOARD4;
                 break;
             case 7:
             case 5:
-                tx_header.StdId = bms_id_TEMPERATURES_CELLBOARD5;
+                tx_header.StdId = bms_ID_TEMPERATURES_CELLBOARD5;
                 break;
             default:
                 return;
@@ -139,26 +139,26 @@ void can_send(uint16_t topic_id) {
         }
 
         return;
-    } else if (topic_id == bms_topic_filter_VOLTAGE_INFO) {
+    } else if (topic_id == bms_TOPIC_FILTER_VOLTAGE_INFO) {
         switch (cellboard_index) {
             case 0:
-                tx_header.StdId = bms_id_VOLTAGES_CELLBOARD0;
+                tx_header.StdId = bms_ID_VOLTAGES_CELLBOARD0;
                 break;
             case 1:
-                tx_header.StdId = bms_id_VOLTAGES_CELLBOARD1;
+                tx_header.StdId = bms_ID_VOLTAGES_CELLBOARD1;
                 break;
             case 2:
-                tx_header.StdId = bms_id_VOLTAGES_CELLBOARD2;
+                tx_header.StdId = bms_ID_VOLTAGES_CELLBOARD2;
                 break;
             case 3:
-                tx_header.StdId = bms_id_VOLTAGES_CELLBOARD3;
+                tx_header.StdId = bms_ID_VOLTAGES_CELLBOARD3;
                 break;
             case 4:
-                tx_header.StdId = bms_id_VOLTAGES_CELLBOARD4;
+                tx_header.StdId = bms_ID_VOLTAGES_CELLBOARD4;
                 break;
             case 7:
             case 5:
-                tx_header.StdId = bms_id_VOLTAGES_CELLBOARD5;
+                tx_header.StdId = bms_ID_VOLTAGES_CELLBOARD5;
                 break;
             default:
                 return;
@@ -185,7 +185,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 
     ERROR_UNSET(ERROR_CAN);
 
-    if (rx_header.StdId == bms_id_BALANCING) {
+    if (rx_header.StdId == bms_ID_BALANCING) {
         bms_message_BALANCING balancing;
         bms_deserialize_BALANCING(&balancing, rx_data);
 
@@ -198,7 +198,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
         } else {
             fsm_trigger_event(bal.fsm, EV_BAL_STOP);
         }
-    } else if (rx_header.StdId == bms_id_FW_UPDATE) {
+    } else if (rx_header.StdId == bms_ID_FW_UPDATE) {
         JumpToBlt();
     }
 }
@@ -206,10 +206,10 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 void can_init_with_filter() {
     CAN_FilterTypeDef filter;
     filter.FilterMode       = CAN_FILTERMODE_IDMASK;
-    filter.FilterIdLow      = bms_topic_filter_BALANCING << 5;  // Take all ids from 0
-    filter.FilterIdHigh     = bms_topic_filter_BALANCING << 5;  // to 2^11 - 1
-    filter.FilterMaskIdHigh = bms_topic_mask_BALANCING << 5;    // Don't care on can id bits
-    filter.FilterMaskIdLow  = bms_topic_mask_BALANCING << 5;    // Don't care on can id bits
+    filter.FilterIdLow      = bms_TOPIC_FILTER_BALANCING << 5;  // Take all ids from 0
+    filter.FilterIdHigh     = bms_TOPIC_FILTER_BALANCING << 5;  // to 2^11 - 1
+    filter.FilterMaskIdHigh = bms_TOPIC_MASK_BALANCING << 5;    // Don't care on can id bits
+    filter.FilterMaskIdLow  = bms_TOPIC_MASK_BALANCING << 5;    // Don't care on can id bits
     /* HAL considers IdLow and IdHigh not as just the ID of the can message but
         as the combination of: 
         STDID + RTR + IDE + 4 most significant bits of EXTID
@@ -223,10 +223,10 @@ void can_init_with_filter() {
 
 
     filter.FilterMode       = CAN_FILTERMODE_IDMASK;
-    filter.FilterIdLow      = bms_id_FW_UPDATE << 5;  // Take all ids from 0
-    filter.FilterIdHigh     = bms_id_FW_UPDATE << 5;  // to 2^11 - 1
-    filter.FilterMaskIdHigh = bms_topic_mask_FIXED_IDS << 5;    // Don't care on can id bits
-    filter.FilterMaskIdLow  = bms_topic_mask_FIXED_IDS << 5;    // Don't care on can id bits
+    filter.FilterIdLow      = bms_ID_FW_UPDATE << 5;  // Take all ids from 0
+    filter.FilterIdHigh     = bms_ID_FW_UPDATE << 5;  // to 2^11 - 1
+    filter.FilterMaskIdHigh = bms_TOPIC_MASK_FIXED_IDS << 5;    // Don't care on can id bits
+    filter.FilterMaskIdLow  = bms_TOPIC_MASK_FIXED_IDS << 5;    // Don't care on can id bits
     /* HAL considers IdLow and IdHigh not as just the ID of the can message but
         as the combination of: 
         STDID + RTR + IDE + 4 most significant bits of EXTID

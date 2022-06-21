@@ -98,7 +98,7 @@ HAL_StatusTypeDef CAN_WAIT(CAN_HandleTypeDef *hcan, uint8_t timeout) {
 }
 
 HAL_StatusTypeDef can_send(CAN_HandleTypeDef *hcan, uint8_t *buffer, CAN_TxHeaderTypeDef *header) {
-    if(CAN_WAIT(hcan, 3) != HAL_OK) return HAL_TIMEOUT;
+    if(CAN_WAIT(hcan, 1) != HAL_OK) return HAL_TIMEOUT;
 
     HAL_StatusTypeDef status = HAL_CAN_AddTxMessage(hcan, header, buffer, NULL);
     if (status != HAL_OK) {
@@ -115,11 +115,11 @@ HAL_StatusTypeDef can_send(CAN_HandleTypeDef *hcan, uint8_t *buffer, CAN_TxHeade
 HAL_StatusTypeDef can_car_send(uint16_t id) {
     uint8_t buffer[CAN_MAX_PAYLOAD_LENGTH];
 
-    if(can_forward && id != primary_id_HV_CAN_FORWARD_STATUS) return HAL_BUSY;
+    if(can_forward && id != primary_ID_HV_CAN_FORWARD_STATUS) return HAL_BUSY;
 
     tx_header.StdId = id;
 
-    if (id == primary_id_HV_VOLTAGE) {
+    if (id == primary_ID_HV_VOLTAGE) {
         primary_message_HV_VOLTAGE raw_volts = {0};
         primary_message_HV_VOLTAGE_conversion conv_volts = {0};
 
@@ -132,7 +132,7 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         raw_volts.min_cell_voltage = voltage_get_cell_min(NULL);
 
         tx_header.DLC = primary_serialize_struct_HV_VOLTAGE(buffer, &raw_volts);
-    } else if (id == primary_id_HV_CURRENT) {
+    } else if (id == primary_ID_HV_CURRENT) {
         primary_message_HV_CURRENT raw_curr;
         primary_message_HV_CURRENT_conversion conv_curr;
 
@@ -142,7 +142,7 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         primary_conversion_to_raw_struct_HV_CURRENT(&raw_curr, &conv_curr);
 
         tx_header.DLC = primary_serialize_struct_HV_CURRENT(buffer, &raw_curr);
-    } else if (id == primary_id_TS_STATUS) {
+    } else if (id == primary_ID_TS_STATUS) {
         primary_TsStatus status = primary_TsStatus_OFF;
         switch (fsm_get_state(bms.fsm)) {
             case BMS_IDLE:
@@ -161,9 +161,9 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
                 break;
         }
         tx_header.DLC = primary_serialize_TS_STATUS(buffer, status);
-    } else if (id == primary_id_HV_TEMP) {
+    } else if (id == primary_ID_HV_TEMP) {
         tx_header.DLC = primary_serialize_HV_TEMP(buffer, (uint8_t)temperature_get_average(), (uint8_t)temperature_get_max(), (uint8_t)temperature_get_min());
-    } else if (id == primary_id_HV_ERRORS) {
+    } else if (id == primary_ID_HV_ERRORS) {
         primary_HvErrors warnings = 0;
         primary_HvErrors errors = 0;
         error_t error_array[100];
@@ -177,7 +177,7 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         }
 
         tx_header.DLC = primary_serialize_HV_ERRORS(buffer, warnings, errors);
-    } else if (id == primary_id_HV_CELL_BALANCING_STATUS) {
+    } else if (id == primary_ID_HV_CELL_BALANCING_STATUS) {
         primary_Toggle bal_status;
         switch (fsm_get_state(bal.fsm)) {
             case BAL_OFF:
@@ -193,7 +193,7 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
                 break;
         }
         tx_header.DLC = primary_serialize_HV_CELL_BALANCING_STATUS(buffer, bal_status);
-    } else if (id == primary_id_HV_CELLS_TEMP) {
+    } else if (id == primary_ID_HV_CELLS_TEMP) {
         uint8_t status = 0;
         temperature_t *temps = temperature_get_all();
         for (uint8_t i = 0; i < PACK_TEMP_COUNT; i += 6) {
@@ -203,7 +203,7 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
             HAL_Delay(1);
         }
         return status == 0 ? HAL_OK : HAL_ERROR;
-    } else if (id == primary_id_HV_CELLS_VOLTAGE) {
+    } else if (id == primary_ID_HV_CELLS_VOLTAGE) {
         uint8_t status = 0;
         voltage_t *volts = voltage_get_cells();
         for (uint8_t i = 0; i < PACK_CELL_COUNT; i += 3) {
@@ -212,12 +212,12 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
             HAL_Delay(1);
         }
         return status == 0 ? HAL_OK : HAL_ERROR;
-    } else if (id == primary_id_HV_CAN_FORWARD_STATUS) {
+    } else if (id == primary_ID_HV_CAN_FORWARD_STATUS) {
         tx_header.DLC = can_forward ? primary_serialize_HV_CAN_FORWARD_STATUS(buffer, primary_Toggle_ON) :
                                         primary_serialize_HV_CAN_FORWARD_STATUS(buffer, primary_Toggle_OFF);
-    } else if (id == primary_id_HV_VERSION) {
+    } else if (id == primary_ID_HV_VERSION) {
         tx_header.DLC = primary_serialize_HV_VERSION(buffer, 1, 1);
-    } else if (id == primary_id_SHUTDOWN_STATUS) {
+    } else if (id == primary_ID_SHUTDOWN_STATUS) {
         feedback_t f = feedback_check(FEEDBACK_SD_END | FEEDBACK_SD_IN, FEEDBACK_SD_END | FEEDBACK_SD_IN);
         tx_header.DLC = primary_serialize_SHUTDOWN_STATUS(buffer, f & FEEDBACK_SD_IN, f & FEEDBACK_SD_END);
     } else {
@@ -230,10 +230,10 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
 HAL_StatusTypeDef can_bms_send(uint16_t id) {
     uint8_t buffer[CAN_MAX_PAYLOAD_LENGTH];
 
-    if(can_forward && id != bms_id_FW_UPDATE) return HAL_BUSY;
+    if(can_forward && id != bms_ID_FW_UPDATE) return HAL_BUSY;
     tx_header.StdId = id;
 
-    if (id == bms_id_BALANCING) {
+    if (id == bms_ID_BALANCING) {
         uint8_t status = 0;
         uint8_t *distr = bms_get_cellboard_distribution();
         register uint16_t i;
@@ -242,7 +242,7 @@ HAL_StatusTypeDef can_bms_send(uint16_t id) {
             status += can_send(&BMS_CAN, buffer, &tx_header);
         }
         return status == 0 ? HAL_OK : HAL_ERROR;  //TODO: ugly
-    } else if (id == bms_id_FW_UPDATE) {
+    } else if (id == bms_ID_FW_UPDATE) {
         tx_header.DLC = bms_serialize_FW_UPDATE(buffer, 0);  //TODO: set board_index
         return can_send(&BMS_CAN, buffer, &tx_header);
     } else {
@@ -261,7 +261,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
     }
 
     if (hcan->Instance == BMS_CAN.Instance) {
-        if (can_forward && (rx_header.StdId >= bms_id_FLASH_CELLBOARD_0_TX && rx_header.StdId <= bms_id_FLASH_CELLBOARD_5_RX)) {
+        if (can_forward && (rx_header.StdId >= bms_ID_FLASH_CELLBOARD_0_TX && rx_header.StdId <= bms_ID_FLASH_CELLBOARD_5_RX)) {
             uint8_t forward_data[8];
             tx_header.StdId = rx_header.StdId;
             tx_header.DLC = rx_header.DLC;
@@ -271,32 +271,32 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
         }
 
         error_reset(ERROR_CAN, 1);
-        if ((rx_header.StdId & bms_topic_mask_VOLTAGE_INFO) == bms_topic_filter_VOLTAGE_INFO) {
+        if ((rx_header.StdId & bms_TOPIC_MASK_VOLTAGE_INFO) == bms_TOPIC_FILTER_VOLTAGE_INFO) {
             uint8_t offset = 0;
             bms_message_VOLTAGES raw_volts;
             bms_deserialize_VOLTAGES(&raw_volts, rx_data);
             switch (rx_header.StdId) {
-                case bms_id_VOLTAGES_CELLBOARD0:
+                case bms_ID_VOLTAGES_CELLBOARD0:
                     ++cellboards_msgs.cellboard0;
                     offset = voltage_get_cellboard_offset(0);
                     break;
-                case bms_id_VOLTAGES_CELLBOARD1:
+                case bms_ID_VOLTAGES_CELLBOARD1:
                     ++cellboards_msgs.cellboard1;
                     offset = voltage_get_cellboard_offset(1);
                     break;
-                case bms_id_VOLTAGES_CELLBOARD2:
+                case bms_ID_VOLTAGES_CELLBOARD2:
                     ++cellboards_msgs.cellboard2;
                     offset = voltage_get_cellboard_offset(2);
                     break;
-                case bms_id_VOLTAGES_CELLBOARD3:
+                case bms_ID_VOLTAGES_CELLBOARD3:
                     ++cellboards_msgs.cellboard3;
                     offset = voltage_get_cellboard_offset(3);
                     break;
-                case bms_id_VOLTAGES_CELLBOARD4:
+                case bms_ID_VOLTAGES_CELLBOARD4:
                     ++cellboards_msgs.cellboard4;
                     offset = voltage_get_cellboard_offset(4);
                     break;
-                case bms_id_VOLTAGES_CELLBOARD5:
+                case bms_ID_VOLTAGES_CELLBOARD5:
                     ++cellboards_msgs.cellboard5;
                     offset = voltage_get_cellboard_offset(5);
                     break;
@@ -304,32 +304,32 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
                     break;
             }
             voltage_set_cells(raw_volts.start_index + offset, raw_volts.voltage0, raw_volts.voltage1, raw_volts.voltage2);
-        } else if ((rx_header.StdId & bms_topic_mask_TEMPERATURE_INFO) == bms_topic_filter_TEMPERATURE_INFO) {
+        } else if ((rx_header.StdId & bms_TOPIC_MASK_TEMPERATURE_INFO) == bms_TOPIC_FILTER_TEMPERATURE_INFO) {
             uint8_t offset = 0;
             bms_message_TEMPERATURES raw_temps;
             bms_deserialize_TEMPERATURES(&raw_temps, rx_data);
             switch (rx_header.StdId) {
-                case bms_id_TEMPERATURES_CELLBOARD0:
+                case bms_ID_TEMPERATURES_CELLBOARD0:
                     ++cellboards_msgs.cellboard0;
                     offset = temperature_get_cellboard_offset(0);
                     break;
-                case bms_id_TEMPERATURES_CELLBOARD1:
+                case bms_ID_TEMPERATURES_CELLBOARD1:
                     ++cellboards_msgs.cellboard1;
                     offset = temperature_get_cellboard_offset(1);
                     break;
-                case bms_id_TEMPERATURES_CELLBOARD2:
+                case bms_ID_TEMPERATURES_CELLBOARD2:
                     ++cellboards_msgs.cellboard2;
                     offset = temperature_get_cellboard_offset(2);
                     break;
-                case bms_id_TEMPERATURES_CELLBOARD3:
+                case bms_ID_TEMPERATURES_CELLBOARD3:
                     ++cellboards_msgs.cellboard3;
                     offset = temperature_get_cellboard_offset(3);
                     break;
-                case bms_id_TEMPERATURES_CELLBOARD4:
+                case bms_ID_TEMPERATURES_CELLBOARD4:
                     ++cellboards_msgs.cellboard4;
                     offset = temperature_get_cellboard_offset(4);
                     break;
-                case bms_id_TEMPERATURES_CELLBOARD5:
+                case bms_ID_TEMPERATURES_CELLBOARD5:
                     ++cellboards_msgs.cellboard5;
                     offset = temperature_get_cellboard_offset(5);
                     break;
@@ -344,32 +344,32 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
                 raw_temps.temp3,
                 raw_temps.temp4,
                 raw_temps.temp5);
-        } else if ((rx_header.StdId & bms_topic_mask_STATUS) == 0/*TODO: to be fixed in canlib */) {
+        } else if ((rx_header.StdId & bms_TOPIC_MASK_STATUS) == 0/*TODO: to be fixed in canlib */) {
             uint8_t index = 0;
             bms_message_BOARD_STATUS status;
             bms_deserialize_BOARD_STATUS(&status, rx_data);
             switch (rx_header.StdId) {
-                case bms_id_BOARD_STATUS_CELLBOARD0:
+                case bms_ID_BOARD_STATUS_CELLBOARD0:
                     ++cellboards_msgs.cellboard0;
                     index = 0;
                     break;
-                case bms_id_BOARD_STATUS_CELLBOARD1:
+                case bms_ID_BOARD_STATUS_CELLBOARD1:
                     ++cellboards_msgs.cellboard1;
                     index = 1;
                     break;
-                case bms_id_BOARD_STATUS_CELLBOARD2:
+                case bms_ID_BOARD_STATUS_CELLBOARD2:
                     ++cellboards_msgs.cellboard2;
                     index = 2;
                     break;
-                case bms_id_BOARD_STATUS_CELLBOARD3:
+                case bms_ID_BOARD_STATUS_CELLBOARD3:
                     ++cellboards_msgs.cellboard3;
                     index = 3;
                     break;
-                case bms_id_BOARD_STATUS_CELLBOARD4:
+                case bms_ID_BOARD_STATUS_CELLBOARD4:
                     ++cellboards_msgs.cellboard4;
                     index = 4;
                     break;
-                case bms_id_BOARD_STATUS_CELLBOARD5:
+                case bms_ID_BOARD_STATUS_CELLBOARD5:
                     ++cellboards_msgs.cellboard5;
                     index = 5;
                     break;
@@ -403,7 +403,7 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
     }
 
     if (hcan->Instance == CAR_CAN.Instance) {
-        if (can_forward && (rx_header.StdId >= bms_id_FLASH_CELLBOARD_0_TX && rx_header.StdId <= bms_id_FLASH_CELLBOARD_5_RX)) {
+        if (can_forward && (rx_header.StdId >= bms_ID_FLASH_CELLBOARD_0_TX && rx_header.StdId <= bms_ID_FLASH_CELLBOARD_5_RX)) {
             uint8_t forward_data[8];
             tx_header.StdId = rx_header.StdId;
             tx_header.DLC = rx_header.DLC;
@@ -414,7 +414,7 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 
         error_reset(ERROR_CAN, 1);
 
-        if (rx_header.StdId == primary_id_SET_TS_STATUS_DAS || rx_header.StdId == primary_id_SET_TS_STATUS_HANDCART) {
+        if (rx_header.StdId == primary_ID_SET_TS_STATUS_DAS || rx_header.StdId == primary_ID_SET_TS_STATUS_HANDCART) {
             primary_message_SET_TS_STATUS ts_status;
             primary_deserialize_SET_TS_STATUS(&ts_status, rx_data);
 
@@ -426,7 +426,7 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
                     fsm_trigger_event(bms.fsm, BMS_EV_TS_ON);
                     break;
             }
-        } else if (rx_header.StdId == primary_id_SET_CELL_BALANCING_STATUS) {
+        } else if (rx_header.StdId == primary_ID_SET_CELL_BALANCING_STATUS) {
             primary_message_SET_CELL_BALANCING_STATUS balancing_status;
             primary_deserialize_SET_CELL_BALANCING_STATUS(&balancing_status, rx_data);
 
@@ -435,11 +435,11 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
             } else if (balancing_status.set_balancing_status == primary_Toggle_OFF) {
                 fsm_trigger_event(bal.fsm, EV_BAL_STOP);
             }
-        } else if (rx_header.StdId == primary_id_HANDCART_STATUS) {
+        } else if (rx_header.StdId == primary_ID_HANDCART_STATUS) {
             primary_message_HANDCART_STATUS handcart_status;
             primary_deserialize_HANDCART_STATUS(&handcart_status, rx_data);
             bms.handcart_connected = handcart_status.connected;
-        } else if (rx_header.StdId == primary_id_HV_CAN_FORWARD) {
+        } else if (rx_header.StdId == primary_ID_HV_CAN_FORWARD) {
             primary_message_HV_CAN_FORWARD hv_can_forward;
             primary_deserialize_HV_CAN_FORWARD(&hv_can_forward, rx_data);
 
@@ -448,11 +448,11 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
                     can_forward = 0;
                     break;
                 case primary_Toggle_ON:
-                    can_bms_send(bms_id_FW_UPDATE);
+                    can_bms_send(bms_ID_FW_UPDATE);
                     can_forward = 1;
                     break;
             }
-        } else if (rx_header.StdId == primary_id_BMS_HV_JMP_TO_BLT) {
+        } else if (rx_header.StdId == primary_ID_BMS_HV_JMP_TO_BLT) {
             //JumpToBlt();
             HAL_NVIC_SystemReset();
         }
