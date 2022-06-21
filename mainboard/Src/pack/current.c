@@ -80,9 +80,9 @@ void current_zero() {
 }
 
 current_t current_get_current() {
-    if (current[CURRENT_SENSOR_SHUNT] < 4 && current[CURRENT_SENSOR_50] < 4)
+    if (fabs(current[CURRENT_SENSOR_SHUNT]) < 4 && fabs(current[CURRENT_SENSOR_50]) < 5)
         return current[CURRENT_SENSOR_SHUNT];
-    if (current[CURRENT_SENSOR_50] < 34 && current[CURRENT_SENSOR_300] < 35)
+    if (fabs(current[CURRENT_SENSOR_50]) < 34 && fabs(current[CURRENT_SENSOR_300]) < 35)
         return current[CURRENT_SENSOR_50];
     return current[CURRENT_SENSOR_300];
 }

@@ -27,7 +27,7 @@ void cli_bms_init();
 /**
  * @brief Print messages in the cli if dmesg is enabled
  */
-void cli_bms_debug(char *text, size_t length);
+void cli_bms_debug(char *text);
 void _cli_timer_handler(TIM_HandleTypeDef *htim);
 void cli_watch_flush_handler();
 
