@@ -121,7 +121,7 @@ cli_command_func_t *commands[N_COMMANDS] = {
     &_cli_sborat};
 
 cli_t cli_bms;
-bool dmesg_ena = true;
+bool dmesg_ena = false;
 
 void cli_bms_init() {
     cli_bms.uart           = &CLI_UART;
@@ -130,8 +130,9 @@ void cli_bms_init() {
     cli_bms.cmds.count     = N_COMMANDS;
 
     char init[94];
-    sprintf(
+    snprintf(
         init,
+        94,
         "\r\n\n********* Fenice BMS *********\r\n"
         " build: %s @ %s\r\n\n type ? for commands\r\n\n",
         __DATE__,
@@ -143,21 +144,13 @@ void cli_bms_init() {
     cli_print(&cli_bms, init, strlen(init));
 }
 
-void cli_bms_debug(char *text, size_t length) {
+void cli_bms_debug(char *text) {
     if (dmesg_ena) {
-        char out[300] = {'\0'};
-        float tick    = (float)HAL_GetTick() / 1000;
-        // add prefix
-        sprintf(out, "[%.2f] ", tick);
+        char out[256] = {'\0'};
 
-        strcat(out, text);
-        length += strlen(out);
+        snprintf(out, 256, "[%.2f] %s\r\n> ", (float)HAL_GetTick() / 1000, text);
 
-        // add suffix
-        sprintf(out + length, "\r\n> ");
-        length += 4;
-
-        cli_print(&cli_bms, out, length);
+        cli_print(&cli_bms, out, strlen(out));
     }
 }
 
@@ -168,8 +161,9 @@ void _cli_volts(uint16_t argc, char **argv, char *out) {
     if (strcmp(argv[1], "") == 0) {
         voltage_t max = voltage_get_cell_max(NULL);
         voltage_t min = voltage_get_cell_min(NULL);
-        sprintf(
+        snprintf(
             out,
+            CLI_TX_BUF_LEN,
             "vts_p.......%.2f V --> %.4f\r\n"
             "vbat_adc....%.2f V --> %.4f\r\n"
             "vbat_sum....%.2f V\r\n"
@@ -189,8 +183,9 @@ void _cli_volts(uint16_t argc, char **argv, char *out) {
     } else if (strcmp(argv[1], "all") == 0) {
         _cli_volts_all(argc, &argv[1], out);
     } else {
-        sprintf(
+        snprintf(
             out,
+            CLI_TX_BUF_LEN,
             "Unknown parameter: %s\r\n"
             "valid parameters:\r\n"
             "- all: returns voltages for all cells\r\n",
@@ -209,51 +204,54 @@ void _cli_volts_all(uint16_t argc, char **argv, char *out) {
         cell_v = (float)cells[i] / 10000;
         if (i % LTC6813_CELL_COUNT == 0) {
             if (i != 0) {
-                sprintf(out + strlen(out), "Segment total: %.2fV", segment_sum);
+                snprintf(out + strlen(out), CLI_TX_BUF_LEN - strlen(out), "Segment total: %.2fV", segment_sum);
                 segment_sum = 0;
             }
-            sprintf(out + strlen(out), "\r\n%-3d", i / LTC6813_CELL_COUNT);
+            snprintf(out + strlen(out), CLI_TX_BUF_LEN - strlen(out), "\r\n%-3d", i / LTC6813_CELL_COUNT);
         } else if (i % (LTC6813_CELL_COUNT / 3) == 0 && i > 0) {
-            sprintf(out + strlen(out), "\r\n%-3s", "");
+            snprintf(out + strlen(out), CLI_TX_BUF_LEN - strlen(out), "\r\n%-3s", "");
         }
         segment_sum += cell_v;
 
         if (fsm_get_state(bal.fsm) == BAL_OFF) {
             if (i == max_index)
-                sprintf(out + strlen(out), RED_BG("[%3u %-.3fV]") " ", i, cell_v);
+                snprintf(out + strlen(out), CLI_TX_BUF_LEN - strlen(out), RED_BG("[%3u %-.3fV]") " ", i, cell_v);
             else if (i == min_index)
-                sprintf(out + strlen(out), CYAN_BG("[%3u %-.3fV]") " ", i, cell_v);
+                snprintf(out + strlen(out), CLI_TX_BUF_LEN - strlen(out), CYAN_BG("[%3u %-.3fV]") " ", i, cell_v);
             else
-                sprintf(out + strlen(out), "[%3u %-.3fV] ", i, cell_v);
+                snprintf(out + strlen(out), CLI_TX_BUF_LEN - strlen(out), "[%3u %-.3fV] ", i, cell_v);
         } else {
             if (i == max_index) {
                 if (CANLIB_BITTEST(bal.cells[i / CELLBOARD_CELL_COUNT], i % CELLBOARD_CELL_COUNT)) {
                     total_power += cell_v * cell_v;
-                    sprintf(
+                    snprintf(
                         out + strlen(out),
+                        CLI_TX_BUF_LEN - strlen(out),
                         RED_BG_ON_YELLOW_FG("[%3u %-.3fV %.2fW]") " ",
                         i,
                         cell_v,
                         DISCHARGE_DUTY_CYCLE * cell_v * cell_v / DISCHARGE_R);
                 } else {
-                    sprintf(out + strlen(out), RED_BG("[%3u %-.3fV 0.00W]") " ", i, cell_v);
+                    snprintf(
+                        out + strlen(out), CLI_TX_BUF_LEN - strlen(out), RED_BG("[%3u %-.3fV 0.00W]") " ", i, cell_v);
                 }
             } else if (CANLIB_BITTEST(bal.cells[i / CELLBOARD_CELL_COUNT], i % CELLBOARD_CELL_COUNT)) {
                 total_power += cell_v * cell_v;
-                sprintf(
+                snprintf(
                     out + strlen(out),
+                    CLI_TX_BUF_LEN - strlen(out),
                     YELLOW_BG("[%3u %-.3fV %.2fW]") " ",
                     i,
                     cell_v,
                     DISCHARGE_DUTY_CYCLE * cell_v * cell_v / DISCHARGE_R);
             } else if (i == min_index) {
-                sprintf(out + strlen(out), CYAN_BG("[%3u %-.3fV 0.00W]") " ", i, cell_v);
+                snprintf(out + strlen(out), CLI_TX_BUF_LEN - strlen(out), CYAN_BG("[%3u %-.3fV 0.00W]") " ", i, cell_v);
             } else {
-                sprintf(out + strlen(out), "[%3u %-.3fV 0.00W] ", i, cell_v);
+                snprintf(out + strlen(out), CLI_TX_BUF_LEN - strlen(out), "[%3u %-.3fV 0.00W] ", i, cell_v);
             }
         }
     }
-    sprintf(out + strlen(out), "Segment total: %.2fV", segment_sum);
+    snprintf(out + strlen(out), CLI_TX_BUF_LEN - strlen(out), "Segment total: %.2fV", segment_sum);
     total_power /= DISCHARGE_R;
 
     if (fsm_get_state(bal.fsm) != BAL_OFF) {
@@ -264,16 +262,18 @@ void _cli_volts_all(uint16_t argc, char **argv, char *out) {
 
         float ETA = ((target_soc - max_soc) * CELL_CAPACITY * 4) / ((float)cells[max_index] / 10000 / DISCHARGE_R);
 
-        sprintf(out + strlen(out), "\r\nETA: %.1fh\r\n", ETA / DISCHARGE_DUTY_CYCLE);
-        sprintf(out + strlen(out), "Pwr: %3.1fW\r\n", total_power * DISCHARGE_DUTY_CYCLE);
+        snprintf(out + strlen(out), CLI_TX_BUF_LEN - strlen(out), "\r\nETA: %.1fh\r\n", ETA / DISCHARGE_DUTY_CYCLE);
+        snprintf(
+            out + strlen(out), CLI_TX_BUF_LEN - strlen(out), "Pwr: %3.1fW\r\n", total_power * DISCHARGE_DUTY_CYCLE);
     } else
-        sprintf(out + strlen(out), "\r\n");
+        snprintf(out + strlen(out), CLI_TX_BUF_LEN - strlen(out), "\r\n");
 }
 
 void _cli_temps(uint16_t argc, char **argv, char *out) {
     if (strcmp(argv[1], "") == 0) {
-        sprintf(
+        snprintf(
             out,
+            CLI_TX_BUF_LEN,
             "average.....%.2f °C\r\nmax.........%.2f "
             "C\r\nmin.........%.2f °C\r\n"
             "delta.......%.2f °C\r\n",
@@ -284,8 +284,9 @@ void _cli_temps(uint16_t argc, char **argv, char *out) {
     } else if (strcmp(argv[1], "all") == 0) {
         _cli_temps_all(argc, &argv[1], out);
     } else {
-        sprintf(
+        snprintf(
             out,
+            CLI_TX_BUF_LEN,
             "Unknown parameter: %s\r\n"
             "valid parameters:\r\n"
             "- all: returns temperature for all cells\r\n",
@@ -299,14 +300,15 @@ void _cli_temps_all(uint16_t argc, char **argv, char *out) {
 
     for (uint8_t i = 0; i < PACK_TEMP_COUNT; i++) {
         if (i % TEMP_SENSOR_COUNT == 0) {
-            sprintf(out + strlen(out), "\r\n%-3d", i / TEMP_SENSOR_COUNT);
+            snprintf(out + strlen(out), CLI_TX_BUF_LEN - strlen(out), "\r\n%-3d", i / TEMP_SENSOR_COUNT);
         } else if (i % (TEMP_SENSOR_COUNT / 4) == 0 && i > 0) {
-            sprintf(out + strlen(out), "\r\n%-3s", "");
+            snprintf(out + strlen(out), CLI_TX_BUF_LEN - strlen(out), "\r\n%-3s", "");
         }
-        sprintf(out + strlen(out), "[%3u %2u °C] ", i, (uint8_t)(temp_all[i] / 2.56 - 20));
+        snprintf(
+            out + strlen(out), CLI_TX_BUF_LEN - strlen(out), "[%3u %2u °C] ", i, (uint8_t)(temp_all[i] / 2.56 - 20));
     }
 
-    sprintf(out + strlen(out), "\r\n");
+    snprintf(out + strlen(out), CLI_TX_BUF_LEN - strlen(out), "\r\n");
 }
 
 void _cli_status(uint16_t argc, char **argv, char *out) {
@@ -328,8 +330,9 @@ void _cli_status(uint16_t argc, char **argv, char *out) {
 
     out[0] = '\0';
     for (uint8_t i = 0; i < n_items; i++) {
-        sprintf(
+        snprintf(
             out + strlen(out),
+            CLI_TX_BUF_LEN - strlen(out),
             "%s%s%s\r\n",
             values[i][0],
             "........................" + strlen(values[i][0]),
@@ -342,10 +345,10 @@ void _cli_balance(uint16_t argc, char **argv, char *out) {
         if (argc > 2)
             bal.target = atoi(argv[2]);
         fsm_trigger_event(bal.fsm, EV_BAL_START);
-        sprintf(out, "enabling balancing\r\n");
+        snprintf(out, CLI_TX_BUF_LEN, "enabling balancing\r\n");
     } else if (strcmp(argv[1], "off") == 0) {
         fsm_trigger_event(bal.fsm, EV_BAL_STOP);
-        sprintf(out, "disabling balancing\r\n");
+        snprintf(out, CLI_TX_BUF_LEN, "disabling balancing\r\n");
     } else if (strcmp(argv[1], "thr") == 0) {
         if (argv[2] != NULL) {
             voltage_t thresh = atoff(argv[2]) * 10;
@@ -353,7 +356,7 @@ void _cli_balance(uint16_t argc, char **argv, char *out) {
                 bal_set_threshold(thresh);
             }
         }
-        sprintf(out, "balancing threshold is %.2f mV\r\n", bal_get_threshold() / 10.0);
+        snprintf(out, CLI_TX_BUF_LEN, "balancing threshold is %.2f mV\r\n", bal_get_threshold() / 10.0);
     } else if (strcmp(argv[1], "test") == 0) {
         CAN_TxHeaderTypeDef tx_header;
         uint8_t buffer[CAN_MAX_PAYLOAD_LENGTH];
@@ -368,26 +371,27 @@ void _cli_balance(uint16_t argc, char **argv, char *out) {
         board = atoi(argv[2]);
 
         if (argc < 4) {
-            sprintf(out, "wrong number of parameters\r\n");
+            snprintf(out, CLI_TX_BUF_LEN, "wrong number of parameters\r\n");
             return;
         }
 
-        sprintf(out, "testing cells [");
+        snprintf(out, CLI_TX_BUF_LEN, "testing cells [");
 
         uint8_t c;
         for (uint8_t i = 3; i < argc; ++i) {
             c = atoi(argv[i]);
             CANLIB_BITSET(cells, c);
-            sprintf(out + strlen(out), "%u,", c);
+            snprintf(out + strlen(out), CLI_TX_BUF_LEN - strlen(out), "%u,", c);
         }
 
         tx_header.DLC = bms_serialize_BALANCING(buffer, cells, board);
         can_send(&BMS_CAN, buffer, &tx_header);
 
-        sprintf(out + strlen(out) - 1, "]\r\non board %d\r\n", board);
+        snprintf(out + strlen(out) - 1, CLI_TX_BUF_LEN - strlen(out) - 1, "]\r\non board %d\r\n", board);
     } else if (argc < 2) {
-        sprintf(
+        snprintf(
             out,
+            CLI_TX_BUF_LEN,
             "Invalid number of parameters.\r\n\n"
             "valid parameters:\r\n"
             "- on\r\n"
@@ -395,8 +399,9 @@ void _cli_balance(uint16_t argc, char **argv, char *out) {
             "- thr <millivolts>\r\n"
             "- test <board> <cell0 cell1 ... cellN>\r\n");
     } else {
-        sprintf(
+        snprintf(
             out,
+            CLI_TX_BUF_LEN,
             "Unknown parameter: %s\r\n\n"
             "valid parameters:\r\n"
             "- on\r\n"
@@ -409,10 +414,11 @@ void _cli_balance(uint16_t argc, char **argv, char *out) {
 void _cli_soc(uint16_t argc, char **argv, char *out) {
     if (strcmp(argv[1], "reset") == 0) {
         soc_reset_soc();
-        sprintf(out, "Resetting energy meter\r\n");
+        snprintf(out, CLI_TX_BUF_LEN, "Resetting energy meter\r\n");
     } else {
-        sprintf(
+        snprintf(
             out,
+            CLI_TX_BUF_LEN,
             "SoC: %.2f %%\r\n"
             "Energy: %.1f Wh\r\n"
             "Energy total: %.1f Wh\r\n",
@@ -429,10 +435,11 @@ void _cli_errors(uint16_t argc, char **argv, char *out) {
     error_dump(errors);
 
     uint32_t now = HAL_GetTick();
-    sprintf(out, "total %u\r\n", count);
+    snprintf(out, CLI_TX_BUF_LEN, "total %u\r\n", count);
     for (uint16_t i = 0; i < count; i++) {
-        sprintf(
+        snprintf(
             out + strlen(out),
+            CLI_TX_BUF_LEN - strlen(out),
             "\r\nid..........%i (%s)\r\n"
             "timestamp...T+%lu (%lums ago)\r\n"
             "offset......%u\r\n"
@@ -449,20 +456,22 @@ void _cli_errors(uint16_t argc, char **argv, char *out) {
 void _cli_ts(uint16_t argc, char **argv, char *out) {
     if (strcmp(argv[1], "on") == 0) {
         fsm_trigger_event(bms.fsm, BMS_EV_TS_ON);
-        sprintf(out, "triggered TS ON event\r\n");
+        snprintf(out, CLI_TX_BUF_LEN, "triggered TS ON event\r\n");
     } else if (strcmp(argv[1], "off") == 0) {
         fsm_trigger_event(bms.fsm, BMS_EV_TS_OFF);
-        sprintf(out, "triggered TS OFF event\r\n");
+        snprintf(out, CLI_TX_BUF_LEN, "triggered TS OFF event\r\n");
     } else if (argc < 2) {
-        sprintf(
+        snprintf(
             out,
+            CLI_TX_BUF_LEN,
             "Invalid number of parameters.\r\n\n"
             "valid parameters:\r\n"
             "- on\r\n"
             "- off\r\n");
     } else {
-        sprintf(
+        snprintf(
             out,
+            CLI_TX_BUF_LEN,
             "Unknown parameter: %s\r\n\n"
             "valid parameters:\r\n"
             "- on\r\n"
@@ -473,8 +482,9 @@ void _cli_ts(uint16_t argc, char **argv, char *out) {
 
 void _cli_current(uint16_t argc, char **argv, char *out) {
     if (argc == 1) {
-        sprintf(
+        snprintf(
             out,
+            CLI_TX_BUF_LEN,
             "Hall 50A:\t%.1fA\r\n"
             "Hall 300A:\t%.1fA\r\n"
             "Shunt:\t\t%.1fA\r\n",
@@ -483,16 +493,18 @@ void _cli_current(uint16_t argc, char **argv, char *out) {
             current_get_current_from_sensor(CURRENT_SENSOR_SHUNT));
     } else if (strcmp(argv[1], "zero") == 0) {
         current_zero();
-        sprintf(out, "Current zeroed\r\n");
+        snprintf(out, CLI_TX_BUF_LEN, "Current zeroed\r\n");
     } else if (argc < 2) {
-        sprintf(
+        snprintf(
             out,
+            CLI_TX_BUF_LEN,
             "Invalid number of parameters.\r\n\n"
             "valid parameters:\r\n"
             "- zero: zeroes the hall-sensor measurement\r\n");
     } else {
-        sprintf(
+        snprintf(
             out,
+            CLI_TX_BUF_LEN,
             "Unknown parameter: %s\r\n\n"
             "valid parameters:\r\n"
             "- zero: zeroes the hall-sensor measurement\r\n",
@@ -502,7 +514,7 @@ void _cli_current(uint16_t argc, char **argv, char *out) {
 
 void _cli_dmesg(uint16_t argc, char **argv, char *out) {
     dmesg_ena = !dmesg_ena;
-    sprintf(out, "dmesg output is %s\r\n", dmesg_ena ? "enabled" : "disabled");
+    snprintf(out, CLI_TX_BUF_LEN, "dmesg output is %s\r\n", dmesg_ena ? "enabled" : "disabled");
 }
 
 void _cli_reset(uint16_t argc, char **argv, char *out) {
@@ -510,8 +522,9 @@ void _cli_reset(uint16_t argc, char **argv, char *out) {
 }
 
 void _cli_taba(uint16_t argc, char **argv, char *out) {
-    sprintf(
+    snprintf(
         out,
+        CLI_TX_BUF_LEN,
         " #######    #    ######     #    ######     #    ####### ####### ######  \r\n"
         "    #      # #   #     #   # #   #     #   # #      #    #       #     # \r\n"
         "    #     #   #  #     #  #   #  #     #  #   #     #    #       #     # \r\n"
@@ -522,15 +535,16 @@ void _cli_taba(uint16_t argc, char **argv, char *out) {
 }
 
 void _cli_help(uint16_t argc, char **argv, char *out) {
-    sprintf(out, "command list:\r\n");
+    snprintf(out, CLI_TX_BUF_LEN, "command list:\r\n");
     for (uint8_t i = 0; i < N_COMMANDS - 3; i++) {
-        sprintf(out + strlen(out), "- %s\r\n", cli_bms.cmds.names[i]);
+        snprintf(out + strlen(out), CLI_TX_BUF_LEN - strlen(out), "- %s\r\n", cli_bms.cmds.names[i]);
     }
 }
 
 void _cli_imd(uint16_t argc, char **argv, char *out) {
-    sprintf(
+    snprintf(
         out,
+        CLI_TX_BUF_LEN,
         "fault:        %u\r\n"
         "IMD status:   %s\r\n"
         "details:      %ld\r\n"
@@ -553,8 +567,9 @@ void _cli_can_forward(uint16_t argc, char **argv, char *out) {
         } else if (!strcmp(argv[1], "primary")) {
             can = &CAR_CAN;
         } else {
-            sprintf(
+            snprintf(
                 out,
+                CLI_TX_BUF_LEN,
                 "Unknown parameter: %s\r\n\n"
                 "valid parameters:\r\n"
                 "- bms: bms internal network\r\n"
@@ -566,13 +581,19 @@ void _cli_can_forward(uint16_t argc, char **argv, char *out) {
         uint8_t payload[CAN_MAX_PAYLOAD_LENGTH] = {0};
 
         if (divider_index == NULL) {
-            sprintf(out, "Errore di formattazione: ID#PAYLOAD\n\rPAYLOAD is hex encoded and is MSB...LSB\r\n");
+            snprintf(
+                out,
+                CLI_TX_BUF_LEN,
+                "Errore di formattazione: ID#PAYLOAD\n\rPAYLOAD is hex encoded and is MSB...LSB\r\n");
             return;
         }
         *divider_index = '\0';
 
         if (strlen(divider_index + 1) % 2 != 0) {
-            sprintf(out, "Errore di formattazione: ID#PAYLOAD\n\rPAYLOAD is hex encoded and is MSB...LSB\r\n");
+            snprintf(
+                out,
+                CLI_TX_BUF_LEN,
+                "Errore di formattazione: ID#PAYLOAD\n\rPAYLOAD is hex encoded and is MSB...LSB\r\n");
             return;
         }
 
@@ -582,8 +603,9 @@ void _cli_can_forward(uint16_t argc, char **argv, char *out) {
         can_send(can, payload, &header);
         *out = '\0';
     } else {
-        sprintf(
+        snprintf(
             out,
+            CLI_TX_BUF_LEN,
             "Invalid command format\r\n\n"
             "valid format:\r\n"
             "can_forward <network> <id>#<payload>\r\n");
@@ -595,8 +617,9 @@ void _cli_feedbacks(uint16_t argc, char **argv, char *out) {
     feedback_get_feedback_states(f);
     *out = '\0';
     for (uint8_t i = 0; i < FEEDBACK_N; ++i) {
-        sprintf(
+        snprintf(
             out + strlen(out),
+            CLI_TX_BUF_LEN - strlen(out),
             "%02d - %s: %s, %.4f\n\r",
             i,
             feedback_names[i],
@@ -620,9 +643,9 @@ void _cli_sigterm(uint16_t argc, char **argv, char *out) {
     if (HTIM_CLI.State == HAL_TIM_STATE_BUSY) {
         HAL_TIM_Base_Stop_IT(&HTIM_CLI);
         *watch_buf = '\0';
-        sprintf(out, "\r\n");
+        snprintf(out, CLI_TX_BUF_LEN, "\r\n");
     } else {
-        sprintf(out, "^C\r\n");
+        snprintf(out, CLI_TX_BUF_LEN, "^C\r\n");
     }
 }
 
@@ -635,7 +658,7 @@ void _cli_watch(uint16_t argc, char **argv, char *out) {
         if (interval == 0)
             interval = 500;
         for (uint8_t i = 2; i < argc; ++i) {
-            sprintf(watch_buf + strlen(watch_buf), "%s ", argv[i]);
+            snprintf(watch_buf + strlen(watch_buf), BUF_SIZE - strlen(out), "%s ", argv[i]);
         }
         cli_watch_execute_cmd            = 1;
         watch_buf[strlen(watch_buf) - 1] = '\0';
@@ -644,7 +667,7 @@ void _cli_watch(uint16_t argc, char **argv, char *out) {
         HAL_TIM_Base_Start_IT(&HTIM_CLI);
     }
 
-    sprintf(out, "\033[2J\033H");
+    snprintf(out, CLI_TX_BUF_LEN, "\033[2J\033H");
 }
 
 void _cli_timer_handler(TIM_HandleTypeDef *htim) {
@@ -653,9 +676,11 @@ void _cli_timer_handler(TIM_HandleTypeDef *htim) {
     cli_watch_flush_tx = 1;
 }
 
-char tx_buf[4096]   = {'\0'};
-char print_buf[256] = {'\0'};
-char *save_ptr      = NULL;
+#define CLI_BMS_PRINT_BUF_LEN (CLI_TX_BUF_LEN / 4)
+
+char tx_buf[CLI_TX_BUF_LEN]           = {'\0'};
+char print_buf[CLI_BMS_PRINT_BUF_LEN] = {'\0'};
+char *save_ptr                        = NULL;
 void cli_watch_flush_handler() {
     char *argv[BUF_SIZE] = {NULL};
     uint16_t argc;
@@ -665,8 +690,9 @@ void cli_watch_flush_handler() {
         return;
 
     if (cli_watch_execute_cmd == 1) {
-        sprintf(
+        snprintf(
             tx_buf,
+            CLI_TX_BUF_LEN,
             "\033[HExecuting %s every %.0fms\033[K\r\n[%.2f]\033[K\r\n",
             watch_buf,
             TIM_TICKS_TO_MS(&HTIM_CLI, __HAL_TIM_GetAutoreload(&HTIM_CLI)),
@@ -684,7 +710,7 @@ void cli_watch_flush_handler() {
             }
 
             if (i == N_COMMANDS - 1) {
-                sprintf(tx_buf, "Command not found\r\n");
+                snprintf(tx_buf, CLI_TX_BUF_LEN, "Command not found\r\n");
                 *watch_buf = '\0';
                 HAL_TIM_Base_Stop_IT(&HTIM_CLI);
                 HAL_UART_Transmit(&CLI_UART, (uint8_t *)tx_buf, strlen(tx_buf), 100);
@@ -692,7 +718,7 @@ void cli_watch_flush_handler() {
             }
         }
 
-        sprintf(tx_buf + strlen(tx_buf), "\r\nPress CTRL+C to stop\r\n\033[J");
+        snprintf(tx_buf + strlen(tx_buf), CLI_TX_BUF_LEN - strlen(tx_buf), "\r\nPress CTRL+C to stop\r\n\033[J");
 
         // restore watch_buf after splitting it in _cli_get_args
         for (uint16_t i = 0; i < argc - 1; ++i) {
@@ -723,21 +749,24 @@ void _cli_cellboard_distribution(uint16_t argc, char **argv, char *out) {
     if (argc == 1) {
         uint8_t *distr = bms_get_cellboard_distribution();
         for (uint8_t i = 0; i < CELLBOARD_COUNT; ++i) {
-            sprintf(out + strlen(out), "%u ", distr[i]);
+            snprintf(out + strlen(out), CLI_TX_BUF_LEN - strlen(out), "%u ", distr[i]);
         }
-        sprintf(out + strlen(out), "\r\n");
+        snprintf(out + strlen(out), CLI_TX_BUF_LEN - strlen(out), "\r\n");
     } else if (argc == 7) {
         uint8_t distr[CELLBOARD_COUNT];
         for (uint8_t i = 1; i < argc; ++i) {
             uint8_t pos = atoi(argv[i]);
             if (pos < 0 || pos > 5) {
-                sprintf(out + strlen(out), "Index out of range: %u\r\n", pos);
+                snprintf(out + strlen(out), CLI_TX_BUF_LEN - strlen(out), "Index out of range: %u\r\n", pos);
                 return;
             }
 
             for (uint8_t j = 0; j < i - 1; ++j) {
                 if (pos == distr[j]) {
-                    sprintf(out + strlen(out), "Non puoi ripetere la stessa cella piu' di una volta\r\n");
+                    snprintf(
+                        out + strlen(out),
+                        CLI_TX_BUF_LEN - strlen(out),
+                        "Non puoi ripetere la stessa cella piu' di una volta\r\n");
                     return;
                 }
             }
@@ -746,10 +775,14 @@ void _cli_cellboard_distribution(uint16_t argc, char **argv, char *out) {
         }
 
         bms_set_cellboard_distribution(distr);
-        sprintf(out + strlen(out), "Distribuzione delle cellboard aggiornata con successo\r\n");
+        snprintf(
+            out + strlen(out),
+            CLI_TX_BUF_LEN - strlen(out),
+            "Distribuzione delle cellboard aggiornata con successo\r\n");
     } else {
-        sprintf(
+        snprintf(
             out,
+            CLI_TX_BUF_LEN,
             "Invalid sintax\r\n"
             "Available commands are:\r\n"
             "\t-<empty>: show the current cell distribution\r\n"
@@ -761,18 +794,18 @@ void _cli_fans(uint16_t argc, char **argv, char *out) {
     if (argc == 2) {
         if (!strcmp(argv[1], "off")) {
             fans_set_speed(0);
-            sprintf(out, "Fans turned off\r\n");
+            snprintf(out, CLI_TX_BUF_LEN, "Fans turned off\r\n");
         } else {
             uint8_t perc = atoi(argv[1]);
             if (perc <= 100) {
                 fans_set_speed(perc / 100.0);
-                sprintf(out, "Fans speed set to %d\r\n", perc);
+                snprintf(out, CLI_TX_BUF_LEN, "Fans speed set to %d\r\n", perc);
             } else {
-                sprintf(out, "Invalid perc value: %d\r\nIt must be between 0 and 100", perc);
+                snprintf(out, CLI_TX_BUF_LEN, "Invalid perc value: %d\r\nIt must be between 0 and 100", perc);
             }
         }
     } else {
-        sprintf(out, "Invalid sintax.\r\n Use this way: fans <perc>\r\n");
+        snprintf(out, CLI_TX_BUF_LEN, "Invalid sintax.\r\n Use this way: fans <perc>\r\n");
     }
 }
 
@@ -802,7 +835,7 @@ void _cli_pack(uint16_t argc, char **argv, char *out) {
             pack_set_precharge(value);
         }
 
-        sprintf(out, "%s setted %s\r\n", argv[1], argv[2]);
+        snprintf(out, CLI_TX_BUF_LEN, "%s setted %s\r\n", argv[1], argv[2]);
     } else if (argc == 2) {
     }
 }

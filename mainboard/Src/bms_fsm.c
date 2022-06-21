@@ -203,7 +203,7 @@ void _idle_entry(fsm FSM) {
 
     _start_fb_check_timer();
 
-    cli_bms_debug("idle state", 10);
+    cli_bms_debug("idle state");
 }
 
 void _idle_handler(fsm FSM, uint8_t event) {
@@ -230,7 +230,7 @@ void _airn_close_entry(fsm FSM) {
 
     current_zero();
 
-    cli_bms_debug("airn close state", 16);
+    cli_bms_debug("airn close state");
 }
 
 void _airn_close_handler(fsm FSM, uint8_t event) {
@@ -261,7 +261,7 @@ void _airn_status_entry(fsm FSM) {
     _start_fb_check_timer();
     _start_fb_timeout_timer();
 
-    cli_bms_debug("airn status state", 17);
+    cli_bms_debug("airn status state");
 }
 
 void _airn_status_handler(fsm FSM, uint8_t event) {
@@ -297,17 +297,17 @@ void _precharge_entry(fsm FSM) {
 
     tick = HAL_GetTick();
 
-    cli_bms_debug("Entered precharge", 18);
+    cli_bms_debug("Entered precharge");
 }
 
 void _precharge_handler(fsm FSM, uint8_t event) {
     switch (event) {
         case BMS_EV_PRECHARGE_TIMEOUT:
-            cli_bms_debug("Precharge timeout", 18);
+            cli_bms_debug("Precharge timeout");
             // send timeout warning
             //NB there's no break; !!!!
         case BMS_EV_TS_OFF:
-            cli_bms_debug("requested TSOFF", 15);
+            cli_bms_debug("requested TSOFF");
             pack_set_default_off(0);
             fsm_transition(FSM, BMS_IDLE);
             break;
@@ -319,7 +319,7 @@ void _precharge_handler(fsm FSM, uint8_t event) {
             break;
 
         case BMS_EV_FB_TIMEOUT:
-            cli_bms_debug("Precharge FB timeout", 20);
+            cli_bms_debug("Precharge FB timeout");
             pack_set_default_off(0);
             fsm_transition(FSM, BMS_IDLE);
             break;
@@ -327,7 +327,7 @@ void _precharge_handler(fsm FSM, uint8_t event) {
         case BMS_EV_PRECHARGE_CHECK:
             char c[5] = {'\0'};
             snprintf(c, 5, "%4.2f", voltage_get_vts_p() / (voltage_get_vbat_adc() * PRECHARGE_VOLTAGE_THRESHOLD));
-            cli_bms_debug(c, 5);
+            cli_bms_debug(c);
 
             if ((!bms.handcart_connected && (voltage_get_vts_p() > 0) &&
                  (voltage_get_vts_p() >= voltage_get_vbat_adc() * PRECHARGE_VOLTAGE_THRESHOLD)) ||
@@ -335,7 +335,7 @@ void _precharge_handler(fsm FSM, uint8_t event) {
                  (voltage_get_vts_p() >= voltage_get_vbat_adc() * PRECHARGE_VOLTAGE_THRESHOLD_CARELINO))) {
                 pack_set_airp_off(AIRP_ON_VALUE);
                 _stop_fb_check_timer();
-                cli_bms_debug("Precharge ok", 18);
+                cli_bms_debug("Precharge ok");
                 fsm_transition(bms.fsm, BMS_ON);
             }
             break;
@@ -355,13 +355,13 @@ void _precharge_exit(fsm FSM) {
 void _on_entry(fsm FSM) {
     _start_fb_timeout_timer();
 
-    cli_bms_debug("on state", 8);
+    cli_bms_debug("on state");
 }
 
 void _on_handler(fsm FSM, uint8_t event) {
     switch (event) {
         case BMS_EV_TS_OFF:
-            cli_bms_debug("requested TSOFF", 15);
+            cli_bms_debug("requested TSOFF");
             pack_set_default_off(0);
             fsm_transition(FSM, BMS_IDLE);
             break;
@@ -373,8 +373,8 @@ void _on_handler(fsm FSM, uint8_t event) {
             if (f != 0) {
                 pack_set_default_off(0);
                 char buf[64];
-                sprintf(buf, "failed fb check, %lx", f);
-                cli_bms_debug(buf, strlen(buf));
+                snprintf(buf, 64, "failed fb check, %lx", f);
+                cli_bms_debug(buf);
                 fsm_transition(FSM, BMS_IDLE);
             }
             break;
@@ -382,7 +382,7 @@ void _on_handler(fsm FSM, uint8_t event) {
             if (feedback_check(FEEDBACK_ON_MASK, FEEDBACK_ON_VAL) != 0) {
                 pack_set_default_off(0);
                 _stop_fb_timeout_timer();
-                cli_bms_debug("failed fb timeout", 17);
+                cli_bms_debug("failed fb timeout");
                 fsm_transition(FSM, BMS_IDLE);
                 return;
             }
@@ -400,7 +400,7 @@ void _fault_entry(fsm FSM) {
     pack_set_default_off(0);
     _start_fb_check_timer();
 
-    cli_bms_debug("fault state", 11);
+    cli_bms_debug("fault state");
 }
 
 void _fault_handler(fsm FSM, uint8_t event) {

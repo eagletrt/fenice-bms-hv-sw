@@ -103,7 +103,7 @@ HAL_StatusTypeDef can_send(CAN_HandleTypeDef *hcan, uint8_t *buffer, CAN_TxHeade
     HAL_StatusTypeDef status = HAL_CAN_AddTxMessage(hcan, header, buffer, NULL);
     if (status != HAL_OK) {
         error_set(ERROR_CAN, 0, HAL_GetTick());
-        //cli_bms_debug("CAN: Error sending message", 27);
+        //cli_bms_debug("CAN: Error sending message");
 
     } else {
         error_reset(ERROR_CAN, 0);
@@ -256,7 +256,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 
     if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rx_header, rx_data) != HAL_OK) {
         error_set(ERROR_CAN, 1, HAL_GetTick());
-        cli_bms_debug("CAN: Error receiving message", 29);
+        cli_bms_debug("CAN: Error receiving message");
         return;
     }
 
@@ -386,8 +386,8 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 
             error_toggle_check(status.errors != 0, ERROR_CELLBOARD_INTERNAL, index);
         } else {
-            char buffer[50] = {0};
-            sprintf(buffer, "%lx#%lx%lx\r\n", rx_header.StdId, *(uint32_t*)rx_data, *(((uint32_t*)rx_data)+1));
+            char buffer[64] = {0};
+            snprintf(buffer, 64, "%lx#%lx%lx\r\n", rx_header.StdId, *(uint32_t*)rx_data, *(((uint32_t*)rx_data)+1));
             HAL_UART_Transmit(&CLI_UART, (uint8_t*)buffer, strlen(buffer), 100);
         }
     }
@@ -398,7 +398,7 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
     CAN_RxHeaderTypeDef rx_header;
     if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO1, &rx_header, rx_data) != HAL_OK) {
         error_set(ERROR_CAN, 1, HAL_GetTick());
-        cli_bms_debug("CAN: Error receiving message", 29);
+        cli_bms_debug("CAN: Error receiving message");
         return;
     }
 

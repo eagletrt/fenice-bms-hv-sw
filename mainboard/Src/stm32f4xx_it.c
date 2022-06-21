@@ -103,7 +103,7 @@ void HardFault_Handler(void) {
     /* USER CODE BEGIN HardFault_IRQn 0 */
     pack_set_fault(BMS_FAULT_ON_VALUE);
     pack_set_default_off(0);
-    cli_bms_debug("HARD FAULT", 10);
+    cli_bms_debug("HARD FAULT");
     HAL_NVIC_SystemReset();
     /* USER CODE END HardFault_IRQn 0 */
     while (1) {
