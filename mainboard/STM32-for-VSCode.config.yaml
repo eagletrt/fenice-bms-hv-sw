@@ -10,7 +10,7 @@ target: fenice-bms
 # Can be C or C++
 language: C
 
-optimization: Og
+optimization: O3
 
 # MCU settings
 targetMCU: stm32f4x
@@ -23,6 +23,7 @@ ldscript: STM32F446RETx_FLASH_shifted.ld # linker script
 cDefinitions: 
   - USE_HAL_DRIVER
   - STM32F446xx
+#  - DEBUG
 
 cxxDefinitions: []
 asDefinitions: []

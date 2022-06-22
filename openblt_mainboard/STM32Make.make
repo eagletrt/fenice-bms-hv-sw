@@ -46,6 +46,7 @@ Core/Src/BLT/cpu.c \
 Core/Src/BLT/cpu_comp.c \
 Core/Src/BLT/file.c \
 Core/Src/BLT/flash.c \
+Core/Src/BLT/hooks.c \
 Core/Src/BLT/led.c \
 Core/Src/BLT/net.c \
 Core/Src/BLT/nvm.c \

@@ -74,8 +74,6 @@ size_t ltc6813_read_voltages(SPI_HandleTypeDef *hspi, voltage_t *volts) {
 
                 count++;
             }
-        } else {
-            ERROR_SET(ERROR_LTC_COMM);
         }
     }
     return count;

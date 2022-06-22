@@ -384,6 +384,12 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
             else if (index == 3)
                 status.errors &= ~0b10000000;  //those adc are not working
 
+            if(status.errors) {
+                char buf[64];
+                snprintf(buf, 64, "cell %u -> %u", index, status.errors);
+                cli_bms_debug(buf);
+            }
+
             error_toggle_check(status.errors != 0, ERROR_CELLBOARD_INTERNAL, index);
         } else {
             char buffer[64] = {0};
