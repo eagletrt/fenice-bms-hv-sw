@@ -56,6 +56,7 @@
 #include "blt_conf.h"                                 /* bootloader configuration      */
 #endif /* PROJ_BLT_CONF_H */
 #include "plausibility.h"                             /* plausibility checks           */
+#include "hooks.h"
 #include "cpu.h"                                      /* cpu driver module             */
 #include "cop.h"                                      /* watchdog driver module        */
 #include "nvm.h"                                      /* memory driver module          */
