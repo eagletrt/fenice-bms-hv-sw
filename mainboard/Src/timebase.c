@@ -4,6 +4,7 @@
 #include "bms_fsm.h"
 #include "can_comm.h"
 #include "cli_bms.h"
+#include "fans_buzzer.h"
 #include "pwm.h"
 #include "soc.h"
 #include "spi.h"
@@ -59,6 +60,7 @@ void timebase_check_flags() {
             SEND_CAN_CAR_MSG(primary_ID_HV_CELL_BALANCING_STATUS);
         }
         SEND_CAN_CAR_MSG(primary_ID_HV_CAN_FORWARD_STATUS);
+        fans_set_speed_from_temp(temperature_get_max() / 2.56f - 20);
         flags &= ~_500MS_INTERVAL_FLAG;
     }
     if (flags & _1S_INTERVAL_FLAG) {
@@ -66,7 +68,6 @@ void timebase_check_flags() {
         flags &= ~_1S_INTERVAL_FLAG;
     }
     if (flags & _5S_INTERVAL_FLAG) {
-        soc_save_to_eeprom();
         flags &= ~_5S_INTERVAL_FLAG;
     }
 }
