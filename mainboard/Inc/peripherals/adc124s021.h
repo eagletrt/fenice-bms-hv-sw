@@ -15,6 +15,6 @@
 
 typedef enum { ADC124S_CH1 = 0x00, ADC124S_CH2, ADC124S_CH3, ADC124S_CH4 } ADC124S021_CH;
 
-voltage_t adc124S021_read_channel(SPI_HandleTypeDef *spi, ADC124S021_CH channel);
+float adc124S021_read_channel(SPI_HandleTypeDef *spi, ADC124S021_CH channel);
 
 bool adc124s021_read_channels(SPI_HandleTypeDef *spi, ADC124S021_CH *channels, uint8_t ch_number, float *data_out);
