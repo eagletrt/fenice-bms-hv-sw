@@ -16,6 +16,13 @@ void fans_set_speed(float power) {
         return;
     pwm_set_duty_cicle(&HTIM_PWM, PWM_FANS_CHANNEL, 1 - power);
 }
+void fans_set_speed_from_temp(float temp) {
+    if (temp < 21)
+        return fans_set_speed(0.15f);
+    if (temp < 49)
+        return fans_set_speed(0.75 / 30 * (temp - 20) + 0.15);
+    fans_set_speed(1);
+}
 
 // credits to the master sborato PM Alex
 ////////////////////////////////////////////////////////////////////////////////
