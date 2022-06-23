@@ -256,9 +256,9 @@ void _cli_volts_all(uint16_t argc, char **argv, char *out) {
 
     if (fsm_get_state(bal.fsm) != BAL_OFF) {
         cell_v           = (float)cells[max_index] / 10000;
-        float max_soc    = 0.0862 * cell_v * cell_v * cell_v - 1.4260 * cell_v * cell_v + 6.0088 * cell_v - 6.551;
-        cell_v           = ((float)cells[min_index] + bal_get_threshold() - 10) / 10000;
-        float target_soc = 0.0862 * cell_v * cell_v * cell_v - 1.4260 * cell_v * cell_v + 6.0088 * cell_v - 6.551;
+        float max_soc    = soc_volt_to_capacity(cell_v);
+        cell_v           = ((float)cells[min_index] + bal_get_threshold()) / 10000;
+        float target_soc = soc_volt_to_capacity(cell_v);
 
         float ETA = ((target_soc - max_soc) * CELL_CAPACITY * 4) / ((float)cells[max_index] / 10000 / DISCHARGE_R);
 
@@ -420,10 +420,8 @@ void _cli_soc(uint16_t argc, char **argv, char *out) {
             out,
             CLI_TX_BUF_LEN,
             "SoC: %.2f %%\r\n"
-            "Energy: %.1f Wh\r\n"
             "Energy total: %.1f Wh\r\n",
             soc_get_soc(),
-            soc_get_energy_last_charge(),
             soc_get_energy_total());
     }
 }
