@@ -19,6 +19,7 @@
 #include "usart.h"
 #include "bootloader.h"
 #include "feedback.h"
+#include "soc.h"
 
 #include <string.h>
 
@@ -138,6 +139,8 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
 
         conv_curr.current = current_get_current();
         conv_curr.power = current_get_current() * voltage_get_vts_p();
+        conv_curr.energy = soc_get_energy_total();
+        conv_curr.soc = soc_get_soc();
 
         primary_conversion_to_raw_struct_HV_CURRENT(&raw_curr, &conv_curr);
 
