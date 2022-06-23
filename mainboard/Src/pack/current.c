@@ -13,6 +13,8 @@
 #include "error.h"
 #include "main.h"
 #include "mainboard_config.h"
+#include "adc124s021.h"
+#include "spi.h"
 
 #include <math.h>
 
@@ -24,6 +26,7 @@ uint16_t adc_300[MEASURE_SAMPLE_SIZE] = {0};
 current_t current[CURRENT_SENSOR_NUM] = {0.f};
 
 float V0L = 0, V0H = 0;  //voltage offset (Vout(0A))
+float shunt_offset;
 
 current_t _current_convert_low(float volt) {
     return (499.f / 300.f / 40e-3f) * (volt - V0L);
@@ -34,7 +37,7 @@ current_t _current_convert_high(float volt) {
 }
 
 current_t _current_convert_shunt(float volt) {
-    return (volt - 0.468205124) / (1e-4f * 500);
+    return (volt - shunt_offset) / (1e-4f * 500);
 }
 
 void current_start_measure() {
@@ -77,6 +80,8 @@ void current_zero() {
     }
     V0L = avg_50 * (3.3f / 4095 / MEASURE_SAMPLE_SIZE);
     V0H = avg_300 * (3.3f / 4095 / MEASURE_SAMPLE_SIZE);
+
+    shunt_offset = adc124S021_read_channel(&SPI_ADC124S, ADC124_SHUNT_CHANNEL);
 }
 
 current_t current_get_current() {
