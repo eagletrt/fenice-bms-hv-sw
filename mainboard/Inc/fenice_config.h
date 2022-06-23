@@ -135,9 +135,9 @@ static const uint8_t TEMP_SENSOR_ADDRESS_CODING[TEMP_SENSORS_PER_STRIP] = {000, 
 #define CELL_MAX_TEMPERATURE 60.0
 
 /**
- * Cell nominal energy (Wh * 10)
+ * Cell nominal energy (Wh)
  */
-#define CELL_ENERGY_NOMINAL 576
+#define CELL_ENERGY_NOMINAL 57.6f
 
 /**
  * Pack nominal energy (Wh * 10)

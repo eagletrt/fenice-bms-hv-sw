@@ -15,7 +15,7 @@
 /**
  * @brief Initializes the SoC management subsystem by loading energy info from EEPROM
  */
-void soc_init();
+void soc_init(float lower_cell_voltage);
 
 /**
  * @brief Process a new current sample.
@@ -43,11 +43,5 @@ float soc_get_soc();
  */
 float soc_get_energy_total();
 
-/**
- * @brief Returns the energy since last charge
- * 
- * @return float current value in Wh
- */
-float soc_get_energy_last_charge();
-
-void soc_save_to_eeprom();
+float soc_volt_to_capacity(float volt);
+float soc_volt_to_energy(float volt);

@@ -128,13 +128,17 @@ int main(void) {
     bal_fsm_init();
     bms_fsm_init();
     current_zero();
-    soc_init();
     can_bms_init();
     can_car_init();
     timebase_init();
     imd_init();
     feedback_init();
     fans_init();
+
+    while (voltage_get_cell_min(NULL) == 0)
+        HAL_Delay(1);
+
+    soc_init(voltage_get_cell_min(NULL) / 1000.0);
 
     /* USER CODE END 2 */
 
