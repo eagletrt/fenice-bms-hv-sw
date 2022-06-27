@@ -60,7 +60,11 @@ void timebase_check_flags() {
             SEND_CAN_CAR_MSG(primary_ID_HV_CELL_BALANCING_STATUS);
         }
         SEND_CAN_CAR_MSG(primary_ID_HV_CAN_FORWARD_STATUS);
-        fans_set_speed_from_temp(temperature_get_max() / 2.56f - 20);
+        SEND_CAN_CAR_MSG(primary_ID_HV_FANS_OVERRIDE_STATUS);
+        if (fans_override)
+            fans_set_speed(fans_override_value);
+        else
+            fans_set_speed_from_temp(temperature_get_max() / 2.56f - 20);
         flags &= ~_500MS_INTERVAL_FLAG;
     }
     if (flags & _1S_INTERVAL_FLAG) {

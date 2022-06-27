@@ -20,6 +20,7 @@
 #include "bootloader.h"
 #include "feedback.h"
 #include "soc.h"
+#include "fans_buzzer.h"
 
 #include <string.h>
 
@@ -138,7 +139,7 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         primary_message_HV_CURRENT_conversion conv_curr;
 
         conv_curr.current = current_get_current();
-        conv_curr.power = current_get_current() * voltage_get_vts_p();
+        conv_curr.power = current_get_current() * voltage_get_vts_p() / 1000;
         conv_curr.energy = soc_get_energy_total();
         conv_curr.soc = soc_get_soc();
 
@@ -223,6 +224,15 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
     } else if (id == primary_ID_SHUTDOWN_STATUS) {
         feedback_t f = feedback_check(FEEDBACK_SD_END | FEEDBACK_SD_IN, FEEDBACK_SD_END | FEEDBACK_SD_IN);
         tx_header.DLC = primary_serialize_SHUTDOWN_STATUS(buffer, f & FEEDBACK_SD_IN, f & FEEDBACK_SD_END);
+    } else if (id == primary_ID_HV_FANS_OVERRIDE_STATUS) {
+        primary_message_HV_FANS_OVERRIDE_STATUS_conversion conv;
+        primary_message_HV_FANS_OVERRIDE_STATUS raw;
+
+        conv.fans_override = fans_override ? primary_Toggle_ON : primary_Toggle_OFF;
+        conv.fans_speed = fans_override_value;
+
+        primary_conversion_to_raw_struct_HV_FANS_OVERRIDE_STATUS(&raw, &conv);
+        tx_header.DLC = primary_serialize_struct_HV_FANS_OVERRIDE_STATUS(buffer, &raw);
     } else {
         return HAL_ERROR;
     }
@@ -464,6 +474,19 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
         } else if (rx_header.StdId == primary_ID_BMS_HV_JMP_TO_BLT) {
             //JumpToBlt();
             HAL_NVIC_SystemReset();
+        } else if (rx_header.StdId == primary_ID_HV_FANS_OVERRIDE) {
+            primary_message_HV_FANS_OVERRIDE hv_fans_override;
+            primary_deserialize_HV_FANS_OVERRIDE(&hv_fans_override, rx_data);
+
+            if(hv_fans_override.fans_override == primary_Toggle_ON) {
+                fans_override = 1;
+                primary_message_HV_FANS_OVERRIDE_conversion conv;
+                primary_raw_to_conversion_struct_HV_FANS_OVERRIDE(&conv, &hv_fans_override);
+                fans_override_value = conv.fans_speed;
+            } else {
+                fans_override = 0;
+                fans_override_value = 0;
+            }
         }
     }
 }
