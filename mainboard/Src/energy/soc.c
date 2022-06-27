@@ -43,7 +43,7 @@ float soc_get_energy_total() {
 }
 
 float soc_volt_to_capacity(float volt) {
-    return 0.0862 * volt * volt * volt - 1.4260 * volt * volt + 6.0088 * volt - 6.551;
+    return CELL_CAPACITY - (0.0862 * volt * volt * volt - 1.4260 * volt * volt + 6.0088 * volt - 6.551);
 }
 
 float soc_volt_to_energy(float volt) {

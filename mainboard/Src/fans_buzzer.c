@@ -6,6 +6,9 @@
 
 #include <string.h>
 
+uint8_t fans_override     = 0;
+float fans_override_value = 0;
+
 void fans_init() {
     pwm_set_period(&HTIM_PWM, PWM_FANS_STANDARD_PERIOD);
     fans_set_speed(0.15);
@@ -17,10 +20,10 @@ void fans_set_speed(float power) {
     pwm_set_duty_cicle(&HTIM_PWM, PWM_FANS_CHANNEL, 1 - power);
 }
 void fans_set_speed_from_temp(float temp) {
-    if (temp < 21)
-        return fans_set_speed(0.15f);
+    if (temp < 26)
+        return fans_set_speed(0);
     if (temp < 49)
-        return fans_set_speed(0.75 / 30 * (temp - 20) + 0.15);
+        return fans_set_speed(0.75 / 25 * (temp - 25) + 0.15);
     fans_set_speed(1);
 }
 

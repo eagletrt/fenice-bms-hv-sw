@@ -256,9 +256,9 @@ void _cli_volts_all(uint16_t argc, char **argv, char *out) {
 
     if (fsm_get_state(bal.fsm) != BAL_OFF) {
         cell_v           = (float)cells[max_index] / 10000;
-        float max_soc    = soc_volt_to_capacity(cell_v);
+        float max_soc    = CELL_CAPACITY - soc_volt_to_capacity(cell_v);
         cell_v           = ((float)cells[min_index] + bal_get_threshold()) / 10000;
-        float target_soc = soc_volt_to_capacity(cell_v);
+        float target_soc = CELL_CAPACITY - soc_volt_to_capacity(cell_v);
 
         float ETA = ((target_soc - max_soc) * CELL_CAPACITY * 4) / ((float)cells[max_index] / 10000 / DISCHARGE_R);
 
