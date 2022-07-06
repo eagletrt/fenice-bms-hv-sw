@@ -3,7 +3,7 @@
 There are many peripherals and devices connected to the mainboard. Every component that interfaces with the mainboard's microcontroller is listed here:
 
 - **CAN-buses** (CAN): A CAN-bus to communicate with the car and an internal isolated bus for handling the cellboards.
-- **Si8900 isolated ADC** (UART): Used to measure pack and bus voltages, and is also used to measure the pack current using a shunt resistor.
+- **adc124021 ADC** (SPI): Used to measure pack and bus voltages, and is also used to measure the pack current using a shunt resistor.
 - **DAHB S/160 Hall-effect sensor** (ADC): Used to measure pack current. Less precise than the shunt, included for historic reasons. The unit contains two sensors with different gains to have a broader current range.
 - **AIR and pre-charge controls**: Three output pins control the actuation of the AIRs (if the shutdown circuit is not latched in the off state) and the pre-charge circuit.
 - **Circuit feedbacks** (MUX/ADC): 16 multiplexed analog signals coming from the mainboard's circuit. Used to diagnose the circuit and to verify its correct state compared to the BMS state. Some of those feedbacks are not multiplexed to permit the generation of interrupts from them.
