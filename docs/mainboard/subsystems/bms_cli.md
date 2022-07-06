@@ -22,7 +22,7 @@ The `volt` command returns the main voltages of the battery pack.
 	```
 
 #### Parameters
-- `all`: prints all cell voltages.
+- `all`: prints all cell voltages (plus some usefull information about balancing).
 
 ### `temp`
 Similarly to the `volt` command, `temp` will return the main temperatures of the pack.
@@ -49,6 +49,7 @@ Suite of commands that handle the balancing process.
 - `thr`: Returns the currently set threshold.
 - `thr <millivolts>`: Sets the threshold to the value of `<millivolts>`.
     Please be gentle with it: it can break bad if you input strange stuff
+- `test <board> <cell0 cell1 ... cellN>`: starts a balancing cycle in the `board` on the specified cells
 
 ### `soc`
 Return state of charge information
@@ -65,6 +66,38 @@ Toggles the debug output. This can be quite verbose if enabled.
 
 ### `reset`
 Resets the microcontroller. Analogue to pressing the reset button on board.
+
+### `imd`
+Show imd details
+
+### `feedbacks`
+Show feedbacks status
+
+### `watch`
+Repeatedly run a command
+#### Parameters
+- `<interval ms> <cmd>`
+
+### `cell_distr`
+Lets you change the cellboard arrangment into the pork
+#### Parameters
+- ``: Show current cellboard distribution
+- `<cell0> ... <cellN>`: Update cellboard distribution
+
+### `fans`
+Control the pork fans
+#### Parameters
+- `off`: shut down fans
+- `<0-100>`: sets fans power
+
+### `pack`
+Control low level ts hardware
+!!! warning
+	This can lead to dangerous behaviours when the tractive system is connected, be carefull
+#### Parameters
+- `airn <on/off>`: controls the air negative
+- `airp <on/off>`: controls the air positive
+- `precharge <on/off>`: controls the precharge relay
 
 ### Easter eggs?
 Of course

@@ -15,6 +15,6 @@ There are several subsystems to the Mainboard's firmware:
 - **[current](subsystems/current)**: Current measurement functions
 - **[energy](subsystems/energy)**: Energy measurement and State-of-Charge estimation logic.
 - **[feedback](subsystems/feedback)**: Mainboard's feedbacks handler functions and variables
-- **[pack](subsystems/pack)**: Old interface for the battery pack.
-- **[soc](subsystems/soc)**: State of charge estimation functions. 
-- **[super_fsm](subsystems/super_fsm)**: A super FSM that encloses the bms_fsm and measurement routines.
+- **[pack](subsystems/pack)**: Interface for the battery pack hardware control.
+- **[soc](subsystems/soc)**: State of charge estimation functions (not working).
+- **[timebase](subsystems/timebase)**: Controls all repeating actions of the firmware.

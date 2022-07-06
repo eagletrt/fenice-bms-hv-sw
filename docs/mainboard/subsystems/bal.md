@@ -30,8 +30,7 @@ The imbalance is the voltage difference between a given cell and the minimum-vol
 $imbalance[i] = \max(0, voltages[i] −(min\_voltage + threshold))$
 
 #### Cell selection
-The cell selection algorithm is very similar to the [Hateville problem](http://disi.unitn.it/~montreso/asd/handouts/13-pd1.pdf) ([video](https://www.youtube.com/watch?v=rrQ300wySmc)) discussed in the ASD course. The purpose of this phase is to select the best subset of non-adjacent cells that need to be discharged. This step runs on every cellboard, after the list of cells to discharge is received.
-A [thesis](https://github.com/Bonnee/bms-development) further explains the implementation of this algorithm.
+The cell selection algorithm is very simple: if the imbalance is greater than 0, the cell is selected for discharge
 
 ### - Discharge (DSC)
 After compute the mainboard sends the list of cells to be discharged to the cellboards that start the actual discharge for a set amount of time. The discharge time depends on configuration but it's in the range from 30 to 120s.
