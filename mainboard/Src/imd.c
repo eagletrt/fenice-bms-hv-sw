@@ -1,5 +1,7 @@
 #include "imd.h"
 
+#include "feedback.h"
+
 #include <math.h>
 
 uint32_t periodTicks = 0, dutyCycleTicks = 0;
@@ -27,7 +29,7 @@ uint8_t imd_get_period() {
 }
 
 uint8_t imd_is_fault() {
-    return !HAL_GPIO_ReadPin(FB_IMD_FAULT_GPIO_Port, FB_IMD_FAULT_Pin);
+    return feedback_check(FEEDBACK_IMD_FAULT, FEEDBACK_IMD_FAULT) == 0;
 }
 
 IMD_STATE imd_get_state() {

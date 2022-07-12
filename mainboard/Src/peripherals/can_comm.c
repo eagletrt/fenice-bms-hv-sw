@@ -17,10 +17,10 @@
 #include "pack/voltage.h"
 #include "mainboard_config.h"
 #include "usart.h"
-#include "bootloader.h"
 #include "feedback.h"
 #include "soc.h"
 #include "fans_buzzer.h"
+#include "imd.h"
 
 #include <string.h>
 
@@ -211,7 +211,7 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         uint8_t status = 0;
         voltage_t *volts = voltage_get_cells();
         for (uint8_t i = 0; i < PACK_CELL_COUNT; i += 3) {
-            tx_header.DLC = primary_serialize_HV_CELLS_VOLTAGE(buffer, volts[i], volts[i + 1], volts[i + 2], i);
+            tx_header.DLC = primary_serialize_HV_CELLS_VOLTAGE(buffer, i, volts[i], volts[i + 1], volts[i + 2]);
             status += can_send(&CAR_CAN, buffer, &tx_header);
             HAL_Delay(1);
         }
@@ -223,7 +223,7 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         tx_header.DLC = primary_serialize_HV_VERSION(buffer, 1, 1);
     } else if (id == primary_ID_SHUTDOWN_STATUS) {
         feedback_t f = feedback_check(FEEDBACK_SD_END | FEEDBACK_SD_IN, FEEDBACK_SD_END | FEEDBACK_SD_IN);
-        tx_header.DLC = primary_serialize_SHUTDOWN_STATUS(buffer, f & FEEDBACK_SD_IN, f & FEEDBACK_SD_END);
+        tx_header.DLC = primary_serialize_SHUTDOWN_STATUS(buffer, !(f & FEEDBACK_SD_IN), !(f & FEEDBACK_SD_END));
     } else if (id == primary_ID_HV_FANS_OVERRIDE_STATUS) {
         primary_message_HV_FANS_OVERRIDE_STATUS_conversion conv;
         primary_message_HV_FANS_OVERRIDE_STATUS raw;
@@ -233,6 +233,48 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
 
         primary_conversion_to_raw_struct_HV_FANS_OVERRIDE_STATUS(&raw, &conv);
         tx_header.DLC = primary_serialize_struct_HV_FANS_OVERRIDE_STATUS(buffer, &raw);
+    } else if (id == primary_ID_HV_FEEDBACKS_STATUS) {
+        primary_message_HV_FEEDBACKS_STATUS hv_feedbacks_status = {0};
+        feedback_feed_t f[FEEDBACK_N];
+        feedback_get_feedback_states(f);
+
+        for(uint8_t i=0; i<FEEDBACK_N; ++i) {
+            if (f[i].state != FEEDBACK_STATE_ERROR) {
+                if (f[i].state == FEEDBACK_STATE_H)
+                    CANLIB_BITSET(hv_feedbacks_status.feedbacks_status, i);
+                else
+                    CANLIB_BITCLEAR(hv_feedbacks_status.feedbacks_status, i);
+            } else {
+                CANLIB_BITCLEAR(hv_feedbacks_status.feedbacks_status, i);
+                CANLIB_BITSET(hv_feedbacks_status.is_circuitry_error, i);
+            }
+        }
+        tx_header.DLC = primary_serialize_struct_HV_FEEDBACKS_STATUS(buffer, &hv_feedbacks_status);
+    } else if (id == primary_ID_HV_IMD_STATUS) {
+        primary_ImdStatus imd_status;
+        switch(imd_get_state()) {
+        case IMD_SC: 
+            imd_status = primary_ImdStatus_IMD_SC;
+            break;
+        case IMD_NORMAL:
+            imd_status = primary_ImdStatus_IMD_NORMAL;
+            break;
+        case IMD_UNDER_VOLTAGE:
+            imd_status = primary_ImdStatus_IMD_UNDER_VOLTAGE;
+            break;
+        case IMD_START_MEASURE:
+            imd_status = primary_ImdStatus_IMD_START_MEASURE;
+            break;
+        case IMD_DEVICE_ERROR:
+            imd_status = primary_ImdStatus_IMD_DEVICE_ERROR;
+            break;
+        case IMD_EARTH_FAULT:
+            imd_status = primary_ImdStatus_IMD_EARTH_FAULT;
+            break;
+        default:
+            imd_status = primary_ImdStatus_IMD_DEVICE_ERROR;
+        }
+        tx_header.DLC = primary_serialize_HV_IMD_STATUS(buffer, imd_is_fault(), imd_status, imd_get_details());
     } else {
         return HAL_ERROR;
     }
@@ -251,7 +293,7 @@ HAL_StatusTypeDef can_bms_send(uint16_t id) {
         uint8_t *distr = bms_get_cellboard_distribution();
         register uint16_t i;
         for (i = 0; i < CELLBOARD_COUNT; ++i) {
-            tx_header.DLC = bms_serialize_BALANCING(buffer, bal.cells[i], distr[i]);
+            tx_header.DLC = bms_serialize_BALANCING(buffer, distr[i], bal.cells[i]);
             status += can_send(&BMS_CAN, buffer, &tx_header);
         }
         return status == 0 ? HAL_OK : HAL_ERROR;  //TODO: ugly

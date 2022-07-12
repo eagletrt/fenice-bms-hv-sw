@@ -166,7 +166,7 @@ void can_send(uint16_t topic_id) {
 
         register uint8_t i;
         for (i = 0; i < CELLBOARD_CELL_COUNT; i += 3) {
-            tx_header.DLC = bms_serialize_VOLTAGES(buffer, voltages[i], voltages[i + 1], voltages[i + 2], i);
+            tx_header.DLC = bms_serialize_VOLTAGES(buffer, i, voltages[i], voltages[i + 1], voltages[i + 2]);
             _can_send(&BMS_CAN, buffer, &tx_header);
             HAL_Delay(1);
         }

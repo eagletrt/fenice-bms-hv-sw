@@ -5,13 +5,14 @@
 #include "can_comm.h"
 #include "cli_bms.h"
 #include "fans_buzzer.h"
+#include "imd.h"
 #include "pwm.h"
 #include "soc.h"
 #include "spi.h"
 #include "temperature.h"
 #include "voltage.h"
 
-#define SEND_CAN_CAR_MSG_ATTEMPTS 10
+#define SEND_CAN_CAR_MSG_ATTEMPTS 2
 #define SEND_CAN_CAR_MSG(id)                                                  \
     do {                                                                      \
         uint8_t i = 0;                                                        \
@@ -32,6 +33,14 @@ void timebase_init() {
 
 void timebase_check_flags() {
     if (flags & _10MS_INTERVAL_FLAG) {
+        SEND_CAN_CAR_MSG(primary_ID_TS_STATUS);
+        if (error_count() > 0) {
+            SEND_CAN_CAR_MSG(primary_ID_HV_ERRORS);
+        }
+
+        if (imd_get_state() != IMD_NORMAL) {
+            SEND_CAN_CAR_MSG(primary_ID_HV_IMD_STATUS);
+        }
         flags &= ~_10MS_INTERVAL_FLAG;
     }
     if (flags & _50MS_INTERVAL_FLAG) {
@@ -40,10 +49,6 @@ void timebase_check_flags() {
         current_check_errors();
         SEND_CAN_CAR_MSG(primary_ID_HV_VOLTAGE);
         SEND_CAN_CAR_MSG(primary_ID_HV_CURRENT);
-        SEND_CAN_CAR_MSG(primary_ID_TS_STATUS);
-        if (error_count() > 0) {
-            SEND_CAN_CAR_MSG(primary_ID_HV_ERRORS);
-        }
         flags &= ~_50MS_INTERVAL_FLAG;
     }
     if (flags & _100MS_INTERVAL_FLAG) {
@@ -51,9 +56,18 @@ void timebase_check_flags() {
         temperature_check_errors();
         SEND_CAN_CAR_MSG(primary_ID_HV_TEMP);
         SEND_CAN_CAR_MSG(primary_ID_SHUTDOWN_STATUS);
+        SEND_CAN_CAR_MSG(primary_ID_HV_FEEDBACKS_STATUS);
+
+        if (imd_get_state() == IMD_NORMAL) {
+            SEND_CAN_CAR_MSG(primary_ID_HV_IMD_STATUS);
+        }
         flags &= ~_100MS_INTERVAL_FLAG;
     }
     if (flags & _500MS_INTERVAL_FLAG) {
+        if (fans_override)
+            fans_set_speed(fans_override_value);
+        else
+            fans_set_speed_from_temp(temperature_get_max() / 2.56f - 20);
         if (bms.handcart_connected) {
             SEND_CAN_CAR_MSG(primary_ID_HV_CELLS_TEMP);
             SEND_CAN_CAR_MSG(primary_ID_HV_CELLS_VOLTAGE);
@@ -61,10 +75,6 @@ void timebase_check_flags() {
         }
         SEND_CAN_CAR_MSG(primary_ID_HV_CAN_FORWARD_STATUS);
         SEND_CAN_CAR_MSG(primary_ID_HV_FANS_OVERRIDE_STATUS);
-        if (fans_override)
-            fans_set_speed(fans_override_value);
-        else
-            fans_set_speed_from_temp(temperature_get_max() / 2.56f - 20);
         flags &= ~_500MS_INTERVAL_FLAG;
     }
     if (flags & _1S_INTERVAL_FLAG) {

@@ -16,7 +16,7 @@
 #include "tim.h"
 
 #define feedback_analog_threshold_h    9.5f / 4.3f
-#define feedback_analog_threshold_l    2.5f / 4.3f
+#define feedback_analog_threshold_l    5.f / 4.3f
 #define feedback_check_mux_threshold_h 3.7f / 4.3f
 #define feedback_check_mux_threshold_l 2.8f / 4.3f
 

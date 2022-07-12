@@ -74,6 +74,7 @@ includeDirectories:
   - Core/Lib/micro-libs/blink/**
   - Core/Lib/micro-libs/timer-utils/**
   - Core/Lib/can-cicd/lib/**
+  - ../CommonInc
 
 
 # Files that should be included in the compilation.
@@ -89,6 +90,11 @@ sourceFiles:
   - Core/Lib/micro-libs/blink/**
   - Core/Lib/micro-libs/timer-utils/**
   - Core/Lib/can-cicd/lib/**
+
+customMakefileRules:
+ - command: can_srec
+   rule: "bin2srec -a $$(grep 'FLASH (rx)      : ORIGIN =' $(LDSCRIPT) | awk '{print $$6}' | sed 's/.$$//') -i $(BUILD_DIR)/$(TARGET).bin -o $(BUILD_DIR)/$(TARGET).srec"
+   dependsOn: $(BUILD_DIR)/$(TARGET).bin  # can be left out
 
 
 # When no makefile is present it will show a warning pop-up.
