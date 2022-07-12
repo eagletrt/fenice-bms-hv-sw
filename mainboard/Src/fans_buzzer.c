@@ -7,6 +7,7 @@
 #include <string.h>
 
 uint8_t fans_override     = 0;
+float fans_speed          = 0;
 float fans_override_value = 0;
 
 void fans_init() {
@@ -17,10 +18,12 @@ void fans_init() {
 void fans_set_speed(float power) {
     if (power > 1 || power < 0)
         return;
+    fans_speed = 1 - power;
     pwm_set_duty_cicle(&HTIM_PWM, PWM_FANS_CHANNEL, 1 - power);
 }
 void fans_set_speed_from_temp(float temp) {
-    if (temp < 26)
+    uint8_t thr_l = fans_speed > 0.05 ? 28 : 30;
+    if (temp < thr_l)
         return fans_set_speed(0);
     if (temp < 49)
         return fans_set_speed(0.75 / 25 * (temp - 25) + 0.15);

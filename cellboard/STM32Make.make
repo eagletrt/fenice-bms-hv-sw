@@ -154,6 +154,7 @@ AS_INCLUDES = \
 
 # C includes
 C_INCLUDES =  \
+-I../CommonInc \
 -ICore/Inc \
 -ICore/Inc/peripherals \
 -ICore/Lib/micro-libs/blink \
@@ -175,7 +176,8 @@ CFLAGS = $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-
 CXXFLAGS = $(MCU) $(CXX_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections -feliminate-unused-debug-types
 
 ifeq ($(DEBUG), 1)
-CFLAGS += -g -gdwarf-2
+CFLAGS += -g -gdwarf -ggdb
+CXXFLAGS += -g -gdwarf -ggdb
 endif
 
 # Add additional flags
@@ -263,6 +265,20 @@ erase: $(BUILD_DIR)/$(TARGET).elf
 #######################################
 clean:
 	-rm -fR $(BUILD_DIR)
+
+#######################################
+# custom makefile rules
+#######################################
+
+
+
+
+#######################################
+# can_srec
+#######################################
+can_srec: $(BUILD_DIR)/$(TARGET).bin
+	bin2srec -a $$(grep 'FLASH (rx)      : ORIGIN =' $(LDSCRIPT) | awk '{print $$6}' | sed 's/.$$//') -i $(BUILD_DIR)/$(TARGET).bin -o $(BUILD_DIR)/$(TARGET).srec
+      
 	
 #######################################
 # dependencies

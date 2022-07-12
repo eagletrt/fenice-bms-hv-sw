@@ -61,7 +61,6 @@ Src/adc.c \
 Src/bal.c \
 Src/bal_fsm.c \
 Src/bms_fsm.c \
-Src/bootloader.c \
 Src/can.c \
 Src/cli_bms.c \
 Src/config.c \
@@ -153,6 +152,7 @@ AS_DEFS =
 
 # C defines
 C_DEFS =  \
+-DDEBUG \
 -DSTM32F446xx \
 -DUSE_HAL_DRIVER
 
@@ -168,6 +168,7 @@ AS_INCLUDES = \
 
 # C includes
 C_INCLUDES =  \
+-I../CommonInc \
 -IDrivers/CMSIS/Device/ST/STM32F4xx/Include \
 -IDrivers/CMSIS/Include \
 -IDrivers/STM32F4xx_HAL_Driver/Inc \
@@ -199,7 +200,8 @@ CFLAGS = $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-
 CXXFLAGS = $(MCU) $(CXX_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections -feliminate-unused-debug-types
 
 ifeq ($(DEBUG), 1)
-CFLAGS += -g -gdwarf-2
+CFLAGS += -g -gdwarf -ggdb
+CXXFLAGS += -g -gdwarf -ggdb
 endif
 
 # Add additional flags
@@ -287,6 +289,20 @@ erase: $(BUILD_DIR)/$(TARGET).elf
 #######################################
 clean:
 	-rm -fR $(BUILD_DIR)
+
+#######################################
+# custom makefile rules
+#######################################
+
+
+
+
+#######################################
+# can_srec
+#######################################
+can_srec: $(BUILD_DIR)/$(TARGET).bin
+	bin2srec -a $$(grep 'FLASH (rx)      : ORIGIN =' $(LDSCRIPT) | awk '{print $$6}' | sed 's/.$$//') -i $(BUILD_DIR)/$(TARGET).bin -o $(BUILD_DIR)/$(TARGET).srec
+      
 	
 #######################################
 # dependencies

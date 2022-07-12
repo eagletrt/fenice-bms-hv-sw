@@ -23,7 +23,7 @@ ldscript: STM32F446RETx_FLASH_shifted.ld # linker script
 cDefinitions: 
   - USE_HAL_DRIVER
   - STM32F446xx
-#  - DEBUG
+  - DEBUG
 
 cxxDefinitions: []
 asDefinitions: []
@@ -70,6 +70,7 @@ includeDirectories:
   - lib/micro-libs/blink/**
   - lib/micro-libs/pwm/**
   - lib/micro-libs/timer-utils/**
+  - ../CommonInc
 
 
 # Files that should be included in the compilation.
@@ -89,6 +90,10 @@ sourceFiles:
   - lib/micro-libs/pwm/**
   - lib/micro-libs/timer-utils/**
 
+customMakefileRules:
+ - command: can_srec
+   rule: "bin2srec -a $$(grep 'FLASH (rx)      : ORIGIN =' $(LDSCRIPT) | awk '{print $$6}' | sed 's/.$$//') -i $(BUILD_DIR)/$(TARGET).bin -o $(BUILD_DIR)/$(TARGET).srec"
+   dependsOn: $(BUILD_DIR)/$(TARGET).bin  # can be left out
 
 # When no makefile is present it will show a warning pop-up.
 # However when compilation without the CubeMX Makefile is desired, this can be turned of.

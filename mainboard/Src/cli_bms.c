@@ -384,7 +384,7 @@ void _cli_balance(uint16_t argc, char **argv, char *out) {
             snprintf(out + strlen(out), CLI_TX_BUF_LEN - strlen(out), "%u,", c);
         }
 
-        tx_header.DLC = bms_serialize_BALANCING(buffer, cells, board);
+        tx_header.DLC = bms_serialize_BALANCING(buffer, board, cells);
         can_send(&BMS_CAN, buffer, &tx_header);
 
         snprintf(out + strlen(out) - 1, CLI_TX_BUF_LEN - strlen(out) - 1, "]\r\non board %d\r\n", board);
@@ -791,12 +791,17 @@ void _cli_cellboard_distribution(uint16_t argc, char **argv, char *out) {
 void _cli_fans(uint16_t argc, char **argv, char *out) {
     if (argc == 2) {
         if (!strcmp(argv[1], "off")) {
-            fans_set_speed(0);
+            fans_override       = 1;
+            fans_override_value = 0;
             snprintf(out, CLI_TX_BUF_LEN, "Fans turned off\r\n");
+        } else if (!strcmp(argv[1], "auto")) {
+            fans_override       = 0;
+            fans_override_value = 0;
         } else {
             uint8_t perc = atoi(argv[1]);
             if (perc <= 100) {
-                fans_set_speed(perc / 100.0);
+                fans_override       = 1;
+                fans_override_value = perc / 100.0;
                 snprintf(out, CLI_TX_BUF_LEN, "Fans speed set to %d\r\n", perc);
             } else {
                 snprintf(out, CLI_TX_BUF_LEN, "Invalid perc value: %d\r\nIt must be between 0 and 100", perc);

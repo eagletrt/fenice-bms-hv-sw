@@ -9,7 +9,7 @@
 #ifndef CELLBOARD_CONFIG_H
 #define CELLBOARD_CONFIG_H
 
-#include "../../../fenice_config.h"
+#include "fenice_config.h"
 
 //===========================================================================
 //=================================== LTC6813 ===============================
@@ -38,7 +38,7 @@
 /**
  * Temperature measurement interval (ms)
  */
-#define TEMP_MEASURE_INTERVAL 200
+#define TEMP_MEASURE_INTERVAL 100
 
 #define TEMP_ADC_COUNT 6
 

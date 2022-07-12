@@ -287,15 +287,11 @@ void _airn_status_exit(fsm FSM) {
     _stop_fb_timeout_timer();
 }
 
-uint32_t tick;
-
 void _precharge_entry(fsm FSM) {
     _start_pc_check_timer();
     _start_pc_timeout_timer();
     _start_fb_check_timer();
     _start_fb_timeout_timer();
-
-    tick = HAL_GetTick();
 
     cli_bms_debug("Entered precharge");
 }
@@ -371,6 +367,7 @@ void _on_handler(fsm FSM, uint8_t event) {
         case BMS_EV_FB_CHECK:
             feedback_t f = feedback_check(FEEDBACK_ON_MASK, FEEDBACK_ON_VAL);
             if (f != 0) {
+                can_car_send(primary_ID_HV_FEEDBACKS_STATUS);
                 pack_set_default_off(0);
                 char buf[64];
                 snprintf(buf, 64, "failed fb check, %lx", f);
@@ -383,9 +380,11 @@ void _on_handler(fsm FSM, uint8_t event) {
                 pack_set_default_off(0);
                 _stop_fb_timeout_timer();
                 cli_bms_debug("failed fb timeout");
+                can_car_send(primary_ID_HV_FEEDBACKS_STATUS);
                 fsm_transition(FSM, BMS_IDLE);
                 return;
             }
+            cli_bms_debug("on state fb timeout ok");
             _start_fb_check_timer();
             break;
     }
