@@ -126,6 +126,9 @@ ADCTEMP_StateTypeDef ADCTEMP_read_Temp(I2C_HandleTypeDef *interface, uint8_t add
         float val4 = val2 * val2;
         *temp =
             (float)(ADCTEMP_CONST_a + ADCTEMP_CONST_b * val + ADCTEMP_CONST_c * val2 + ADCTEMP_CONST_d * val3 + ADCTEMP_CONST_e * val4);
+            
+        if(*temp < -20) *temp = -20.f;
+        else if(*temp > 80) *temp = 80.f;
     }
 
     return ADCTEMP_STATE_OK;
