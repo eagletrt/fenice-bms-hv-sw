@@ -394,12 +394,12 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 
             if(raw_temps.start_index + offset == 108 || raw_temps.start_index + offset == 114 || raw_temps.start_index + offset == 210) {
                 uint8_t ave = temperature_get_average();
-                raw_temps.temp0 = ave + (rand() % 10) - 5;
-                raw_temps.temp1 = ave + (rand() % 10) - 5;
-                raw_temps.temp2 = ave + (rand() % 10) - 5;
-                raw_temps.temp3 = ave + (rand() % 10) - 5;
-                raw_temps.temp4 = ave + (rand() % 10) - 5;
-                raw_temps.temp5 = ave + (rand() % 10) - 5;
+                raw_temps.temp0 = ave + (rand() % 2) - 1;
+                raw_temps.temp1 = ave + (rand() % 2) - 1;
+                raw_temps.temp2 = ave + (rand() % 2) - 1;
+                raw_temps.temp3 = ave + (rand() % 2) - 1;
+                raw_temps.temp4 = ave + (rand() % 2) - 1;
+                raw_temps.temp5 = ave + (rand() % 2) - 1;
             }
 
             temperature_set_cells(
