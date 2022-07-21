@@ -1,0 +1,159 @@
+/**
+ * @file		ltc6813.h
+ * @brief		This file contains the functions to communicate with the LTCs
+ *
+ * @date		Apr 11, 2019
+ * @author		Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ */
+
+#ifndef LTC6813_H
+#define LTC6813_H
+
+#include "cellboard_config.h"
+#include "error.h"
+#include "peripherals/ltc6813_utils.h"
+
+#include <inttypes.h>
+#include <main.h>
+#include <stdbool.h>
+
+typedef enum { LTC6813_ADOW_PUP_ACTIVE = 0b01000000, LTC6813_ADOW_PUP_INACTIVE = 0b00000000 } LTC6813_ADOW_PUP;
+
+/** @brief Table used to calculate the pec for messaging */
+static const uint16_t crcTable[256] = {
+    0x0,    0xc599, 0xceab, 0xb32,  0xd8cf, 0x1d56, 0x1664, 0xd3fd, 0xf407, 0x319e, 0x3aac, 0xff35, 0x2cc8, 0xe951,
+    0xe263, 0x27fa, 0xad97, 0x680e, 0x633c, 0xa6a5, 0x7558, 0xb0c1, 0xbbf3, 0x7e6a, 0x5990, 0x9c09, 0x973b, 0x52a2,
+    0x815f, 0x44c6, 0x4ff4, 0x8a6d, 0x5b2e, 0x9eb7, 0x9585, 0x501c, 0x83e1, 0x4678, 0x4d4a, 0x88d3, 0xaf29, 0x6ab0,
+    0x6182, 0xa41b, 0x77e6, 0xb27f, 0xb94d, 0x7cd4, 0xf6b9, 0x3320, 0x3812, 0xfd8b, 0x2e76, 0xebef, 0xe0dd, 0x2544,
+    0x2be,  0xc727, 0xcc15, 0x98c,  0xda71, 0x1fe8, 0x14da, 0xd143, 0xf3c5, 0x365c, 0x3d6e, 0xf8f7, 0x2b0a, 0xee93,
+    0xe5a1, 0x2038, 0x7c2,  0xc25b, 0xc969, 0xcf0,  0xdf0d, 0x1a94, 0x11a6, 0xd43f, 0x5e52, 0x9bcb, 0x90f9, 0x5560,
+    0x869d, 0x4304, 0x4836, 0x8daf, 0xaa55, 0x6fcc, 0x64fe, 0xa167, 0x729a, 0xb703, 0xbc31, 0x79a8, 0xa8eb, 0x6d72,
+    0x6640, 0xa3d9, 0x7024, 0xb5bd, 0xbe8f, 0x7b16, 0x5cec, 0x9975, 0x9247, 0x57de, 0x8423, 0x41ba, 0x4a88, 0x8f11,
+    0x57c,  0xc0e5, 0xcbd7, 0xe4e,  0xddb3, 0x182a, 0x1318, 0xd681, 0xf17b, 0x34e2, 0x3fd0, 0xfa49, 0x29b4, 0xec2d,
+    0xe71f, 0x2286, 0xa213, 0x678a, 0x6cb8, 0xa921, 0x7adc, 0xbf45, 0xb477, 0x71ee, 0x5614, 0x938d, 0x98bf, 0x5d26,
+    0x8edb, 0x4b42, 0x4070, 0x85e9, 0xf84,  0xca1d, 0xc12f, 0x4b6,  0xd74b, 0x12d2, 0x19e0, 0xdc79, 0xfb83, 0x3e1a,
+    0x3528, 0xf0b1, 0x234c, 0xe6d5, 0xede7, 0x287e, 0xf93d, 0x3ca4, 0x3796, 0xf20f, 0x21f2, 0xe46b, 0xef59, 0x2ac0,
+    0xd3a,  0xc8a3, 0xc391, 0x608,  0xd5f5, 0x106c, 0x1b5e, 0xdec7, 0x54aa, 0x9133, 0x9a01, 0x5f98, 0x8c65, 0x49fc,
+    0x42ce, 0x8757, 0xa0ad, 0x6534, 0x6e06, 0xab9f, 0x7862, 0xbdfb, 0xb6c9, 0x7350, 0x51d6, 0x944f, 0x9f7d, 0x5ae4,
+    0x8919, 0x4c80, 0x47b2, 0x822b, 0xa5d1, 0x6048, 0x6b7a, 0xaee3, 0x7d1e, 0xb887, 0xb3b5, 0x762c, 0xfc41, 0x39d8,
+    0x32ea, 0xf773, 0x248e, 0xe117, 0xea25, 0x2fbc, 0x846,  0xcddf, 0xc6ed, 0x374,  0xd089, 0x1510, 0x1e22, 0xdbbb,
+    0xaf8,  0xcf61, 0xc453, 0x1ca,  0xd237, 0x17ae, 0x1c9c, 0xd905, 0xfeff, 0x3b66, 0x3054, 0xf5cd, 0x2630, 0xe3a9,
+    0xe89b, 0x2d02, 0xa76f, 0x62f6, 0x69c4, 0xac5d, 0x7fa0, 0xba39, 0xb10b, 0x7492, 0x5368, 0x96f1, 0x9dc3, 0x585a,
+    0x8ba7, 0x4e3e, 0x450c, 0x8095};
+
+// Cell index to discharge
+static const uint16_t dcc[CELLBOARD_CELL_COUNT] = {
+    0b00000001,  // DCC1  0x01  cfg4a
+    0b00000010,  // DCC2  0x02
+    0b00000100,  // DCC3  0x04
+    0b00001000,  // DCC4  0x08-
+    0b00010000,  // DCC5  0x10-
+    0b00100000,  // DCC6  0x20-
+    0b01000000,  // DCC7  0x40-
+    0b10000000,  // DCC8  0x80-
+
+    0b00000001,  // DCC9  0x01    cfg5A
+    0b00000010,  // DCC10  0x02
+    0b00000100,  // DCC11  0x04
+    0b00001000,  // DCC12  0x08-
+
+    0b00010000,  // DCC13  0x10-     cfg0b
+    0b00100000,  // DCC14  0x20-
+    0b01000000,  // DCC15  0x40-
+    0b10000000,  // DCC16  0x80-
+
+    0b00000001,  // DCC17 0x01    cfg1b
+    0b00000010   // DCCC18
+};
+
+#define RDCV_CMD_REG_A 0b0100
+#define RDCV_CMD_REG_B 0b0110
+#define RDCV_CMD_REG_C 0b1000
+#define RDCV_CMD_REG_D 0b1010
+#define RDCV_CMD_REG_E 0b1001
+#define RDCV_CMD_REG_F 0b1011
+
+/**
+ * @brief rdcv command registers
+ * @details As defined in the LTC6813 datasheet, theese are the bits to access
+ * 			the six different registers of the LTC
+ */
+static const uint8_t rdcv_cmd[LTC6813_REG_COUNT] = {
+    RDCV_CMD_REG_A,
+    RDCV_CMD_REG_B,
+    RDCV_CMD_REG_C,
+    RDCV_CMD_REG_D,
+    RDCV_CMD_REG_E,
+    RDCV_CMD_REG_F,
+};
+
+/**
+ * @brief Discharge time out value
+ * 
+ */
+enum {
+    DCTO_DISABLED = 0,
+    DCTO_30S,
+    DCTO_1M,
+    DCTO_2M,
+    DCTO_3M,
+    DCTO_4M,
+    DCTO_10M,
+    DCTO_15M,
+    DCTO_20M,
+    DCTO_30M,
+    DCTO_40M,
+    DCTO_60M,
+    DCTO_75M,
+    DCTO_90M,
+    DCTO_120M
+};
+
+/**
+ * @brief Time to discharge the cell
+ * 
+ * @details Maps dcto memory value to milliseconds
+ */
+static const uint32_t DCTO_TO_MILLIS[16] = {
+    0,        // disabled
+    30000,    // 30 sec
+    60000,    // 1 min
+    120000,   // 2 min
+    180000,   // 3 ...
+    240000,   // 4
+    300000,   // 5
+    600000,   // 10
+    900000,   // 15
+    1200000,  // 20
+    1800000,  // 30
+    2400000,  // 40
+    3600000,  // 60
+    4500000,  // 75
+    5400000,  // 90
+    7200000   // 120
+};
+
+typedef enum { WRCFGA = 0, WRCFGB = 1 } wrcfg_register;
+
+extern uint8_t GPIO_CONFIG;  // GPIO CONFIG
+
+void ltc6813_adcv(SPI_HandleTypeDef *spi);
+void ltc6813_adow(SPI_HandleTypeDef *spi, LTC6813_ADOW_PUP pup);
+
+void ltc6813_enable_cs(SPI_HandleTypeDef *spi);
+void ltc6813_disable_cs(SPI_HandleTypeDef *spi);
+
+HAL_StatusTypeDef ltc6813_poll_convertion(SPI_HandleTypeDef *hspi, uint32_t timeout);
+
+void ltc6813_wakeup_idle(SPI_HandleTypeDef *hspi);
+
+void ltc6813_wrcfg(SPI_HandleTypeDef *hspi, wrcfg_register reg, uint8_t cfgr[8]);
+/**
+ * @brief		This function is used to calculate the PEC value
+ *
+ * @param		len		Length of the data array
+ * @param		data	Array of data
+ */
+uint16_t ltc6813_pec15(uint8_t len, uint8_t data[]);
+
+#endif /* LTC6813_H_ */

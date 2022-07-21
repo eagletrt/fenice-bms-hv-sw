@@ -1,5 +1,0 @@
-{
-    "sketch": "temperature.ino",
-    "board": "arduino:avr:uno",
-    "port": "/dev/ttyUSB0"
-}
