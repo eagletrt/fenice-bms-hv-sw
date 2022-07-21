@@ -1,0 +1,26 @@
+
+name: Documentation
+on: [push]
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Documentation
+      uses: eagletrt/documentation@main
+      with:
+        author: E-Agle TRT         # project author
+        project: Fenice BMS HV     # project name
+        rootfile: Software            # project title
+        folders: ../mainboard/Inc ../mainboard/Src ../cellboard/Src ../cellboard/Inc
+        version: 1.0.0             # project version
+        release: 1.0.0             # project release
+        language: c                # language used
+    - name: Deploy 🚀
+      uses: JamesIves/github-pages-deploy-action@4.0.0
+      with:
+        nojekyll: true 
+        branch: docs # The branch the action should deploy to.
+        folder: docs/_build # The folder the action should deploy.
