@@ -64,15 +64,11 @@ void timebase_check_flags() {
         flags &= ~_100MS_INTERVAL_FLAG;
     }
     if (flags & _500MS_INTERVAL_FLAG) {
-        if (fans_override)
-            fans_set_speed(fans_override_value);
-        else
-            fans_set_speed_from_temp(temperature_get_max() / 2.56f - 20);
-        if (1 || bms.handcart_connected) {  //always do this
-            SEND_CAN_CAR_MSG(primary_ID_HV_CELLS_TEMP);
-            SEND_CAN_CAR_MSG(primary_ID_HV_CELLS_VOLTAGE);
-            SEND_CAN_CAR_MSG(primary_ID_HV_CELL_BALANCING_STATUS);
-        }
+        fans_loop(temperature_get_max() / 2.56 - 20);
+
+        SEND_CAN_CAR_MSG(primary_ID_HV_CELLS_TEMP);
+        SEND_CAN_CAR_MSG(primary_ID_HV_CELLS_VOLTAGE);
+        SEND_CAN_CAR_MSG(primary_ID_HV_CELL_BALANCING_STATUS);
         SEND_CAN_CAR_MSG(primary_ID_HV_CAN_FORWARD_STATUS);
         SEND_CAN_CAR_MSG(primary_ID_HV_FANS_OVERRIDE_STATUS);
         flags &= ~_500MS_INTERVAL_FLAG;

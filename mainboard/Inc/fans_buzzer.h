@@ -12,5 +12,6 @@ extern float fans_override_value;
 void fans_init();
 void fans_set_speed(float power_percentage);
 void fans_set_speed_from_temp(float temp);
+void fans_loop(float temperature);
 
 void BUZ_sborati(TIM_HandleTypeDef *htim);

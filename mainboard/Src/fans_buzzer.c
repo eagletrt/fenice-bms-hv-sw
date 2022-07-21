@@ -2,6 +2,7 @@
 
 #include "mainboard_config.h"
 #include "math.h"
+#include "temperature.h"
 #include "tim.h"
 
 #include <string.h>
@@ -22,12 +23,19 @@ void fans_set_speed(float power) {
     pwm_set_duty_cicle(&HTIM_PWM, PWM_FANS_CHANNEL, 1 - power);
 }
 void fans_set_speed_from_temp(float temp) {
-    uint8_t thr_l = fans_speed > 0.05 ? 28 : 30;
+    uint8_t thr_l = fans_speed > 0.05 ? 43 : 45;
     if (temp < thr_l)
         return fans_set_speed(0);
     if (temp < 49)
-        return fans_set_speed(0.75 / 25 * (temp - 25) + 0.15);
+        return fans_set_speed(0.75 / 12 * (temp - 43) + 0.15);  //map temps between 43-55 to duty cycle
     fans_set_speed(1);
+}
+
+void fans_loop(float temperature) {
+    if (fans_override)
+        fans_set_speed(fans_override_value);
+    else
+        fans_set_speed_from_temp(temperature_get_max() / 2.56f - 20);
 }
 
 // credits to the master sborato PM Alex
