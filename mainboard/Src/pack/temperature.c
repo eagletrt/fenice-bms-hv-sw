@@ -53,6 +53,7 @@ temperature_t temperature_get_min() {
 temperature_t temperature_get_average() {
     float average = 0;
     for (size_t i = 0; i < PACK_TEMP_COUNT; i++) {
+        if(temperatures[i] == 0) continue;
         average += temperatures[i];
     }
     return (temperature_t)roundf(average / PACK_TEMP_COUNT);

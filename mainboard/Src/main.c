@@ -25,7 +25,7 @@
 #include "bal_fsm.h"
 #include "bms_fsm.h"
 #include "cli_bms.h"
-#include "config.h"
+#include "eeprom-config.h"
 #include "error/error.h"
 #include "fans_buzzer.h"
 #include "feedback.h"
@@ -140,6 +140,8 @@ int main(void) {
 
     soc_init(voltage_get_cell_min(NULL) / 1000.0);
 
+    uint8_t todo_init_led_test = 1;
+
     /* USER CODE END 2 */
 
     /* Infinite loop */
@@ -152,8 +154,13 @@ int main(void) {
         fsm_run(bal.fsm);
 
         timebase_check_flags();
-        if (HAL_GetTick() > 1500 && !HAL_GPIO_ReadPin(BMS_FAULT_GPIO_Port, BMS_FAULT_Pin))
-            HAL_GPIO_WritePin(BMS_FAULT_GPIO_Port, BMS_FAULT_Pin, BMS_FAULT_OFF_VALUE);
+        if (todo_init_led_test && feedback_check(FEEDBACK_IMD_LATCHED, FEEDBACK_IMD_LATCHED) == 0) {
+            todo_init_led_test = 0;
+            HAL_GPIO_WritePin(
+                BMS_FAULT_GPIO_Port,
+                BMS_FAULT_Pin,
+                fsm_get_state(bms.fsm) == BMS_FAULT ? BMS_FAULT_ON_VALUE : BMS_FAULT_OFF_VALUE);
+        }
 
 #ifdef DEBUG
         cli_watch_flush_handler();
