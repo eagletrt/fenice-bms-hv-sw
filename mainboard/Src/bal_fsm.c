@@ -11,7 +11,7 @@
 
 #include "can_comm.h"
 #include "cli_bms.h"
-#include "config.h"
+#include "eeprom-config.h"
 #include "fenice_config.h"
 #include "pack/pack.h"
 #include "spi.h"
@@ -27,7 +27,7 @@ typedef struct {
 bal_params bal_params_default = {BAL_MAX_VOLTAGE_THRESHOLD};
 
 bal_fsm bal;
-config_t config;
+EEPROM_ConfigTypeDef config;
 
 void off_entry(fsm FSM);
 void off_handler(fsm FSM, uint8_t event);
@@ -40,15 +40,15 @@ void cooldown_handler(fsm FSM, uint8_t event);
 void cooldown_exit(fsm FSM);
 
 voltage_t bal_get_threshold() {
-    return ((bal_params *)config_get(&config))->threshold;
+    return ((bal_params *)EEPROM_config_get(&config))->threshold;
 }
 
 void bal_set_threshold(uint16_t thresh) {
-    bal_params params = *(bal_params *)config_get(&config);
+    bal_params params = *(bal_params *)EEPROM_config_get(&config);
     params.threshold  = thresh;
 
-    config_set(&config, &params);
-    config_write(&config);
+    EEPROM_config_set(&config, &params);
+    EEPROM_config_write(&config);
 }
 
 void bal_fsm_init() {
@@ -81,7 +81,15 @@ void bal_fsm_init() {
     state.exit    = cooldown_exit;
     fsm_set_state(bal.fsm, BAL_COOLDOWN, &state);
 
-    config_init(&config, CONF_ADDR, CONF_VER, &bal_params_default, sizeof(bal_params));
+    EEPROM_config_init(
+        &config,
+        &SPI_EEPROM,
+        EEPROM_CS_GPIO_Port,
+        EEPROM_CS_Pin,
+        CONF_ADDR,
+        CONF_VER,
+        &bal_params_default,
+        sizeof(bal_params));
 }
 
 void off_entry(fsm FSM) {

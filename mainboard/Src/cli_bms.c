@@ -121,7 +121,7 @@ cli_command_func_t *commands[N_COMMANDS] = {
     &_cli_sborat};
 
 cli_t cli_bms;
-bool dmesg_ena = false;
+bool dmesg_ena = true;
 
 void cli_bms_init() {
     cli_bms.uart           = &CLI_UART;

@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include "config.h"
+#include "eeprom-config.h"
 #include "pack/current.h"
 
 /**

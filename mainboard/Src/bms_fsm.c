@@ -11,8 +11,8 @@
 #include "bms_fsm.h"
 
 #include "cli_bms.h"
-#include "config.h"
 #include "current.h"
+#include "eeprom-config.h"
 #include "error.h"
 #include "feedback.h"
 #include "main.h"
@@ -20,6 +20,7 @@
 #include "pack/pack.h"
 #include "pack/voltage.h"
 #include "peripherals/can_comm.h"
+#include "spi.h"
 #include "tim.h"
 
 #include <inttypes.h>
@@ -27,10 +28,10 @@
 #include <string.h>
 
 #define CELLBOARD_DISTR_ADDR 0x50
-#define CELLBOARD_DISTR_VER  0x01
+#define CELLBOARD_DISTR_VER  0x02
 
 bms_fsm bms;
-config_t cellboard_distribution;
+EEPROM_ConfigTypeDef cellboard_distribution;
 
 //------------------------------Declarations------------------------------------------
 void bms_set_led_blinker();
@@ -112,12 +113,12 @@ void _stop_fb_timeout_timer() {
 }
 
 uint8_t *bms_get_cellboard_distribution() {
-    return (uint8_t *)config_get(&cellboard_distribution);
+    return (uint8_t *)EEPROM_config_get(&cellboard_distribution);
 }
 
 void bms_set_cellboard_distribution(uint8_t distribution[static 6]) {
-    config_set(&cellboard_distribution, (void *)distribution);
-    config_write(&cellboard_distribution);
+    EEPROM_config_set(&cellboard_distribution, (void *)distribution);
+    EEPROM_config_write(&cellboard_distribution);
 }
 
 void bms_fsm_init() {
@@ -165,8 +166,16 @@ void bms_fsm_init() {
     HAL_GPIO_WritePin(bms.led.port, bms.led.pin, GPIO_PIN_RESET);
     bms_set_led_blinker();
 
-    uint8_t cell_distr_default[CELLBOARD_COUNT] = {0, 1, 2, 3, 4, 5};
-    config_init(&cellboard_distribution, CELLBOARD_DISTR_ADDR, CELLBOARD_DISTR_VER, cell_distr_default, 6);
+    uint8_t cell_distr_default[CELLBOARD_COUNT] = {2, 4, 1, 5, 3, 0};
+    EEPROM_config_init(
+        &cellboard_distribution,
+        &SPI_EEPROM,
+        EEPROM_CS_GPIO_Port,
+        EEPROM_CS_Pin,
+        CELLBOARD_DISTR_ADDR,
+        CELLBOARD_DISTR_VER,
+        cell_distr_default,
+        6);
 }
 
 void bms_set_led_blinker() {
@@ -334,6 +343,11 @@ void _precharge_handler(fsm FSM, uint8_t event) {
                 cli_bms_debug("Precharge ok");
                 fsm_transition(bms.fsm, BMS_ON);
             }
+
+            if (feedback_check(FEEDBACK_AIRN_STATUS, FEEDBACK_NULL) != 0) {
+                fsm_trigger_event(FSM, BMS_EV_TS_OFF);
+            }
+
             break;
         case BMS_EV_FAULT:
             fsm_transition(FSM, BMS_FAULT);

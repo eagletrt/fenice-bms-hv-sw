@@ -15,7 +15,10 @@
 #include "mainboard_config.h"
 #include "adc124s021.h"
 #include "spi.h"
+#include "cli_bms.h"
+#include "bms_fsm.h"
 
+#include <stdio.h>
 #include <math.h>
 
 #define MEASURE_SAMPLE_SIZE 128
@@ -58,6 +61,8 @@ uint32_t current_read(float shunt_adc_val) {
     float volt        = avg_50 * (3.3f / 4095 / MEASURE_SAMPLE_SIZE);
     current[CURRENT_SENSOR_50] = _current_convert_low(volt);
 
+    error_toggle_check(volt < 0.3, ERROR_CONNECTOR_DETACH, 2);
+
     // Convert Hall-high (300A)
     volt                        = avg_300 * (3.3f / 4095 / MEASURE_SAMPLE_SIZE);
     current[CURRENT_SENSOR_300] = _current_convert_high(volt);
@@ -80,6 +85,11 @@ void current_zero() {
     }
     V0L = avg_50 * (3.3f / 4095 / MEASURE_SAMPLE_SIZE);
     V0H = avg_300 * (3.3f / 4095 / MEASURE_SAMPLE_SIZE);
+
+    if(V0L < 0.3){
+        error_set(ERROR_CONNECTOR_DETACH, 2, HAL_GetTick());
+        cli_bms_debug("sensor detached");
+    }
 
     shunt_offset = adc124S021_read_channel(&SPI_ADC124S, ADC124_SHUNT_CHANNEL);
 }
