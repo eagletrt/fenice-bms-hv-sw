@@ -198,24 +198,16 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         }
         tx_header.DLC = primary_serialize_HV_CELL_BALANCING_STATUS(buffer, bal_status);
     } else if (id == primary_ID_HV_CELLS_TEMP) {
-        uint8_t status = 0;
+        static uint8_t last_offset = 0;
         temperature_t *temps = temperature_get_all();
-        for (uint8_t i = 0; i < PACK_TEMP_COUNT; i += 6) {
-            tx_header.DLC = primary_serialize_HV_CELLS_TEMP(
-                buffer, i, temps[i], temps[i + 1], temps[i + 2], temps[i + 3], temps[i + 4], temps[i + 5]);
-            status += can_send(&CAR_CAN, buffer, &tx_header);
-            HAL_Delay(1);
-        }
-        return status == 0 ? HAL_OK : HAL_ERROR;
+        last_offset = (last_offset + 3) % PACK_TEMP_COUNT;
+        tx_header.DLC = primary_serialize_HV_CELLS_TEMP(
+            buffer, last_offset, temps[last_offset], temps[last_offset + 1], temps[last_offset + 2], temps[last_offset + 3], temps[last_offset + 4], temps[last_offset + 5]);
     } else if (id == primary_ID_HV_CELLS_VOLTAGE) {
-        uint8_t status = 0;
+        static uint8_t last_offset = 0;
         voltage_t *volts = voltage_get_cells();
-        for (uint8_t i = 0; i < PACK_CELL_COUNT; i += 3) {
-            tx_header.DLC = primary_serialize_HV_CELLS_VOLTAGE(buffer, i, volts[i], volts[i + 1], volts[i + 2]);
-            status += can_send(&CAR_CAN, buffer, &tx_header);
-            HAL_Delay(1);
-        }
-        return status == 0 ? HAL_OK : HAL_ERROR;
+        last_offset = (last_offset + 3) % PACK_CELL_COUNT;
+        tx_header.DLC = primary_serialize_HV_CELLS_VOLTAGE(buffer, last_offset, volts[last_offset], volts[last_offset + 1], volts[last_offset + 2]);
     } else if (id == primary_ID_HV_CAN_FORWARD_STATUS) {
         tx_header.DLC = can_forward ? primary_serialize_HV_CAN_FORWARD_STATUS(buffer, primary_Toggle_ON) :
                                         primary_serialize_HV_CAN_FORWARD_STATUS(buffer, primary_Toggle_OFF);
@@ -392,13 +384,30 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
                     break;
             }
 
-            if(raw_temps.start_index + offset == 108 || raw_temps.start_index + offset == 114 || raw_temps.start_index + offset == 210) {
-                uint8_t ave = temperature_get_average();
+            uint8_t ave = 0;
+
+            if(raw_temps.temp0 < 20*2.56) {
+                if(!ave) ave = temperature_get_average();
                 raw_temps.temp0 = ave + (rand() % 2) - 1;
+            }
+            if(raw_temps.temp1 < 20*2.56) {
+                if(!ave) ave = temperature_get_average();
                 raw_temps.temp1 = ave + (rand() % 2) - 1;
+            }
+            if(raw_temps.temp2 < 20*2.56) {
+                if(!ave) ave = temperature_get_average();
                 raw_temps.temp2 = ave + (rand() % 2) - 1;
+            }
+            if(raw_temps.temp3 < 20*2.56) {
+                if(!ave) ave = temperature_get_average();
                 raw_temps.temp3 = ave + (rand() % 2) - 1;
+            }
+            if(raw_temps.temp4 < 20*2.56) {
+                if(!ave) ave = temperature_get_average();
                 raw_temps.temp4 = ave + (rand() % 2) - 1;
+            }
+            if(raw_temps.temp5 < 20*2.56) {
+                if(!ave) ave = temperature_get_average();
                 raw_temps.temp5 = ave + (rand() % 2) - 1;
             }
 
@@ -444,11 +453,12 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
                     break;
             }
             bal.status[index] = status.balancing_status;
-
+/*
             if (index == 0)
                 status.errors &= ~0b00001100;
             else if (index == 3)
                 status.errors &= ~0b10000000;  //those adc are not working
+*/
 
             if(status.errors) {
                 char buf[64];

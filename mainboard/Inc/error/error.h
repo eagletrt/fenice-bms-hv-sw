@@ -50,6 +50,8 @@ typedef enum {
     ERROR_EEPROM_COMM,
     ERROR_EEPROM_WRITE,
 
+    ERROR_CONNECTOR_DETACH,
+
     ERROR_NUM_ERRORS
 } __attribute__((__packed__)) error_id;
 

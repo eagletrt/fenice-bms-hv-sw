@@ -23,7 +23,7 @@ ldscript: STM32F446RETx_FLASH_shifted.ld # linker script
 cDefinitions: 
   - USE_HAL_DRIVER
   - STM32F446xx
-  - DEBUG
+#  - DEBUG
 
 cxxDefinitions: []
 asDefinitions: []
@@ -67,6 +67,7 @@ includeDirectories:
   - lib/micro-libs/fsm/**
   - lib/micro-libs/cli/**
   - lib/micro-libs/m95256/**
+  - lib/micro-libs/eeprom-config/**
   - lib/micro-libs/blink/**
   - lib/micro-libs/pwm/**
   - lib/micro-libs/timer-utils/**
@@ -86,6 +87,7 @@ sourceFiles:
   - lib/micro-libs/fsm/**
   - lib/micro-libs/cli/**
   - lib/micro-libs/m95256/**
+  - lib/micro-libs/eeprom-config/**
   - lib/micro-libs/blink/**
   - lib/micro-libs/pwm/**
   - lib/micro-libs/timer-utils/**

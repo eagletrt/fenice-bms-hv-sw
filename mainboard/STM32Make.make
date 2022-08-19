@@ -63,7 +63,6 @@ Src/bal_fsm.c \
 Src/bms_fsm.c \
 Src/can.c \
 Src/cli_bms.c \
-Src/config.c \
 Src/dma.c \
 Src/energy/energy.c \
 Src/energy/soc.c \
@@ -89,6 +88,7 @@ Src/timebase.c \
 Src/usart.c \
 lib/micro-libs/blink/blink.c \
 lib/micro-libs/cli/cli.c \
+lib/micro-libs/eeprom-config/eeprom-config.c \
 lib/micro-libs/fsm/fsm.c \
 lib/micro-libs/llist/llist.c \
 lib/micro-libs/m95256/m95256.c \
@@ -152,7 +152,6 @@ AS_DEFS =
 
 # C defines
 C_DEFS =  \
--DDEBUG \
 -DSTM32F446xx \
 -DUSE_HAL_DRIVER
 
@@ -183,6 +182,7 @@ C_INCLUDES =  \
 -Ilib/can/lib/secondary/c \
 -Ilib/micro-libs/blink \
 -Ilib/micro-libs/cli \
+-Ilib/micro-libs/eeprom-config \
 -Ilib/micro-libs/fsm \
 -Ilib/micro-libs/llist \
 -Ilib/micro-libs/m95256 \

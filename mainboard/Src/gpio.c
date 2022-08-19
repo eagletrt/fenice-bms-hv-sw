@@ -59,10 +59,10 @@ void MX_GPIO_Init(void) {
     HAL_GPIO_WritePin(GPIOC, CS_ADC_Pin | EEPROM_CS_Pin | EEPROM_HOLD_Pin | CARD_CS_Pin | AIRN_OFF_Pin, GPIO_PIN_SET);
 
     /*Configure GPIO pin Output Level */
-    HAL_GPIO_WritePin(AIRP_OFF_GPIO_Port, AIRP_OFF_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(GPIOB, SIGNALS_INOUT_INTERLOCK_OUT_Pin | TS_ON_Pin, GPIO_PIN_SET);
 
     /*Configure GPIO pin Output Level */
-    HAL_GPIO_WritePin(TS_ON_GPIO_Port, TS_ON_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(AIRP_OFF_GPIO_Port, AIRP_OFF_Pin, GPIO_PIN_SET);
 
     /*Configure GPIO pin Output Level */
     HAL_GPIO_WritePin(GPIOB, LED2_Pin | LED1_Pin, GPIO_PIN_RESET);
@@ -89,17 +89,18 @@ void MX_GPIO_Init(void) {
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-    /*Configure GPIO pins : PB10 PB7 */
-    GPIO_InitStruct.Pin  = GPIO_PIN_10 | GPIO_PIN_7;
-    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    /*Configure GPIO pins : PBPin PBPin PBPin PBPin */
+    GPIO_InitStruct.Pin   = SIGNALS_INOUT_INTERLOCK_OUT_Pin | TS_ON_Pin | LED2_Pin | LED1_Pin;
+    GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull  = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
     /*Configure GPIO pin : PtPin */
-    GPIO_InitStruct.Pin  = HANDCART_Pin;
+    GPIO_InitStruct.Pin  = SIGNALS_INOUT_INTERLOCK_IN_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(HANDCART_GPIO_Port, &GPIO_InitStruct);
+    HAL_GPIO_Init(SIGNALS_INOUT_INTERLOCK_IN_GPIO_Port, &GPIO_InitStruct);
 
     /*Configure GPIO pin : PtPin */
     GPIO_InitStruct.Pin  = CARD_OK_Pin;
@@ -114,11 +115,10 @@ void MX_GPIO_Init(void) {
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(AIRP_OFF_GPIO_Port, &GPIO_InitStruct);
 
-    /*Configure GPIO pins : PBPin PBPin PBPin */
-    GPIO_InitStruct.Pin   = TS_ON_Pin | LED2_Pin | LED1_Pin;
-    GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
-    GPIO_InitStruct.Pull  = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    /*Configure GPIO pin : PB7 */
+    GPIO_InitStruct.Pin  = GPIO_PIN_7;
+    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 }
 
