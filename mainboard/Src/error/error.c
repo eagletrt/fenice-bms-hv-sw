@@ -33,13 +33,15 @@ const uint32_t error_timeouts[ERROR_NUM_ERRORS] = {
     [ERROR_CELL_OVER_TEMPERATURE] = 750,
     [ERROR_OVER_CURRENT]          = 300,
     [ERROR_CAN]                   = SOFT,
-    [ERROR_INT_VOLTAGE_MISMATCH]  = SOFT,
+    [ERROR_INT_VOLTAGE_MISMATCH]  = 250,
     [ERROR_CELLBOARD_COMM]        = 250,
     [ERROR_CELLBOARD_INTERNAL]    = 250,
     [ERROR_FEEDBACK]              = SOFT,
     [ERROR_FEEDBACK_CIRCUITRY]    = SOFT,
     [ERROR_EEPROM_COMM]           = SOFT,
-    [ERROR_EEPROM_WRITE]          = SOFT};
+    [ERROR_EEPROM_WRITE]          = SOFT,
+    [ERROR_CONNECTOR_DETACH]      = 10
+    };
 
 llist er_list = NULL;
 

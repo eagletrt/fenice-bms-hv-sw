@@ -47,6 +47,7 @@ llist_node error_list_ref_feedback[FEEDBACK_N]               = {NULL};
 llist_node error_list_ref_feedback_circuitry[FEEDBACK_N]     = {NULL};
 llist_node error_list_ref_eeprom_comm[1]                     = {NULL};
 llist_node error_list_ref_eeprom_write[1]                    = {NULL};
+llist_node error_list_ref_connector_detach[5]                   = {NULL};
 
 llist_node *const error_list_ref_array[ERROR_NUM_ERRORS] = {
     [ERROR_CELL_LOW_VOLTAGE]      = error_list_ref_low_voltages,
@@ -62,8 +63,8 @@ llist_node *const error_list_ref_array[ERROR_NUM_ERRORS] = {
     [ERROR_FEEDBACK]              = error_list_ref_feedback,
     [ERROR_FEEDBACK_CIRCUITRY]    = error_list_ref_feedback_circuitry,
     [ERROR_EEPROM_COMM]           = error_list_ref_eeprom_comm,
-    [ERROR_EEPROM_WRITE]          = error_list_ref_eeprom_write
-
+    [ERROR_EEPROM_WRITE]          = error_list_ref_eeprom_write,
+    [ERROR_CONNECTOR_DETACH]      = error_list_ref_connector_detach
 };
 
 /**

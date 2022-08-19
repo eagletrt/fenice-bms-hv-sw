@@ -5,6 +5,7 @@
 #include "can_comm.h"
 #include "cli_bms.h"
 #include "fans_buzzer.h"
+#include "feedback.h"
 #include "imd.h"
 #include "pwm.h"
 #include "soc.h"
@@ -47,6 +48,17 @@ void timebase_check_flags() {
         timebase_voltage_current_soc();
         voltage_check_errors();
         current_check_errors();
+
+        error_toggle_check(
+            !HAL_GPIO_ReadPin(SIGNALS_INOUT_INTERLOCK_IN_GPIO_Port, SIGNALS_INOUT_INTERLOCK_IN_Pin),
+            ERROR_CONNECTOR_DETACH,
+            1);
+        error_toggle_check(
+            feedback_check(FEEDBACK_CONNECTOR_MASK, FEEDBACK_CONNECTOR_VAL) != 0, ERROR_CONNECTOR_DETACH, 0);
+
+        SEND_CAN_CAR_MSG(primary_ID_HV_CELLS_TEMP);
+        SEND_CAN_CAR_MSG(primary_ID_HV_CELLS_VOLTAGE);
+
         SEND_CAN_CAR_MSG(primary_ID_HV_VOLTAGE);
         SEND_CAN_CAR_MSG(primary_ID_HV_CURRENT);
         flags &= ~_50MS_INTERVAL_FLAG;
@@ -61,13 +73,12 @@ void timebase_check_flags() {
         if (imd_get_state() == IMD_NORMAL) {
             SEND_CAN_CAR_MSG(primary_ID_HV_IMD_STATUS);
         }
+
         flags &= ~_100MS_INTERVAL_FLAG;
     }
     if (flags & _500MS_INTERVAL_FLAG) {
         fans_loop(temperature_get_max() / 2.56 - 20);
 
-        SEND_CAN_CAR_MSG(primary_ID_HV_CELLS_TEMP);
-        SEND_CAN_CAR_MSG(primary_ID_HV_CELLS_VOLTAGE);
         SEND_CAN_CAR_MSG(primary_ID_HV_CELL_BALANCING_STATUS);
         SEND_CAN_CAR_MSG(primary_ID_HV_CAN_FORWARD_STATUS);
         SEND_CAN_CAR_MSG(primary_ID_HV_FANS_OVERRIDE_STATUS);
