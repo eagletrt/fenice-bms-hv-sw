@@ -121,8 +121,8 @@ uint8_t voltage_get_cellboard_offset(uint8_t cellboard_index) {
 
 void voltage_check_errors() {
     for(uint8_t i=0; i<PACK_CELL_COUNT; ++i) {
-        error_toggle_check(voltage.cells[i] > CELL_MAX_VOLTAGE, ERROR_CELL_OVER_VOLTAGE, 0);
-        error_toggle_check(voltage.cells[i] < CELL_MIN_VOLTAGE, ERROR_CELL_UNDER_VOLTAGE, 0);
-        error_toggle_check(voltage.cells[i] < CELL_WARN_VOLTAGE, ERROR_CELL_LOW_VOLTAGE, 0);
+        error_toggle_check(voltage.cells[i] > CELL_MAX_VOLTAGE, ERROR_CELL_OVER_VOLTAGE, i);
+        error_toggle_check(voltage.cells[i] < CELL_MIN_VOLTAGE, ERROR_CELL_UNDER_VOLTAGE, i);
+        error_toggle_check(voltage.cells[i] < CELL_WARN_VOLTAGE, ERROR_CELL_LOW_VOLTAGE, i);
     }
 }

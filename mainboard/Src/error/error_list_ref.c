@@ -32,11 +32,11 @@
     node_t* error_list_ref_<insert the relative data name in data.c>;
 */
 
-llist_node error_list_ref_under_voltages[1]     = {NULL};
-llist_node error_list_ref_over_voltages[1]     = {NULL};
-llist_node error_list_ref_low_voltages[1] = {NULL};
-llist_node error_list_ref_temperatures[1]      = {NULL};
-llist_node error_list_ref_high_temperatures[1] = {NULL};
+llist_node error_list_ref_under_voltages[PACK_CELL_COUNT]     = {NULL};
+llist_node error_list_ref_over_voltages[PACK_CELL_COUNT]     = {NULL};
+llist_node error_list_ref_low_voltages[PACK_CELL_COUNT]       = {NULL};
+llist_node error_list_ref_temperatures[PACK_TEMP_COUNT]      = {NULL};
+llist_node error_list_ref_high_temperatures[PACK_TEMP_COUNT] = {NULL};
 llist_node error_list_ref_current[1]                = {NULL};
 llist_node error_list_ref_cellboards[LTC6813_COUNT] = {NULL};
 llist_node error_list_ref_can[1]                    = {NULL};
