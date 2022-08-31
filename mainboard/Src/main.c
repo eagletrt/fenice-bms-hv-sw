@@ -154,7 +154,8 @@ int main(void) {
         fsm_run(bal.fsm);
 
         timebase_check_flags();
-        if (todo_init_led_test && feedback_check(FEEDBACK_IMD_LATCHED, FEEDBACK_IMD_LATCHED) == 0) {
+        if (todo_init_led_test &&
+            (feedback_check(FEEDBACK_IMD_LATCHED, FEEDBACK_IMD_LATCHED) == 0 || HAL_GetTick() > 2500)) {
             todo_init_led_test = 0;
             HAL_GPIO_WritePin(
                 BMS_FAULT_GPIO_Port,
