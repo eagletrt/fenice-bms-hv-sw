@@ -200,7 +200,7 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
     } else if (id == primary_ID_HV_CELLS_TEMP) {
         static uint8_t last_offset = 0;
         temperature_t *temps = temperature_get_all();
-        last_offset = (last_offset + 3) % PACK_TEMP_COUNT;
+        last_offset = (last_offset + 6) % PACK_TEMP_COUNT;
         tx_header.DLC = primary_serialize_HV_CELLS_TEMP(
             buffer, last_offset, temps[last_offset], temps[last_offset + 1], temps[last_offset + 2], temps[last_offset + 3], temps[last_offset + 4], temps[last_offset + 5]);
     } else if (id == primary_ID_HV_CELLS_VOLTAGE) {
@@ -384,8 +384,8 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
                     break;
             }
 
+/*
             uint8_t ave = 0;
-
             if(raw_temps.temp0 < 20*2.56) {
                 if(!ave) ave = temperature_get_average();
                 raw_temps.temp0 = ave + (rand() % 2) - 1;
@@ -410,6 +410,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
                 if(!ave) ave = temperature_get_average();
                 raw_temps.temp5 = ave + (rand() % 2) - 1;
             }
+            */
 
             temperature_set_cells(
                 raw_temps.start_index + offset,
