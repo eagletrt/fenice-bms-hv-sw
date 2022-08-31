@@ -344,10 +344,6 @@ void _precharge_handler(fsm FSM, uint8_t event) {
                 fsm_transition(bms.fsm, BMS_ON);
             }
 
-            if (feedback_check(FEEDBACK_AIRN_STATUS, FEEDBACK_NULL) != 0) {
-                fsm_trigger_event(FSM, BMS_EV_TS_OFF);
-            }
-
             break;
         case BMS_EV_FAULT:
             fsm_transition(FSM, BMS_FAULT);

@@ -26,8 +26,8 @@ void temperature_init() {
 
 void temperature_check_errors() {
     for (size_t i = 0; i < PACK_TEMP_COUNT; i++) {
-        error_toggle_check(temperatures[i]/2.56 - 20 > CELL_MAX_TEMPERATURE - 10, ERROR_CELL_HIGH_TEMPERATURE, 0);
-        error_toggle_check(temperatures[i]/2.56 - 20 > CELL_MAX_TEMPERATURE, ERROR_CELL_OVER_TEMPERATURE, 0);
+        error_toggle_check(temperatures[i]/2.56 - 20 > CELL_MAX_TEMPERATURE - 10, ERROR_CELL_HIGH_TEMPERATURE, i);
+        error_toggle_check(temperatures[i]/2.56 - 20 > CELL_MAX_TEMPERATURE, ERROR_CELL_OVER_TEMPERATURE, i);
     }
 }
 
