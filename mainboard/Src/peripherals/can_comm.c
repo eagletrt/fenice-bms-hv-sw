@@ -212,7 +212,7 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         tx_header.DLC = can_forward ? primary_serialize_HV_CAN_FORWARD_STATUS(buffer, primary_Toggle_ON) :
                                         primary_serialize_HV_CAN_FORWARD_STATUS(buffer, primary_Toggle_OFF);
     } else if (id == primary_ID_HV_VERSION) {
-        tx_header.DLC = primary_serialize_HV_VERSION(buffer, 1, 1);
+        tx_header.DLC = primary_serialize_HV_VERSION(buffer, 1, CANLIB_BUILD_TIME);
     } else if (id == primary_ID_SHUTDOWN_STATUS) {
         feedback_t f = feedback_check(FEEDBACK_SD_END | FEEDBACK_SD_IN, FEEDBACK_SD_END | FEEDBACK_SD_IN);
         tx_header.DLC = primary_serialize_SHUTDOWN_STATUS(buffer, !(f & FEEDBACK_SD_IN), !(f & FEEDBACK_SD_END));
