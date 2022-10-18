@@ -306,6 +306,7 @@ void _precharge_entry(fsm FSM) {
 }
 
 void _precharge_handler(fsm FSM, uint8_t event) {
+    char c[5] = {'\0'};
     switch (event) {
         case BMS_EV_PRECHARGE_TIMEOUT:
             cli_bms_debug("Precharge timeout");
@@ -330,7 +331,6 @@ void _precharge_handler(fsm FSM, uint8_t event) {
             break;
 
         case BMS_EV_PRECHARGE_CHECK:
-            char c[5] = {'\0'};
             snprintf(c, 5, "%4.2f", voltage_get_vts_p() / (voltage_get_vbat_adc() * PRECHARGE_VOLTAGE_THRESHOLD));
             cli_bms_debug(c);
 
@@ -365,6 +365,7 @@ void _on_entry(fsm FSM) {
 }
 
 void _on_handler(fsm FSM, uint8_t event) {
+    feedback_t f = feedback_check(FEEDBACK_ON_MASK, FEEDBACK_ON_VAL);
     switch (event) {
         case BMS_EV_TS_OFF:
             cli_bms_debug("requested TSOFF");
@@ -375,7 +376,6 @@ void _on_handler(fsm FSM, uint8_t event) {
             fsm_transition(FSM, BMS_FAULT);
             break;
         case BMS_EV_FB_CHECK:
-            feedback_t f = feedback_check(FEEDBACK_ON_MASK, FEEDBACK_ON_VAL);
             if (f != 0) {
                 can_car_send(primary_ID_HV_FEEDBACKS_STATUS);
                 pack_set_default_off(0);
