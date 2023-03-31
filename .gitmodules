@@ -1,17 +1,11 @@
-[submodule "mainboard/test/munit"]
-	path = mainboard/test/munit
+[submodule "Test/munit"]
+    path = Test/munit
 	url = https://github.com/nemequ/munit.git
-[submodule "mainboard/lib/micro-libs"]
-	path = mainboard/lib/micro-libs
+[submodule "Lib/micro-libs"]
+	path = Lib/micro-libs
 	url = git@github.com:eagletrt/micro-libs.git
-[submodule "cellboard/Core/Lib/micro-libs"]
-	path = cellboard/Core/Lib/micro-libs
-	url = git@github.com:eagletrt/micro-libs
-[submodule "mainboard/lib/can"]
-	path = mainboard/lib/can
-	url = git@github.com:eagletrt/can.git
-	branch = build
-[submodule "cellboard/Core/Lib/can"]
-	path = cellboard/Core/Lib/can
+    branch = bms-monitor
+[submodule "Lib/can"]
+	path = Lib/can
 	url = git@github.com:eagletrt/can.git
 	branch = build
