@@ -65,6 +65,13 @@ void max22530_cs_disable(GPIO_TypeDef * port, uint16_t pin);
 void max22530_init(SPI_HandleTypeDef * spi, GPIO_TypeDef * port, uint16_t pin);
 /**
  * @brief Read data from a channel
+ * @details Command structure:
+ *
+ * 					31   HEADER   23     DATA      7   CRC   0
+ * 					|- - - - - - -|- - - ... - - - | - ... - |
+ * 					X X X X X X 0 0                 (Optional)
+ *                  - - - - - -
+ * 					  Address
  * 
  * @param spi The spi configuration structure
  * @param port The GPIO port
@@ -78,6 +85,14 @@ float max22530_read_channel(SPI_HandleTypeDef * spi,
     MAX22530_CH channel);
 /**
  * @brief Read data from multiple channels
+ * @details Command structure:
+ *
+ *        95   HEADER   87     71      55      39       23          7   CRC   0
+ *        |- - - - - - -|- ... -|- ... -|- ... -|- ... -|- - ... - -| - ... - |
+ *        0 0 0 1 0 1 0 1  ADC1    ADC2    ADC3    ADC4   Interrupt  (Optional)
+ *        - - - - - -                                      Status
+ *          Address
+ *          (FADC)
  * 
  * @param spi The spi configuration structure
  * @param port The GPIO port
