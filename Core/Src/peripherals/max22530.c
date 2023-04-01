@@ -62,9 +62,9 @@ HAL_StatusTypeDef max22530_read_channels(SPI_HandleTypeDef *spi,
     max22530_cs_disable(port, pin);
 
     for (uint8_t i = 0; i < ch_number; ++i) {
-        MAX22530_CH ch = channels[i];
+        uint8_t ch_off = (uint8_t)channels[i];
         // Get 12 bit ADC value
-        uint16_t val = ( *(uint16_t *)(cmd + (ch * 2)) ) & 0x0FFF;
+        uint16_t val = ( *(uint16_t *)(cmd + (ch_off * 2)) ) & 0x0FFF;
         data_out[i] = MAX22530_CONV_VALUE_TO_VOLTAGE(val);
     }
 
