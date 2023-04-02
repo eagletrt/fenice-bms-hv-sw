@@ -24,8 +24,9 @@
 #define HTIM_BMS      htim8
 #define HTIM_MUX      htim10
 
-#define SPI_EEPROM  hspi2
-#define SPI_ADC124S hspi1
+#define SPI_MAX22530 hspi1
+#define SPI_EEPROM   hspi2
+#define SPI_MONITOR  hspi3
 
 #define ADC_HALL50  hadc2
 #define ADC_HALL300 hadc3
