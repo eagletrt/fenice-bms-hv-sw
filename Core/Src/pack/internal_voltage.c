@@ -37,8 +37,8 @@ HAL_StatusTypeDef internal_voltage_measure() {
 
     float voltages[4];
     HAL_StatusTypeDef status = max22530_read_channels(&SPI_MAX22530,
-        ADC_SPI_MOSI_GPIO_Port,
-        ADC_SPI_MOSI_Pin,
+        ADC_CS_GPIO_Port,
+        ADC_CS_Pin,
         channels,
         4,
         voltages);
@@ -52,6 +52,7 @@ HAL_StatusTypeDef internal_voltage_measure() {
     return status;
 }
 
+// TODO: Add errors (SCS?)
 float internal_voltage_get_vts() {
     return voltage.vts;
 }
