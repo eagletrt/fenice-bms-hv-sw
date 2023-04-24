@@ -1,21 +1,29 @@
 /**
- * @file		fenice_config.h
- * @brief		This file contains configuration settings for Fenice
+ * @file bms_config.h
+ * @brief This file contains configuration settings for Fenice BMS HV
  *
- * @date	Oct 07, 2019
+ * @date Oct 07, 2019
  * 
- * @author	Matteo Bonora [matteo.bonora@studenti.unitn.it]
- * @author	Simone Ruffini [simone.ruffini@studenti.unitn.it]
+ * @author Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @author Simone Ruffini [simone.ruffini@studenti.unitn.it]
+ * @author Antonio Gelain [antonio.gelain@studenti.unitn.it]
  */
 
-#ifndef FENICE_CONFIG_H
-#define FENICE_CONFIG_H
+#ifndef BMS_CONFIG_H
+#define BMS_CONFIG_H
 
 #include <inttypes.h>
 
 //===========================================================================
 //=================================== General ===============================
 //===========================================================================
+
+#ifndef MIN(x, y)
+#define MIN(x, y) ((x) < (y)) ? (x) : (y)
+#endif // MIN(x, y)
+#ifndef MAX(x, y)
+#define MAX(x, y) ((x) > (y)) ? (x) : (y)
+#endif // MAX(x, y)
 
 #define DISCHARGE_R   10   //Ohm
 #define CELL_CAPACITY 3.9  //Ah
@@ -34,6 +42,29 @@
  * configuration
  */
 #define CELLBOARD_CELL_COUNT 18
+
+#define HTIM_ERR      htim1
+#define HTIM_IMD      htim2
+#define HTIM_PWM      htim3
+#define HTIM_MEASURES htim4
+#define HTIM_BAL      htim5
+#define HTIM_CLI      htim6
+#define HTIM_BMS      htim8
+#define HTIM_MUX      htim10
+
+#define SPI_MAX22530 hspi1
+#define SPI_EEPROM   hspi2
+#define SPI_MONITOR  hspi3
+
+#define ADC_HALL50  hadc2
+#define ADC_HALL300 hadc3
+#define ADC_MUX     hadc1
+
+#define CAR_CAN hcan1
+#define BMS_CAN hcan2
+
+#define STATE_LED_GPIO LED2_GPIO_Port
+#define STATE_LED_PIN  LED2_Pin
 
 //===========================================================================
 //=================================== LTC6813 ===============================
@@ -245,4 +276,4 @@ enum {
 */
 #define CLI_ECHO 1
 
-#endif /* FENICE_CONFIG_H_ */
+#endif // BMS_CONFIG_H
