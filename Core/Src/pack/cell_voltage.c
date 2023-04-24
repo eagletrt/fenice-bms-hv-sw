@@ -18,7 +18,7 @@ static cell_voltage_t voltages[CELLBOARD_COUNT] = { 0 };
 
 HAL_StatusTypeDef cell_voltage_measure(voltage_t volts[PACK_CELL_COUNT]) {
     volt_start_measure(&SPI_MONITOR,
-        LTC6811_MD_NORMAL,
+        VOLT_ADC_MODE_NORMAL,
         DCP_DISABLED,
         CELL_CH_ALL,
         MONITOR_SPI_CS_GPIO_Port,
