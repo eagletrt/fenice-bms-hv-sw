@@ -1,34 +1,26 @@
 /**
- * @file		error.h
- * @brief		This file contains the functions to handle errors.
+ * @file error.h
+ * @brief This file contains the functions to handle errors.
  *
- * @date		May 1, 2019
- * @author		Matteo Bonora [matteo.bonora@studenti.unitn.it]
- * @author		Simone Ruffini[simone.ruffini@tutanota.com]
+ * @date May 1, 2019
+ * @author Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @author Simone Ruffini [simone.ruffini@tutanota.com]
+ * @author Antonio Gelain [antonio.gelain@studenti.unitn.it]
  */
 
 #ifndef ERROR_H
 #define ERROR_H
 
-#include "llist.h"
-
 #include <inttypes.h>
-#include <stdbool.h>
 
-#define error_toggle_check(condition, error_type, index) \
-    if ((condition)) {                                   \
-        error_set((error_type), (index), HAL_GetTick()); \
-    } else {                                             \
-        error_reset((error_type), (index));              \
-    }
+#define ERROR_TIMEOUT_SOFT UINT32_MAX
 
-/**
- * @brief	Error type definitions
- *
- * @details	To add an error type you need to add it to this enum, then you
- * need to create the error reference variable in error_data.h and you need to
- * link the error to the reference in the error_reference array.
- */
+/** @brief Set error if the condition is true, otherwise reset */
+#define ERROR_TOGGLE(condition, type, instance) (condition) ? error_set((type), (instance)) : error_reset((type), (instance))
+
+
+// TODO: Change old error types
+/** @brief Error type definitions */
 typedef enum {
     ERROR_CELL_LOW_VOLTAGE,
     ERROR_CELL_UNDER_VOLTAGE,
@@ -50,42 +42,60 @@ typedef enum {
     ERROR_EEPROM_COMM,
     ERROR_EEPROM_WRITE,
 
-    ERROR_NUM_ERRORS
-} __attribute__((__packed__)) error_id;
-
-typedef enum { SOFT = UINT32_MAX, SHORT = 500, REGULAR = 1000, INSTANT = 0 } __attribute__((__packed__)) error_timeout;
+    ERROR_COUNT
+} __attribute__((__packed__)) ERROR_TYPE;
 
 /**
- * @brief an error is active when it enters the error list (ERROR_ACTIVE)
- * an error is fatal when it stays active till the error timeout (ERROR_FATAL)
- * an error becomes inactive
- **/
+ * @brief Timeout of each error type in ms 
+ * @details Reaction times by the rules:
+ *     - 500ms for voltages and current
+ *     - 1s for temperatures
+ */
+const uint32_t error_timeouts[ERROR_COUNT] = {
+    [ERROR_CELL_LOW_VOLTAGE]      = ERROR_TIMEOUT_SOFT,
+    [ERROR_CELL_UNDER_VOLTAGE]    = 450,
+    [ERROR_CELL_OVER_VOLTAGE]     = 450,
+    [ERROR_CELL_HIGH_TEMPERATURE] = ERROR_TIMEOUT_SOFT,
+    [ERROR_CELL_OVER_TEMPERATURE] = 750,
+    [ERROR_OVER_CURRENT]          = 450,
+    [ERROR_CAN]                   = ERROR_TIMEOUT_SOFT,
+    [ERROR_INT_VOLTAGE_MISMATCH]  = ERROR_TIMEOUT_SOFT,
+    [ERROR_CELLBOARD_COMM]        = 250,
+    [ERROR_CELLBOARD_INTERNAL]    = ERROR_TIMEOUT_SOFT,
+    [ERROR_FEEDBACK]              = ERROR_TIMEOUT_SOFT,
+    [ERROR_FEEDBACK_CIRCUITRY]    = ERROR_TIMEOUT_SOFT,
+    [ERROR_EEPROM_COMM]           = ERROR_TIMEOUT_SOFT,
+    [ERROR_EEPROM_WRITE]          = ERROR_TIMEOUT_SOFT
+};
 
-typedef enum { STATE_WARNING, STATE_FATAL } __attribute__((__packed__)) error_state;
+/**
+ * @brief Initialize error handler
+ * 
+ * @return HAL_StatusTypeDef The result of the operation
+ */
+HAL_StatusTypeDef error_init();
+/**
+ * @brief Set an instance of an error
+ * 
+ * @param type The type of the error
+ * @param instance The instance of the error type
+ * @return HAL_StatusTypeDef The result of the operation
+ */
+HAL_StatusTypeDef error_set(ERROR_TYPE type, size_t instance);
+/**
+ * @brief Reset an instance of an error
+ * 
+ * @param type The type of the error
+ * @param instance The instance of the error type
+ * @return HAL_StatusTypeDef The result of the operation
+ */
+HAL_StatusTypeDef error_reset(ERROR_TYPE type, size_t instance);
 
-/** @brief	Defines an error instance */
-typedef struct {
-    error_id id;    /* Defines the type of error */
-    uint8_t offset; /* Identifies different instances of a type */
-    error_state state;
-    uint32_t timestamp; /* Last time the error activated */
-} error_t;
-
-extern llist er_list;
-
-void error_init();
-void error_init_error(error_t *error, error_id id, uint8_t offset, uint32_t timestamp);
-bool error_set(error_id type, uint8_t offset, uint32_t now);
-error_t *error_get_top();
-bool error_set_fatal(error_t *error);
-
-bool error_reset(error_id type, uint8_t offset);
-
-size_t error_get_fatal();
+/**
+ * @brief Get the number of running error instances
+ * 
+ * @return size_t The number of errors
+ */
 size_t error_count();
-void error_dump(error_t errors[]);
-bool compare_timeouts(error_t *a, error_t *b);
-
-void _error_handle_tim_oc_irq();
 
 #endif /* ERROR_H_ */

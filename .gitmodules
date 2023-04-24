@@ -4,7 +4,7 @@
 [submodule "Lib/micro-libs"]
 	path = Lib/micro-libs
 	url = git@github.com:eagletrt/micro-libs.git
-    branch = bms-monitor
+    branch = error-utils
 [submodule "Lib/can"]
 	path = Lib/can
 	url = git@github.com:eagletrt/can.git
