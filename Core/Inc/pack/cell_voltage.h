@@ -1,34 +1,64 @@
 /**
- * @file    voltage.h
- * @brief   Functions to manage all pack voltages (cells and internal)
+ * @file cell_voltage.h
+ * @brief Functions to manage cells voltages in the pack
  *
- * @date    Apr 11, 2019
+ * @date Apr 11, 2019
  * 
- * @author  Matteo Bonora [matteo.bonora@studenti.unitn.it]
- * @author  Federico Carbone [federico.carbone@studenti.unitn.it]
+ * @author Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @author Federico Carbone [federico.carbone@studenti.unitn.it]
+ * @author Antonio Gelain [antonio.gelain@studenti.unitn.it]
  */
 
-#pragma once
-
-#include "mainboard_config.h"
+#ifndef CELL_VOLTAGE_H
+#define CELL_VOLTAGE_H
 
 #include <inttypes.h>
+#include <stddef.h>
 
-typedef uint16_t voltage_t;
+#include "bms_config.h"
+#include "bms-monitor/monitor_config.h"
 
-void voltage_init();
+/** @brief Minimum, maximum and sum of voltage values of a group of cells */
+typedef struct {
+    voltage_t min;
+    voltage_t max;
+    size_t sum;
+} cell_voltage_t;
 
 /**
- * @brief   Polls ADC124S021 for voltages
+ * @brief Read all cells voltages from the pack and copy all the values in the volts array
+ * @details The minimum, maximum and sum of groups of cells are saved internally
+ * if the values are read correctly
+ * 
+ * @param volts The array where the values are stored (can be NULL)
+ * @return HAL_StatusTypeDef The result of the operation
  */
-void voltage_measure(float voltages[2]);
+HAL_StatusTypeDef cell_voltage_measure(voltage_t volts[PACK_CELL_COUNT]);
 
-voltage_t *voltage_get_cells();
-voltage_t voltage_get_cell_max(uint8_t *index);
-voltage_t voltage_get_cell_min(uint8_t *index);
-float voltage_get_vts_p();
-float voltage_get_vbat_adc();
-float voltage_get_vbat_sum();
-void voltage_set_cells(uint16_t index, voltage_t v1, voltage_t v2, voltage_t v3);
-uint8_t voltage_get_cellboard_offset(uint8_t cellboard_index);
-void voltage_check_errors();
+/**
+ * @brief Get the minimum voltage value of the pack
+ * 
+ * @return voltage_t The minimum voltage value
+ */
+voltage_t cell_voltage_get_min();
+/**
+ * @brief Get the maximum voltage value of the pack
+ * 
+ * @return voltage_t The maximum voltage value
+ */
+voltage_t cell_voltage_get_max();
+/**
+ * @brief Get the sum of all the voltage values of the pack
+ * 
+ * @return size_t The sum of the voltage values
+ */
+size_t cell_voltage_get_sum();
+/**
+ * @brief Get the average of all the voltage values of the pack
+ * 
+ * @return float The average voltage value
+ */
+float cell_voltage_get_avg();
+
+
+#endif // CELL_VOLTAGE_H

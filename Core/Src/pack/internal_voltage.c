@@ -6,7 +6,8 @@
  * @author Antonio Gelain [antonio.gelain@studenti.unitn.it]
  */
 
-#include "mainboard_config.h"
+#include "main.h"
+#include "bms_config.h"
 #include "pack/internal_voltage.h"
 #include "peripherals/max22530.h"
 
