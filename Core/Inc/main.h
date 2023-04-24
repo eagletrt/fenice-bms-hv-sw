@@ -109,10 +109,10 @@ void Error_Handler(void);
 #define EEPROM_CS_GPIO_Port GPIOC
 #define EEPROM_HOLD_Pin GPIO_PIN_7
 #define EEPROM_HOLD_GPIO_Port GPIOC
-#define SPI_EN_Pin GPIO_PIN_8
-#define SPI_EN_GPIO_Port GPIOC
-#define SPI_CS_Pin GPIO_PIN_9
-#define SPI_CS_GPIO_Port GPIOC
+#define MONITOR_SPI_EN_Pin GPIO_PIN_8
+#define MONITOR_SPI_EN_GPIO_Port GPIOC
+#define MONITOR_SPI_CS_Pin GPIO_PIN_9
+#define MONITOR_SPI_CS_GPIO_Port GPIOC
 #define BUZZER_Pin GPIO_PIN_8
 #define BUZZER_GPIO_Port GPIOA
 #define ADC_INT_Pin GPIO_PIN_15

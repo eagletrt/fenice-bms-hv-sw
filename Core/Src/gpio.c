@@ -53,8 +53,8 @@ void MX_GPIO_Init(void)
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOC, MUX_A3_Pin|MUX_A2_Pin|MUX_A1_Pin|MUX_A0_Pin
-                          |AIRN_OFF_Pin|EEPROM_CS_Pin|EEPROM_HOLD_Pin|SPI_EN_Pin
-                          |SPI_CS_Pin|BMS_FAULT_Pin, GPIO_PIN_RESET);
+                          |AIRN_OFF_Pin|EEPROM_CS_Pin|EEPROM_HOLD_Pin|MONITOR_SPI_EN_Pin
+                          |MONITOR_SPI_CS_Pin|BMS_FAULT_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(AIRP_OFF_GPIO_Port, AIRP_OFF_Pin, GPIO_PIN_RESET);
@@ -72,8 +72,8 @@ void MX_GPIO_Init(void)
                            PCPin PCPin PCPin PCPin
                            PCPin PCPin */
   GPIO_InitStruct.Pin = MUX_A3_Pin|MUX_A2_Pin|MUX_A1_Pin|MUX_A0_Pin
-                          |AIRN_OFF_Pin|EEPROM_CS_Pin|EEPROM_HOLD_Pin|SPI_EN_Pin
-                          |SPI_CS_Pin|BMS_FAULT_Pin;
+                          |AIRN_OFF_Pin|EEPROM_CS_Pin|EEPROM_HOLD_Pin|MONITOR_SPI_EN_Pin
+                          |MONITOR_SPI_CS_Pin|BMS_FAULT_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
