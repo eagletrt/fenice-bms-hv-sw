@@ -28,23 +28,10 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
-#include <string.h>
-
-#include "m95256/m95256.h"
-#include "adc124s021.h"
-#include "bal_fsm.h"
 #include "bms_fsm.h"
-#include "cli_bms.h"
-#include "config.h"
-#include "error/error.h"
-#include "fans_buzzer.h"
-#include "feedback.h"
-#include "imd.h"
-#include "mainboard_config.h"
-#include "measures.h"
+#include "micro-libs/m95256/m95256.h"
 #include "pack/current.h"
-#include "pack/pack.h"
-#include "soc.h"
+#include "cli_bms.h"
 
 /* USER CODE END Includes */
 
@@ -87,37 +74,37 @@ void SystemClock_Config(void);
   */
 int main(void)
 {
-  /* USER CODE BEGIN 1 */
+    /* USER CODE BEGIN 1 */
 
-  /* USER CODE END 1 */
+    /* USER CODE END 1 */
 
-  /* MCU Configuration--------------------------------------------------------*/
+    /* MCU Configuration--------------------------------------------------------*/
 
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
+    /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+    HAL_Init();
 
-  /* USER CODE BEGIN Init */
+    /* USER CODE BEGIN Init */
 
-  /* USER CODE END Init */
+    /* USER CODE END Init */
 
-  /* Configure the system clock */
-  SystemClock_Config();
+    /* Configure the system clock */
+    SystemClock_Config();
 
-  /* USER CODE BEGIN SysInit */
+    /* USER CODE BEGIN SysInit */
 
-  /* USER CODE END SysInit */
+    /* USER CODE END SysInit */
 
-  /* Initialize all configured peripherals */
-  MX_GPIO_Init();
-  MX_ADC1_Init();
-  MX_CAN1_Init();
-  MX_CAN2_Init();
-  MX_SPI1_Init();
-  MX_SPI2_Init();
-  MX_SPI3_Init();
-  MX_USART1_UART_Init();
-  MX_TIM1_Init();
-  /* USER CODE BEGIN 2 */
+    /* Initialize all configured peripherals */
+    MX_GPIO_Init();
+    MX_ADC1_Init();
+    MX_CAN1_Init();
+    MX_CAN2_Init();
+    MX_SPI1_Init();
+    MX_SPI2_Init();
+    MX_SPI3_Init();
+    MX_USART1_UART_Init();
+    MX_TIM1_Init();
+    /* USER CODE BEGIN 2 */
 
     EEPROM_HOLD_HIGH(EEPROM_HOLD_GPIO_Port, EEPROM_HOLD_Pin);
     current_start_measure();

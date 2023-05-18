@@ -36,6 +36,16 @@ BUILD_DIR = build
 ######################################
 # C sources
 C_SOURCES =  \
+Core/Src/adc.c \
+Core/Src/can.c \
+Core/Src/gpio.c \
+Core/Src/main.c \
+Core/Src/spi.c \
+Core/Src/stm32f4xx_hal_msp.c \
+Core/Src/stm32f4xx_it.c \
+Core/Src/system_stm32f4xx.c \
+Core/Src/tim.c \
+Core/Src/usart.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_adc.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_adc_ex.c \
@@ -57,46 +67,15 @@ Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_adc.c \
-Src/adc.c \
-Src/bal.c \
-Src/bal_fsm.c \
-Src/bms_fsm.c \
-Src/bootloader.c \
-Src/can.c \
-Src/cli_bms.c \
-Src/config.c \
-Src/dma.c \
-Src/energy/energy.c \
-Src/energy/soc.c \
-Src/error/error.c \
-Src/error/error_list_ref.c \
-Src/fans_buzzer.c \
-Src/feedback.c \
-Src/gpio.c \
-Src/imd.c \
-Src/main.c \
-Src/measures.c \
-Src/pack/current.c \
-Src/pack/pack.c \
-Src/pack/temperature.c \
-Src/pack/voltage.c \
-Src/peripherals/adc124s021.c \
-Src/peripherals/can_comm.c \
-Src/spi.c \
-Src/stm32f4xx_hal_msp.c \
-Src/stm32f4xx_it.c \
-Src/system_stm32f4xx.c \
-Src/tim.c \
-Src/usart.c \
-lib/micro-libs/blink/blink.c \
-lib/micro-libs/cli/cli.c \
-lib/micro-libs/fsm/fsm.c \
-lib/micro-libs/llist/llist.c \
-lib/micro-libs/m95256/m95256.c \
-lib/micro-libs/priority-queue/priority_queue.c \
-lib/micro-libs/priority-queue/priority_queue_fast_insert.c \
-lib/micro-libs/pwm/pwm.c \
-lib/micro-libs/timer-utils/timer_utils.c
+Lib/micro-libs/blink/blink.c \
+Lib/micro-libs/cli/cli.c \
+Lib/micro-libs/fsm/fsm.c \
+Lib/micro-libs/llist/llist.c \
+Lib/micro-libs/m95256/m95256.c \
+Lib/micro-libs/priority-queue/priority_queue.c \
+Lib/micro-libs/priority-queue/priority_queue_fast_insert.c \
+Lib/micro-libs/pwm/pwm.c \
+Lib/micro-libs/timer-utils/timer_utils.c
 
 
 CPP_SOURCES = \
@@ -115,7 +94,7 @@ PREFIX = arm-none-eabi-
 POSTFIX = "
 # The gcc compiler bin path can be either defined in make command via GCC_PATH variable (> make GCC_PATH=xxx)
 # either it can be added to the PATH environment variable.
-GCC_PATH="/usr/bin
+GCC_PATH="/home/tonidotpy/.config/Code - OSS/User/globalStorage/bmd.stm32-for-vscode/@xpack-dev-tools/arm-none-eabi-gcc/12.2.1-1.2.1/.content/bin
 ifdef GCC_PATH
 CXX = $(GCC_PATH)/$(PREFIX)g++$(POSTFIX)
 CC = $(GCC_PATH)/$(PREFIX)gcc$(POSTFIX)
@@ -168,26 +147,22 @@ AS_INCLUDES = \
 
 # C includes
 C_INCLUDES =  \
+-ICore/Inc \
 -IDrivers/CMSIS/Device/ST/STM32F4xx/Include \
 -IDrivers/CMSIS/Include \
 -IDrivers/STM32F4xx_HAL_Driver/Inc \
 -IDrivers/STM32F4xx_HAL_Driver/Inc/Legacy \
--IInc \
--IInc/energy \
--IInc/error \
--IInc/pack \
--IInc/peripherals \
--Ilib/can/lib/bms/c \
--Ilib/can/lib/primary/c \
--Ilib/can/lib/secondary/c \
--Ilib/micro-libs/blink \
--Ilib/micro-libs/cli \
--Ilib/micro-libs/fsm \
--Ilib/micro-libs/llist \
--Ilib/micro-libs/m95256 \
--Ilib/micro-libs/priority-queue \
--Ilib/micro-libs/pwm \
--Ilib/micro-libs/timer-utils
+-ILib/can/lib/bms/c \
+-ILib/can/lib/primary/c \
+-ILib/can/lib/secondary/c \
+-ILib/micro-libs/blink \
+-ILib/micro-libs/cli \
+-ILib/micro-libs/fsm \
+-ILib/micro-libs/llist \
+-ILib/micro-libs/m95256 \
+-ILib/micro-libs/priority-queue \
+-ILib/micro-libs/pwm \
+-ILib/micro-libs/timer-utils
 
 
 
@@ -199,7 +174,8 @@ CFLAGS = $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-
 CXXFLAGS = $(MCU) $(CXX_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections -feliminate-unused-debug-types
 
 ifeq ($(DEBUG), 1)
-CFLAGS += -g -gdwarf-2
+CFLAGS += -g -gdwarf -ggdb
+CXXFLAGS += -g -gdwarf -ggdb
 endif
 
 # Add additional flags
@@ -241,8 +217,14 @@ vpath %.cpp $(sort $(dir $(CPP_SOURCES)))
 # list of C objects
 OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(C_SOURCES:.c=.o)))
 vpath %.c $(sort $(dir $(C_SOURCES)))
+
 # list of ASM program objects
-OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(ASM_SOURCES:.s=.o)))
+# list of ASM program objects
+UPPER_CASE_ASM_SOURCES = $(filter %.S,$(ASM_SOURCES))
+LOWER_CASE_ASM_SOURCES = $(filter %.s,$(ASM_SOURCES))
+
+OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(UPPER_CASE_ASM_SOURCES:.S=.o)))
+OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(LOWER_CASE_ASM_SOURCES:.s=.o)))
 vpath %.s $(sort $(dir $(ASM_SOURCES)))
 
 $(BUILD_DIR)/%.o: %.cpp STM32Make.make | $(BUILD_DIR) 
@@ -255,6 +237,9 @@ $(BUILD_DIR)/%.o: %.c STM32Make.make | $(BUILD_DIR)
 	$(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
 
 $(BUILD_DIR)/%.o: %.s STM32Make.make | $(BUILD_DIR)
+	$(AS) -c $(CFLAGS) $< -o $@
+
+$(BUILD_DIR)/%.o: %.S STM32Make.make | $(BUILD_DIR)
 	$(AS) -c $(CFLAGS) $< -o $@
 
 $(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) STM32Make.make
@@ -274,19 +259,25 @@ $(BUILD_DIR):
 # flash
 #######################################
 flash: $(BUILD_DIR)/$(TARGET).elf
-	"/usr/bin/openocd" -f ./openocd.cfg -c "program $(BUILD_DIR)/$(TARGET).elf verify reset exit"
+	"/home/tonidotpy/.config/Code - OSS/User/globalStorage/bmd.stm32-for-vscode/@xpack-dev-tools/openocd/0.12.0-1.1/.content/bin/openocd" -f ./openocd.cfg -c "program $(BUILD_DIR)/$(TARGET).elf verify reset exit"
 
 #######################################
 # erase
 #######################################
 erase: $(BUILD_DIR)/$(TARGET).elf
-	"/usr/bin/openocd" -f ./openocd.cfg -c "init; reset halt; stm32f4x mass_erase 0; exit"
+	"/home/tonidotpy/.config/Code - OSS/User/globalStorage/bmd.stm32-for-vscode/@xpack-dev-tools/openocd/0.12.0-1.1/.content/bin/openocd" -f ./openocd.cfg -c "init; reset halt; stm32f4x mass_erase 0; exit"
 
 #######################################
 # clean up
 #######################################
 clean:
 	-rm -fR $(BUILD_DIR)
+
+#######################################
+# custom makefile rules
+#######################################
+
+
 	
 #######################################
 # dependencies

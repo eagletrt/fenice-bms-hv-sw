@@ -67,10 +67,10 @@ void Error_Handler(void);
 #define MUX_A1_GPIO_Port GPIOC
 #define MUX_A0_Pin GPIO_PIN_1
 #define MUX_A0_GPIO_Port GPIOC
-#define ITS_CH2_Pin GPIO_PIN_2
-#define ITS_CH2_GPIO_Port GPIOC
-#define ITS_CH1_Pin GPIO_PIN_3
-#define ITS_CH1_GPIO_Port GPIOC
+#define HALL300_ADC_Pin GPIO_PIN_2
+#define HALL300_ADC_GPIO_Port GPIOC
+#define HAL50_ADC_Pin GPIO_PIN_3
+#define HAL50_ADC_GPIO_Port GPIOC
 #define PROBING_3V3_Pin GPIO_PIN_0
 #define PROBING_3V3_GPIO_Port GPIOA
 #define SD_BMS_FB_ADC_Pin GPIO_PIN_1

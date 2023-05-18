@@ -30,7 +30,7 @@ extern "C" {
 
 /* USER CODE BEGIN Includes */
 
-#include "timer-utils.h"
+#include "micro-libs/timer-utils/timer_utils.h"
 
 /* USER CODE END Includes */
 

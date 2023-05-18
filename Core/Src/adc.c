@@ -104,7 +104,7 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* adcHandle)
     PC4     ------> ADC1_IN14
     PB0     ------> ADC1_IN8
     */
-    GPIO_InitStruct.Pin = ITS_CH2_Pin|ITS_CH1_Pin|ADC_CS_Pin;
+    GPIO_InitStruct.Pin = HALL300_ADC_Pin|HAL50_ADC_Pin|ADC_CS_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
@@ -148,7 +148,7 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* adcHandle)
     PC4     ------> ADC1_IN14
     PB0     ------> ADC1_IN8
     */
-    HAL_GPIO_DeInit(GPIOC, ITS_CH2_Pin|ITS_CH1_Pin|ADC_CS_Pin);
+    HAL_GPIO_DeInit(GPIOC, HALL300_ADC_Pin|HAL50_ADC_Pin|ADC_CS_Pin);
 
     HAL_GPIO_DeInit(GPIOA, PROBING_3V3_Pin|SD_BMS_FB_ADC_Pin|SD_IMD_FB_ADC_Pin|SD_IN_ADC_Pin
                           |MUX_OUTPUT_Pin);

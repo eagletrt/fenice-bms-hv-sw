@@ -14,6 +14,12 @@
 
 #include <inttypes.h>
 
+#include "tim.h"
+#include "spi.h"
+#include "adc.h"
+#include "can.h"
+#include "usart.h"
+
 //===========================================================================
 //=================================== General ===============================
 //===========================================================================
@@ -27,21 +33,18 @@
 
 #define DISCHARGE_R   10   //Ohm
 #define CELL_CAPACITY 3.9  //Ah
+
 /**
- * Maximum can payload. for CAN 2.0A is 8 bytes
+ * @brief Maximum can payload in bytes
+ * @details For CAN 2.0A is 8 bytes
  */
 #define CAN_MAX_PAYLOAD_LENGTH 8
 
-/**
- * Number of daisy chained LTCs
- */
+/** @brief Total number of cellboard */
 #define CELLBOARD_COUNT 6
-
-/**
- * Number of cells a single IC controls. Refer to cell_distribution for
- * configuration
- */
-#define CELLBOARD_CELL_COUNT 18
+/** @brief Total number of pack cells */
+// TODO: Check total number of cells in the pack
+#define CELL_COUNT (12 * 2 * CELLBOARD_COUNT)
 
 #define HTIM_ERR      htim1
 #define HTIM_IMD      htim2
@@ -56,32 +59,37 @@
 #define SPI_EEPROM   hspi2
 #define SPI_MONITOR  hspi3
 
-#define ADC_HALL50  hadc2
-#define ADC_HALL300 hadc3
-#define ADC_MUX     hadc1
+#define ADC hadc1
 
-#define CAR_CAN hcan1
-#define BMS_CAN hcan2
+#define CAN_CAR hcan1
+#define CAN_BMS hcan2
+
+#define UART_CLI huart1
 
 #define STATE_LED_GPIO LED2_GPIO_Port
 #define STATE_LED_PIN  LED2_Pin
 
 //===========================================================================
-//=================================== LTC6813 ===============================
+//================================= BMS MONITOR =============================
 //===========================================================================
 
-#define LTC6813_PERIPHERAL hspi1
+// Set to 1 to emulate the LTC daisy chain
+// #define LTC6813_EMU 0
 
-/**
- * Number of daisy chained LTCs
- */
-#define LTC6813_COUNT 6
+/** @brief Number of BMS monitors */
+#define MONITOR_COUNT (CELLBOARD_COUNT)
+/** @brief Number of LTCs per BMS monitor */
+#define MONITOR_LTC_COUNT 2
 
-/**
- * Number of cells a single IC controls. Refer to cell_distribution for
- * configuration
- */
-#define LTC6813_CELL_COUNT 18
+/** @brief Total number of LTCs */
+#define LTC_COUNT (MONITOR_COUNT * MONITOR_LTC_COUNT)
+/** @brief Number of cells handled by a single LTC */
+#define LTC_CELL_COUNT 12
+
+/** @brief Number of cells handled by a single BMS monitor */
+#define MONITOR_CELL_COUNT (LTC_CELL_COUNT * MONITOR_LTC_COUNT)
+
+
 
 /**
  * Number of registers for each LTC
@@ -95,9 +103,26 @@
 
 #define LTC6813_TEMP_ADDRESS 69
 
+#define VOLT_MEASURE_INTERVAL 8
+#define VOLT_MEASURE_TIME     5
+
 //===========================================================================
 //================================= Temperature =============================
 //===========================================================================
+
+/**
+ * Temperature measurement interval (ms)
+ */
+#define TEMP_MEASURE_INTERVAL 200
+
+#define TEMP_ADC_COUNT 6
+
+#define TEMP_ADC_SENSOR_COUNT 6
+
+/**
+ * How many sensors on each cellboard
+ */
+#define CELLBOARD_TEMP_SENSOR_COUNT (TEMP_ADC_COUNT * TEMP_ADC_SENSOR_COUNT)
 
 /**
  * Temperature measurement interval (ms)
@@ -275,5 +300,15 @@ enum {
  * If the cli should echo the input
 */
 #define CLI_ECHO 1
+
+//===========================================================================
+//================================= Timers ==================================
+//===========================================================================
+
+/**
+ * Timers interval (ms)
+ */
+#define TIM_DISCHARGE    htim16
+#define TIM_MEASUREMENTS htim2
 
 #endif // BMS_CONFIG_H
