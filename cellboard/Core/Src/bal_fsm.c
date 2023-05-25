@@ -9,8 +9,6 @@
 
 #include "bal_fsm.h"
 
-#include "can_comms.h"
-#include "ltc6813_utils.h"
 #include "main.h"
 #include "spi.h"
 #include "volt.h"

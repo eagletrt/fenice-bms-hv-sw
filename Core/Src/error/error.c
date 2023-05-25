@@ -20,33 +20,33 @@ ERROR_UTILS_ErrorTypeDef errors[ERROR_COUNT];
 ERROR_UTILS_InstanceTypeDef cell_low_voltage_inst[1];
 ERROR_UTILS_InstanceTypeDef cell_under_voltage_inst[1];
 ERROR_UTILS_InstanceTypeDef cell_over_voltage_inst[1];
-ERROR_UTILS_InstanceTypeDef cell_over_temperature_inst[1];
 ERROR_UTILS_InstanceTypeDef cell_high_temperature_inst[1];
+ERROR_UTILS_InstanceTypeDef cell_over_temperature_inst[1];
 ERROR_UTILS_InstanceTypeDef over_current_inst[1];
-ERROR_UTILS_InstanceTypeDef can_inst[1];
 ERROR_UTILS_InstanceTypeDef int_voltage_mismatch_inst[1];
-ERROR_UTILS_InstanceTypeDef cellboard_comm_inst[1];
-ERROR_UTILS_InstanceTypeDef cellboard_internal_inst[1];
+ERROR_UTILS_InstanceTypeDef can_inst[1];
+ERROR_UTILS_InstanceTypeDef bms_monitor_comm_inst[1];
+ERROR_UTILS_InstanceTypeDef eeprom_comm_inst[1];
+ERROR_UTILS_InstanceTypeDef adc_comm_inst[1];
+ERROR_UTILS_InstanceTypeDef eeprom_write_inst[1];
 ERROR_UTILS_InstanceTypeDef feedback_inst[1];
 ERROR_UTILS_InstanceTypeDef feedback_circuitry_inst[1];
-ERROR_UTILS_InstanceTypeDef eeprom_comm_inst[1];
-ERROR_UTILS_InstanceTypeDef eeprom_write_inst[1];
 
 ERROR_UTILS_InstanceTypeDef * instances[] = {
     [ERROR_CELL_LOW_VOLTAGE]      = cell_low_voltage_inst,
     [ERROR_CELL_UNDER_VOLTAGE]    = cell_under_voltage_inst,
     [ERROR_CELL_OVER_VOLTAGE]     = cell_over_voltage_inst,
-    [ERROR_CELL_OVER_TEMPERATURE] = cell_over_temperature_inst,
     [ERROR_CELL_HIGH_TEMPERATURE] = cell_high_temperature_inst,
+    [ERROR_CELL_OVER_TEMPERATURE] = cell_over_temperature_inst,
     [ERROR_OVER_CURRENT]          = over_current_inst,
-    [ERROR_CAN]                   = can_inst,
     [ERROR_INT_VOLTAGE_MISMATCH]  = int_voltage_mismatch_inst,
-    [ERROR_CELLBOARD_COMM]        = cellboard_comm_inst,
-    [ERROR_CELLBOARD_INTERNAL]    = cellboard_internal_inst,
-    [ERROR_FEEDBACK]              = feedback_inst,
-    [ERROR_FEEDBACK_CIRCUITRY]    = feedback_circuitry_inst,
+    [ERROR_CAN]                   = can_inst,
+    [ERROR_BMS_MONITOR_COMM]      = bms_monitor_comm_inst,
     [ERROR_EEPROM_COMM]           = eeprom_comm_inst,
-    [ERROR_EEPROM_WRITE]          = eeprom_write_inst
+    [ERROR_ADC_COMM]              = adc_comm_inst,
+    [ERROR_EEPROM_WRITE]          = eeprom_write_inst,
+    [ERROR_FEEDBACK]              = feedback_inst,
+    [ERROR_FEEDBACK_CIRCUITRY]    = feedback_circuitry_inst
 };
 
 // TODO: Init error instances

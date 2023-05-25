@@ -12,7 +12,7 @@
 #include "can_comm.h"
 #include "cli_bms.h"
 #include "config.h"
-#include "fenice_config.h"
+#include "bms_config.h"
 #include "pack/pack.h"
 #include "spi.h"
 

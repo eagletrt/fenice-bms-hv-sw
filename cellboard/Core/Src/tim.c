@@ -23,7 +23,6 @@
 /* USER CODE BEGIN 0 */
 
 #include "bal_fsm.h"
-#include "cellboard_config.h"
 #include "measurements.h"
 
 /* USER CODE END 0 */

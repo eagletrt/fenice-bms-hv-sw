@@ -10,18 +10,31 @@
 #ifndef BAL_FSM_H
 #define BAL_FSM_H
 
+#include "bms_config.h"
+#include "network.h"
 #include "bal.h"
-#include "can_comm.h"
 #include "fsm.h"
 #include "tim.h"
 
-enum { BAL_OFF, BAL_COMPUTE, BAL_DISCHARGE, BAL_COOLDOWN, BAL_NUM_STATES };
-enum { EV_BAL_STOP, EV_BAL_START, EV_BAL_COOLDOWN_START, EV_BAL_COOLDOWN_END, BAL_EV_NUM };
+enum {
+    BAL_OFF,
+    BAL_COMPUTE,
+    BAL_DISCHARGE,
+    BAL_COOLDOWN,
+    BAL_NUM_STATES
+};
+enum {
+    EV_BAL_STOP,
+    EV_BAL_START,
+    EV_BAL_COOLDOWN_START,
+    EV_BAL_COOLDOWN_END,
+    BAL_EV_NUM
+};
 
 typedef struct {
     fsm fsm;
-    bms_BalancingCells cells[LTC6813_COUNT];
-    bms_BalancingStatus status[LTC6813_COUNT];
+    bms_BalancingCells cells[MONITOR_LTC_COUNT];
+    bms_BalancingStatus status[MONITOR_LTC_COUNT];
     uint32_t discharge_time;
     uint32_t cycle_length;
     voltage_t target;
