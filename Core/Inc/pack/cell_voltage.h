@@ -23,6 +23,9 @@ typedef struct {
     voltage_t min;
     voltage_t max;
     size_t sum;
+
+    size_t min_index;
+    size_t max_index;
 } cell_voltage_t;
 
 /**
@@ -33,20 +36,22 @@ typedef struct {
  * @param volts The array where the values are stored (can be NULL)
  * @return HAL_StatusTypeDef The result of the operation
  */
-HAL_StatusTypeDef cell_voltage_measure(voltage_t volts[PACK_CELL_COUNT]);
+HAL_StatusTypeDef cell_voltage_measure(voltage_t volts[CELL_COUNT]);
 
 /**
  * @brief Get the minimum voltage value of the pack
  * 
+ * @param index A pointer to where the index of the minimum voltage value is written
  * @return voltage_t The minimum voltage value
  */
-voltage_t cell_voltage_get_min();
+voltage_t cell_voltage_get_min(size_t * index);
 /**
  * @brief Get the maximum voltage value of the pack
  * 
+ * @param index A pointer to where the index of the maximum voltage value is written
  * @return voltage_t The maximum voltage value
  */
-voltage_t cell_voltage_get_max();
+voltage_t cell_voltage_get_max(size_t * index);
 /**
  * @brief Get the sum of all the voltage values of the pack
  * 
