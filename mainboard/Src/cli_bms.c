@@ -356,7 +356,7 @@ void _cli_balance(uint16_t argc, char **argv, char *out) {
         tx_header.ExtId = 0;
         tx_header.IDE   = CAN_ID_STD;
         tx_header.RTR   = CAN_RTR_DATA;
-        tx_header.StdId = bms_id_BALANCING;
+        tx_header.StdId = bms_ID_BALANCING;
 
         board = atoi(argv[2]);
 
@@ -374,7 +374,8 @@ void _cli_balance(uint16_t argc, char **argv, char *out) {
             sprintf(out + strlen(out), "%u,", c);
         }
 
-        tx_header.DLC = bms_BALANCING_SIZE;
+        // TODO: Missing bms_BALANCING_SIZE
+        tx_header.DLC = 8;// bms_BALANCING_SIZE;
         bms_serialize_BALANCING(buffer, cells, board);
         can_send(&BMS_CAN, buffer, &tx_header);
 

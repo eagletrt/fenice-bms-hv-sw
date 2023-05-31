@@ -11,9 +11,9 @@
 
 #include "feedback.h"
 
-void pack_set_ts_on(uint8_t value) {
-    HAL_GPIO_WritePin(TS_ON_GPIO_Port, TS_ON_Pin, value);
-}
+// void pack_set_ts_on(uint8_t value) {
+//     HAL_GPIO_WritePin(TS_ON_GPIO_Port, TS_ON_Pin, value);
+// }
 
 void pack_set_airn_off(uint8_t value) {
     HAL_GPIO_WritePin(AIRN_OFF_GPIO_Port, AIRN_OFF_Pin, value);
@@ -32,7 +32,7 @@ void pack_set_fault(uint8_t value) {
 }
 
 void pack_set_default_off(uint16_t prech_delay) {
-    pack_set_ts_on(TS_ON_VALUE);
+    // pack_set_ts_on(TS_ON_VALUE);
     pack_set_airn_off(AIRN_OFF_VALUE);
     pack_set_airp_off(AIRP_OFF_VALUE);
     if(prech_delay) HAL_Delay(prech_delay);

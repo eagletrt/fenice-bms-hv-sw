@@ -190,14 +190,14 @@ void bms_set_led_blinker() {
     blink_reset(&(bms.led));
     HAL_GPIO_WritePin(bms.led.port, bms.led.pin, GPIO_PIN_SET);
 
-    can_car_send(primary_id_TS_STATUS);
+    can_car_send(primary_ID_TS_STATUS);
 }
 void bms_blink_led() {
     blink_run(&bms.led);
 }
 
 void _idle_entry(fsm FSM) {
-    can_car_send(primary_id_TS_STATUS);
+    can_car_send(primary_ID_TS_STATUS);
 
     pack_set_default_off(0);
 

@@ -23,9 +23,9 @@ voltage_t adc124S021_read_channel(SPI_HandleTypeDef *spi, ADC124S021_CH channel)
     cmd[1] = cmd[2] = cmd[3] = 0xFF;
     cmd[0]                   = channel << 3;
 
-    _adc124s021_cs_enable(spi, CS_ADC_GPIO_Port, CS_ADC_Pin);
+    _adc124s021_cs_enable(spi, ADC_CS_GPIO_Port, ADC_CS_Pin);
     HAL_SPI_TransmitReceive(spi, cmd, cmd, 4, 100);
-    _adc124s021_cs_disable(spi, CS_ADC_GPIO_Port, CS_ADC_Pin);
+    _adc124s021_cs_disable(spi, ADC_CS_GPIO_Port, ADC_CS_Pin);
 
     rcv |= (uint16_t)cmd[2] << 8;
     rcv |= cmd[3];
@@ -45,9 +45,9 @@ bool adc124s021_read_channels(SPI_HandleTypeDef *spi, ADC124S021_CH *channels, u
         cmd[i * 2] = channels[i] << 3;
     }
 
-    _adc124s021_cs_enable(spi, CS_ADC_GPIO_Port, CS_ADC_Pin);
+    _adc124s021_cs_enable(spi, ADC_CS_GPIO_Port, ADC_CS_Pin);
     HAL_SPI_TransmitReceive(spi, cmd, cmd, ch_number * 2 + 2, 100);
-    _adc124s021_cs_disable(spi, CS_ADC_GPIO_Port, CS_ADC_Pin);
+    _adc124s021_cs_disable(spi, ADC_CS_GPIO_Port, ADC_CS_Pin);
 
     for (i = 1; i <= ch_number; ++i) {
         rcv = 0;

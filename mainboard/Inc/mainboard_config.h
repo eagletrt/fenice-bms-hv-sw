@@ -15,9 +15,9 @@
 //=================================== General ===============================
 //===========================================================================
 
-#define HTIM_ERR      htim1
+#define HTIM_PWM      htim1
 #define HTIM_IMD      htim2
-#define HTIM_PWM      htim3
+#define HTIM_ERR      htim3
 #define HTIM_MEASURES htim4
 #define HTIM_BAL      htim5
 #define HTIM_CLI      htim6

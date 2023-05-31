@@ -27,7 +27,7 @@ uint8_t imd_get_period() {
 }
 
 uint8_t imd_is_fault() {
-    return !HAL_GPIO_ReadPin(FB_IMD_FAULT_GPIO_Port, FB_IMD_FAULT_Pin);
+    return !HAL_GPIO_ReadPin(FB_SD_IMD_GPIO_Port, FB_SD_IMD_Pin);
 }
 
 IMD_STATE imd_get_state() {
