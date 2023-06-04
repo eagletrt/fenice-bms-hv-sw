@@ -11,7 +11,7 @@
 #ifndef BAL_H
 #define BAL_H
 
-#include "../lib/can/lib/bms/c/network.h"
+#include "bms/network.h"
 #include "mainboard_config.h"
 #include "pack/voltage.h"
 
@@ -36,7 +36,7 @@ uint16_t bal_get_cells_to_discharge(
     voltage_t volts[],
     uint16_t volts_count,
     voltage_t threshold,
-    bms_BalancingCells cells[],
+    bms_balancing_converted_t cells[],
     uint16_t cells_count,
     voltage_t target);
 
@@ -68,5 +68,5 @@ uint16_t bal_compute_imbalance_with_target(
  * 
  * @returns	amount of cells to be discharged
  */
-uint16_t bal_exclude_neighbors(uint16_t indexes[], uint16_t count, bms_BalancingCells cells[]);
+uint16_t bal_exclude_neighbors(uint16_t indexes[], uint16_t count, bms_balancing_converted_t cells[]);
 #endif

@@ -10,8 +10,8 @@
 [submodule "mainboard/lib/can"]
 	path = mainboard/lib/can
 	url = git@github.com:eagletrt/can.git
-	branch = build
+	branch = build-evo
 [submodule "cellboard/Core/Lib/can"]
 	path = cellboard/Core/Lib/can
 	url = git@github.com:eagletrt/can.git
-	branch = build
+	branch = build-evo

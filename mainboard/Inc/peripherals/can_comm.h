@@ -8,10 +8,8 @@
 
 #pragma once
 
-#include "../lib/can/lib/bms/c/ids.h"
-#include "../lib/can/lib/bms/c/network.h"
-#include "../lib/can/lib/primary/c/ids.h"
-#include "../lib/can/lib/primary/c/network.h"
+#include "bms/network.h"
+#include "primary/network.h"
 #include "can.h"
 #include "pack/voltage.h"
 

@@ -27,10 +27,8 @@
 #define primary_IMPLEMENTATION
 #define primary_IDS_IMPLEMENTATION
 
-#include "../lib/can/lib/bms/c/ids.h"
-#include "../lib/can/lib/bms/c/network.h"
-#include "../lib/can/lib/primary/c/ids.h"
-#include "../lib/can/lib/primary/c/network.h"
+#include "bms/network.h"
+#include "primary/network.h"
 
 #undef bms_IMPLEMENTATION
 #undef bms_IDS_IMPLEMENTATION

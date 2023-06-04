@@ -31,7 +31,5 @@ void temperature_set_cells(
     temperature_t t1,
     temperature_t t2,
     temperature_t t3,
-    temperature_t t4,
-    temperature_t t5,
-    temperature_t t6);
+    temperature_t t4);
 uint8_t temperature_get_cellboard_offset(uint8_t cellboard_index);

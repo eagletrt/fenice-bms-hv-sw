@@ -89,6 +89,8 @@ Src/stm32f4xx_it.c \
 Src/system_stm32f4xx.c \
 Src/tim.c \
 Src/usart.c \
+lib/can/lib/bms/network.c \
+lib/can/lib/primary/network.c \
 lib/micro-libs/blink/blink.c \
 lib/micro-libs/cli/cli.c \
 lib/micro-libs/fsm/fsm.c \
@@ -155,7 +157,10 @@ AS_DEFS =
 # C defines
 C_DEFS =  \
 -DSTM32F446xx \
--DUSE_HAL_DRIVER
+-DUSE_HAL_DRIVER \
+-Dbms_NETWORK_IMPLEMENTATION \
+-Dprimary_NETWORK_IMPLEMENTATION \
+-Dsecondary_NETWORK_IMPLEMENTATION
 
 
 # CXX defines
@@ -179,9 +184,7 @@ C_INCLUDES =  \
 -IInc/pack \
 -IInc/peripherals \
 -Ilib \
--Ilib/can/lib/bms/c \
--Ilib/can/lib/primary/c \
--Ilib/can/lib/secondary/c \
+-Ilib/can/lib/ \
 -Ilib/micro-libs/blink \
 -Ilib/micro-libs/cli \
 -Ilib/micro-libs/fsm \
@@ -218,7 +221,7 @@ CXXFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 # LDFLAGS
 #######################################
 # link script
-LDSCRIPT = STM32F446RETx_FLASH_shifted.ld
+LDSCRIPT = STM32F446RETx_FLASH.ld
 
 # libraries
 LIBS = -lc -lm -lnosys 

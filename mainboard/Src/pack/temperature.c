@@ -63,15 +63,11 @@ void temperature_set_cells(
     temperature_t t1,
     temperature_t t2,
     temperature_t t3,
-    temperature_t t4,
-    temperature_t t5,
-    temperature_t t6) {
+    temperature_t t4) {
     temperatures[index]     = t1;
     temperatures[index + 1] = t2;
     temperatures[index + 2] = t3;
     temperatures[index + 3] = t4;
-    temperatures[index + 4] = t5;
-    temperatures[index + 5] = t6;
 }
 
 uint8_t temperature_get_cellboard_offset(uint8_t cellboard_index) {

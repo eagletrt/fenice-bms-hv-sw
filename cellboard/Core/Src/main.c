@@ -29,6 +29,10 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#define bms_NETWORK_IMPLEMENTATION
+#define primary_NETWORK_IMPLEMENTATION
+#define secondary_NETWORK_IMPLEMENTATION
+
 #include "bal_fsm.h"
 #include "can_comms.h"
 #include "index_blink.h"

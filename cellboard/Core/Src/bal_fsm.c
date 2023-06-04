@@ -53,7 +53,7 @@ void transition_callback(fsm handle) {
 }
 
 void off_entry(fsm handle) {
-    bms_BalancingCells cells = bms_BalancingCells_DEFAULT;
+    bms_balancing_converted_t cells = { 0 };
     ltc6813_set_balancing(&LTC6813_SPI, cells, 0);
 }
 
@@ -96,7 +96,7 @@ void discharge_exit(fsm handle) {
   * @retval None
   */
 void bal_timers_handler(TIM_HandleTypeDef *htim, fsm handle) {
-    bal.cells = bms_BalancingCells_DEFAULT;
+    memset(&bal.cells, 0, sizeof(bms_balancing_converted_t));
     fsm_trigger_event(bal.fsm, EV_BAL_STOP);
 }
 
@@ -104,7 +104,7 @@ void bal_oc_timer_handler(TIM_HandleTypeDef *htim) {
     if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1) {
         uint32_t cmp = __HAL_TIM_GetCompare(htim, TIM_CHANNEL_1);
         if (bal.is_s_pin_high) {
-            bms_BalancingCells cells = bms_BalancingCells_DEFAULT;
+            bms_balancing_converted_t cells = { 0 };
             ltc6813_set_balancing(&LTC6813_SPI, cells, 0);
             __HAL_TIM_SetCompare(htim, TIM_CHANNEL_1, cmp + TIM_MS_TO_TICKS(htim, BAL_TIME_OFF));
             bal.is_s_pin_high = 0;
@@ -117,5 +117,23 @@ void bal_oc_timer_handler(TIM_HandleTypeDef *htim) {
 }
 
 uint8_t bal_is_cells_empty() {
-    return bal.cells == bms_BalancingCells_DEFAULT;
+    uint32_t empty = bal.cells.cells_cell0 |
+        bal.cells.cells_cell1 |
+        bal.cells.cells_cell2 |
+        bal.cells.cells_cell3 |
+        bal.cells.cells_cell4 |
+        bal.cells.cells_cell5 |
+        bal.cells.cells_cell6 |
+        bal.cells.cells_cell7 |
+        bal.cells.cells_cell8 |
+        bal.cells.cells_cell9 |
+        bal.cells.cells_cell10 |
+        bal.cells.cells_cell11 |
+        bal.cells.cells_cell12 |
+        bal.cells.cells_cell13 |
+        bal.cells.cells_cell14 |
+        bal.cells.cells_cell15 |
+        bal.cells.cells_cell16 |
+        bal.cells.cells_cell17;
+    return empty == 0;
 }

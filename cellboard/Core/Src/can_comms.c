@@ -56,109 +56,113 @@ void can_send(uint16_t topic_id) {
     tx_header.RTR   = CAN_RTR_DATA;
 
     if (topic_id == 0/*bms_topic_filter_STATUS*/) {
-        bms_BalancingStatus state = BAL_OFF;
+        bms_board_status_t raw_state;
+        bms_board_status_converted_t conv_state;
+        
+        conv_state.balancing_status = BMS_BOARD_STATUS_BALANCING_STATUS_OFF_CHOICE;
+
         switch (fsm_get_state(bal.fsm)) {
             case BAL_OFF:
-                state = bms_BalancingStatus_OFF;
+                conv_state.balancing_status = BMS_BOARD_STATUS_BALANCING_STATUS_OFF_CHOICE;
                 break;
             case BAL_DISCHARGE:
-                state = bms_BalancingStatus_DISCHARGE;
+                conv_state.balancing_status = BMS_BOARD_STATUS_BALANCING_STATUS_DISCHARGE_CHOICE;
                 break;
         }
 
         switch (cellboard_index) {
             case 0:
-                tx_header.StdId = bms_id_BOARD_STATUS_CELLBOARD0;
+                tx_header.DLC = BMS_BOARD_STATUS_CELLBOARD_ID_CELLBOARD_0_CHOICE;
                 break;
             case 1:
-                tx_header.StdId = bms_id_BOARD_STATUS_CELLBOARD1;
+                tx_header.DLC = BMS_BOARD_STATUS_CELLBOARD_ID_CELLBOARD_1_CHOICE;
                 break;
             case 2:
-                tx_header.StdId = bms_id_BOARD_STATUS_CELLBOARD2;
+                tx_header.DLC = BMS_BOARD_STATUS_CELLBOARD_ID_CELLBOARD_2_CHOICE;
                 break;
             case 3:
-                tx_header.StdId = bms_id_BOARD_STATUS_CELLBOARD3;
+                tx_header.DLC = BMS_BOARD_STATUS_CELLBOARD_ID_CELLBOARD_3_CHOICE;
                 break;
             case 4:
-                tx_header.StdId = bms_id_BOARD_STATUS_CELLBOARD4;
+                tx_header.DLC = BMS_BOARD_STATUS_CELLBOARD_ID_CELLBOARD_4_CHOICE;
                 break;
             case 7:
             case 5:
-                tx_header.StdId = bms_id_BOARD_STATUS_CELLBOARD5;
+                tx_header.DLC = BMS_BOARD_STATUS_CELLBOARD_ID_CELLBOARD_5_CHOICE;
                 break;
             default:
                 return;
         }
 
-        tx_header.DLC = bms_serialize_BOARD_STATUS(buffer, errors, state);
+        bms_board_status_conversion_to_raw_struct(&raw_state, &conv_state);
+
+        tx_header.DLC = bms_board_status_pack(buffer, &raw_state, CAN_MAX_PAYLOAD_LENGTH);
 
         _can_send(&BMS_CAN, buffer, &tx_header);
         return;
-    } else if (topic_id == bms_topic_filter_TEMPERATURE_INFO) {
+    } else if (topic_id == BMS_TEMPERATURES_FRAME_ID) {
         switch (cellboard_index) {
             case 0:
-                tx_header.StdId = bms_id_TEMPERATURES_CELLBOARD0;
+                tx_header.DLC = BMS_TEMPERATURES_CELLBOARD_ID_CELLBOARD_0_CHOICE;
                 break;
             case 1:
-                tx_header.StdId = bms_id_TEMPERATURES_CELLBOARD1;
+                tx_header.DLC = BMS_TEMPERATURES_CELLBOARD_ID_CELLBOARD_1_CHOICE;
                 break;
             case 2:
-                tx_header.StdId = bms_id_TEMPERATURES_CELLBOARD2;
+                tx_header.DLC = BMS_TEMPERATURES_CELLBOARD_ID_CELLBOARD_2_CHOICE;
                 break;
             case 3:
-                tx_header.StdId = bms_id_TEMPERATURES_CELLBOARD3;
+                tx_header.DLC = BMS_TEMPERATURES_CELLBOARD_ID_CELLBOARD_3_CHOICE;
                 break;
             case 4:
-                tx_header.StdId = bms_id_TEMPERATURES_CELLBOARD4;
+                tx_header.DLC = BMS_TEMPERATURES_CELLBOARD_ID_CELLBOARD_4_CHOICE;
                 break;
             case 7:
             case 5:
-                tx_header.StdId = bms_id_TEMPERATURES_CELLBOARD5;
+                tx_header.DLC = BMS_TEMPERATURES_CELLBOARD_ID_CELLBOARD_5_CHOICE;
                 break;
             default:
                 return;
         }
 
-        bms_message_TEMPERATURES raw_temps;
-        bms_message_TEMPERATURES_conversion conv_temps;
+        bms_temperatures_t raw_temps;
+        bms_temperatures_converted_t conv_temps;
         register uint8_t i;
-        for (i = 0; i < CELLBOARD_TEMP_SENSOR_COUNT; i += 6) {
+        for (i = 0; i < CELLBOARD_TEMP_SENSOR_COUNT; i += 4) {
             conv_temps.start_index = i,
             conv_temps.temp0 = temperatures[i];
-            conv_temps.temp1 = temperatures[i+1];
-            conv_temps.temp2 = temperatures[i+2];
-            conv_temps.temp3 = temperatures[i+3];
-            conv_temps.temp4 = temperatures[i+4];
-            conv_temps.temp5 = temperatures[i+5];
+            conv_temps.temp1 = temperatures[i + 1];
+            conv_temps.temp2 = temperatures[i + 2];
+            conv_temps.temp3 = temperatures[i + 3];
 
-            bms_conversion_to_raw_struct_TEMPERATURES(&raw_temps, &conv_temps);
+            bms_temperatures_conversion_to_raw_struct(&raw_temps, &conv_temps);
 
-            tx_header.DLC = bms_serialize_struct_TEMPERATURES(buffer, &raw_temps);
+            tx_header.DLC = bms_temperatures_pack(buffer, &raw_temps, CAN_MAX_PAYLOAD_LENGTH);
             _can_send(&BMS_CAN, buffer, &tx_header);
             HAL_Delay(1);
         }
 
         return;
-    } else if (topic_id == bms_topic_filter_VOLTAGE_INFO) {
+    } else if (topic_id == BMS_VOLTAGES_FRAME_ID) {
         switch (cellboard_index) {
             case 0:
-                tx_header.StdId = bms_id_VOLTAGES_CELLBOARD0;
+                tx_header.DLC = BMS_VOLTAGES_CELLBOARD_ID_CELLBOARD_0_CHOICE;
                 break;
             case 1:
-                tx_header.StdId = bms_id_VOLTAGES_CELLBOARD1;
+                tx_header.DLC = BMS_VOLTAGES_CELLBOARD_ID_CELLBOARD_1_CHOICE;
                 break;
             case 2:
-                tx_header.StdId = bms_id_VOLTAGES_CELLBOARD2;
+                tx_header.DLC = BMS_VOLTAGES_CELLBOARD_ID_CELLBOARD_2_CHOICE;
                 break;
             case 3:
-                tx_header.StdId = bms_id_VOLTAGES_CELLBOARD3;
+                tx_header.DLC = BMS_VOLTAGES_CELLBOARD_ID_CELLBOARD_3_CHOICE;
                 break;
             case 4:
-                tx_header.StdId = bms_id_VOLTAGES_CELLBOARD4;
+                tx_header.DLC = BMS_VOLTAGES_CELLBOARD_ID_CELLBOARD_4_CHOICE;
                 break;
             case 7:
             case 5:
-                tx_header.StdId = bms_id_VOLTAGES_CELLBOARD5;
+                tx_header.DLC = BMS_VOLTAGES_CELLBOARD_ID_CELLBOARD_5_CHOICE;
                 break;
             default:
                 return;
@@ -166,7 +170,18 @@ void can_send(uint16_t topic_id) {
 
         register uint8_t i;
         for (i = 0; i < CELLBOARD_CELL_COUNT; i += 3) {
-            tx_header.DLC = bms_serialize_VOLTAGES(buffer, voltages[i], voltages[i + 1], voltages[i + 2], i);
+            bms_voltages_t raw_volts;
+            bms_voltages_converted_t conv_volts;
+
+            conv_volts.start_index = i;
+            conv_volts.voltage0 = voltages[i];
+            conv_volts.voltage1 = voltages[i + 1];
+            conv_volts.voltage2 = voltages[i + 2];
+
+            // Convert voltage to raw
+            bms_voltages_conversion_to_raw_struct(&raw_volts, &conv_volts);
+
+            tx_header.DLC = bms_voltages_pack(buffer, &raw_volts, CAN_MAX_PAYLOAD_LENGTH);
             _can_send(&BMS_CAN, buffer, &tx_header);
             HAL_Delay(1);
         }
@@ -175,30 +190,30 @@ void can_send(uint16_t topic_id) {
     }
 }
 
-void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
-    uint8_t rx_data[8] = {'\0'};
+void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
+    uint8_t rx_data[8] = { '\0' };
     CAN_RxHeaderTypeDef rx_header;
     if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rx_header, rx_data) != HAL_OK) {
         ERROR_SET(ERROR_CAN);
         return;
     }
-
     ERROR_UNSET(ERROR_CAN);
 
-    if (rx_header.StdId == bms_id_BALANCING) {
-        bms_message_BALANCING balancing;
-        bms_deserialize_BALANCING(&balancing, rx_data);
+    if (rx_header.StdId == BMS_BALANCING_FRAME_ID) {
+        bms_balancing_t balancing;
+        bms_balancing_unpack(&balancing, rx_data, CAN_MAX_PAYLOAD_LENGTH);
 
         if (balancing.board_index != cellboard_index)
             return;
 
-        bal.cells = balancing.cells;
+        bms_balancing_raw_to_conversion_struct(&bal.cells, &balancing);
+
         if (!bal_is_cells_empty()) {
             fsm_trigger_event(bal.fsm, EV_BAL_START);
         } else {
             fsm_trigger_event(bal.fsm, EV_BAL_STOP);
         }
-    } else if (rx_header.StdId == bms_id_FW_UPDATE) {
+    } else if (rx_header.StdId == BMS_FW_UPDATE_FRAME_ID) {
         JumpToBlt();
     }
 }
@@ -206,10 +221,11 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 void can_init_with_filter() {
     CAN_FilterTypeDef filter;
     filter.FilterMode       = CAN_FILTERMODE_IDMASK;
-    filter.FilterIdLow      = bms_topic_filter_BALANCING << 5;  // Take all ids from 0
-    filter.FilterIdHigh     = bms_topic_filter_BALANCING << 5;  // to 2^11 - 1
-    filter.FilterMaskIdHigh = bms_topic_mask_BALANCING << 5;    // Don't care on can id bits
-    filter.FilterMaskIdLow  = bms_topic_mask_BALANCING << 5;    // Don't care on can id bits
+    // TODO: Missing topic filters and masks
+    // filter.FilterIdLow      = bms_TOPIC_FILTER_BALANCING << 5;  // Take all ids from 0
+    // filter.FilterIdHigh     = bms_TOPIC_FILTER_BALANCING << 5;  // to 2^11 - 1
+    // filter.FilterMaskIdHigh = bms_TOPIC_MASK_BALANCING << 5;    // Don't care on can id bits
+    // filter.FilterMaskIdLow  = bms_TOPIC_MASK_BALANCING << 5;    // Don't care on can id bits
     /* HAL considers IdLow and IdHigh not as just the ID of the can message but
         as the combination of: 
         STDID + RTR + IDE + 4 most significant bits of EXTID
@@ -223,10 +239,11 @@ void can_init_with_filter() {
 
 
     filter.FilterMode       = CAN_FILTERMODE_IDMASK;
-    filter.FilterIdLow      = bms_id_FW_UPDATE << 5;  // Take all ids from 0
-    filter.FilterIdHigh     = bms_id_FW_UPDATE << 5;  // to 2^11 - 1
-    filter.FilterMaskIdHigh = bms_topic_mask_FIXED_IDS << 5;    // Don't care on can id bits
-    filter.FilterMaskIdLow  = bms_topic_mask_FIXED_IDS << 5;    // Don't care on can id bits
+    // TODO: Missing topic filters and masks
+    // filter.FilterIdLow      = BMS_FW_UPDATE_FRAME_ID << 5;  // Take all ids from 0
+    // filter.FilterIdHigh     = BMS_FW_UPDATE_FRAME_ID << 5;  // to 2^11 - 1
+    // filter.FilterMaskIdHigh = bms_TOPIC_MASK_FIXED_IDS << 5;    // Don't care on can id bits
+    // filter.FilterMaskIdLow  = bms_TOPIC_MASK_FIXED_IDS << 5;    // Don't care on can id bits
     /* HAL considers IdLow and IdHigh not as just the ID of the can message but
         as the combination of: 
         STDID + RTR + IDE + 4 most significant bits of EXTID

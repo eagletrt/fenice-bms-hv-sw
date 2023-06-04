@@ -21,10 +21,6 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
-#define bms_NETWORK_IMPLEMENTATION
-#define primary_NETWORK_IMPLEMENTATION
-#define secondary_NETWORK_IMPLEMENTATION
-
 #include "adc124s021.h"
 #include "bal_fsm.h"
 #include "bms_fsm.h"
@@ -132,11 +128,6 @@ int main(void)
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
     
-    pwm_start_channel(&htim1, TIM_CHANNEL_1);
-    HAL_Delay(500);
-    pwm_stop_channel(&htim1, TIM_CHANNEL_1);
-    HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
-
     HAL_GPIO_WritePin(EEPROM_HOLD_GPIO_Port, EEPROM_HOLD_Pin, GPIO_PIN_SET);
     current_start_measure();
 
@@ -164,13 +155,13 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-        // fsm_run(bms.fsm);
-        // fsm_run(bal.fsm);
-        // measures_check_flags();
-        // cli_watch_flush_handler();
-        // if (HAL_GetTick() > 1500 && !HAL_GPIO_ReadPin(BMS_FAULT_GPIO_Port, BMS_FAULT_Pin))
-        //     HAL_GPIO_WritePin(BMS_FAULT_GPIO_Port, BMS_FAULT_Pin, BMS_FAULT_OFF_VALUE);
-        // cli_loop(&cli_bms);
+        fsm_run(bms.fsm);
+        fsm_run(bal.fsm);
+        measures_check_flags();
+        cli_watch_flush_handler();
+        if (HAL_GetTick() > 1500 && !HAL_GPIO_ReadPin(BMS_FAULT_GPIO_Port, BMS_FAULT_Pin))
+            HAL_GPIO_WritePin(BMS_FAULT_GPIO_Port, BMS_FAULT_Pin, BMS_FAULT_OFF_VALUE);
+        cli_loop(&cli_bms);
     }
     return 0;
   /* USER CODE END 3 */

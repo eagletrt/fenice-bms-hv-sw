@@ -56,12 +56,13 @@ uint16_t _min_index(voltage_t data[], size_t count) {
  * @param	out	output array
  * @param	out_index	length of output (initialize to 0 please)
  */
-void _bal_hateville_solution(uint16_t DP[], uint16_t i, bms_BalancingCells cells[], uint16_t *out_index) {
+void _bal_hateville_solution(uint16_t DP[], uint16_t i, bms_balancing_converted_t cells[], uint16_t *out_index) {
     if (i == 0) {
         return;
     } else if (i == 1) {
         if (DP[1] > 0) {
-            CANLIB_BITSET(cells[0], 0);
+            // cells[0] |= (1 << 0);
+            cells[0].cells_cell0 = 1;
             ++(*out_index);
         }
         return;
@@ -70,7 +71,65 @@ void _bal_hateville_solution(uint16_t DP[], uint16_t i, bms_BalancingCells cells
         return;
     } else {
         _bal_hateville_solution(DP, i - 2, cells, out_index);
-        CANLIB_BITSET(cells[(i - 1) / LTC6813_CELL_COUNT], ((i - 1) % LTC6813_CELL_COUNT));
+        size_t index = (i - 1) / LTC6813_CELL_COUNT;
+
+        switch ((i - 1) % LTC6813_CELL_COUNT)
+        {
+        case 0:
+            cells[index].cells_cell0 = 1;
+            break;
+        case 1:
+            cells[index].cells_cell1 = 1;
+            break;
+        case 2:
+            cells[index].cells_cell2 = 1;
+            break;
+        case 3:
+            cells[index].cells_cell3 = 1;
+            break;
+        case 4:
+            cells[index].cells_cell4 = 1;
+            break;
+        case 5:
+            cells[index].cells_cell5 = 1;
+            break;
+        case 6:
+            cells[index].cells_cell6 = 1;
+            break;
+        case 7:
+            cells[index].cells_cell7 = 1;
+            break;
+        case 8:
+            cells[index].cells_cell8 = 1;
+            break;
+        case 9:
+            cells[index].cells_cell9 = 1;
+            break;
+        case 10:
+            cells[index].cells_cell10 = 1;
+            break;
+        case 11:
+            cells[index].cells_cell11 = 1;
+            break;
+        case 12:
+            cells[index].cells_cell12 = 1;
+            break;
+        case 13:
+            cells[index].cells_cell13 = 1;
+            break;
+        case 14:
+            cells[index].cells_cell14 = 1;
+            break;
+        case 15:
+            cells[index].cells_cell15 = 1;
+            break;
+        case 16:
+            cells[index].cells_cell16 = 1;
+            break;
+        case 17:
+            cells[index].cells_cell17 = 1;
+            break;
+        }
         ++(*out_index);
 
         return;
@@ -88,7 +147,7 @@ void _bal_hateville_solution(uint16_t DP[], uint16_t i, bms_BalancingCells cells
  * 
  * @returns	length of the solution array
  */
-uint16_t _bal_hateville(uint16_t D[], uint16_t count, bms_BalancingCells solution[]) {
+uint16_t _bal_hateville(uint16_t D[], uint16_t count, bms_balancing_converted_t solution[]) {
     uint16_t DP[PACK_CELL_COUNT + 1];
 
     DP[0] = 0;
@@ -109,7 +168,7 @@ uint16_t bal_get_cells_to_discharge(
     voltage_t volts[],
     uint16_t volts_count,
     voltage_t threshold,
-    bms_BalancingCells cells[],
+    bms_balancing_converted_t cells[],
     uint16_t cells_count,
     voltage_t target) {
     uint16_t len = 0;
@@ -120,11 +179,68 @@ uint16_t bal_get_cells_to_discharge(
     else
         min_volt = target;
 
-    memset(cells, 0, sizeof(bms_BalancingCells) * cells_count);
+    memset(cells, 0, sizeof(bms_balancing_converted_t) * cells_count);
 
     for (uint16_t i = 0; i < volts_count; i++) {
         if (max(0, (int32_t)volts[i] - (min_volt + threshold))) {
-            CANLIB_BITSET(cells[i / CELLBOARD_CELL_COUNT], i % CELLBOARD_CELL_COUNT);
+            size_t index = i / LTC6813_CELL_COUNT;
+            switch (i % LTC6813_CELL_COUNT)
+            {
+            case 0:
+                cells[index].cells_cell0 = 1;
+                break;
+            case 1:
+                cells[index].cells_cell1 = 1;
+                break;
+            case 2:
+                cells[index].cells_cell2 = 1;
+                break;
+            case 3:
+                cells[index].cells_cell3 = 1;
+                break;
+            case 4:
+                cells[index].cells_cell4 = 1;
+                break;
+            case 5:
+                cells[index].cells_cell5 = 1;
+                break;
+            case 6:
+                cells[index].cells_cell6 = 1;
+                break;
+            case 7:
+                cells[index].cells_cell7 = 1;
+                break;
+            case 8:
+                cells[index].cells_cell8 = 1;
+                break;
+            case 9:
+                cells[index].cells_cell9 = 1;
+                break;
+            case 10:
+                cells[index].cells_cell10 = 1;
+                break;
+            case 11:
+                cells[index].cells_cell11 = 1;
+                break;
+            case 12:
+                cells[index].cells_cell12 = 1;
+                break;
+            case 13:
+                cells[index].cells_cell13 = 1;
+                break;
+            case 14:
+                cells[index].cells_cell14 = 1;
+                break;
+            case 15:
+                cells[index].cells_cell15 = 1;
+                break;
+            case 16:
+                cells[index].cells_cell16 = 1;
+                break;
+            case 17:
+                cells[index].cells_cell17 = 1;
+                break;
+            }
             ++len;
         }
     }
@@ -175,6 +291,6 @@ uint16_t bal_compute_imbalance(voltage_t volts[], uint16_t count, voltage_t thre
     return indexes;
 }
 
-uint16_t bal_exclude_neighbors(uint16_t data[], uint16_t count, bms_BalancingCells cells[]) {
+uint16_t bal_exclude_neighbors(uint16_t data[], uint16_t count, bms_balancing_converted_t cells[]) {
     return _bal_hateville(data, count, cells);
 }

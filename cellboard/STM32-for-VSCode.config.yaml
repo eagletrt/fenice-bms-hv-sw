@@ -73,7 +73,7 @@ includeDirectories:
   - Core/Lib/micro-libs/fsm/**
   - Core/Lib/micro-libs/blink/**
   - Core/Lib/micro-libs/timer-utils/**
-  - Core/Lib/can-cicd/lib/**
+  - Core/Lib/can/lib/
 
 
 # Files that should be included in the compilation.
@@ -88,7 +88,7 @@ sourceFiles:
   - Core/Lib/micro-libs/fsm/**
   - Core/Lib/micro-libs/blink/**
   - Core/Lib/micro-libs/timer-utils/**
-  - Core/Lib/can-cicd/lib/**
+  - Core/Lib/can/lib/
 
 
 # When no makefile is present it will show a warning pop-up.

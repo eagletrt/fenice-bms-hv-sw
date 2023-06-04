@@ -32,28 +32,28 @@ void measures_check_flags() {
         measures_voltage_current_soc();
         voltage_check_errors();
         current_check_errors();
-        can_car_send(primary_ID_HV_VOLTAGE);
-        can_car_send(primary_ID_HV_CURRENT);
-        can_car_send(primary_ID_TS_STATUS);
+        can_car_send(PRIMARY_HV_VOLTAGE_FRAME_ID);
+        can_car_send(PRIMARY_HV_CURRENT_FRAME_ID);
+        can_car_send(PRIMARY_TS_STATUS_FRAME_ID);
         if (error_count() > 0) {
-            can_car_send(primary_ID_HV_ERRORS);
+            can_car_send(PRIMARY_HV_ERRORS_FRAME_ID);
         }
         flags &= ~_50MS_INTERVAL_FLAG;
     }
     if (flags & _200MS_INTERVAL_FLAG) {
         can_cellboards_check();
         temperature_check_errors();
-        can_car_send(primary_ID_HV_TEMP);
+        can_car_send(PRIMARY_HV_TEMP_FRAME_ID);
         flags &= ~_200MS_INTERVAL_FLAG;
     }
     if (flags & _500MS_INTERVAL_FLAG) {
         if (bms.handcart_connected) {
-            can_car_send(primary_ID_HV_CELLS_TEMP);
-            can_car_send(primary_ID_HV_CELLS_VOLTAGE);
-            can_car_send(primary_ID_HV_CELL_BALANCING_STATUS);
+            can_car_send(PRIMARY_HV_CELLS_TEMP_FRAME_ID);
+            can_car_send(PRIMARY_HV_CELLS_VOLTAGE_FRAME_ID);
+            can_car_send(PRIMARY_HV_CELL_BALANCING_STATUS_FRAME_ID);
         }
-        can_car_send(primary_ID_HV_CAN_FORWARD_STATUS);
-        can_car_send(primary_ID_HV_VERSION);
+        can_car_send(PRIMARY_HV_CAN_FORWARD_FRAME_ID);
+        can_car_send(PRIMARY_HV_VERSION_FRAME_ID);
         flags &= ~_500MS_INTERVAL_FLAG;
     }
     if (flags & _5S_INTERVAL_FLAG) {

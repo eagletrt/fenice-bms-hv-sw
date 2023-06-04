@@ -24,6 +24,7 @@
 #include "pack/voltage.h"
 #include "soc.h"
 #include "usart.h"
+#include "bms/network.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -211,6 +212,65 @@ void _cli_volts_all(uint16_t argc, char **argv, char *out) {
         }
         segment_sum += cell_v;
 
+        bool is_cell_selected = false;
+        switch (i % CELLBOARD_CELL_COUNT)
+        {
+            case 0:
+                is_cell_selected = bal.cells[i / CELLBOARD_CELL_COUNT].cells_cell0;
+                break;
+            case 1:
+                is_cell_selected = bal.cells[i / CELLBOARD_CELL_COUNT].cells_cell1;
+                break;
+            case 2:
+                is_cell_selected = bal.cells[i / CELLBOARD_CELL_COUNT].cells_cell2;
+                break;
+            case 3:
+                is_cell_selected = bal.cells[i / CELLBOARD_CELL_COUNT].cells_cell3;
+                break;
+            case 4:
+                is_cell_selected = bal.cells[i / CELLBOARD_CELL_COUNT].cells_cell4;
+                break;
+            case 5:
+                is_cell_selected = bal.cells[i / CELLBOARD_CELL_COUNT].cells_cell5;
+                break;
+            case 6:
+                is_cell_selected = bal.cells[i / CELLBOARD_CELL_COUNT].cells_cell6;
+                break;
+            case 7:
+                is_cell_selected = bal.cells[i / CELLBOARD_CELL_COUNT].cells_cell7;
+                break;
+            case 8:
+                is_cell_selected = bal.cells[i / CELLBOARD_CELL_COUNT].cells_cell8;
+                break;
+            case 9:
+                is_cell_selected = bal.cells[i / CELLBOARD_CELL_COUNT].cells_cell9;
+                break;
+            case 10:
+                is_cell_selected = bal.cells[i / CELLBOARD_CELL_COUNT].cells_cell10;
+                break;
+            case 11:
+                is_cell_selected = bal.cells[i / CELLBOARD_CELL_COUNT].cells_cell11;
+                break;
+            case 12:
+                is_cell_selected = bal.cells[i / CELLBOARD_CELL_COUNT].cells_cell12;
+                break;
+            case 13:
+                is_cell_selected = bal.cells[i / CELLBOARD_CELL_COUNT].cells_cell13;
+                break;
+            case 14:
+                is_cell_selected = bal.cells[i / CELLBOARD_CELL_COUNT].cells_cell14;
+                break;
+            case 15:
+                is_cell_selected = bal.cells[i / CELLBOARD_CELL_COUNT].cells_cell15;
+                break;
+            case 16:
+                is_cell_selected = bal.cells[i / CELLBOARD_CELL_COUNT].cells_cell16;
+                break;
+            case 17:
+                is_cell_selected = bal.cells[i / CELLBOARD_CELL_COUNT].cells_cell17;
+                break;
+        }
+
         if (fsm_get_state(bal.fsm) == BAL_OFF) {
             if (i == max_index)
                 sprintf(out + strlen(out), RED_BG("[%3u %-.3fV]") " ", i, cell_v);
@@ -220,7 +280,7 @@ void _cli_volts_all(uint16_t argc, char **argv, char *out) {
                 sprintf(out + strlen(out), "[%3u %-.3fV] ", i, cell_v);
         } else {
             if (i == max_index) {
-                if (CANLIB_BITTEST(bal.cells[i / CELLBOARD_CELL_COUNT], i % CELLBOARD_CELL_COUNT)) {
+                if (is_cell_selected) {
                     total_power += cell_v * cell_v;
                     sprintf(
                         out + strlen(out),
@@ -228,10 +288,9 @@ void _cli_volts_all(uint16_t argc, char **argv, char *out) {
                         i,
                         cell_v,
                         DISCHARGE_DUTY_CYCLE * cell_v * cell_v / DISCHARGE_R);
-                } else {
+                } else
                     sprintf(out + strlen(out), RED_BG("[%3u %-.3fV 0.00W]") " ", i, cell_v);
-                }
-            } else if (CANLIB_BITTEST(bal.cells[i / CELLBOARD_CELL_COUNT], i % CELLBOARD_CELL_COUNT)) {
+            } else if (is_cell_selected) {
                 total_power += cell_v * cell_v;
                 sprintf(
                     out + strlen(out),
@@ -239,11 +298,10 @@ void _cli_volts_all(uint16_t argc, char **argv, char *out) {
                     i,
                     cell_v,
                     DISCHARGE_DUTY_CYCLE * cell_v * cell_v / DISCHARGE_R);
-            } else if (i == min_index) {
+            } else if (i == min_index)
                 sprintf(out + strlen(out), CYAN_BG("[%3u %-.3fV 0.00W]") " ", i, cell_v);
-            } else {
+            else
                 sprintf(out + strlen(out), "[%3u %-.3fV 0.00W] ", i, cell_v);
-            }
         }
     }
     sprintf(out + strlen(out), "Segment total: %.2fV", segment_sum);
@@ -285,18 +343,48 @@ void _cli_temps(uint16_t argc, char **argv, char *out) {
             argv[1]);
     }
 }
+/*
+void _cli_temps_all(uint16_t argc, char **argv, char *out) {
+    out[0]                  = '\0';
+    temperature_t *temp_all = temperature_get_all();
+    uint8_t * distr = bms_get_cellboard_distribution();
+    uint8_t ids[CELLBOARD_COUNT] = { 0 };
 
+    for (uint8_t i = 0; i < CELLBOARD_COUNT; i++)
+        ids[distr[i]] = i;
+
+    sprintf(out + strlen(out), "   ");
+    for (size_t i = 0; i < TEMP_SENSORS_PER_STRIP; i++)
+        sprintf(out + strlen(out), "         %d  ", i);
+
+    
+    for (uint8_t i = 0; i < PACK_TEMP_COUNT; i++) {
+        const size_t cellboard = i / TEMP_SENSOR_COUNT;
+        const size_t strip = i % TEMP_STRIPS_PER_BUS;
+
+        if (i % TEMP_SENSOR_COUNT == 0)
+            sprintf(out + strlen(out), "\r\n\r\n%-3d", cellboard);
+        else if (i % (TEMP_SENSOR_COUNT / TEMP_STRIPS_PER_BUS) == 0 && i > 0)
+            sprintf(out + strlen(out), "\r\n%-3s", "");
+
+        sprintf(out + strlen(out), "[%3u %2u °C] ", i, (uint8_t)(temp_all[ids[strip]] / 2.56 - 20));
+    }
+
+    sprintf(out + strlen(out), "\r\n");
+}
+*/
 void _cli_temps_all(uint16_t argc, char **argv, char *out) {
     out[0]                  = '\0';
     temperature_t *temp_all = temperature_get_all();
 
     for (uint8_t i = 0; i < PACK_TEMP_COUNT; i++) {
-        if (i % TEMP_SENSOR_COUNT == 0) {
-            sprintf(out + strlen(out), "\r\n%-3d", i / TEMP_SENSOR_COUNT);
-        } else if (i % (TEMP_SENSOR_COUNT / 4) == 0 && i > 0) {
+
+        if (i % TEMP_SENSOR_COUNT == 0)
+            sprintf(out + strlen(out), "\r\n\r\n%-3d", i / TEMP_SENSOR_COUNT);
+        else if (i % (TEMP_SENSOR_COUNT / 4) == 0 && i > 0)
             sprintf(out + strlen(out), "\r\n%-3s", "");
-        }
-        sprintf(out + strlen(out), "[%3u %2u °C] ", i, (uint8_t)(temp_all[i] / 2.56 - 20));
+
+        sprintf(out + strlen(out), "[%3u %2u °C] ", i, (uint8_t)(temp_all[i] / 2.55 - 20));
     }
 
     sprintf(out + strlen(out), "\r\n");
@@ -351,12 +439,12 @@ void _cli_balance(uint16_t argc, char **argv, char *out) {
         CAN_TxHeaderTypeDef tx_header;
         uint8_t buffer[CAN_MAX_PAYLOAD_LENGTH];
         uint8_t board;
-        bms_BalancingCells cells = bms_BalancingCells_DEFAULT;
+        bms_balancing_converted_t cells = { 0 };
 
         tx_header.ExtId = 0;
         tx_header.IDE   = CAN_ID_STD;
         tx_header.RTR   = CAN_RTR_DATA;
-        tx_header.StdId = bms_ID_BALANCING;
+        tx_header.StdId = BMS_BALANCING_FRAME_ID;
 
         board = atoi(argv[2]);
 
@@ -370,13 +458,73 @@ void _cli_balance(uint16_t argc, char **argv, char *out) {
         uint8_t c;
         for (uint8_t i = 3; i < argc; ++i) {
             c = atoi(argv[i]);
-            CANLIB_BITSET(cells, c);
+            switch (c) {
+                case 0:
+                    cells.cells_cell0 = 1;
+                    break;
+                case 1:
+                    cells.cells_cell1 = 1;
+                    break;
+                case 2:
+                    cells.cells_cell2 = 1;
+                    break;
+                case 3:
+                    cells.cells_cell3 = 1;
+                    break;
+                case 4:
+                    cells.cells_cell4 = 1;
+                    break;
+                case 5:
+                    cells.cells_cell5 = 1;
+                    break;
+                case 6:
+                    cells.cells_cell6 = 1;
+                    break;
+                case 7:
+                    cells.cells_cell7 = 1;
+                    break;
+                case 8:
+                    cells.cells_cell8 = 1;
+                    break;
+                case 9:
+                    cells.cells_cell9 = 1;
+                    break;
+                case 10:
+                    cells.cells_cell10 = 1;
+                    break;
+                case 11:
+                    cells.cells_cell11 = 1;
+                    break;
+                case 12:
+                    cells.cells_cell12 = 1;
+                    break;
+                case 13:
+                    cells.cells_cell13 = 1;
+                    break;
+                case 14:
+                    cells.cells_cell14 = 1;
+                    break;
+                case 15:
+                    cells.cells_cell15 = 1;
+                    break;
+                case 16:
+                    cells.cells_cell16 = 1;
+                    break;
+                case 17:
+                    cells.cells_cell17 = 1;
+                    break;
+            }
             sprintf(out + strlen(out), "%u,", c);
         }
 
         // TODO: Missing bms_BALANCING_SIZE
         tx_header.DLC = 8;// bms_BALANCING_SIZE;
-        bms_serialize_BALANCING(buffer, cells, board);
+
+        // Convert cells values to raw
+        bms_balancing_t raw = { 0 };
+        bms_balancing_conversion_to_raw_struct(&raw, &cells);
+
+        bms_balancing_pack(buffer, &raw, CAN_MAX_PAYLOAD_LENGTH);
         can_send(&BMS_CAN, buffer, &tx_header);
 
         sprintf(out + strlen(out) - 1, "]\r\non board %d\r\n", board);
