@@ -157,7 +157,8 @@ void bms_fsm_init() {
     fsm_set_state(bms.fsm, BMS_FAULT, &state);
 
     //HAL_TIM_Base_Start_IT(&HTIM_BMS);
-    fsm_start(bms.fsm);
+    // TODO: Remove comment, for test purpose only
+    // fsm_start(bms.fsm);
 
     bms.led.port = STATE_LED_GPIO;
     bms.led.pin  = STATE_LED_PIN;
@@ -201,7 +202,8 @@ void _idle_entry(fsm FSM) {
 
     pack_set_default_off(0);
 
-    _start_fb_check_timer();
+    // TODO: Remove comments, for testing purposes only
+    // _start_fb_check_timer();
 
     cli_bms_debug("idle state", 10);
 }
@@ -209,7 +211,8 @@ void _idle_entry(fsm FSM) {
 void _idle_handler(fsm FSM, uint8_t event) {
     switch (event) {
         case BMS_EV_TS_ON:
-            if (feedback_check(FEEDBACK_TS_OFF_MASK, FEEDBACK_TS_OFF_VAL) == 0)
+            // TODO: Remove comments, for testing purposes only
+            // if (feedback_check(FEEDBACK_TS_OFF_MASK, FEEDBACK_TS_OFF_VAL) == 0)
                 fsm_transition(FSM, BMS_AIRN_CLOSE);
             break;
         case BMS_EV_FAULT:
@@ -221,16 +224,22 @@ void _idle_handler(fsm FSM, uint8_t event) {
 }
 
 void _idle_exit(fsm FSM) {
-    _stop_fb_check_timer();
+    // TODO: Remove comments, for testing purposes only
+    // _stop_fb_check_timer();
 }
 
 void _airn_close_entry(fsm FSM) {
-    _start_fb_check_timer();
-    _start_fb_timeout_timer();
+    // TODO: Remove comments, for testing purposes only
+    // _start_fb_check_timer();
+    // _start_fb_timeout_timer();
 
     current_zero();
 
     cli_bms_debug("airn close state", 16);
+
+    // TODO: To remove, for testing purposes only
+    HAL_Delay(50);
+    fsm_trigger_event(bms.fsm, BMS_EV_FB_CHECK);
 }
 
 void _airn_close_handler(fsm FSM, uint8_t event) {
@@ -239,10 +248,11 @@ void _airn_close_handler(fsm FSM, uint8_t event) {
             fsm_transition(FSM, BMS_FAULT);
             break;
         case BMS_EV_FB_CHECK:
-            if (feedback_check(FEEDBACK_AIRN_CLOSE_MASK, FEEDBACK_AIRN_CLOSE_VAL) == 0) {
+            // TODO: Remove comments, for testing purposes only
+            // if (feedback_check(FEEDBACK_AIRN_CLOSE_MASK, FEEDBACK_AIRN_CLOSE_VAL) == 0) {
                 pack_set_airn_off(AIRN_ON_VALUE);
                 fsm_transition(FSM, BMS_AIRN_STATUS);
-            }
+            // }
             break;
         case BMS_EV_FB_TIMEOUT:
             pack_set_default_off(0);
@@ -252,15 +262,21 @@ void _airn_close_handler(fsm FSM, uint8_t event) {
 }
 
 void _airn_close_exit(fsm FSM) {
-    _stop_fb_check_timer();
-    _stop_fb_timeout_timer();
+    // TODO: Remove comments, for testing purposes only
+    // _stop_fb_check_timer();
+    // _stop_fb_timeout_timer();
 }
 
 void _airn_status_entry(fsm FSM) {
-    _start_fb_check_timer();
-    _start_fb_timeout_timer();
+    // TODO: Remove comments, for testing purposes only
+    // _start_fb_check_timer();
+    // _start_fb_timeout_timer();
 
     cli_bms_debug("airn status state", 17);
+
+    // TODO: To remove, for testing purposes only
+    HAL_Delay(50);
+    fsm_trigger_event(bms.fsm, BMS_EV_FB_CHECK);
 }
 
 void _airn_status_handler(fsm FSM, uint8_t event) {
@@ -269,10 +285,11 @@ void _airn_status_handler(fsm FSM, uint8_t event) {
             fsm_transition(FSM, BMS_FAULT);
             break;
         case BMS_EV_FB_CHECK:
-            if (feedback_check(FEEDBACK_AIRN_STATUS_MASK, FEEDBACK_AIRN_STATUS_VAL) == 0) {
+            // TODO: Remove comments, for testing purposes only
+            // if (feedback_check(FEEDBACK_AIRN_STATUS_MASK, FEEDBACK_AIRN_STATUS_VAL) == 0) {
                 pack_set_precharge(PRECHARGE_ON_VALUE);
                 fsm_transition(FSM, BMS_PRECHARGE);
-            }
+            // }
             break;
         case BMS_EV_FB_TIMEOUT:
             pack_set_default_off(0);
@@ -282,21 +299,28 @@ void _airn_status_handler(fsm FSM, uint8_t event) {
 }
 
 void _airn_status_exit(fsm FSM) {
-    _stop_fb_check_timer();
-    _stop_fb_timeout_timer();
+    // TODO: Remove comments, for testing purposes only
+    // _stop_fb_check_timer();
+    // _stop_fb_timeout_timer();
 }
 
 uint32_t tick;
 
 void _precharge_entry(fsm FSM) {
-    _start_pc_check_timer();
-    _start_pc_timeout_timer();
-    _start_fb_check_timer();
-    _start_fb_timeout_timer();
+    // TODO: Remove comments, for testing purposes only
+    // _start_pc_check_timer();
+    // _start_pc_timeout_timer();
+    // _start_fb_check_timer();
+    // _start_fb_timeout_timer();
 
     tick = HAL_GetTick();
 
     cli_bms_debug("Entered precharge", 18);
+
+    // TODO: To remove, for testing purposes only
+    can_car_send(PRIMARY_TS_STATUS_FRAME_ID);
+    HAL_Delay(5000);
+    fsm_trigger_event(bms.fsm, BMS_EV_PRECHARGE_CHECK);
 }
 
 void _precharge_handler(fsm FSM, uint8_t event) {
@@ -327,16 +351,17 @@ void _precharge_handler(fsm FSM, uint8_t event) {
             snprintf(c, 5, "%4.2f", voltage_get_vts_p() / (voltage_get_vbat_adc() * PRECHARGE_VOLTAGE_THRESHOLD));
             cli_bms_debug(c, 5);
 
-            if (HAL_GetTick() - tick > 10000 ||
-                (!bms.handcart_connected && voltage_get_vts_p() > 0 &&
-                 voltage_get_vts_p() >= voltage_get_vbat_adc() * PRECHARGE_VOLTAGE_THRESHOLD) ||
-                (bms.handcart_connected && voltage_get_vts_p() > 0 &&
-                 voltage_get_vts_p() >= voltage_get_vbat_adc() * PRECHARGE_VOLTAGE_THRESHOLD_CARELINO)) {
+            // TODO: Remove comments, for testing purposes only
+            // if (HAL_GetTick() - tick > 10000 ||
+            //     (!bms.handcart_connected && voltage_get_vts_p() > 0 &&
+            //      voltage_get_vts_p() >= voltage_get_vbat_adc() * PRECHARGE_VOLTAGE_THRESHOLD) ||
+            //     (bms.handcart_connected && voltage_get_vts_p() > 0 &&
+            //      voltage_get_vts_p() >= voltage_get_vbat_adc() * PRECHARGE_VOLTAGE_THRESHOLD_CARELINO)) {
                 pack_set_airp_off(AIRP_ON_VALUE);
-                _stop_fb_check_timer();
+                // _stop_fb_check_timer();
                 cli_bms_debug("Precharge ok", 18);
                 fsm_transition(bms.fsm, BMS_ON);
-            }
+            // }
             break;
         case BMS_EV_FAULT:
             fsm_transition(FSM, BMS_FAULT);
@@ -345,15 +370,20 @@ void _precharge_handler(fsm FSM, uint8_t event) {
 }
 
 void _precharge_exit(fsm FSM) {
-    _stop_pc_check_timer();
-    _stop_pc_timeout_timer();
-    _stop_fb_check_timer();
+    // TODO: Remove comments, for testing purposes only
+    // _stop_pc_check_timer();
+    // _stop_pc_timeout_timer();
+    // _stop_fb_check_timer();
 }
 
 void _on_entry(fsm FSM) {
-    _start_fb_timeout_timer();
+    // TODO: Remove comments, for testing purposes only
+    // _start_fb_timeout_timer();
 
     cli_bms_debug("on state", 8);
+
+    // TODO: To remove, for testing purposes only
+    can_car_send(PRIMARY_TS_STATUS_FRAME_ID);
 }
 
 void _on_handler(fsm FSM, uint8_t event) {
@@ -383,8 +413,12 @@ void _on_handler(fsm FSM, uint8_t event) {
 }
 
 void _on_exit(fsm FSM) {
-    _stop_fb_timeout_timer();
-    _stop_fb_check_timer();
+    // TODO: Remove comments, for testing purposes only
+    // _stop_fb_timeout_timer();
+    // _stop_fb_check_timer();
+
+    // TODO: To remove, for testing purposes only
+    HAL_Delay(2000);
 }
 
 void _fault_entry(fsm FSM) {

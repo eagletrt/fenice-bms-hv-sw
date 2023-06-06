@@ -24,7 +24,7 @@
 #include "pack/voltage.h"
 #include "soc.h"
 #include "usart.h"
-#include "bms/network.h"
+#include "bms/bms_network.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -524,7 +524,7 @@ void _cli_balance(uint16_t argc, char **argv, char *out) {
         bms_balancing_t raw = { 0 };
         bms_balancing_conversion_to_raw_struct(&raw, &cells);
 
-        bms_balancing_pack(buffer, &raw, CAN_MAX_PAYLOAD_LENGTH);
+        bms_balancing_pack(buffer, &raw, BMS_BALANCING_BIT_SIZE);
         can_send(&BMS_CAN, buffer, &tx_header);
 
         sprintf(out + strlen(out) - 1, "]\r\non board %d\r\n", board);

@@ -11,7 +11,7 @@
 #ifndef BAL_H
 #define BAL_H
 
-#include "bms/network.h"
+#include "bms/bms_network.h"
 #include "mainboard_config.h"
 #include "pack/voltage.h"
 

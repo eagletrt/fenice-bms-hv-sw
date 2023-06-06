@@ -22,7 +22,7 @@
 /**
  * Maximum can payload. for CAN 2.0A is 8 bytes
  */
-#define CAN_MAX_PAYLOAD_LENGTH 8
+#define CAN_MAX_PAYLOAD_LENGTH 8 * 8
 
 /**
  * Number of daisy chained LTCs

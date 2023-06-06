@@ -83,6 +83,7 @@ sourceFiles:
   - Src/**
   - lib/can/lib/bms/*.c
   - lib/can/lib/primary/*.c
+  - lib/can/lib/secondary/*.c
   - lib/micro-libs/llist/**
   - lib/micro-libs/priority-queue/**
   - lib/micro-libs/fsm/**

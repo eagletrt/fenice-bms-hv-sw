@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "bms/network.h"
-#include "primary/network.h"
+#include "bms/bms_network.h"
+#include "primary/primary_network.h"
 #include "can.h"
 #include "pack/voltage.h"
 

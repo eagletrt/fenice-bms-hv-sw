@@ -156,11 +156,12 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
         fsm_run(bms.fsm);
-        fsm_run(bal.fsm);
-        measures_check_flags();
+        // TODO: Remove comments, for testing purposes only
+        // fsm_run(bal.fsm);
+        // measures_check_flags();
         cli_watch_flush_handler();
-        if (HAL_GetTick() > 1500 && !HAL_GPIO_ReadPin(BMS_FAULT_GPIO_Port, BMS_FAULT_Pin))
-            HAL_GPIO_WritePin(BMS_FAULT_GPIO_Port, BMS_FAULT_Pin, BMS_FAULT_OFF_VALUE);
+        // if (HAL_GetTick() > 1500 && !HAL_GPIO_ReadPin(BMS_FAULT_GPIO_Port, BMS_FAULT_Pin))
+        //     HAL_GPIO_WritePin(BMS_FAULT_GPIO_Port, BMS_FAULT_Pin, BMS_FAULT_OFF_VALUE);
         cli_loop(&cli_bms);
     }
     return 0;

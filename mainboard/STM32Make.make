@@ -89,8 +89,9 @@ Src/stm32f4xx_it.c \
 Src/system_stm32f4xx.c \
 Src/tim.c \
 Src/usart.c \
-lib/can/lib/bms/network.c \
-lib/can/lib/primary/network.c \
+lib/can/lib/bms/bms_network.c \
+lib/can/lib/primary/primary_network.c \
+lib/can/lib/secondary/secondary_network.c \
 lib/micro-libs/blink/blink.c \
 lib/micro-libs/cli/cli.c \
 lib/micro-libs/fsm/fsm.c \

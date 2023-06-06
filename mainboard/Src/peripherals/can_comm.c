@@ -18,7 +18,7 @@
 #include "mainboard_config.h"
 #include "usart.h"
 #include "bootloader.h"
-#include "primary/network.h"
+#include "primary/primary_network.h"
 
 #include <string.h>
 
@@ -132,7 +132,7 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         raw_volts.max_cell_voltage = voltage_get_cell_max(NULL);
         raw_volts.min_cell_voltage = voltage_get_cell_min(NULL);
 
-        tx_header.DLC = primary_hv_voltage_pack(buffer, &raw_volts, CAN_MAX_PAYLOAD_LENGTH);
+        tx_header.DLC = primary_hv_voltage_pack(buffer, &raw_volts, PRIMARY_HV_VOLTAGE_BIT_SIZE);
     } else if (id == PRIMARY_HV_CURRENT_FRAME_ID) {
         primary_hv_current_t raw_curr;
         primary_hv_current_converted_t conv_curr;
@@ -142,7 +142,7 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
 
         primary_hv_current_conversion_to_raw_struct(&raw_curr, &conv_curr);
 
-        tx_header.DLC = primary_hv_current_pack(buffer, &raw_curr, CAN_MAX_PAYLOAD_LENGTH);
+        tx_header.DLC = primary_hv_current_pack(buffer, &raw_curr, PRIMARY_HV_CURRENT_BIT_SIZE);
     } else if (id == PRIMARY_TS_STATUS_FRAME_ID) {
         primary_ts_status_t raw_status;
         primary_ts_status_converted_t conv_status;
@@ -168,7 +168,7 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         // Convert ts status to raw
         primary_ts_status_conversion_to_raw_struct(&raw_status, &conv_status);
         
-        tx_header.DLC = primary_ts_status_pack(buffer, &raw_status, CAN_MAX_PAYLOAD_LENGTH);
+        tx_header.DLC = primary_ts_status_pack(buffer, &raw_status, PRIMARY_TS_STATUS_BIT_SIZE);
     } else if (id == PRIMARY_HV_TEMP_FRAME_ID) {
         primary_hv_temp_t raw_temp;
         primary_hv_temp_converted_t conv_temp;
@@ -180,7 +180,7 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         // Convert temperatures to raw
         primary_hv_temp_conversion_to_raw_struct(&raw_temp, &conv_temp);
 
-        tx_header.DLC = primary_hv_temp_pack(buffer, &raw_temp, CAN_MAX_PAYLOAD_LENGTH);
+        tx_header.DLC = primary_hv_temp_pack(buffer, &raw_temp, PRIMARY_HV_TEMP_BIT_SIZE);
     } else if (id == PRIMARY_HV_ERRORS_FRAME_ID) {
         primary_hv_errors_t raw_errors = { 0 };
         primary_hv_errors_converted_t conv_errors  = { 0 };
@@ -282,7 +282,7 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         // Convert errors to raw
         primary_hv_errors_conversion_to_raw_struct(&raw_errors, &conv_errors);
 
-        tx_header.DLC = primary_hv_errors_pack(buffer, &raw_errors, CAN_MAX_PAYLOAD_LENGTH);
+        tx_header.DLC = primary_hv_errors_pack(buffer, &raw_errors, PRIMARY_HV_ERRORS_BIT_SIZE);
     } else if (id == PRIMARY_HV_CELL_BALANCING_STATUS_FRAME_ID) {
         primary_hv_cell_balancing_status_t raw_bal_status;
         primary_hv_cell_balancing_status_converted_t conv_bal_status;
@@ -304,7 +304,7 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         // Convert bal status to raw
         primary_hv_cell_balancing_status_conversion_to_raw_struct(&raw_bal_status, &conv_bal_status);
 
-        tx_header.DLC = primary_hv_cell_balancing_status_pack(buffer, &raw_bal_status, CAN_MAX_PAYLOAD_LENGTH);
+        tx_header.DLC = primary_hv_cell_balancing_status_pack(buffer, &raw_bal_status, PRIMARY_HV_CELL_BALANCING_STATUS_BIT_SIZE);
     } else if (id == PRIMARY_HV_CELLS_TEMP_FRAME_ID) {
         uint8_t status = 0;
         temperature_t * temps = temperature_get_all();
@@ -324,7 +324,7 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
             // Convert temperatures to raw
             primary_hv_cells_temp_conversion_to_raw_struct(&raw_temps, &conv_temps);
 
-            tx_header.DLC = primary_hv_cells_temp_pack(buffer, &raw_temps, CAN_MAX_PAYLOAD_LENGTH);
+            tx_header.DLC = primary_hv_cells_temp_pack(buffer, &raw_temps, PRIMARY_HV_CELLS_TEMP_BIT_SIZE);
             status |= can_send(&CAR_CAN, buffer, &tx_header);
             HAL_Delay(1);
         }
@@ -346,7 +346,7 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
             // Convert volatges to raw
             primary_hv_cells_voltage_conversion_to_raw_struct(&raw_volts, &conv_volts);
 
-            tx_header.DLC = primary_hv_cells_voltage_pack(buffer, &raw_volts, CAN_MAX_PAYLOAD_LENGTH);
+            tx_header.DLC = primary_hv_cells_voltage_pack(buffer, &raw_volts, PRIMARY_HV_CELLS_VOLTAGE_BIT_SIZE);
             status |= can_send(&CAR_CAN, buffer, &tx_header);
             HAL_Delay(1);
         }
@@ -363,7 +363,7 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         // Convert can forward to raw
         primary_hv_can_forward_status_conversion_to_raw_struct(&raw_can_forward, &conv_can_forward);
 
-        tx_header.DLC = primary_hv_can_forward_status_pack(buffer, &raw_can_forward, CAN_MAX_PAYLOAD_LENGTH);
+        tx_header.DLC = primary_hv_can_forward_status_pack(buffer, &raw_can_forward, PRIMARY_HV_CAN_FORWARD_STATUS_BIT_SIZE);
     } else if (id == PRIMARY_HV_VERSION_FRAME_ID) {
         primary_hv_version_t raw_version;
         primary_hv_version_converted_t conv_version;
@@ -373,7 +373,7 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
 
         primary_hv_version_conversion_to_raw_struct(&raw_version, &conv_version);
 
-        tx_header.DLC = primary_hv_version_pack(buffer, &raw_version, CAN_MAX_PAYLOAD_LENGTH);
+        tx_header.DLC = primary_hv_version_pack(buffer, &raw_version, PRIMARY_HV_VERSION_BIT_SIZE);
     } else
         return HAL_ERROR;
 
@@ -397,7 +397,7 @@ HAL_StatusTypeDef can_bms_send(uint16_t id) {
             // Convert bal to raw
             bms_balancing_conversion_to_raw_struct(&raw_bal, &bal.cells[i]);
 
-            tx_header.DLC = bms_balancing_pack(buffer, &raw_bal, CAN_MAX_PAYLOAD_LENGTH);
+            tx_header.DLC = bms_balancing_pack(buffer, &raw_bal, BMS_BALANCING_BIT_SIZE);
             status |= can_send(&BMS_CAN, buffer, &tx_header);
         }
         return status == 0 ? HAL_OK : HAL_ERROR;
@@ -410,7 +410,7 @@ HAL_StatusTypeDef can_bms_send(uint16_t id) {
         // Convert fw update to raw
         bms_fw_update_conversion_to_raw_struct(&raw_fw_update, &conv_fw_update);
 
-        tx_header.DLC = bms_fw_update_pack(buffer, &raw_fw_update, CAN_MAX_PAYLOAD_LENGTH);  //TODO: set board_index
+        tx_header.DLC = bms_fw_update_pack(buffer, &raw_fw_update, BMS_FW_UPDATE_BIT_SIZE);  //TODO: set board_index
         return can_send(&BMS_CAN, buffer, &tx_header);
     } else
         return HAL_ERROR;
@@ -440,7 +440,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
         if (rx_header.StdId == BMS_VOLTAGES_FRAME_ID) {
             uint8_t offset = 0;
             bms_voltages_t raw_volts;
-            bms_voltages_unpack(&raw_volts, rx_data, CAN_MAX_PAYLOAD_LENGTH);
+            bms_voltages_unpack(&raw_volts, rx_data, BMS_VOLTAGES_BIT_SIZE);
             switch (rx_header.DLC) {
                 case BMS_VOLTAGES_CELLBOARD_ID_CELLBOARD_0_CHOICE:
                     ++cellboards_msgs.cellboard0;
@@ -475,7 +475,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
             uint8_t offset = 0;
             bms_temperatures_t raw_temps;
 
-            bms_temperatures_unpack(&raw_temps, rx_data, CAN_MAX_PAYLOAD_LENGTH);
+            bms_temperatures_unpack(&raw_temps, rx_data, BMS_TEMPERATURES_BIT_SIZE);
 
             switch (rx_header.StdId) {
                 case BMS_TEMPERATURES_CELLBOARD_ID_CELLBOARD_0_CHOICE:
@@ -515,7 +515,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
             uint8_t index = 0;
             bms_board_status_t status;
 
-            bms_board_status_unpack(&status, rx_data, CAN_MAX_PAYLOAD_LENGTH);
+            bms_board_status_unpack(&status, rx_data, BMS_BOARD_STATUS_BIT_SIZE);
             switch (rx_header.StdId) {
                 case BMS_TEMPERATURES_CELLBOARD_ID_CELLBOARD_0_CHOICE:
                     ++cellboards_msgs.cellboard0;
@@ -589,23 +589,23 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 
         error_reset(ERROR_CAN, 1);
 
-        if (rx_header.StdId == PRIMARY_SET_TS_STATUS_HANDCART_FRAME_ID) { // || rx_header.StdId == primary_ID_SET_TS_STATUS_DAS
-            primary_set_ts_status_handcart_t ts_status;
+        if (rx_header.StdId == PRIMARY_SET_TS_STATUS_DAS_FRAME_ID || rx_header.StdId == PRIMARY_SET_TS_STATUS_HANDCART_FRAME_ID) {
+            primary_set_ts_status_das_t ts_status;
 
-            primary_set_ts_status_handcart_unpack(&ts_status, rx_data, CAN_MAX_PAYLOAD_LENGTH);
+            primary_set_ts_status_das_unpack(&ts_status, rx_data, PRIMARY_SET_TS_STATUS_DAS_BIT_SIZE);
 
             switch (ts_status.ts_status_set) {
-                case primary_set_ts_status_handcart_ts_status_set_OFF:
+                case primary_set_ts_status_das_ts_status_set_OFF:
                     fsm_trigger_event(bms.fsm, BMS_EV_TS_OFF);
                     break;
-                case primary_set_ts_status_handcart_ts_status_set_ON:
+                case primary_set_ts_status_das_ts_status_set_ON:
                     fsm_trigger_event(bms.fsm, BMS_EV_TS_ON);
                     break;
             }
         } else if (rx_header.StdId == PRIMARY_SET_CELL_BALANCING_STATUS_FRAME_ID) {
             primary_set_cell_balancing_status_t balancing_status;
 
-            primary_set_cell_balancing_status_unpack(&balancing_status, rx_data, CAN_MAX_PAYLOAD_LENGTH);
+            primary_set_cell_balancing_status_unpack(&balancing_status, rx_data, PRIMARY_SET_CELL_BALANCING_STATUS_BIT_SIZE);
 
             switch (balancing_status.set_balancing_status) {
                 case primary_set_cell_balancing_status_set_balancing_status_ON:
@@ -618,13 +618,13 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
         } else if (rx_header.StdId == PRIMARY_HANDCART_STATUS_FRAME_ID) {
             primary_handcart_status_t handcart_status;
 
-            primary_handcart_status_unpack(&handcart_status, rx_data, CAN_MAX_PAYLOAD_LENGTH);
+            primary_handcart_status_unpack(&handcart_status, rx_data, PRIMARY_HANDCART_STATUS_BIT_SIZE);
             
             bms.handcart_connected = handcart_status.connected;
         } else if (rx_header.StdId == PRIMARY_HV_CAN_FORWARD_FRAME_ID) {
             primary_hv_can_forward_t hv_can_forward;
 
-            primary_hv_can_forward_unpack(&hv_can_forward, rx_data, CAN_MAX_PAYLOAD_LENGTH);
+            primary_hv_can_forward_unpack(&hv_can_forward, rx_data, PRIMARY_HV_CAN_FORWARD_BIT_SIZE);
 
             switch (hv_can_forward.can_forward_set) {
                 case primary_hv_can_forward_can_forward_set_OFF:
