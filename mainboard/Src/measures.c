@@ -1,6 +1,6 @@
 #include "measures.h"
 
-#include "adc124s021.h"
+#include "max22530.h"
 #include "bms_fsm.h"
 #include "can_comm.h"
 #include "pwm.h"
@@ -9,6 +9,7 @@
 #include "temperature.h"
 #include "voltage.h"
 
+MAX22530_HandleTypeDef adc_handler;
 measures_flags_t flags;
 
 void measures_init() {
@@ -25,6 +26,9 @@ void measures_init() {
     HAL_TIM_OC_Start_IT(&HTIM_MEASURES, TIM_CHANNEL_3);
     HAL_TIM_OC_Start_IT(&HTIM_MEASURES, TIM_CHANNEL_4);
     flags = 0;
+
+    // Init ADC
+    max22530_init(&adc_handler, &SPI_ADC, ADC_CS_GPIO_Port, ADC_CS_Pin);
 }
 
 void measures_check_flags() {
@@ -63,11 +67,10 @@ void measures_check_flags() {
 }
 
 void measures_voltage_current_soc() {
-    ADC124S021_CH chs[3]     = {ADC124_BUS_CHANNEL, ADC124_INTERNAL_CHANNEL, ADC124_SHUNT_CHANNEL};
-    float adc124_measures[3] = {0};
-    if (adc124s021_read_channels(&SPI_ADC124S, chs, 3, adc124_measures)) {
-        voltage_measure(adc124_measures);
-        current_read(adc124_measures[2]);
+    float volts[MAX22530_CHANNEL_COUNT] = { 0 };
+    if (max22530_read_all_channels(&adc_handler, volts) == HAL_OK) {
+        voltage_measure(volts);
+        current_read(volts[2]);
     }
     soc_sample_energy(HAL_GetTick());
 }

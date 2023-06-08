@@ -238,7 +238,6 @@ void _airn_close_entry(fsm FSM) {
     cli_bms_debug("airn close state", 16);
 
     // TODO: To remove, for testing purposes only
-    HAL_Delay(50);
     fsm_trigger_event(bms.fsm, BMS_EV_FB_CHECK);
 }
 
@@ -275,7 +274,6 @@ void _airn_status_entry(fsm FSM) {
     cli_bms_debug("airn status state", 17);
 
     // TODO: To remove, for testing purposes only
-    HAL_Delay(50);
     fsm_trigger_event(bms.fsm, BMS_EV_FB_CHECK);
 }
 
@@ -319,7 +317,6 @@ void _precharge_entry(fsm FSM) {
 
     // TODO: To remove, for testing purposes only
     can_car_send(PRIMARY_TS_STATUS_FRAME_ID);
-    HAL_Delay(5000);
     fsm_trigger_event(bms.fsm, BMS_EV_PRECHARGE_CHECK);
 }
 
@@ -384,6 +381,7 @@ void _on_entry(fsm FSM) {
 
     // TODO: To remove, for testing purposes only
     can_car_send(PRIMARY_TS_STATUS_FRAME_ID);
+    ;
 }
 
 void _on_handler(fsm FSM, uint8_t event) {
@@ -416,9 +414,6 @@ void _on_exit(fsm FSM) {
     // TODO: Remove comments, for testing purposes only
     // _stop_fb_timeout_timer();
     // _stop_fb_check_timer();
-
-    // TODO: To remove, for testing purposes only
-    HAL_Delay(2000);
 }
 
 void _fault_entry(fsm FSM) {

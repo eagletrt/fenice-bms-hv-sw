@@ -50,7 +50,7 @@ void voltage_measure(float voltages[2]) {
     ADC124S021_CH chs[2] = {ADC124_BUS_CHANNEL, ADC124_INTERNAL_CHANNEL};
     voltage.vbat_sum        = 0;
 
-    if (voltages != NULL || adc124s021_read_channels(&SPI_ADC124S, chs, 2, voltages)) {
+    if (voltages != NULL || adc124s021_read_channels(&SPI_ADC, chs, 2, voltages)) {
         voltage.vts_p      = _voltage_conv_adc_to_voltage(voltages[0]);
         voltage.vbat_adc = _voltage_conv_adc_to_voltage(voltages[1]);
     }

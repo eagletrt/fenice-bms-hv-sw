@@ -7,7 +7,7 @@
 #include <string.h>
 
 void fans_init() {
-    pwm_set_period(&HTIM_PWM, PWM_FANS_STANDARD_PERIOD);
+    pwm_set_period(&HTIM_PWM, 1);//PWM_FANS_STANDARD_PERIOD);
     fans_set_speed(0.15);
     pwm_start_channel(&HTIM_PWM, PWM_FANS_CHANNEL);
 }

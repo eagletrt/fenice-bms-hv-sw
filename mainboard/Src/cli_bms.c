@@ -524,7 +524,7 @@ void _cli_balance(uint16_t argc, char **argv, char *out) {
         bms_balancing_t raw = { 0 };
         bms_balancing_conversion_to_raw_struct(&raw, &cells);
 
-        bms_balancing_pack(buffer, &raw, BMS_BALANCING_BIT_SIZE);
+        bms_balancing_pack(buffer, &raw, BMS_BALANCING_BYTE_SIZE);
         can_send(&BMS_CAN, buffer, &tx_header);
 
         sprintf(out + strlen(out) - 1, "]\r\non board %d\r\n", board);

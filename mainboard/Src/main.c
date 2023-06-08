@@ -21,7 +21,6 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
-#include "adc124s021.h"
 #include "bal_fsm.h"
 #include "bms_fsm.h"
 #include "cli_bms.h"
@@ -163,6 +162,9 @@ int main(void)
         // if (HAL_GetTick() > 1500 && !HAL_GPIO_ReadPin(BMS_FAULT_GPIO_Port, BMS_FAULT_Pin))
         //     HAL_GPIO_WritePin(BMS_FAULT_GPIO_Port, BMS_FAULT_Pin, BMS_FAULT_OFF_VALUE);
         cli_loop(&cli_bms);
+
+        can_car_send(PRIMARY_TS_STATUS_FRAME_ID);
+        HAL_Delay(500);
     }
     return 0;
   /* USER CODE END 3 */
