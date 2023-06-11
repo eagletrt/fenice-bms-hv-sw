@@ -36,6 +36,9 @@ BUILD_DIR = build
 ######################################
 # C sources
 C_SOURCES =  \
+Core/Lib/can/lib/bms/bms_network.c \
+Core/Lib/can/lib/primary/primary_network.c \
+Core/Lib/can/lib/secondary/secondary_network.c \
 Core/Lib/micro-libs/blink/blink.c \
 Core/Lib/micro-libs/fsm/fsm.c \
 Core/Lib/micro-libs/m95256/m95256.c \
@@ -140,7 +143,8 @@ AS_DEFS =
 # C defines
 C_DEFS =  \
 -DSTM32L432xx \
--DUSE_HAL_DRIVER
+-DUSE_HAL_DRIVER \
+-Dbms_NETWORK_IMPLEMENTATION
 
 
 # CXX defines

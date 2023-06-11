@@ -17,6 +17,7 @@
 #include "spi.h"
 #include "temp.h"
 #include "volt.h"
+#include "bms/bms_network.h"
 
 #include <math.h>
 #include <string.h>
@@ -70,6 +71,7 @@ void can_send(uint16_t topic_id) {
                 break;
         }
 
+        // TODO: Check where to set cellboard index in the tx_header
         switch (cellboard_index) {
             case 0:
                 tx_header.DLC = BMS_BOARD_STATUS_CELLBOARD_ID_CELLBOARD_0_CHOICE;
@@ -96,11 +98,12 @@ void can_send(uint16_t topic_id) {
 
         bms_board_status_conversion_to_raw_struct(&raw_state, &conv_state);
 
-        tx_header.DLC = bms_board_status_pack(buffer, &raw_state, CAN_MAX_PAYLOAD_LENGTH);
+        tx_header.DLC = bms_board_status_pack(buffer, &raw_state, BMS_BOARD_STATUS_BYTE_SIZE);
 
         _can_send(&BMS_CAN, buffer, &tx_header);
         return;
     } else if (topic_id == BMS_TEMPERATURES_FRAME_ID) {
+        // TODO: Check where to set cellboard index in the tx_header
         switch (cellboard_index) {
             case 0:
                 tx_header.DLC = BMS_TEMPERATURES_CELLBOARD_ID_CELLBOARD_0_CHOICE;
@@ -137,13 +140,14 @@ void can_send(uint16_t topic_id) {
 
             bms_temperatures_conversion_to_raw_struct(&raw_temps, &conv_temps);
 
-            tx_header.DLC = bms_temperatures_pack(buffer, &raw_temps, CAN_MAX_PAYLOAD_LENGTH);
+            tx_header.DLC = bms_temperatures_pack(buffer, &raw_temps, BMS_TEMPERATURES_BYTE_SIZE);
             _can_send(&BMS_CAN, buffer, &tx_header);
             HAL_Delay(1);
         }
 
         return;
     } else if (topic_id == BMS_VOLTAGES_FRAME_ID) {
+        // TODO: Check where to set cellboard index in the tx_header
         switch (cellboard_index) {
             case 0:
                 tx_header.DLC = BMS_VOLTAGES_CELLBOARD_ID_CELLBOARD_0_CHOICE;
@@ -181,7 +185,7 @@ void can_send(uint16_t topic_id) {
             // Convert voltage to raw
             bms_voltages_conversion_to_raw_struct(&raw_volts, &conv_volts);
 
-            tx_header.DLC = bms_voltages_pack(buffer, &raw_volts, CAN_MAX_PAYLOAD_LENGTH);
+            tx_header.DLC = bms_voltages_pack(buffer, &raw_volts, BMS_VOLTAGES_BYTE_SIZE);
             _can_send(&BMS_CAN, buffer, &tx_header);
             HAL_Delay(1);
         }
@@ -201,7 +205,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
 
     if (rx_header.StdId == BMS_BALANCING_FRAME_ID) {
         bms_balancing_t balancing;
-        bms_balancing_unpack(&balancing, rx_data, CAN_MAX_PAYLOAD_LENGTH);
+        bms_balancing_unpack(&balancing, rx_data, BMS_BALANCING_BYTE_SIZE);
 
         if (balancing.board_index != cellboard_index)
             return;

@@ -15,6 +15,7 @@
 #include "cellboard_config.h"
 #include "fsm.h"
 #include "tim.h"
+#include "bms/bms_network.h"
 
 #include <inttypes.h>
 

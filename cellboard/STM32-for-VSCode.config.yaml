@@ -23,6 +23,7 @@ ldscript: STM32L432KBUx_FLASH.ld # linker script
 cDefinitions: 
   - USE_HAL_DRIVER
   - STM32L432xx
+  - bms_NETWORK_IMPLEMENTATION
 
 cxxDefinitions: []
 asDefinitions: []
@@ -88,7 +89,9 @@ sourceFiles:
   - Core/Lib/micro-libs/fsm/**
   - Core/Lib/micro-libs/blink/**
   - Core/Lib/micro-libs/timer-utils/**
-  - Core/Lib/can/lib/
+  - Core/Lib/can/lib/bms/*.c
+  - Core/Lib/can/lib/primary/*.c
+  - Core/Lib/can/lib/secondary/*.c
 
 
 # When no makefile is present it will show a warning pop-up.

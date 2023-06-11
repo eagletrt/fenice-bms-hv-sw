@@ -10,7 +10,6 @@
 #include "peripherals/ltc6813_utils.h"
 
 #include "main.h"
-#include "bms/network.h"
 
 #include <math.h>
 
