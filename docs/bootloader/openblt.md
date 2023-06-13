@@ -47,7 +47,8 @@ The last step requires:
 2. [Can-utils](https://elinux.org/Can-utils) installed in the device
 3. [Bootcommander](https://www.feaser.com/openblt/doku.php?id=manual:bootcommander) installed in the device
 
-When everything is ready the project can be flashed using **bootcommander**, with:
+When everything is ready the project can be flashed by resetting the microcontroller (via an appropriate *CAN message*)
+and then sending the program to flash using the **bootcommander** tool, with:
 - The `-t` flag set to `xcp_can`
 - The selected CAN peripheral (`-d` flag)
 - The *baud rate* (`-b` flag)
@@ -56,5 +57,6 @@ When everything is ready the project can be flashed using **bootcommander**, wit
 
 *Example*:
 ```bash
-bootcommander -t=xcp_can -d=can0 -b=1000000 -tid=667 -rid=7E1 fenice-bms.srec
+cansend can1 005#00 &&
+bootcommander -t=xcp_can -d=can1 -b=1000000 -tid=667 -rid=7E1 fenice-bms.srec
 ```
