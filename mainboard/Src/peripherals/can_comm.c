@@ -61,7 +61,7 @@ void can_bms_init() {
     HAL_CAN_ConfigFilter(&BMS_CAN, &filter);
     HAL_CAN_ActivateNotification(&BMS_CAN, CAN_IT_ERROR | CAN_IT_RX_FIFO0_MSG_PENDING);
     HAL_CAN_Start(&BMS_CAN);
-
+    
     can_tx_header_init();
 }
 
@@ -405,7 +405,8 @@ HAL_StatusTypeDef can_bms_send(uint16_t id) {
         bms_fw_update_t raw_fw_update;
         bms_fw_update_converted_t conv_fw_update;
 
-        conv_fw_update.board_index = 0;
+        conv_fw_update.board_index = 4;
+        conv_fw_update.cellboard_id = 4;
 
         // Convert fw update to raw
         bms_fw_update_conversion_to_raw_struct(&raw_fw_update, &conv_fw_update);

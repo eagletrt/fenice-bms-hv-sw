@@ -28,7 +28,7 @@ void transition_callback(fsm handle);
 
 void bal_fsm_init() {
     bal.cycle_length  = DCTO_30S;
-    bal.fsm           = fsm_init(BAL_NUM_STATES, BAL_EV_NUM, NULL, transition_callback);
+    bal.fsm           = fsm_init(BAL_NUM_STATES, BAL_EV_NUM, NULL, NULL);
     bal.is_s_pin_high = 0;
 
     fsm_state state;
@@ -49,7 +49,7 @@ void bal_fsm_init() {
 }
 
 void transition_callback(fsm handle) {
-    can_send(0); //TODO: sborato
+    can_send(BMS_BOARD_STATUS_FRAME_ID); // 0); //TODO: sborato
 }
 
 void off_entry(fsm handle) {

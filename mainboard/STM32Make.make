@@ -160,8 +160,7 @@ C_DEFS =  \
 -DSTM32F446xx \
 -DUSE_HAL_DRIVER \
 -Dbms_NETWORK_IMPLEMENTATION \
--Dprimary_NETWORK_IMPLEMENTATION \
--Dsecondary_NETWORK_IMPLEMENTATION
+-Dprimary_NETWORK_IMPLEMENTATION
 
 
 # CXX defines
@@ -222,7 +221,7 @@ CXXFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 # LDFLAGS
 #######################################
 # link script
-LDSCRIPT = STM32F446RETx_FLASH_shifted.ld
+LDSCRIPT = STM32F446RETx_FLASH.ld
 
 # libraries
 LIBS = -lc -lm -lnosys 

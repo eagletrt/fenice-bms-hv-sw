@@ -56,7 +56,7 @@ void can_send(uint16_t topic_id) {
     tx_header.IDE   = CAN_ID_STD;
     tx_header.RTR   = CAN_RTR_DATA;
 
-    if (topic_id == 0/*bms_topic_filter_STATUS*/) {
+    if (topic_id == BMS_BOARD_STATUS_FRAME_ID /*bms_topic_filter_STATUS*/) {
         bms_board_status_t raw_state;
         bms_board_status_converted_t conv_state;
         
@@ -71,67 +71,31 @@ void can_send(uint16_t topic_id) {
                 break;
         }
 
-        // TODO: Check where to set cellboard index in the tx_header
-        switch (cellboard_index) {
-            case 0:
-                tx_header.DLC = BMS_BOARD_STATUS_CELLBOARD_ID_CELLBOARD_0_CHOICE;
-                break;
-            case 1:
-                tx_header.DLC = BMS_BOARD_STATUS_CELLBOARD_ID_CELLBOARD_1_CHOICE;
-                break;
-            case 2:
-                tx_header.DLC = BMS_BOARD_STATUS_CELLBOARD_ID_CELLBOARD_2_CHOICE;
-                break;
-            case 3:
-                tx_header.DLC = BMS_BOARD_STATUS_CELLBOARD_ID_CELLBOARD_3_CHOICE;
-                break;
-            case 4:
-                tx_header.DLC = BMS_BOARD_STATUS_CELLBOARD_ID_CELLBOARD_4_CHOICE;
-                break;
-            case 7:
-            case 5:
-                tx_header.DLC = BMS_BOARD_STATUS_CELLBOARD_ID_CELLBOARD_5_CHOICE;
-                break;
-            default:
-                return;
-        }
+        // Add cellboard index in the payload
+        conv_state.cellboard_id = (cellboard_index == 7)
+            ? bms_board_status_cellboard_id_CELLBOARD_5
+            : cellboard_index;
 
         bms_board_status_conversion_to_raw_struct(&raw_state, &conv_state);
 
+        tx_header.StdId = BMS_BOARD_STATUS_FRAME_ID;
         tx_header.DLC = bms_board_status_pack(buffer, &raw_state, BMS_BOARD_STATUS_BYTE_SIZE);
 
         _can_send(&BMS_CAN, buffer, &tx_header);
         return;
     } else if (topic_id == BMS_TEMPERATURES_FRAME_ID) {
-        // TODO: Check where to set cellboard index in the tx_header
-        switch (cellboard_index) {
-            case 0:
-                tx_header.DLC = BMS_TEMPERATURES_CELLBOARD_ID_CELLBOARD_0_CHOICE;
-                break;
-            case 1:
-                tx_header.DLC = BMS_TEMPERATURES_CELLBOARD_ID_CELLBOARD_1_CHOICE;
-                break;
-            case 2:
-                tx_header.DLC = BMS_TEMPERATURES_CELLBOARD_ID_CELLBOARD_2_CHOICE;
-                break;
-            case 3:
-                tx_header.DLC = BMS_TEMPERATURES_CELLBOARD_ID_CELLBOARD_3_CHOICE;
-                break;
-            case 4:
-                tx_header.DLC = BMS_TEMPERATURES_CELLBOARD_ID_CELLBOARD_4_CHOICE;
-                break;
-            case 7:
-            case 5:
-                tx_header.DLC = BMS_TEMPERATURES_CELLBOARD_ID_CELLBOARD_5_CHOICE;
-                break;
-            default:
-                return;
-        }
+        tx_header.StdId = BMS_TEMPERATURES_FRAME_ID;
 
-        bms_temperatures_t raw_temps;
-        bms_temperatures_converted_t conv_temps;
         register uint8_t i;
         for (i = 0; i < CELLBOARD_TEMP_SENSOR_COUNT; i += 4) {
+            bms_temperatures_t raw_temps;
+            bms_temperatures_converted_t conv_temps;
+
+            // Add cellboard index in the payload
+            conv_temps.cellboard_id = (cellboard_index == 7)
+                ? bms_temperatures_cellboard_id_CELLBOARD_5
+                : cellboard_index;
+
             conv_temps.start_index = i,
             conv_temps.temp0 = temperatures[i];
             conv_temps.temp1 = temperatures[i + 1];
@@ -139,7 +103,7 @@ void can_send(uint16_t topic_id) {
             conv_temps.temp3 = temperatures[i + 3];
 
             bms_temperatures_conversion_to_raw_struct(&raw_temps, &conv_temps);
-
+            
             tx_header.DLC = bms_temperatures_pack(buffer, &raw_temps, BMS_TEMPERATURES_BYTE_SIZE);
             _can_send(&BMS_CAN, buffer, &tx_header);
             HAL_Delay(1);
@@ -147,35 +111,17 @@ void can_send(uint16_t topic_id) {
 
         return;
     } else if (topic_id == BMS_VOLTAGES_FRAME_ID) {
-        // TODO: Check where to set cellboard index in the tx_header
-        switch (cellboard_index) {
-            case 0:
-                tx_header.DLC = BMS_VOLTAGES_CELLBOARD_ID_CELLBOARD_0_CHOICE;
-                break;
-            case 1:
-                tx_header.DLC = BMS_VOLTAGES_CELLBOARD_ID_CELLBOARD_1_CHOICE;
-                break;
-            case 2:
-                tx_header.DLC = BMS_VOLTAGES_CELLBOARD_ID_CELLBOARD_2_CHOICE;
-                break;
-            case 3:
-                tx_header.DLC = BMS_VOLTAGES_CELLBOARD_ID_CELLBOARD_3_CHOICE;
-                break;
-            case 4:
-                tx_header.DLC = BMS_VOLTAGES_CELLBOARD_ID_CELLBOARD_4_CHOICE;
-                break;
-            case 7:
-            case 5:
-                tx_header.DLC = BMS_VOLTAGES_CELLBOARD_ID_CELLBOARD_5_CHOICE;
-                break;
-            default:
-                return;
-        }
+        tx_header.StdId = BMS_VOLTAGES_FRAME_ID;
 
         register uint8_t i;
         for (i = 0; i < CELLBOARD_CELL_COUNT; i += 3) {
             bms_voltages_t raw_volts;
             bms_voltages_converted_t conv_volts;
+     
+            // Add cellboard index in the payload
+            conv_volts.cellboard_id = (cellboard_index == 7)
+                ? bms_voltages_cellboard_id_CELLBOARD_5
+                : cellboard_index;
 
             conv_volts.start_index = i;
             conv_volts.voltage0 = voltages[i];
@@ -222,6 +168,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
     }
 }
 
+#include "usart.h"
 void can_init_with_filter() {
     CAN_FilterTypeDef filter;
     filter.FilterMode       = CAN_FILTERMODE_IDMASK;

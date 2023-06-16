@@ -25,7 +25,6 @@ cDefinitions:
   - STM32F446xx
   - bms_NETWORK_IMPLEMENTATION
   - primary_NETWORK_IMPLEMENTATION
-  - secondary_NETWORK_IMPLEMENTATION
 
 cxxDefinitions: []
 asDefinitions: []
