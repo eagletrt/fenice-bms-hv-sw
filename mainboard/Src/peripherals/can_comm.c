@@ -405,8 +405,9 @@ HAL_StatusTypeDef can_bms_send(uint16_t id) {
         bms_fw_update_t raw_fw_update;
         bms_fw_update_converted_t conv_fw_update;
 
-        conv_fw_update.board_index = 4;
-        conv_fw_update.cellboard_id = 4;
+        // TODO: Set cellboard id and board index (not used in cellboard)
+        conv_fw_update.cellboard_id = 0;
+        conv_fw_update.board_index = 0;
 
         // Convert fw update to raw
         bms_fw_update_conversion_to_raw_struct(&raw_fw_update, &conv_fw_update);
