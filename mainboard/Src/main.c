@@ -34,6 +34,7 @@
 #include "pack/current.h"
 #include "pack/pack.h"
 #include "soc.h"
+#include "internal_voltage.h"
 
 #include <m95256.h>
 #include <string.h>
@@ -133,7 +134,7 @@ int main(void)
     cli_bms_init();
     error_init();
 
-    voltage_init();
+    internal_voltage_init();
     bal_fsm_init();
     bms_fsm_init();
     current_zero();

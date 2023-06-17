@@ -7,7 +7,7 @@
  */
 
 #include "main.h"
-#include "pack/voltage.h"
+#include "fenice_config.h"
 
 #define ADC124_BUS_CHANNEL      ADC124S_CH2
 #define ADC124_INTERNAL_CHANNEL ADC124S_CH3

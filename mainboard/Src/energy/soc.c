@@ -10,7 +10,6 @@
 #include "energy/soc.h"
 
 #include "energy/energy.h"
-#include "pack/voltage.h"
 
 #define ENERGY_VERSION 0x5555
 #define ENERGY_ADDR    0x30

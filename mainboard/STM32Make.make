@@ -76,10 +76,11 @@ Src/gpio.c \
 Src/imd.c \
 Src/main.c \
 Src/measures.c \
+Src/pack/cell_voltage.c \
 Src/pack/current.c \
+Src/pack/internal_voltage.c \
 Src/pack/pack.c \
 Src/pack/temperature.c \
-Src/pack/voltage.c \
 Src/peripherals/adc124s021.c \
 Src/peripherals/can_comm.c \
 Src/peripherals/max22530.c \
@@ -221,7 +222,7 @@ CXXFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 # LDFLAGS
 #######################################
 # link script
-LDSCRIPT = STM32F446RETx_FLASH_shifted.ld
+LDSCRIPT = STM32F446RETx_FLASH.ld
 
 # libraries
 LIBS = -lc -lm -lnosys 

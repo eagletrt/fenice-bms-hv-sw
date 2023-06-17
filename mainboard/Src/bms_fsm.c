@@ -18,9 +18,9 @@
 #include "main.h"
 #include "mainboard_config.h"
 #include "pack/pack.h"
-#include "pack/voltage.h"
 #include "peripherals/can_comm.h"
 #include "tim.h"
+#include "internal_voltage.h"
 
 #include <inttypes.h>
 #include <stdio.h>
@@ -325,14 +325,14 @@ void _precharge_handler(fsm FSM, uint8_t event) {
 
         case BMS_EV_PRECHARGE_CHECK:
             char c[5] = {'\0'};
-            snprintf(c, 5, "%4.2f", voltage_get_vts_p() / (voltage_get_vbat_adc() * PRECHARGE_VOLTAGE_THRESHOLD));
+            snprintf(c, 5, "%4.2f", internal_voltage_get_tsp() / (internal_voltage_get_bat() * PRECHARGE_VOLTAGE_THRESHOLD));
             cli_bms_debug(c, 5);
 
             if (HAL_GetTick() - tick > 10000 ||
-                (!bms.handcart_connected && voltage_get_vts_p() > 0 &&
-                 voltage_get_vts_p() >= voltage_get_vbat_adc() * PRECHARGE_VOLTAGE_THRESHOLD) ||
-                (bms.handcart_connected && voltage_get_vts_p() > 0 &&
-                 voltage_get_vts_p() >= voltage_get_vbat_adc() * PRECHARGE_VOLTAGE_THRESHOLD_CARELINO)) {
+                (!bms.handcart_connected && internal_voltage_get_tsp() > 0 &&
+                 internal_voltage_get_tsp() >= internal_voltage_get_bat() * PRECHARGE_VOLTAGE_THRESHOLD) ||
+                (bms.handcart_connected && internal_voltage_get_tsp() > 0 &&
+                 internal_voltage_get_tsp() >= internal_voltage_get_bat() * PRECHARGE_VOLTAGE_THRESHOLD_CARELINO)) {
                 pack_set_airp_off(AIRP_ON_VALUE);
                 // _stop_fb_check_timer();
                 cli_bms_debug("Precharge ok", 18);

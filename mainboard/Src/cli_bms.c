@@ -21,10 +21,11 @@
 #include "mainboard_config.h"
 #include "pack/pack.h"
 #include "pack/temperature.h"
-#include "pack/voltage.h"
 #include "soc.h"
 #include "usart.h"
 #include "bms/bms_network.h"
+#include "internal_voltage.h"
+#include "cell_voltage.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -162,24 +163,30 @@ void cli_bms_debug(char *text, size_t length) {
 
 void _cli_volts(uint16_t argc, char **argv, char *out) {
     if (strcmp(argv[1], "") == 0) {
-        voltage_t max = voltage_get_cell_max(NULL);
-        voltage_t min = voltage_get_cell_min(NULL);
+        float max = cell_voltage_get_max();
+        float min = cell_voltage_get_min();
+        float sum = cell_voltage_get_sum();
         sprintf(
             out,
-            "vts_p.......%.2f V\r\n"
-            "vbat_adc....%.2f V\r\n"
-            "vbat_sum....%.2f V\r\n"
+            "vts+........%.2f V\r\n"
+            "vts-........%.2f V\r\n"
+            "vbat........%.2f V\r\n"
+            "vshunt......%.2f V\r\n"
+            "sum.........%.2f V\r\n"
             "average.....%.2f V\r\n"
             "max.........%.3f V\r\n"
             "min.........%.3f V\r\n"
             "delta.......%.3f V\r\n",
-            voltage_get_vts_p(),
-            voltage_get_vbat_adc(),
-            voltage_get_vbat_sum(),
-            voltage_get_vbat_adc() / PACK_CELL_COUNT,
-            (float)max / 10000,
-            (float)min / 10000,
-            (float)(max - min) / 10000);
+            (float)internal_voltage_get_tsp(),
+            (float)internal_voltage_get_tsn(),
+            (float)internal_voltage_get_bat(),
+            (float)internal_voltage_get_shunt(),
+            sum,
+            sum / PACK_CELL_COUNT,
+            max,
+            min,
+            max - min
+        );
     } else if (strcmp(argv[1], "all") == 0) {
         _cli_volts_all(argc, &argv[1], out);
     } else {
@@ -193,12 +200,13 @@ void _cli_volts(uint16_t argc, char **argv, char *out) {
 }
 
 void _cli_volts_all(uint16_t argc, char **argv, char *out) {
-    out[0]           = '\0';
-    voltage_t *cells = voltage_get_cells();
-    uint8_t max_index, min_index;
+    out[0] = '\0';
+    voltage_t * cells = cell_voltage_get_cells();
+
+    voltage_t max = cell_voltage_get_max();
+    voltage_t min = cell_voltage_get_min();
+
     float cell_v, total_power = 0.0f, segment_sum = 0.0f;
-    voltage_get_cell_max(&max_index);
-    voltage_get_cell_min(&min_index);
     for (uint8_t i = 0; i < PACK_CELL_COUNT; i++) {
         cell_v = (float)cells[i] / 10000;
         if (i % LTC6813_CELL_COUNT == 0) {
@@ -272,14 +280,14 @@ void _cli_volts_all(uint16_t argc, char **argv, char *out) {
         }
 
         if (fsm_get_state(bal.fsm) == BAL_OFF) {
-            if (i == max_index)
+            if (cells[i] == max)
                 sprintf(out + strlen(out), RED_BG("[%3u %-.3fV]") " ", i, cell_v);
-            else if (i == min_index)
+            else if (cells[i] == min)
                 sprintf(out + strlen(out), CYAN_BG("[%3u %-.3fV]") " ", i, cell_v);
             else
                 sprintf(out + strlen(out), "[%3u %-.3fV] ", i, cell_v);
         } else {
-            if (i == max_index) {
+            if (cells[i] == max) {
                 if (is_cell_selected) {
                     total_power += cell_v * cell_v;
                     sprintf(
@@ -298,7 +306,7 @@ void _cli_volts_all(uint16_t argc, char **argv, char *out) {
                     i,
                     cell_v,
                     DISCHARGE_DUTY_CYCLE * cell_v * cell_v / DISCHARGE_R);
-            } else if (i == min_index)
+            } else if (cells[i] == min)
                 sprintf(out + strlen(out), CYAN_BG("[%3u %-.3fV 0.00W]") " ", i, cell_v);
             else
                 sprintf(out + strlen(out), "[%3u %-.3fV 0.00W] ", i, cell_v);
@@ -308,12 +316,12 @@ void _cli_volts_all(uint16_t argc, char **argv, char *out) {
     total_power /= DISCHARGE_R;
 
     if (fsm_get_state(bal.fsm) != BAL_OFF) {
-        cell_v           = (float)cells[max_index] / 10000;
+        cell_v           = max / 10000;
         float max_soc    = 0.0862 * cell_v * cell_v * cell_v - 1.4260 * cell_v * cell_v + 6.0088 * cell_v - 6.551;
-        cell_v           = ((float)cells[min_index] + bal_get_threshold() - 10) / 10000;
+        cell_v           = (min + bal_get_threshold() - 10) / 10000;
         float target_soc = 0.0862 * cell_v * cell_v * cell_v - 1.4260 * cell_v * cell_v + 6.0088 * cell_v - 6.551;
 
-        float ETA = ((target_soc - max_soc) * CELL_CAPACITY * 4) / ((float)cells[max_index] / 10000 / DISCHARGE_R);
+        float ETA = ((target_soc - max_soc) * CELL_CAPACITY * 4) / (max / 10000 / DISCHARGE_R);
 
         sprintf(out + strlen(out), "\r\nETA: %.1fh\r\n", ETA / DISCHARGE_DUTY_CYCLE);
         sprintf(out + strlen(out), "Pwr: %3.1fW\r\n", total_power * DISCHARGE_DUTY_CYCLE);

@@ -12,8 +12,8 @@
 #define BAL_H
 
 #include "bms/bms_network.h"
+#include "fenice_config.h"
 #include "mainboard_config.h"
-#include "pack/voltage.h"
 
 #include <inttypes.h>
 #include <stdbool.h>

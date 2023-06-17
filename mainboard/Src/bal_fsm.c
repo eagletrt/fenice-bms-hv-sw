@@ -15,6 +15,7 @@
 #include "fenice_config.h"
 #include "pack/pack.h"
 #include "spi.h"
+#include "cell_voltage.h"
 
 #include <string.h>
 
@@ -107,7 +108,12 @@ void off_handler(fsm FSM, uint8_t event) {
 
 void compute_entry(fsm FSM) {
     if (bal_get_cells_to_discharge(
-            voltage_get_cells(), PACK_CELL_COUNT, bal_get_threshold(), bal.cells, LTC6813_COUNT, bal.target) != 0) {
+            cell_voltage_get_cells(),
+            PACK_CELL_COUNT,
+            bal_get_threshold(),
+            bal.cells,
+            LTC6813_COUNT,
+            bal.target) != 0) {
         fsm_transition(FSM, BAL_DISCHARGE);
         return;
     }
@@ -138,7 +144,7 @@ void discharge_handler(fsm FSM, uint8_t event) {
         case EV_BAL_COOLDOWN_START:
             if (bal_are_cells_off_status()) {
                 if (bal_get_cells_to_discharge(
-                        voltage_get_cells(),
+                        cell_voltage_get_cells(),
                         PACK_CELL_COUNT,
                         bal_get_threshold() + 5,
                         bal.cells,

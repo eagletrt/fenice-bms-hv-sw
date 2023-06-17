@@ -1,15 +1,14 @@
 #include "measures.h"
 
-#include "max22530.h"
 #include "bms_fsm.h"
 #include "can_comm.h"
 #include "pwm.h"
 #include "soc.h"
 #include "spi.h"
 #include "temperature.h"
-#include "voltage.h"
+#include "internal_voltage.h"
+#include "cell_voltage.h"
 
-MAX22530_HandleTypeDef adc_handler;
 measures_flags_t flags;
 
 void measures_init() {
@@ -26,15 +25,12 @@ void measures_init() {
     HAL_TIM_OC_Start_IT(&HTIM_MEASURES, TIM_CHANNEL_3);
     HAL_TIM_OC_Start_IT(&HTIM_MEASURES, TIM_CHANNEL_4);
     flags = 0;
-
-    // Init ADC
-    max22530_init(&adc_handler, &SPI_ADC, ADC_CS_GPIO_Port, ADC_CS_Pin);
 }
 
 void measures_check_flags() {
     if (flags & _50MS_INTERVAL_FLAG) {
         measures_voltage_current_soc();
-        voltage_check_errors();
+        cell_voltage_check_errors();
         current_check_errors();
         can_car_send(PRIMARY_HV_VOLTAGE_FRAME_ID);
         can_car_send(PRIMARY_HV_CURRENT_FRAME_ID);
@@ -67,11 +63,8 @@ void measures_check_flags() {
 }
 
 void measures_voltage_current_soc() {
-    float volts[MAX22530_CHANNEL_COUNT] = { 0 };
-    if (max22530_read_all_channels(&adc_handler, volts) == HAL_OK) {
-        voltage_measure(volts);
-        current_read(volts[2]);
-    }
+    if (internal_voltage_measure() == HAL_OK)
+        current_read(internal_voltage_get_shunt());
     soc_sample_energy(HAL_GetTick());
 }
 

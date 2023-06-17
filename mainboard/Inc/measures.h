@@ -12,7 +12,6 @@
 #include "main.h"
 #include "mainboard_config.h"
 #include "pack/current.h"
-#include "pack/voltage.h"
 #include "tim.h"
 #include "usart.h"
 

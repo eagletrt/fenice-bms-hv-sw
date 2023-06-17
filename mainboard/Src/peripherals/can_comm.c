@@ -14,11 +14,12 @@
 #include "pack/current.h"
 #include "pack/pack.h"
 #include "pack/temperature.h"
-#include "pack/voltage.h"
 #include "mainboard_config.h"
 #include "usart.h"
 #include "bootloader.h"
 #include "primary/primary_network.h"
+#include "internal_voltage.h"
+#include "cell_voltage.h"
 
 #include <string.h>
 
@@ -124,13 +125,13 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         primary_hv_voltage_t raw_volts = { 0 };
         primary_hv_voltage_converted_t conv_volts = { 0 };
 
-        conv_volts.bus_voltage = voltage_get_vts_p();
-        conv_volts.pack_voltage = voltage_get_vbat_adc();
+        conv_volts.bus_voltage = internal_voltage_get_tsp();
+        conv_volts.pack_voltage = internal_voltage_get_bat();
 
         primary_hv_voltage_conversion_to_raw_struct(&raw_volts, &conv_volts);
 
-        raw_volts.max_cell_voltage = voltage_get_cell_max(NULL);
-        raw_volts.min_cell_voltage = voltage_get_cell_min(NULL);
+        raw_volts.max_cell_voltage = cell_voltage_get_max();
+        raw_volts.min_cell_voltage = cell_voltage_get_min();
 
         tx_header.DLC = primary_hv_voltage_pack(buffer, &raw_volts, PRIMARY_HV_VOLTAGE_BYTE_SIZE);
     } else if (id == PRIMARY_HV_CURRENT_FRAME_ID) {
@@ -138,7 +139,7 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         primary_hv_current_converted_t conv_curr;
 
         conv_curr.current = current_get_current();
-        conv_curr.power = conv_curr.current * voltage_get_vts_p();
+        conv_curr.power = conv_curr.current * internal_voltage_get_tsp();
 
         primary_hv_current_conversion_to_raw_struct(&raw_curr, &conv_curr);
 
@@ -332,7 +333,7 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         return status == 0 ? HAL_OK : HAL_ERROR;
     } else if (id == PRIMARY_HV_CELLS_VOLTAGE_FRAME_ID) {
         uint8_t status = 0;
-        voltage_t * volts = voltage_get_cells();
+        voltage_t * volts = cell_voltage_get_cells();
 
         primary_hv_cells_voltage_t raw_volts;
         primary_hv_cells_voltage_converted_t conv_volts;
@@ -440,46 +441,45 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
 
         error_reset(ERROR_CAN, 1);
         if (rx_header.StdId == BMS_VOLTAGES_FRAME_ID) {
-            uint8_t offset = 0;
             bms_voltages_t raw_volts;
             bms_voltages_unpack(&raw_volts, rx_data, BMS_VOLTAGES_BYTE_SIZE);
-            switch (rx_header.DLC) {
+
+            switch (raw_volts.cellboard_id) {
                 case BMS_VOLTAGES_CELLBOARD_ID_CELLBOARD_0_CHOICE:
                     ++cellboards_msgs.cellboard0;
-                    offset = voltage_get_cellboard_offset(0);
                     break;
                 case BMS_VOLTAGES_CELLBOARD_ID_CELLBOARD_1_CHOICE:
                     ++cellboards_msgs.cellboard1;
-                    offset = voltage_get_cellboard_offset(1);
                     break;
                 case BMS_VOLTAGES_CELLBOARD_ID_CELLBOARD_2_CHOICE:
                     ++cellboards_msgs.cellboard2;
-                    offset = voltage_get_cellboard_offset(2);
                     break;
                 case BMS_VOLTAGES_CELLBOARD_ID_CELLBOARD_3_CHOICE:
                     ++cellboards_msgs.cellboard3;
-                    offset = voltage_get_cellboard_offset(3);
                     break;
                 case BMS_VOLTAGES_CELLBOARD_ID_CELLBOARD_4_CHOICE:
                     ++cellboards_msgs.cellboard4;
-                    offset = voltage_get_cellboard_offset(4);
                     break;
                 case BMS_VOLTAGES_CELLBOARD_ID_CELLBOARD_5_CHOICE:
                     ++cellboards_msgs.cellboard5;
-                    offset = voltage_get_cellboard_offset(5);
                     break;
                 default:
                     break;
             }
 
-            voltage_set_cells(raw_volts.start_index + offset, raw_volts.voltage0, raw_volts.voltage1, raw_volts.voltage2);
+            voltage_t volts[] = {
+                raw_volts.voltage0,
+                raw_volts.voltage1,
+                raw_volts.voltage2
+            };
+            cell_voltage_set_cells(raw_volts.cellboard_id, raw_volts.start_index, volts, 3);
         } else if (rx_header.StdId == BMS_TEMPERATURES_FRAME_ID) {
             uint8_t offset = 0;
             bms_temperatures_t raw_temps;
 
             bms_temperatures_unpack(&raw_temps, rx_data, BMS_TEMPERATURES_BYTE_SIZE);
 
-            switch (rx_header.StdId) {
+            switch (raw_temps.cellboard_id) {
                 case BMS_TEMPERATURES_CELLBOARD_ID_CELLBOARD_0_CHOICE:
                     ++cellboards_msgs.cellboard0;
                     offset = temperature_get_cellboard_offset(0);

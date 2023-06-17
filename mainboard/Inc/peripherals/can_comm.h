@@ -11,7 +11,6 @@
 #include "bms/bms_network.h"
 #include "primary/primary_network.h"
 #include "can.h"
-#include "pack/voltage.h"
 
 #define CAN_1MBIT_PRE 3
 #define CAN_1MBIT_BS1 CAN_BS1_12TQ

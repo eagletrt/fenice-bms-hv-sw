@@ -29,7 +29,7 @@ typedef struct {
 
 extern bal_fsm bal;
 
-uint16_t bal_get_threshold();
+voltage_t bal_get_threshold();
 void bal_set_threshold(uint16_t thresh);
 
 void bal_fsm_init();

@@ -15,13 +15,6 @@
 #include <stddef.h>
 #include <string.h>
 
-#ifndef max
-#define max(a, b) ((a) > (b) ? (a) : (b))
-#endif
-#ifndef min
-#define min(a, b) ((a) < (b) ? (a) : (b))
-#endif
-
 /**
  * @returns	The index of the maximum value of data
  */
@@ -154,7 +147,7 @@ uint16_t _bal_hateville(uint16_t D[], uint16_t count, bms_balancing_converted_t 
     DP[1] = D[0];
 
     for (uint16_t i = 2; i < count + 1; i++) {
-        DP[i] = max(DP[i - 1], DP[i - 2] + D[i - 1]);
+        DP[i] = MAX(DP[i - 1], DP[i - 2] + D[i - 1]);
     }
 
     uint16_t out_index = 0;
@@ -182,7 +175,7 @@ uint16_t bal_get_cells_to_discharge(
     memset(cells, 0, sizeof(bms_balancing_converted_t) * cells_count);
 
     for (uint16_t i = 0; i < volts_count; i++) {
-        if (max(0, (int32_t)volts[i] - (min_volt + threshold))) {
+        if (MAX(0, (int32_t)volts[i] - (min_volt + threshold))) {
             size_t index = i / LTC6813_CELL_COUNT;
             switch (i % LTC6813_CELL_COUNT)
             {

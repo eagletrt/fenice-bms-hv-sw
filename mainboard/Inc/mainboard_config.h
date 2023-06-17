@@ -9,7 +9,11 @@
 #ifndef MAINBOARD_CONFIG_H
 #define MAINBOARD_CONFIG_H
 
-#include "../../fenice_config.h"
+#include "fenice_config.h"
+#include "spi.h"
+#include "tim.h"
+#include "adc.h"
+#include "can.h"
 
 //===========================================================================
 //=================================== General ===============================
