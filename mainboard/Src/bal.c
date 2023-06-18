@@ -1,289 +1,159 @@
 /**
- * @file		bal.c
+ * @file		bal_fsm.c
  * @brief		This file contains the balancing functions
  *
- * @date		Oct 28, 2019
+ * @date		May 09, 2021
  *
  * @author		Matteo Bonora [matteo.bonora@studenti.unitn.it]
- * @author		Simone Ruffini [simone.ruffini@studenti.unitn.it]
  */
 
 #include "bal.h"
 
-#include "mainboard_config.h"
+// TODO: Start and stop balancing per cellboard
 
-#include <stddef.h>
-#include <string.h>
+#define CONF_VER  0x01
+#define CONF_ADDR 0x01
 
-/**
- * @returns	The index of the maximum value of data
- */
-uint8_t _max_index(uint16_t data[], size_t count) {
-    uint8_t max = 0;
-    for (uint8_t i = 0; i < count; i++) {
-        if (data[i] > data[max])
-            max = i;
-    }
+typedef struct {
+    voltage_t threshold;
+} bal_params;
+bal_params bal_params_default = {BAL_MAX_VOLTAGE_THRESHOLD};
 
-    return max;
+config_t config;
+
+voltage_t bal_get_threshold() {
+    return ((bal_params *)config_get(&config))->threshold;
 }
 
-/**
- * @returns	The index of the minimum value of data
- */
-uint16_t _min_index(voltage_t data[], size_t count) {
-    uint16_t min_value_index = 0;
-    for (uint16_t i = 0; i < count; i++) {
-        if (data[i] < data[min_value_index] && data[i] > 0)
-            min_value_index = i;
-    }
+void bal_set_threshold(uint16_t thresh) {
+    bal_params params = *(bal_params *)config_get(&config);
+    params.threshold  = thresh;
 
-    return min_value_index;
+    config_set(&config, &params);
+    config_write(&config);
 }
 
-/**
- * @brief Reconstructs the solution given the dynamic programming array
- * 
- * @param	DP	dynamic programming work array
- * @param	i	length of DP
- * @param	out	output array
- * @param	out_index	length of output (initialize to 0 please)
- */
-void _bal_hateville_solution(uint16_t DP[], uint16_t i, bms_balancing_converted_t cells[], uint16_t *out_index) {
-    if (i == 0) {
-        return;
-    } else if (i == 1) {
-        if (DP[1] > 0) {
-            // cells[0] |= (1 << 0);
-            cells[0].cells_cell0 = 1;
-            ++(*out_index);
-        }
-        return;
-    } else if (DP[i] == DP[i - 1]) {
-        _bal_hateville_solution(DP, i - 1, cells, out_index);
-        return;
-    } else {
-        _bal_hateville_solution(DP, i - 2, cells, out_index);
-        size_t index = (i - 1) / LTC6813_CELL_COUNT;
+void bal_fsm_init() {
+    config_init(&config, CONF_ADDR, CONF_VER, &bal_params_default, sizeof(bal_params));
+}
 
-        switch ((i - 1) % LTC6813_CELL_COUNT)
-        {
-        case 0:
-            cells[index].cells_cell0 = 1;
-            break;
-        case 1:
-            cells[index].cells_cell1 = 1;
-            break;
-        case 2:
-            cells[index].cells_cell2 = 1;
-            break;
-        case 3:
-            cells[index].cells_cell3 = 1;
-            break;
-        case 4:
-            cells[index].cells_cell4 = 1;
-            break;
-        case 5:
-            cells[index].cells_cell5 = 1;
-            break;
-        case 6:
-            cells[index].cells_cell6 = 1;
-            break;
-        case 7:
-            cells[index].cells_cell7 = 1;
-            break;
-        case 8:
-            cells[index].cells_cell8 = 1;
-            break;
-        case 9:
-            cells[index].cells_cell9 = 1;
-            break;
-        case 10:
-            cells[index].cells_cell10 = 1;
-            break;
-        case 11:
-            cells[index].cells_cell11 = 1;
-            break;
-        case 12:
-            cells[index].cells_cell12 = 1;
-            break;
-        case 13:
-            cells[index].cells_cell13 = 1;
-            break;
-        case 14:
-            cells[index].cells_cell14 = 1;
-            break;
-        case 15:
-            cells[index].cells_cell15 = 1;
-            break;
-        case 16:
-            cells[index].cells_cell16 = 1;
-            break;
-        case 17:
-            cells[index].cells_cell17 = 1;
-            break;
-        }
-        ++(*out_index);
+void off_entry(fsm FSM) {
+    bal.target = 0;
+    HAL_TIM_OC_Stop_IT(&HTIM_BAL, TIM_CHANNEL_1);
+    HAL_TIM_OC_Stop_IT(&HTIM_BAL, TIM_CHANNEL_2);
+    cli_bms_debug("disabling balancing", 20);
+    memset(bal.cells, 0, sizeof(bms_balancing_converted_t) * LTC6813_COUNT);
+    can_bms_send(BMS_BALANCING_FRAME_ID);
+}
 
-        return;
+void off_handler(fsm FSM, uint8_t event) {
+    switch (event) {
+        case EV_BAL_START:
+            fsm_transition(FSM, BAL_COMPUTE);
+            break;
+        case EV_BAL_STOP:
+            memset(bal.cells, 0, sizeof(bms_balancing_converted_t) * LTC6813_COUNT);
+            can_bms_send(BMS_BALANCING_FRAME_ID);
+            break;
     }
 }
 
-/**
- * @brief Hateville problem solver with Dynamic Programming (https://disi.unitn.it/~montreso/asd/handouts/13-pd1.pdf#Outline0.3)
- * 
- * @details	Explanation of this algorithm by the one and only Alberto Montresor ❤️ (https://youtu.be/rrQ300wySmc)
- * 
- * @param	D			Input data
- * @param	count		Input size
- * @param	solution	Output data
- * 
- * @returns	length of the solution array
- */
-uint16_t _bal_hateville(uint16_t D[], uint16_t count, bms_balancing_converted_t solution[]) {
-    uint16_t DP[PACK_CELL_COUNT + 1];
-
-    DP[0] = 0;
-    DP[1] = D[0];
-
-    for (uint16_t i = 2; i < count + 1; i++) {
-        DP[i] = MAX(DP[i - 1], DP[i - 2] + D[i - 1]);
+void compute_entry(fsm FSM) {
+    if (bal_get_cells_to_discharge(
+            cell_voltage_get_cells(),
+            PACK_CELL_COUNT,
+            bal_get_threshold(),
+            bal.cells,
+            LTC6813_COUNT,
+            bal.target) != 0) {
+        fsm_transition(FSM, BAL_DISCHARGE);
+        return;
     }
-
-    uint16_t out_index = 0;
-    _bal_hateville_solution(DP, count, solution, &out_index);
-    return out_index;
+    cli_bms_debug("Non si può fare meglio di così.", 34);
+    can_bms_send(BMS_BALANCING_FRAME_ID);
+    fsm_transition(FSM, BAL_OFF);
 }
 
-/* @section Public functions */
-
-uint16_t bal_get_cells_to_discharge(
-    voltage_t volts[],
-    uint16_t volts_count,
-    voltage_t threshold,
-    bms_balancing_converted_t cells[],
-    uint16_t cells_count,
-    voltage_t target) {
-    uint16_t len = 0;
-    uint16_t min_volt;
-
-    if (target == 0)
-        min_volt = volts[_min_index(volts, volts_count)];
-    else
-        min_volt = target;
-
-    memset(cells, 0, sizeof(bms_balancing_converted_t) * cells_count);
-
-    for (uint16_t i = 0; i < volts_count; i++) {
-        if (MAX(0, (int32_t)volts[i] - (min_volt + threshold))) {
-            size_t index = i / LTC6813_CELL_COUNT;
-            switch (i % LTC6813_CELL_COUNT)
-            {
-            case 0:
-                cells[index].cells_cell0 = 1;
-                break;
-            case 1:
-                cells[index].cells_cell1 = 1;
-                break;
-            case 2:
-                cells[index].cells_cell2 = 1;
-                break;
-            case 3:
-                cells[index].cells_cell3 = 1;
-                break;
-            case 4:
-                cells[index].cells_cell4 = 1;
-                break;
-            case 5:
-                cells[index].cells_cell5 = 1;
-                break;
-            case 6:
-                cells[index].cells_cell6 = 1;
-                break;
-            case 7:
-                cells[index].cells_cell7 = 1;
-                break;
-            case 8:
-                cells[index].cells_cell8 = 1;
-                break;
-            case 9:
-                cells[index].cells_cell9 = 1;
-                break;
-            case 10:
-                cells[index].cells_cell10 = 1;
-                break;
-            case 11:
-                cells[index].cells_cell11 = 1;
-                break;
-            case 12:
-                cells[index].cells_cell12 = 1;
-                break;
-            case 13:
-                cells[index].cells_cell13 = 1;
-                break;
-            case 14:
-                cells[index].cells_cell14 = 1;
-                break;
-            case 15:
-                cells[index].cells_cell15 = 1;
-                break;
-            case 16:
-                cells[index].cells_cell16 = 1;
-                break;
-            case 17:
-                cells[index].cells_cell17 = 1;
-                break;
-            }
-            ++len;
-        }
-    }
-
-    return len;
-
+void discharge_entry(fsm FSM) {
     /*
-	if(target == 0)
-		len = bal_compute_imbalance(volts, volts_count, threshold, imbalance);
-	else
-		len = bal_compute_imbalance_with_target(volts, volts_count, threshold, imbalance, target);
+    fsm_trigger_event(FSM, EV_BAL_CHECK_TIMER);
+    bal.discharge_time = HAL_GetTick();
+    */
 
-	if (len == 0) {
-		return false;
-	}
+    HAL_TIM_OC_Stop_IT(&HTIM_BAL, TIM_CHANNEL_1);
+    __HAL_TIM_SET_COMPARE(&HTIM_BAL, TIM_CHANNEL_1, __HAL_TIM_GET_COUNTER(&HTIM_BAL) + bal.cycle_length);
+    HAL_TIM_OC_Start_IT(&HTIM_BAL, TIM_CHANNEL_1);
 
-	return bal_exclude_neighbors(imbalance, volts_count, cells);
-*/
+    can_bms_send(BMS_BALANCING_FRAME_ID);
+    cli_bms_debug("Discharging cells", 18);
 }
 
-uint16_t bal_compute_imbalance_with_target(
-    voltage_t volts[],
-    uint16_t count,
-    voltage_t threshold,
-    uint16_t cells[],
-    voltage_t target) {
-    uint16_t indexes = 0;
-
-    for (uint16_t i = 0; i < count; i++) {
-        cells[i] = max(0, (int32_t)volts[i] - (target + threshold));
-        if (cells[i] > 0) {
-            indexes++;
-        }
+void discharge_handler(fsm FSM, uint8_t event) {
+    switch (event) {
+        case EV_BAL_STOP:
+            fsm_transition(FSM, BAL_OFF);
+            break;
+        case EV_BAL_COOLDOWN_START:
+            if (bal_are_cells_off_status()) {
+                if (bal_get_cells_to_discharge(
+                        cell_voltage_get_cells(),
+                        PACK_CELL_COUNT,
+                        bal_get_threshold() + 5,
+                        bal.cells,
+                        LTC6813_COUNT,
+                        bal.target) == 0) {
+                    cli_bms_debug("Non si può fare meglio di così.", 34);
+                    can_bms_send(BMS_BALANCING_FRAME_ID);
+                    fsm_transition(FSM, BAL_OFF);
+                } else {
+                    fsm_transition(FSM, BAL_COOLDOWN);
+                }
+            } else {
+                fsm_trigger_event(FSM, EV_BAL_COOLDOWN_START);
+            }
+            break;
     }
-    return indexes;
 }
 
-uint16_t bal_compute_imbalance(voltage_t volts[], uint16_t count, voltage_t threshold, uint16_t cells[]) {
-    uint16_t indexes   = 0;
-    uint16_t min_index = _min_index(volts, count);
+void discharge_exit(fsm FSM) {
+    HAL_TIM_OC_Stop_IT(&HTIM_BAL, TIM_CHANNEL_1);
+}
 
-    for (uint16_t i = 0; i < count; i++) {
-        cells[i] = max(0, volts[i] - (volts[min_index] + threshold));
-        if (cells[i] > 0) {
-            indexes++;
-        }
+void cooldown_entry(fsm FSM) {
+    memset(bal.cells, 0, sizeof(bms_balancing_converted_t) * LTC6813_COUNT);
+    HAL_TIM_OC_Stop_IT(&HTIM_BAL, TIM_CHANNEL_1);
+    __HAL_TIM_SET_COMPARE(
+        &HTIM_BAL, TIM_CHANNEL_2, __HAL_TIM_GET_COUNTER(&HTIM_BAL) + TIM_MS_TO_TICKS(&HTIM_BAL, BAL_COOLDOWN_DELAY));
+    __HAL_TIM_CLEAR_FLAG(&HTIM_BAL, TIM_IT_CC2);  //clears existing interrupts on channel 1
+    HAL_TIM_OC_Start_IT(&HTIM_BAL, TIM_CHANNEL_2);
+
+    cli_bms_debug("Cooldown cells", 15);
+}
+
+void cooldown_handler(fsm FSM, uint8_t event) {
+    switch (event) {
+        case EV_BAL_STOP:
+            fsm_transition(FSM, BAL_OFF);
+        case EV_BAL_COOLDOWN_END:
+            fsm_transition(FSM, BAL_COMPUTE);
+            break;
     }
-    return indexes;
 }
 
-uint16_t bal_exclude_neighbors(uint16_t data[], uint16_t count, bms_balancing_converted_t cells[]) {
-    return _bal_hateville(data, count, cells);
+void cooldown_exit(fsm FSM) {
+    HAL_TIM_OC_Stop_IT(&HTIM_BAL, TIM_CHANNEL_2);
+}
+
+
+void _bal_handle_tim_oc_irq(TIM_HandleTypeDef *htim) {
+    switch (htim->Channel) {
+        case HAL_TIM_ACTIVE_CHANNEL_1:
+            fsm_trigger_event(bal.fsm, EV_BAL_COOLDOWN_START);
+            break;
+        case HAL_TIM_ACTIVE_CHANNEL_2:
+            fsm_trigger_event(bal.fsm, EV_BAL_COOLDOWN_END);
+            break;
+        default:
+            break;
+    }
 }

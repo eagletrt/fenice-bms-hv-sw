@@ -66,7 +66,6 @@ RAM2 (xrw)      : ORIGIN = 0x10000000, LENGTH = 16K
 FLASH (rx)      : ORIGIN = 0x8000000, LENGTH = 128K
 }
 
-
 /* Define output sections */
 SECTIONS
 {

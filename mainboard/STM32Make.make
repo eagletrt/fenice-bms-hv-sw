@@ -58,7 +58,6 @@ Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_adc.c \
 Src/adc.c \
-Src/bal.c \
 Src/bal_fsm.c \
 Src/bms_fsm.c \
 Src/bootloader.c \

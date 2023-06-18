@@ -13,9 +13,6 @@
 
 #include <math.h>
 
-#define MIN(x, y) (((x) < (y)) ? (x) : (y))
-#define MAX(x, y) (((x) > (y)) ? (x) : (y))
-
 #define TEMP_INIT_TIMEOUT 100
 
 temperature_t temperatures[CELLBOARD_TEMP_SENSOR_COUNT] = {0};

@@ -18,6 +18,7 @@
 #include "main.h"
 #include "bms_fsm.h"
 
+// TODO: Save only maximum, minimum and average voltage values of the cellboards
 voltage_t cells[PACK_CELL_COUNT];
 
 

@@ -43,6 +43,7 @@ Core/Lib/micro-libs/blink/blink.c \
 Core/Lib/micro-libs/fsm/fsm.c \
 Core/Lib/micro-libs/m95256/m95256.c \
 Core/Lib/micro-libs/timer-utils/timer_utils.c \
+Core/Src/bal.c \
 Core/Src/bal_fsm.c \
 Core/Src/bootloader.c \
 Core/Src/can.c \

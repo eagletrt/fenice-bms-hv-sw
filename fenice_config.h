@@ -35,6 +35,17 @@
  */
 #define CELLBOARD_CELL_COUNT 18
 
+// Voltage value in mV * 10
+typedef uint16_t voltage_t;
+
+#ifndef MAX
+#define MAX(a, b) ((a) > (b) ? (a) : (b)) // Get the maximum between two values
+#endif // MAX(a, b)
+
+#ifndef MIN
+#define MIN(a, b) ((a) < (b) ? (a) : (b)) // Get the minimum between two values
+#endif // MIN(a, b)
+
 //===========================================================================
 //=================================== LTC6813 ===============================
 //===========================================================================

@@ -66,7 +66,9 @@ void can_send(uint16_t topic_id) {
             case BAL_OFF:
                 conv_state.balancing_status = BMS_BOARD_STATUS_BALANCING_STATUS_OFF_CHOICE;
                 break;
+            case BAL_COMPUTE:
             case BAL_DISCHARGE:
+            case BAL_COOLDOWN:
                 conv_state.balancing_status = BMS_BOARD_STATUS_BALANCING_STATUS_DISCHARGE_CHOICE;
                 break;
         }
@@ -149,6 +151,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
     }
     ERROR_UNSET(ERROR_CAN);
 
+    // TODO: Handle balancing CAN message
     if (rx_header.StdId == BMS_BALANCING_FRAME_ID) {
         bms_balancing_t balancing;
         bms_balancing_unpack(&balancing, rx_data, BMS_BALANCING_BYTE_SIZE);

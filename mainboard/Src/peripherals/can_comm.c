@@ -8,7 +8,7 @@
 
 #include "can_comm.h"
 
-#include "bal_fsm.h"
+#include "bal.h"
 #include "bms_fsm.h"
 #include "cli_bms.h"
 #include "pack/current.h"
@@ -611,10 +611,10 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 
             switch (balancing_status.set_balancing_status) {
                 case primary_set_cell_balancing_status_set_balancing_status_ON:
-                    fsm_trigger_event(bal.fsm, EV_BAL_START);
+                    bal_start();
                     break;
                 case primary_set_cell_balancing_status_set_balancing_status_OFF:
-                    fsm_trigger_event(bal.fsm, EV_BAL_STOP);
+                    bal_stop();
                     break;
             }
         } else if (rx_header.StdId == PRIMARY_HANDCART_STATUS_FRAME_ID) {

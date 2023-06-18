@@ -13,7 +13,9 @@
 #define CELL_VOLTAGE_H
 
 #include "stm32f4xx_hal.h"
-#include "fenice_config.h"
+#include "../../fenice_config.h"
+
+// TODO: Save only maximum, minimum and average voltage values of the cellboards
 
 /** @brief Intialize the cell voltages */
 void cell_voltage_init();

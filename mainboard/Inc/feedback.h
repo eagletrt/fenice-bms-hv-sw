@@ -10,7 +10,7 @@
 #pragma once
 
 #include "error.h"
-#include "fenice_config.h"
+#include "../../fenice_config.h"
 
 #include <inttypes.h>
 

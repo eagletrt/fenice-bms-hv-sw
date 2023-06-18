@@ -26,3 +26,9 @@ void volt_open_wire_check();
  * @return uint16_t The index of the lower-voltage cell
  */
 uint16_t volt_get_min();
+/**
+ * @brief Get a pointer to the array of voltages values of the cells
+ * 
+ * @return voltage_t * The pointer to the array of voltages
+ */
+voltage_t * volt_get_volts();

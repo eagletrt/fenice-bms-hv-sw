@@ -10,6 +10,7 @@
 #define CELLBOARD_CONFIG_H
 
 #include "../../../fenice_config.h"
+#include "tim.h"
 
 //===========================================================================
 //=================================== LTC6813 ===============================
@@ -57,10 +58,13 @@
  * Timers interval (ms)
  */
 
-#define TIM_DISCHARGE    htim16
 #define TIM_MEASUREMENTS htim2
+#define TIM_COOLDOWN     htim15
+#define TIM_DISCHARGE    htim16
 
-typedef uint16_t voltage_t;
+#define TIM_COOLDOWN_START_CHANNEL TIM_CHANNEL_1
+#define TIM_COOLDOWN_STOP_CHANNEL TIM_CHANNEL_2
+
 typedef float temperature_t;
 typedef int16_t current_t;
 

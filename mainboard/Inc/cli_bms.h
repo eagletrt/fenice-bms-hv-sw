@@ -12,7 +12,7 @@
 #define CLI_BMS_H
 
 #include "cli.h"
-#include "fenice_config.h"
+#include "../../fenice_config.h"
 
 #define NORMAL_COLOR           "\033[0m"
 #define RED_BG(S)              "\033[0;41m" S NORMAL_COLOR

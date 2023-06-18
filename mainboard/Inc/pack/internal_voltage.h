@@ -13,7 +13,7 @@
 #define INTERNAL_VOLTAGE_H
 
 #include "stm32f4xx_hal.h"
-#include "fenice_config.h"
+#include "../../fenice_config.h"
 
 /** @brief Initializes the adc and internal voltages */
 void internal_voltage_init();

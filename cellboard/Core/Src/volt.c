@@ -32,7 +32,7 @@ void volt_read_open_wire(uint8_t status) {
 }
 
 void volt_open_wire_check() {
-    for(uint8_t i=1; i<CELLBOARD_CELL_COUNT; ++i) {
+    for(uint8_t i = 1; i < CELLBOARD_CELL_COUNT; ++i) {
         int32_t diff = (int32_t)voltages_pup[i] - voltages_pud[i];
 
         if(diff < -4000) {
@@ -62,4 +62,8 @@ uint16_t volt_get_min() {
     }
 
     return min;
+}
+
+voltage_t * volt_get_volts() {
+    return voltages;
 }
