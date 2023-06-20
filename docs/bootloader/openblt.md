@@ -2,7 +2,7 @@
 
 [OpenBLT](https://www.feaser.com/openblt/doku.php) is an open source bootloader that can run on any microcontroller and use any type of communication interface to perform **software updates**, without the need of specialized debugger hardware
 
-Both cellboards' and mainboard's bootloaders are derived from [OpenBLT sources](https://github.com/feaser/openblts)
+Both cellboards' and mainboard's bootloaders are derived from [OpenBLT sources](https://github.com/feaser/openblt)
 
 ## Mainboard and Cellboard bootloaders
 
