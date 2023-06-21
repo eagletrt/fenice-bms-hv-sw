@@ -21,7 +21,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
-#include "bal_fsm.h"
+#include "bal.h"
 #include "bms_fsm.h"
 #include "cli_bms.h"
 #include "config.h"
@@ -35,6 +35,8 @@
 #include "pack/pack.h"
 #include "soc.h"
 #include "internal_voltage.h"
+#include "primary/primary_network.h"
+#include "can_comm.h"
 
 #include <m95256.h>
 #include <string.h>
@@ -135,7 +137,7 @@ int main(void)
     error_init();
 
     internal_voltage_init();
-    bal_fsm_init();
+    // bal_fsm_init();
     bms_fsm_init();
     current_zero();
     soc_init();
@@ -159,15 +161,11 @@ int main(void)
         // fsm_run(bal.fsm);
         // measures_check_flags();
         cli_watch_flush_handler();
-        if (HAL_GetTick() > 1500 && !HAL_GPIO_ReadPin(BMS_FAULT_GPIO_Port, BMS_FAULT_Pin))
-            HAL_GPIO_WritePin(BMS_FAULT_GPIO_Port, BMS_FAULT_Pin, BMS_FAULT_OFF_VALUE);
+        // if (HAL_GetTick() > 1500 && !HAL_GPIO_ReadPin(BMS_FAULT_GPIO_Port, BMS_FAULT_Pin))
+        //     HAL_GPIO_WritePin(BMS_FAULT_GPIO_Port, BMS_FAULT_Pin, BMS_FAULT_OFF_VALUE);
         cli_loop(&cli_bms);
 
         can_car_send(PRIMARY_TS_STATUS_FRAME_ID);
-        // uint8_t data[1] = { 0 };
-        // CAN_TxHeaderTypeDef header;
-        // header.StdId = BMS_BOARD_STATUS_FRAME_ID;
-        // HAL_CAN_AddTxMessage(&BMS_CAN, &header, data, NULL);
         HAL_Delay(500);
     }
     return 0;

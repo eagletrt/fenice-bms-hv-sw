@@ -7,6 +7,8 @@
  * @author		Matteo Bonora [matteo.bonora@studenti.unitn.it]
  */
 
+#ifdef DO_NOT_DEFINE
+
 #include "bal.h"
 
 // TODO: Start and stop balancing per cellboard
@@ -157,3 +159,4 @@ void _bal_handle_tim_oc_irq(TIM_HandleTypeDef *htim) {
             break;
     }
 }
+#endif // DO_NOT_DEFINE

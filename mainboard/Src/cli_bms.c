@@ -10,7 +10,7 @@
 
 #include "cli_bms.h"
 
-#include "bal_fsm.h"
+#include "bal.h"
 #include "bms_fsm.h"
 #include "can.h"
 #include "can_comm.h"
@@ -199,8 +199,10 @@ void _cli_volts(uint16_t argc, char **argv, char *out) {
     }
 }
 
+// TODO: Print all cells voltages
 void _cli_volts_all(uint16_t argc, char **argv, char *out) {
-    out[0] = '\0';
+    strcpy(out, "Work in progress...\n\0");
+    /*
     voltage_t * cells = cell_voltage_get_cells();
 
     voltage_t max = cell_voltage_get_max();
@@ -327,6 +329,7 @@ void _cli_volts_all(uint16_t argc, char **argv, char *out) {
         sprintf(out + strlen(out), "Pwr: %3.1fW\r\n", total_power * DISCHARGE_DUTY_CYCLE);
     } else
         sprintf(out + strlen(out), "\r\n");
+    */
 }
 
 void _cli_temps(uint16_t argc, char **argv, char *out) {
@@ -402,16 +405,19 @@ void _cli_status(uint16_t argc, char **argv, char *out) {
 #define n_items 3
 
     char thresh[5] = {'\0'};
-    itoa((float)bal_get_threshold() / 10, thresh, 10);
+    // TODO: Get bal threshold
+    // itoa((float)bal_get_threshold() / 10, thresh, 10);
 
     char er_count[3] = {'\0'};
     itoa(error_count(), er_count, 10);
 
     // TODO: Fix this
+    // TODO: Get balancing state
     const char *values[n_items][2] = {
         {"BMS state", bms_state_names[fsm_get_state(bms.fsm)]},
         {"error count", er_count},
-        {"balancing state", bal_state_names[fsm_get_state(bal.fsm)]}};
+        {"balancing state", bal_state_names[0]} // fsm_get_state(bal.fsm)]}};
+    };
     //{"BMS state", (char *)fsm_bms.state_names[fsm_bms.current_state]}, {"error
     // count", er_count}, {"balancing", bal}, {"balancing threshold", thresh}};
 
@@ -426,7 +432,10 @@ void _cli_status(uint16_t argc, char **argv, char *out) {
     }
 }
 
+// TODO: Balancing actions
 void _cli_balance(uint16_t argc, char **argv, char *out) {
+    strcpy(out, "Work in progress...\n\0");
+    /*
     if (strcmp(argv[1], "on") == 0) {
         if (argc > 2)
             bal.target = atoi(argv[2]);
@@ -556,6 +565,7 @@ void _cli_balance(uint16_t argc, char **argv, char *out) {
             "- test <board> <cell0 cell1 ... cellN>\r\n",
             argv[0]);
     }
+    */
 }
 void _cli_soc(uint16_t argc, char **argv, char *out) {
     if (strcmp(argv[1], "reset") == 0) {

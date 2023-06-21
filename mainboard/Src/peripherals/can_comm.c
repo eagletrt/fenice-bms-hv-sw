@@ -288,6 +288,8 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         primary_hv_cell_balancing_status_t raw_bal_status;
         primary_hv_cell_balancing_status_converted_t conv_bal_status;
 
+        // TODO: Check balancing status
+        /*
         switch (fsm_get_state(bal.fsm)) {
             case BAL_OFF:
                 conv_bal_status.balancing_status = primary_hv_cell_balancing_status_balancing_status_OFF;
@@ -301,6 +303,8 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
                 conv_bal_status.balancing_status = primary_hv_cell_balancing_status_balancing_status_OFF;
                 break;
         }
+        */
+        conv_bal_status.balancing_status = primary_hv_cell_balancing_status_balancing_status_OFF;
 
         // Convert bal status to raw
         primary_hv_cell_balancing_status_conversion_to_raw_struct(&raw_bal_status, &conv_bal_status);
@@ -375,6 +379,15 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         primary_hv_version_conversion_to_raw_struct(&raw_version, &conv_version);
 
         tx_header.DLC = primary_hv_version_pack(buffer, &raw_version, PRIMARY_HV_VERSION_BYTE_SIZE);
+    } else if (id == PRIMARY_HV_FEEDBACKS_STATUS_FRAME_ID) {
+        primary_hv_feedbacks_status_t raw_status;
+        // TODO: Set feedback status
+        primary_hv_feedbacks_status_converted_t conv_status = { 0 };
+        conv_status.feedbacks_status_feedback_ts_over_60v_status = 1;
+
+        primary_hv_feedbacks_status_conversion_to_raw_struct(&raw_status, &conv_status);
+
+        tx_header.DLC = primary_hv_feedbacks_status_pack(buffer, &raw_status, PRIMARY_HV_FEEDBACKS_STATUS_BYTE_SIZE);
     } else
         return HAL_ERROR;
 
@@ -384,13 +397,15 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
 HAL_StatusTypeDef can_bms_send(uint16_t id) {
     uint8_t buffer[CAN_MAX_PAYLOAD_LENGTH];
 
-    if(can_forward && id != BMS_FW_UPDATE_FRAME_ID)
+    if(can_forward && id != BMS_JMP_TO_BLT_FRAME_ID)
         return HAL_BUSY;
     tx_header.StdId = id;
 
     if (id == BMS_BALANCING_FRAME_ID) {
         uint8_t status = 0;
 
+        // TODO: Send balancing message to the cellboards
+        /*
         register uint16_t i;
         for (i = 0; i < CELLBOARD_COUNT; ++i) {
             bms_balancing_t raw_bal;
@@ -401,19 +416,20 @@ HAL_StatusTypeDef can_bms_send(uint16_t id) {
             tx_header.DLC = bms_balancing_pack(buffer, &raw_bal, BMS_BALANCING_BYTE_SIZE);
             status |= can_send(&BMS_CAN, buffer, &tx_header);
         }
+        */
         return status == 0 ? HAL_OK : HAL_ERROR;
-    } else if (id == BMS_FW_UPDATE_FRAME_ID) {
-        bms_fw_update_t raw_fw_update;
-        bms_fw_update_converted_t conv_fw_update;
+    } else if (id == BMS_JMP_TO_BLT_FRAME_ID) {
+        bms_jmp_to_blt_t raw_jmp;
+        bms_jmp_to_blt_converted_t conv_jmp;
 
         // TODO: Set cellboard id and board index (not used in cellboard)
-        conv_fw_update.cellboard_id = 0;
-        conv_fw_update.board_index = 0;
+        conv_jmp.cellboard_id = 0;
+        conv_jmp.board_index = 0;
 
         // Convert fw update to raw
-        bms_fw_update_conversion_to_raw_struct(&raw_fw_update, &conv_fw_update);
+        bms_jmp_to_blt_conversion_to_raw_struct(&raw_jmp, &conv_jmp);
 
-        tx_header.DLC = bms_fw_update_pack(buffer, &raw_fw_update, BMS_FW_UPDATE_BYTE_SIZE);  //TODO: set board_index
+        tx_header.DLC = bms_jmp_to_blt_pack(buffer, &raw_jmp, BMS_JMP_TO_BLT_BYTE_SIZE);  //TODO: set board_index
         return can_send(&BMS_CAN, buffer, &tx_header);
     } else
         return HAL_ERROR;
@@ -544,7 +560,8 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
                     index = 5;
                     break;
             }
-            bal.status[index] = status.balancing_status;
+            // TODO: set balancing status
+            // bal.status[index] = status.balancing_status;
             /*
             if (index == 0)
                 status.errors &= ~0b00001100;
@@ -605,6 +622,8 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
                     break;
             }
         } else if (rx_header.StdId == PRIMARY_SET_CELL_BALANCING_STATUS_FRAME_ID) {
+            // TODO: Set cell balancing status
+            /*
             primary_set_cell_balancing_status_t balancing_status;
 
             primary_set_cell_balancing_status_unpack(&balancing_status, rx_data, PRIMARY_SET_CELL_BALANCING_STATUS_BYTE_SIZE);
@@ -617,6 +636,7 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
                     bal_stop();
                     break;
             }
+            */
         } else if (rx_header.StdId == PRIMARY_HANDCART_STATUS_FRAME_ID) {
             primary_handcart_status_t handcart_status;
 
@@ -633,11 +653,11 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
                     can_forward = 0;
                     break;
                 case primary_hv_can_forward_can_forward_set_ON:
-                    can_bms_send(BMS_FW_UPDATE_FRAME_ID);
+                    can_bms_send(BMS_JMP_TO_BLT_FRAME_ID);
                     can_forward = 1;
                     break;
             }
-        } else if (rx_header.StdId == PRIMARY_BMS_HV_JMP_TO_BLT_FRAME_ID) {
+        } else if (rx_header.StdId == PRIMARY_BMS_HV_JMP_TO_BLT_FRAME_ID && fsm_get_state(bms.fsm) == BMS_IDLE) {
             // JumpToBlt();
             HAL_NVIC_SystemReset();
         }

@@ -21,7 +21,7 @@
 #include "tim.h"
 
 /* USER CODE BEGIN 0 */
-#include "bal_fsm.h"
+#include "bal.h"
 #include "bms_fsm.h"
 #include "mainboard_config.h"
 //#include "super_fsm.h"
@@ -773,7 +773,8 @@ void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim) {
     } else if (htim->Instance == HTIM_MEASURES.Instance) {
         _measures_handle_tim_oc_irq(htim);
     } else if (htim->Instance == HTIM_BAL.Instance) {
-        _bal_handle_tim_oc_irq(htim);
+        // TODO: Remove?
+        // _bal_handle_tim_oc_irq(htim);
     }
 }
 void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim) {
