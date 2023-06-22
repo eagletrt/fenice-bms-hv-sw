@@ -48,12 +48,12 @@ uint16_t _min_index(voltage_t data[], size_t count) {
  * @param	out	output array
  * @param	out_index	length of output (initialize to 0 please)
  */
-void _bal_hateville_solution(uint16_t DP[], uint16_t i, bms_balancing_converted_t cells, uint16_t *out_index) {
+void _bal_hateville_solution(uint16_t DP[], uint16_t i, uint32_t cells, uint16_t *out_index) {
     if (i == 0) {
         return;
     } else if (i == 1) {
         if (DP[1] > 0) {
-            cells.cells_cell0 = 1;
+            cells |= 1;
             ++(*out_index);
         }
         return;
@@ -62,65 +62,8 @@ void _bal_hateville_solution(uint16_t DP[], uint16_t i, bms_balancing_converted_
         return;
     } else {
         _bal_hateville_solution(DP, i - 2, cells, out_index);
-        switch ((i - 1) % LTC6813_CELL_COUNT)
-        {
-        case 0:
-            cells.cells_cell0 = 1;
-            break;
-        case 1:
-            cells.cells_cell1 = 1;
-            break;
-        case 2:
-            cells.cells_cell2 = 1;
-            break;
-        case 3:
-            cells.cells_cell3 = 1;
-            break;
-        case 4:
-            cells.cells_cell4 = 1;
-            break;
-        case 5:
-            cells.cells_cell5 = 1;
-            break;
-        case 6:
-            cells.cells_cell6 = 1;
-            break;
-        case 7:
-            cells.cells_cell7 = 1;
-            break;
-        case 8:
-            cells.cells_cell8 = 1;
-            break;
-        case 9:
-            cells.cells_cell9 = 1;
-            break;
-        case 10:
-            cells.cells_cell10 = 1;
-            break;
-        case 11:
-            cells.cells_cell11 = 1;
-            break;
-        case 12:
-            cells.cells_cell12 = 1;
-            break;
-        case 13:
-            cells.cells_cell13 = 1;
-            break;
-        case 14:
-            cells.cells_cell14 = 1;
-            break;
-        case 15:
-            cells.cells_cell15 = 1;
-            break;
-        case 16:
-            cells.cells_cell16 = 1;
-            break;
-        case 17:
-            cells.cells_cell17 = 1;
-            break;
-        }
+        cells |= 1 << ((i - 1) % LTC6813_CELL_COUNT);
         ++(*out_index);
-
         return;
     }
 }
@@ -136,7 +79,7 @@ void _bal_hateville_solution(uint16_t DP[], uint16_t i, bms_balancing_converted_
  * 
  * @returns	length of the solution array
  */
-uint16_t _bal_hateville(uint16_t D[], uint16_t count, bms_balancing_converted_t solution) {
+uint16_t _bal_hateville(uint16_t D[], uint16_t count, uint32_t solution) {
     uint16_t DP[PACK_CELL_COUNT + 1];
 
     DP[0] = 0;
@@ -155,7 +98,7 @@ uint16_t _bal_hateville(uint16_t D[], uint16_t count, bms_balancing_converted_t 
 
 uint16_t bal_get_cells_to_discharge(
     voltage_t volts[CELLBOARD_CELL_COUNT],
-    bms_balancing_converted_t * cells,
+    uint32_t cells,
     voltage_t target,
     voltage_t threshold) {
     
@@ -170,67 +113,11 @@ uint16_t bal_get_cells_to_discharge(
     else
         min_volt = target;
 
-    memset(cells, 0, sizeof(bms_balancing_converted_t));
+    cells = 0;
 
     for (uint16_t i = 0; i < CELLBOARD_CELL_COUNT; i++) {
-        if (MAX(0, (int32_t)volts[i] - (min_volt + threshold))) {
-            switch (i)
-            {
-            case 0:
-                cells->cells_cell0 = 1;
-                break;
-            case 1:
-                cells->cells_cell1 = 1;
-                break;
-            case 2:
-                cells->cells_cell2 = 1;
-                break;
-            case 3:
-                cells->cells_cell3 = 1;
-                break;
-            case 4:
-                cells->cells_cell4 = 1;
-                break;
-            case 5:
-                cells->cells_cell5 = 1;
-                break;
-            case 6:
-                cells->cells_cell6 = 1;
-                break;
-            case 7:
-                cells->cells_cell7 = 1;
-                break;
-            case 8:
-                cells->cells_cell8 = 1;
-                break;
-            case 9:
-                cells->cells_cell9 = 1;
-                break;
-            case 10:
-                cells->cells_cell10 = 1;
-                break;
-            case 11:
-                cells->cells_cell11 = 1;
-                break;
-            case 12:
-                cells->cells_cell12 = 1;
-                break;
-            case 13:
-                cells->cells_cell13 = 1;
-                break;
-            case 14:
-                cells->cells_cell14 = 1;
-                break;
-            case 15:
-                cells->cells_cell15 = 1;
-                break;
-            case 16:
-                cells->cells_cell16 = 1;
-                break;
-            case 17:
-                cells->cells_cell17 = 1;
-                break;
-            }
+        if (MAX(0, (int32_t)MAX(volts[i], CELL_MIN_VOLTAGE) - (min_volt + threshold))) {
+            cells = 1 << i;
             ++len;
         }
     }
@@ -281,6 +168,6 @@ uint16_t bal_compute_imbalance(voltage_t volts[], uint16_t count, voltage_t thre
     return indexes;
 }
 
-uint16_t bal_exclude_neighbors(uint16_t data[], uint16_t count, bms_balancing_converted_t cells) {
+uint16_t bal_exclude_neighbors(uint16_t data[], uint16_t count, uint32_t cells) {
     return _bal_hateville(data, count, cells);
 }

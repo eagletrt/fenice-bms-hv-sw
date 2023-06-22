@@ -80,66 +80,10 @@ size_t ltc6813_read_voltages(SPI_HandleTypeDef *hspi, voltage_t *volts) {
     return count;
 }
 
-void ltc6813_build_dcc(bms_balancing_converted_t cells, uint8_t cfgar[8], uint8_t cfgbr[8]) {
+void ltc6813_build_dcc(uint32_t cells, uint8_t cfgar[8], uint8_t cfgbr[8]) {
     for (uint8_t i = 0; i < LTC6813_CELL_COUNT; ++i) {
         uint8_t is_cell_selected = 0;
-        switch (i)
-        {
-            case 0:
-                is_cell_selected = cells.cells_cell0;
-                break;
-            case 1:
-                is_cell_selected = cells.cells_cell1;
-                break;
-            case 2:
-                is_cell_selected = cells.cells_cell2;
-                break;
-            case 3:
-                is_cell_selected = cells.cells_cell3;
-                break;
-            case 4:
-                is_cell_selected = cells.cells_cell4;
-                break;
-            case 5:
-                is_cell_selected = cells.cells_cell5;
-                break;
-            case 6:
-                is_cell_selected = cells.cells_cell6;
-                break;
-            case 7:
-                is_cell_selected = cells.cells_cell7;
-                break;
-            case 8:
-                is_cell_selected = cells.cells_cell8;
-                break;
-            case 9:
-                is_cell_selected = cells.cells_cell9;
-                break;
-            case 10:
-                is_cell_selected = cells.cells_cell10;
-                break;
-            case 11:
-                is_cell_selected = cells.cells_cell11;
-                break;
-            case 12:
-                is_cell_selected = cells.cells_cell12;
-                break;
-            case 13:
-                is_cell_selected = cells.cells_cell13;
-                break;
-            case 14:
-                is_cell_selected = cells.cells_cell14;
-                break;
-            case 15:
-                is_cell_selected = cells.cells_cell15;
-                break;
-            case 16:
-                is_cell_selected = cells.cells_cell16;
-                break;
-            case 17:
-                is_cell_selected = cells.cells_cell17;
-                break;
-        }
+        cells |= 1 << i;
 
         if (is_cell_selected) {
             if (i < 8)
@@ -162,7 +106,7 @@ void ltc6813_build_dcc(bms_balancing_converted_t cells, uint8_t cfgar[8], uint8_
     cfgbr[7] = (uint8_t)(pec);
 }
 
-void ltc6813_set_balancing(SPI_HandleTypeDef *hspi, bms_balancing_converted_t cells, int dcto) {
+void ltc6813_set_balancing(SPI_HandleTypeDef *hspi, uint32_t cells, int dcto) {
     uint8_t cfgar[8] = {0};
     uint8_t cfgbr[8] = {0};
 

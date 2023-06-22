@@ -151,34 +151,30 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
     }
     ERROR_UNSET(ERROR_CAN);
 
-    // TODO: Handle balancing CAN message
     if (rx_header.StdId == BMS_BALANCING_FRAME_ID) {
         bms_balancing_t balancing;
         bms_balancing_unpack(&balancing, rx_data, BMS_BALANCING_BYTE_SIZE);
 
-        if (balancing.board_index != cellboard_index)
-            return;
-
-        bms_balancing_raw_to_conversion_struct(&bal.cells, &balancing);
+        bal_fsm_set_threshold(balancing.threshold);
+        bal.target = balancing.target;
 
         if (!bal_is_cells_empty()) {
             fsm_trigger_event(bal.fsm, EV_BAL_START);
         } else {
             fsm_trigger_event(bal.fsm, EV_BAL_STOP);
         }
-    } else if (rx_header.StdId == BMS_FW_UPDATE_FRAME_ID) {
-        JumpToBlt();
+    } else if (rx_header.StdId == BMS_JMP_TO_BLT_FRAME_ID && fsm_get_state(bal.fsm) == BAL_OFF) {
+        HAL_NVIC_SystemReset();
     }
 }
 
 void can_init_with_filter() {
     CAN_FilterTypeDef filter;
     filter.FilterMode       = CAN_FILTERMODE_IDMASK;
-    // TODO: Missing topic filters and masks
-    // filter.FilterIdLow      = bms_TOPIC_FILTER_BALANCING << 5;  // Take all ids from 0
-    // filter.FilterIdHigh     = bms_TOPIC_FILTER_BALANCING << 5;  // to 2^11 - 1
-    // filter.FilterMaskIdHigh = bms_TOPIC_MASK_BALANCING << 5;    // Don't care on can id bits
-    // filter.FilterMaskIdLow  = bms_TOPIC_MASK_BALANCING << 5;    // Don't care on can id bits
+    filter.FilterIdLow      = BMS_TOPIC_FILTER_BALANCING << 5;  // Take all ids from 0
+    filter.FilterIdHigh     = BMS_TOPIC_FILTER_BALANCING << 5;  // to 2^11 - 1
+    filter.FilterMaskIdHigh = BMS_TOPIC_MASK_BALANCING << 5;    // Don't care on can id bits
+    filter.FilterMaskIdLow  = BMS_TOPIC_MASK_BALANCING << 5;    // Don't care on can id bits
     /* HAL considers IdLow and IdHigh not as just the ID of the can message but
         as the combination of: 
         STDID + RTR + IDE + 4 most significant bits of EXTID
@@ -192,11 +188,10 @@ void can_init_with_filter() {
 
 
     filter.FilterMode       = CAN_FILTERMODE_IDMASK;
-    // TODO: Missing topic filters and masks
-    // filter.FilterIdLow      = BMS_FW_UPDATE_FRAME_ID << 5;  // Take all ids from 0
-    // filter.FilterIdHigh     = BMS_FW_UPDATE_FRAME_ID << 5;  // to 2^11 - 1
-    // filter.FilterMaskIdHigh = bms_TOPIC_MASK_FIXED_IDS << 5;    // Don't care on can id bits
-    // filter.FilterMaskIdLow  = bms_TOPIC_MASK_FIXED_IDS << 5;    // Don't care on can id bits
+    filter.FilterIdLow      = BMS_JMP_TO_BLT_FRAME_ID << 5;  // Take all ids from 0
+    filter.FilterIdHigh     = BMS_JMP_TO_BLT_FRAME_ID << 5;  // to 2^11 - 1
+    filter.FilterMaskIdHigh = BMS_TOPIC_MASK_FIXED_IDS << 5;    // Don't care on can id bits
+    filter.FilterMaskIdLow  = BMS_TOPIC_MASK_FIXED_IDS << 5;    // Don't care on can id bits
     /* HAL considers IdLow and IdHigh not as just the ID of the can message but
         as the combination of: 
         STDID + RTR + IDE + 4 most significant bits of EXTID

@@ -30,6 +30,14 @@ void cooldown_handler(fsm FSM, uint8_t event);
 void cooldown_exit(fsm FSM);
 void transition_callback(fsm FSM);
 
+uint16_t bal_fsm_get_threshold() {
+    return bal.threshold;
+}
+
+void bal_fsm_set_threshold(uint16_t threshold) {
+    bal.threshold = MIN(threshold, BAL_MAX_VOLTAGE_THRESHOLD);
+}
+
 void bal_fsm_init() {
     memset(&bal.cells, 0, sizeof(bms_balancing_converted_t));
     bal.status = bms_board_status_balancing_status_OFF;
@@ -37,6 +45,10 @@ void bal_fsm_init() {
     bal.cycle_length  = DCTO_30S;
     bal.fsm           = fsm_init(BAL_NUM_STATES, BAL_EV_NUM, NULL, transition_callback);
     bal.is_s_pin_high = 0;
+
+    bal.discharge_time = 0;
+    bal.target = 0;
+    bal.threshold = BAL_MAX_VOLTAGE_THRESHOLD;
 
     fsm_state state;
 
@@ -67,7 +79,7 @@ void bal_fsm_init() {
 }
 
 void transition_callback(fsm FSM) {
-    can_send(BMS_BOARD_STATUS_FRAME_ID); // 0); //TODO: sborato
+    can_send(BMS_BOARD_STATUS_FRAME_ID);
 }
 
 void off_entry(fsm FSM) {
@@ -77,10 +89,10 @@ void off_entry(fsm FSM) {
     HAL_TIM_OC_Stop_IT(&TIM_COOLDOWN, TIM_COOLDOWN_START_CHANNEL);
     HAL_TIM_OC_Stop_IT(&TIM_COOLDOWN, TIM_COOLDOWN_STOP_CHANNEL);
     
-    memset(&bal.cells, 0, sizeof(bms_balancing_converted_t));
+    bal.cells = 0;
 
     // Reset balancing
-    bms_balancing_converted_t cells = { 0 };
+    uint32_t cells = 0;
     ltc6813_set_balancing(&LTC6813_SPI, cells, 0);
 }
 
@@ -90,7 +102,7 @@ void off_handler(fsm FSM, uint8_t event) {
             fsm_transition(FSM, BAL_DISCHARGE);
             break;
         case EV_BAL_STOP:
-            memset(&bal.cells, 0, sizeof(bms_balancing_converted_t));
+            bal.cells = 0;
     }
 }
 
@@ -98,7 +110,7 @@ void compute_entry(fsm FSM) {
     // Get cells to discharge
     uint16_t discharge_count = bal_get_cells_to_discharge(
         volt_get_volts(),
-        &bal.cells,
+        bal.cells,
         bal.target,
         bal.threshold
     );
@@ -138,7 +150,7 @@ void discharge_handler(fsm FSM, uint8_t event) {
                 // Get cells to discharge
                 uint16_t discharge_count = bal_get_cells_to_discharge(
                     volt_get_volts(),
-                    &bal.cells,
+                    bal.cells,
                     bal.target,
                     bal.threshold
                 );
@@ -196,8 +208,24 @@ void cooldown_exit(fsm FSM) {
 }
 
 void bal_timers_handler(TIM_HandleTypeDef *htim, fsm handle) {
-    memset(&bal.cells, 0, sizeof(bms_balancing_converted_t));
-    fsm_trigger_event(bal.fsm, EV_BAL_STOP);
+    if (htim->Instance == TIM_DISCHARGE.Instance) {
+        memset(&bal.cells, 0, sizeof(bms_balancing_converted_t));
+        fsm_trigger_event(bal.fsm, EV_BAL_STOP);
+    }
+    else if (htim->Instance == TIM_COOLDOWN.Instance) {
+        switch (htim->Channel) {
+            case HAL_TIM_ACTIVE_CHANNEL_1:
+                // Start cooldown
+                fsm_trigger_event(bal.fsm, EV_BAL_COOLDOWN_START);
+                break;
+            case HAL_TIM_ACTIVE_CHANNEL_2:
+                // Stop cooldown
+                fsm_trigger_event(bal.fsm, EV_BAL_COOLDOWN_END);
+                break;
+            default:
+                break;
+        }
+    }
 }
 
 
@@ -206,7 +234,7 @@ void bal_oc_timer_handler(TIM_HandleTypeDef *htim) {
         uint32_t cmp = __HAL_TIM_GetCompare(htim, TIM_CHANNEL_1);
 
         if (bal.is_s_pin_high) {
-            bms_balancing_converted_t cells = { 0 };
+            uint32_t cells = 0;
             ltc6813_set_balancing(&LTC6813_SPI, cells, 0);
             __HAL_TIM_SetCompare(htim, TIM_CHANNEL_1, cmp + TIM_MS_TO_TICKS(htim, BAL_TIME_OFF));
             bal.is_s_pin_high = 0;
@@ -219,23 +247,5 @@ void bal_oc_timer_handler(TIM_HandleTypeDef *htim) {
 }
 
 bool bal_is_cells_empty() {
-    uint32_t empty = bal.cells.cells_cell0 |
-        bal.cells.cells_cell1 |
-        bal.cells.cells_cell2 |
-        bal.cells.cells_cell3 |
-        bal.cells.cells_cell4 |
-        bal.cells.cells_cell5 |
-        bal.cells.cells_cell6 |
-        bal.cells.cells_cell7 |
-        bal.cells.cells_cell8 |
-        bal.cells.cells_cell9 |
-        bal.cells.cells_cell10 |
-        bal.cells.cells_cell11 |
-        bal.cells.cells_cell12 |
-        bal.cells.cells_cell13 |
-        bal.cells.cells_cell14 |
-        bal.cells.cells_cell15 |
-        bal.cells.cells_cell16 |
-        bal.cells.cells_cell17;
-    return empty == 0;
+    return bal.cells == 0;
 }

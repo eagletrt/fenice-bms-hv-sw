@@ -26,7 +26,7 @@ enum { EV_BAL_STOP = 0, EV_BAL_START, EV_BAL_COOLDOWN_START, EV_BAL_COOLDOWN_END
 typedef struct {
     fsm fsm;
     uint8_t is_s_pin_high;
-    bms_balancing_converted_t cells;
+    uint32_t cells;
     bms_board_status_balancing_status status;
     uint32_t discharge_time;
     uint32_t cycle_length;
@@ -35,6 +35,19 @@ typedef struct {
 } bal_fsm;
 
 extern bal_fsm bal;
+
+/**
+ * @brief Get the voltage threshold value for balancing
+ * 
+ * @return uint16_t The voltage threshold
+ */
+uint16_t bal_fsm_get_threshold();
+/**
+ * @brief Set the voltage threshold value for balancing
+ * 
+ * @param threshold The new threshold voltage to set
+ */
+void bal_fsm_set_threshold(uint16_t threshold);
 
 /** @brief Initialize the fsm */
 void bal_fsm_init();

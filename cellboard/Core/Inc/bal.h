@@ -32,7 +32,7 @@
  */
 uint16_t bal_get_cells_to_discharge(
     voltage_t volts[CELLBOARD_CELL_COUNT],
-    bms_balancing_converted_t * cells,
+    uint32_t cells,
     voltage_t target,
     voltage_t threshold);
 
@@ -64,5 +64,5 @@ uint16_t bal_compute_imbalance_with_target(
  * 
  * @returns	amount of cells to be discharged
  */
-uint16_t bal_exclude_neighbors(uint16_t indexes[], uint16_t count, bms_balancing_converted_t cells);
+uint16_t bal_exclude_neighbors(uint16_t indexes[], uint16_t count, uint32_t cells);
 #endif

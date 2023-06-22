@@ -245,7 +245,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
    When DISCHARGE_TIMER elapses bal_timers_handler is called,
    when the function completes its work the DISCHARGE_TIMER is stopped
   */
-    if (htim->Instance == TIM_DISCHARGE.Instance) {
+    if (htim->Instance == TIM_DISCHARGE.Instance
+        || htim->Instance == TIM_COOLDOWN.Instance) {
         bal_timers_handler(htim, bal.fsm);
     }
 }
