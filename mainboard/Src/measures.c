@@ -32,7 +32,6 @@ void measures_check_flags() {
         measures_voltage_current_soc();
         cell_voltage_check_errors();
         current_check_errors();
-        can_car_send(PRIMARY_HV_VOLTAGE_FRAME_ID);
         can_car_send(PRIMARY_HV_CURRENT_FRAME_ID);
         can_car_send(PRIMARY_TS_STATUS_FRAME_ID);
         if (error_count() > 0) {

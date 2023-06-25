@@ -39,7 +39,7 @@ void bal_fsm_set_threshold(uint16_t threshold) {
 }
 
 void bal_fsm_init() {
-    memset(&bal.cells, 0, sizeof(bms_balancing_converted_t));
+    bal.cells = 0;
     bal.status = bms_board_status_balancing_status_OFF;
 
     bal.cycle_length  = DCTO_30S;
@@ -99,7 +99,7 @@ void off_entry(fsm FSM) {
 void off_handler(fsm FSM, uint8_t event) {
     switch (event) {
         case EV_BAL_START:
-            fsm_transition(FSM, BAL_DISCHARGE);
+            fsm_transition(FSM, BAL_COMPUTE);
             break;
         case EV_BAL_STOP:
             bal.cells = 0;
@@ -110,7 +110,7 @@ void compute_entry(fsm FSM) {
     // Get cells to discharge
     uint16_t discharge_count = bal_get_cells_to_discharge(
         volt_get_volts(),
-        bal.cells,
+        &bal.cells,
         bal.target,
         bal.threshold
     );
@@ -150,7 +150,7 @@ void discharge_handler(fsm FSM, uint8_t event) {
                 // Get cells to discharge
                 uint16_t discharge_count = bal_get_cells_to_discharge(
                     volt_get_volts(),
-                    bal.cells,
+                    &bal.cells,
                     bal.target,
                     bal.threshold
                 );
@@ -167,7 +167,7 @@ void discharge_handler(fsm FSM, uint8_t event) {
 
 void discharge_exit(fsm FSM) {
     bal.is_s_pin_high = 0;
-    memset(&bal.cells, 0, sizeof(bms_balancing_converted_t));
+    bal.cells = 0;
 
     // Stop discharge timer
     HAL_TIM_Base_Stop_IT(&TIM_DISCHARGE);
@@ -178,7 +178,7 @@ void discharge_exit(fsm FSM) {
 }
 
 void cooldown_entry(fsm FSM) {
-    memset(&bal.cells, 0, sizeof(bms_balancing_converted_t));
+    bal.cells = 0;
 
     // Stop cooldown start timer channel
     HAL_TIM_OC_Stop_IT(&TIM_COOLDOWN, TIM_COOLDOWN_START_CHANNEL);
@@ -209,7 +209,7 @@ void cooldown_exit(fsm FSM) {
 
 void bal_timers_handler(TIM_HandleTypeDef *htim, fsm handle) {
     if (htim->Instance == TIM_DISCHARGE.Instance) {
-        memset(&bal.cells, 0, sizeof(bms_balancing_converted_t));
+        bal.cells = 0;
         fsm_trigger_event(bal.fsm, EV_BAL_STOP);
     }
     else if (htim->Instance == TIM_COOLDOWN.Instance) {

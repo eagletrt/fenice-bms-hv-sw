@@ -10,23 +10,43 @@
 #ifndef BAL_FSM_H
 #define BAL_FSM_H
 
-enum { BAL_OFF = 0, BAL_COMPUTE, BAL_DISCHARGE, BAL_COOLDOWN, BAL_NUM_STATES };
-enum { EV_BAL_STOP = 0, EV_BAL_START, EV_BAL_COOLDOWN_START, EV_BAL_COOLDOWN_END, BAL_EV_NUM };
+#include <inttypes.h>
+#include <stdbool.h>
 
+#include "../../fenice_config.h"
 
-// TODO: Start and stop balancing per cellboard
-
-/*
-void bal_start();
-void bal_stop();
-
-
+/**
+ * @brief Get balancing threshold voltage value
+ * 
+ * @return voltage_t The threshold voltage
+ */
 voltage_t bal_get_threshold();
+/**
+ * @brief Set balancing threshold voltage value
+ * 
+ * @param thresh The new threshold voltage to set
+ */
 void bal_set_threshold(uint16_t thresh);
+/**
+ * @brief Check if the cellboard are balancing or not
+ * 
+ * @return true If any cellboard is balancing
+ * @return false If no cellboard are balancing
+ */
+bool bal_is_balancing();
+/**
+ * @brief Workaround for can_bms_send
+ * 
+ * @return true during bal_start
+ * @return false otherwise
+ */
+bool bal_need_balancing();
 
-uint8_t bal_are_cells_off_status();
-
-void _bal_handle_tim_oc_irq(TIM_HandleTypeDef *htim);
-*/
+/** @brief Initialize balancing */
+void bal_init();
+/** @brief Start balancing */
+void bal_start();
+/** @brief Stop balancing */
+void bal_stop();
 
 #endif

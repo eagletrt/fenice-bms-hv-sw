@@ -32,7 +32,7 @@
  */
 uint16_t bal_get_cells_to_discharge(
     voltage_t volts[CELLBOARD_CELL_COUNT],
-    uint32_t cells,
+    uint32_t * cells,
     voltage_t target,
     voltage_t threshold);
 

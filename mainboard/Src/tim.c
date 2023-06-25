@@ -772,9 +772,6 @@ void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim) {
         _bms_handle_tim_oc_irq(htim);
     } else if (htim->Instance == HTIM_MEASURES.Instance) {
         _measures_handle_tim_oc_irq(htim);
-    } else if (htim->Instance == HTIM_BAL.Instance) {
-        // TODO: Remove?
-        // _bal_handle_tim_oc_irq(htim);
     }
 }
 void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim) {

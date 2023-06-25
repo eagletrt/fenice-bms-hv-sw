@@ -98,7 +98,7 @@ uint16_t _bal_hateville(uint16_t D[], uint16_t count, uint32_t solution) {
 
 uint16_t bal_get_cells_to_discharge(
     voltage_t volts[CELLBOARD_CELL_COUNT],
-    uint32_t cells,
+    uint32_t * cells,
     voltage_t target,
     voltage_t threshold) {
     
@@ -113,14 +113,17 @@ uint16_t bal_get_cells_to_discharge(
     else
         min_volt = target;
 
-    cells = 0;
-
+    *cells = 0;
+    /*
     for (uint16_t i = 0; i < CELLBOARD_CELL_COUNT; i++) {
         if (MAX(0, (int32_t)MAX(volts[i], CELL_MIN_VOLTAGE) - (min_volt + threshold))) {
-            cells = 1 << i;
+            *cells = 1 << i;
             ++len;
         }
     }
+    */
+    *cells = 1;
+    len++;
 
     return len;
 

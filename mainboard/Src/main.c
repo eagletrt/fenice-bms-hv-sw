@@ -82,14 +82,7 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-    // HAL_Init();
-    // SystemClock_Config();
-    // MX_GPIO_Init();
-    // MX_USART1_UART_Init();
-    // HAL_UART_Transmit(&huart1, "Sborat!\n", 9, 100);
-    // HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_SET);
-    // HAL_Delay(3000);
-    // HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_RESET);
+  
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -137,7 +130,7 @@ int main(void)
     error_init();
 
     internal_voltage_init();
-    // bal_fsm_init();
+    bal_init();
     bms_fsm_init();
     current_zero();
     soc_init();
@@ -158,15 +151,13 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
         fsm_run(bms.fsm);
-        // fsm_run(bal.fsm);
-        // measures_check_flags();
+        
+        measures_check_flags();
+        
         cli_watch_flush_handler();
         // if (HAL_GetTick() > 1500 && !HAL_GPIO_ReadPin(BMS_FAULT_GPIO_Port, BMS_FAULT_Pin))
         //     HAL_GPIO_WritePin(BMS_FAULT_GPIO_Port, BMS_FAULT_Pin, BMS_FAULT_OFF_VALUE);
         cli_loop(&cli_bms);
-
-        can_car_send(PRIMARY_TS_STATUS_FRAME_ID);
-        HAL_Delay(500);
     }
     return 0;
   /* USER CODE END 3 */

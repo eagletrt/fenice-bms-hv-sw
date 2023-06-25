@@ -288,23 +288,10 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         primary_hv_cell_balancing_status_t raw_bal_status;
         primary_hv_cell_balancing_status_converted_t conv_bal_status;
 
-        // TODO: Check balancing status
-        /*
-        switch (fsm_get_state(bal.fsm)) {
-            case BAL_OFF:
-                conv_bal_status.balancing_status = primary_hv_cell_balancing_status_balancing_status_OFF;
-                break;
-            case BAL_COMPUTE:
-            case BAL_COOLDOWN:
-            case BAL_DISCHARGE:
-                conv_bal_status.balancing_status = primary_hv_cell_balancing_status_balancing_status_ON;
-                break;
-            default:
-                conv_bal_status.balancing_status = primary_hv_cell_balancing_status_balancing_status_OFF;
-                break;
-        }
-        */
-        conv_bal_status.balancing_status = primary_hv_cell_balancing_status_balancing_status_OFF;
+        if (bal_is_balancing())
+            conv_bal_status.balancing_status = PRIMARY_HV_CELL_BALANCING_STATUS_BALANCING_STATUS_OFF_CHOICE;
+        else
+            conv_bal_status.balancing_status = PRIMARY_HV_CELL_BALANCING_STATUS_BALANCING_STATUS_ON_CHOICE;
 
         // Convert bal status to raw
         primary_hv_cell_balancing_status_conversion_to_raw_struct(&raw_bal_status, &conv_bal_status);
@@ -401,22 +388,19 @@ HAL_StatusTypeDef can_bms_send(uint16_t id) {
         return HAL_BUSY;
     tx_header.StdId = id;
 
-    if (id == BMS_BALANCING_FRAME_ID) {
+    if (id == BMS_SET_BALANCING_STATUS_FRAME_ID) {
         uint8_t status = 0;
 
-        // TODO: Send balancing message to the cellboards
-        /*
-        register uint16_t i;
-        for (i = 0; i < CELLBOARD_COUNT; ++i) {
-            bms_balancing_t raw_bal;
+        for (size_t i = 0; i < CELLBOARD_COUNT; ++i) {
+            bms_set_balancing_status_t raw_bal = { 0 };
+            raw_bal.balancing_status = bal_need_balancing();
+            raw_bal.target = MAX(CELL_MIN_VOLTAGE, cell_voltage_get_min());
+            raw_bal.threshold = MIN(BAL_MAX_VOLTAGE_THRESHOLD, bal_get_threshold());
 
-            // Convert bal to raw
-            bms_balancing_conversion_to_raw_struct(&raw_bal, &bal.cells[i]);
-
-            tx_header.DLC = bms_balancing_pack(buffer, &raw_bal, BMS_BALANCING_BYTE_SIZE);
+            tx_header.DLC = bms_set_balancing_status_pack(buffer, &raw_bal, BMS_SET_BALANCING_STATUS_BYTE_SIZE);
             status |= can_send(&BMS_CAN, buffer, &tx_header);
         }
-        */
+
         return status == 0 ? HAL_OK : HAL_ERROR;
     } else if (id == BMS_JMP_TO_BLT_FRAME_ID) {
         bms_jmp_to_blt_t raw_jmp;
@@ -489,6 +473,21 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
                 raw_volts.voltage2
             };
             cell_voltage_set_cells(raw_volts.cellboard_id, raw_volts.start_index, volts, 3);
+
+            uint8_t buffer[8];
+            primary_hv_cells_voltage_t fwd_volts;
+
+            tx_header.StdId = PRIMARY_HV_CELLS_VOLTAGE_FRAME_ID;
+            tx_header.DLC = PRIMARY_HV_CELLS_VOLTAGE_BYTE_SIZE;
+
+            fwd_volts.start_index = raw_volts.start_index;
+            fwd_volts.voltage_0 = raw_volts.voltage0;
+            fwd_volts.voltage_1 = raw_volts.voltage1;
+            fwd_volts.voltage_2 = raw_volts.voltage2;
+
+            primary_hv_cells_voltage_pack(buffer, &fwd_volts, PRIMARY_HV_CELLS_VOLTAGE_BYTE_SIZE);
+
+            can_send(&CAR_CAN, buffer, &tx_header);
         } else if (rx_header.StdId == BMS_TEMPERATURES_FRAME_ID) {
             uint8_t offset = 0;
             bms_temperatures_t raw_temps;
@@ -560,6 +559,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
                     index = 5;
                     break;
             }
+            
             // TODO: set balancing status
             // bal.status[index] = status.balancing_status;
             /*
@@ -622,21 +622,18 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
                     break;
             }
         } else if (rx_header.StdId == PRIMARY_SET_CELL_BALANCING_STATUS_FRAME_ID) {
-            // TODO: Set cell balancing status
-            /*
-            primary_set_cell_balancing_status_t balancing_status;
+            primary_set_cell_balancing_status_t bal_status;
 
-            primary_set_cell_balancing_status_unpack(&balancing_status, rx_data, PRIMARY_SET_CELL_BALANCING_STATUS_BYTE_SIZE);
-
-            switch (balancing_status.set_balancing_status) {
-                case primary_set_cell_balancing_status_set_balancing_status_ON:
+            primary_set_cell_balancing_status_unpack(&bal_status, rx_data, PRIMARY_SET_CELL_BALANCING_STATUS_BYTE_SIZE);
+            
+            switch(bal_status.set_balancing_status) {
+                case PRIMARY_SET_CELL_BALANCING_STATUS_SET_BALANCING_STATUS_ON_CHOICE:
                     bal_start();
                     break;
-                case primary_set_cell_balancing_status_set_balancing_status_OFF:
+                case PRIMARY_SET_CELL_BALANCING_STATUS_SET_BALANCING_STATUS_OFF_CHOICE:
                     bal_stop();
                     break;
             }
-            */
         } else if (rx_header.StdId == PRIMARY_HANDCART_STATUS_FRAME_ID) {
             primary_handcart_status_t handcart_status;
 
@@ -644,6 +641,11 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
             
             bms.handcart_connected = handcart_status.connected;
         } else if (rx_header.StdId == PRIMARY_HV_CAN_FORWARD_FRAME_ID) {
+            if (fsm_get_state(bms.fsm) != BMS_IDLE) {
+                can_forward = 0;
+                return;
+            }
+            
             primary_hv_can_forward_t hv_can_forward;
 
             primary_hv_can_forward_unpack(&hv_can_forward, rx_data, PRIMARY_HV_CAN_FORWARD_BYTE_SIZE);
@@ -657,8 +659,7 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
                     can_forward = 1;
                     break;
             }
-        } else if (rx_header.StdId == PRIMARY_BMS_HV_JMP_TO_BLT_FRAME_ID && fsm_get_state(bms.fsm) == BMS_IDLE) {
-            // JumpToBlt();
+        } else if (rx_header.StdId == PRIMARY_BMS_HV_JMP_TO_BLT_FRAME_ID && fsm_get_state(bms.fsm) == BMS_IDLE && !bal_is_balancing()) {
             HAL_NVIC_SystemReset();
         }
     }

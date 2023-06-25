@@ -78,6 +78,8 @@ void can_send(uint16_t topic_id) {
             ? bms_board_status_cellboard_id_CELLBOARD_5
             : cellboard_index;
 
+        // TODO: set errors?
+
         bms_board_status_conversion_to_raw_struct(&raw_state, &conv_state);
 
         tx_header.StdId = BMS_BOARD_STATUS_FRAME_ID;
@@ -137,7 +139,6 @@ void can_send(uint16_t topic_id) {
             _can_send(&BMS_CAN, buffer, &tx_header);
             HAL_Delay(1);
         }
-
         return;
     }
 }
@@ -151,17 +152,20 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
     }
     ERROR_UNSET(ERROR_CAN);
 
-    if (rx_header.StdId == BMS_BALANCING_FRAME_ID) {
-        bms_balancing_t balancing;
-        bms_balancing_unpack(&balancing, rx_data, BMS_BALANCING_BYTE_SIZE);
+    if (rx_header.StdId == BMS_SET_BALANCING_STATUS_FRAME_ID) {
+        bms_set_balancing_status_t balancing;
+        bms_set_balancing_status_unpack(&balancing, rx_data, BMS_SET_BALANCING_STATUS_BYTE_SIZE);
 
         bal_fsm_set_threshold(balancing.threshold);
         bal.target = balancing.target;
-
-        if (!bal_is_cells_empty()) {
-            fsm_trigger_event(bal.fsm, EV_BAL_START);
-        } else {
-            fsm_trigger_event(bal.fsm, EV_BAL_STOP);
+        
+        switch(balancing.balancing_status) {
+            case bms_set_balancing_status_balancing_status_OFF:
+                fsm_trigger_event(bal.fsm, EV_BAL_STOP);
+                break;
+            case bms_set_balancing_status_balancing_status_DISCHARGE:
+                fsm_trigger_event(bal.fsm, EV_BAL_START);
+                break;
         }
     } else if (rx_header.StdId == BMS_JMP_TO_BLT_FRAME_ID && fsm_get_state(bal.fsm) == BAL_OFF) {
         HAL_NVIC_SystemReset();

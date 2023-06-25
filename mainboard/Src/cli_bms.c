@@ -61,8 +61,7 @@ cli_command_func_t _cli_sborat;
 const char *bms_state_names[BMS_NUM_STATES] =
     {[BMS_IDLE] = "idle", [BMS_PRECHARGE] = "precharge", [BMS_ON] = "run", [BMS_FAULT] = "fault"};
 
-const char *bal_state_names[BAL_NUM_STATES] =
-    {[BAL_OFF] = "off", [BAL_COMPUTE] = "computing", [BAL_DISCHARGE] = "discharging", [BAL_COOLDOWN] = "cooldown"};
+const char *bal_state_names[2] = { "off", "discharging" };
 
 const char *error_names[ERROR_NUM_ERRORS] = {
     [ERROR_CELL_LOW_VOLTAGE]      = "low-voltage",
@@ -201,7 +200,7 @@ void _cli_volts(uint16_t argc, char **argv, char *out) {
 
 // TODO: Print all cells voltages
 void _cli_volts_all(uint16_t argc, char **argv, char *out) {
-    strcpy(out, "Work in progress...\n\0");
+    sprintf(out + strlen(out), "Sorry, not avilable...! :(\n");
     /*
     voltage_t * cells = cell_voltage_get_cells();
 
@@ -222,66 +221,9 @@ void _cli_volts_all(uint16_t argc, char **argv, char *out) {
         }
         segment_sum += cell_v;
 
-        bool is_cell_selected = false;
-        switch (i % CELLBOARD_CELL_COUNT)
-        {
-            case 0:
-                is_cell_selected = bal.cells[i / CELLBOARD_CELL_COUNT].cells_cell0;
-                break;
-            case 1:
-                is_cell_selected = bal.cells[i / CELLBOARD_CELL_COUNT].cells_cell1;
-                break;
-            case 2:
-                is_cell_selected = bal.cells[i / CELLBOARD_CELL_COUNT].cells_cell2;
-                break;
-            case 3:
-                is_cell_selected = bal.cells[i / CELLBOARD_CELL_COUNT].cells_cell3;
-                break;
-            case 4:
-                is_cell_selected = bal.cells[i / CELLBOARD_CELL_COUNT].cells_cell4;
-                break;
-            case 5:
-                is_cell_selected = bal.cells[i / CELLBOARD_CELL_COUNT].cells_cell5;
-                break;
-            case 6:
-                is_cell_selected = bal.cells[i / CELLBOARD_CELL_COUNT].cells_cell6;
-                break;
-            case 7:
-                is_cell_selected = bal.cells[i / CELLBOARD_CELL_COUNT].cells_cell7;
-                break;
-            case 8:
-                is_cell_selected = bal.cells[i / CELLBOARD_CELL_COUNT].cells_cell8;
-                break;
-            case 9:
-                is_cell_selected = bal.cells[i / CELLBOARD_CELL_COUNT].cells_cell9;
-                break;
-            case 10:
-                is_cell_selected = bal.cells[i / CELLBOARD_CELL_COUNT].cells_cell10;
-                break;
-            case 11:
-                is_cell_selected = bal.cells[i / CELLBOARD_CELL_COUNT].cells_cell11;
-                break;
-            case 12:
-                is_cell_selected = bal.cells[i / CELLBOARD_CELL_COUNT].cells_cell12;
-                break;
-            case 13:
-                is_cell_selected = bal.cells[i / CELLBOARD_CELL_COUNT].cells_cell13;
-                break;
-            case 14:
-                is_cell_selected = bal.cells[i / CELLBOARD_CELL_COUNT].cells_cell14;
-                break;
-            case 15:
-                is_cell_selected = bal.cells[i / CELLBOARD_CELL_COUNT].cells_cell15;
-                break;
-            case 16:
-                is_cell_selected = bal.cells[i / CELLBOARD_CELL_COUNT].cells_cell16;
-                break;
-            case 17:
-                is_cell_selected = bal.cells[i / CELLBOARD_CELL_COUNT].cells_cell17;
-                break;
-        }
+        bool is_cell_selected = (cells[i / CELLBOARD_CELL_COUNT] & (1 << i % CELLBOARD_CELL_COUNT));
 
-        if (fsm_get_state(bal.fsm) == BAL_OFF) {
+        if (!bal_is_balancing()) {
             if (cells[i] == max)
                 sprintf(out + strlen(out), RED_BG("[%3u %-.3fV]") " ", i, cell_v);
             else if (cells[i] == min)
@@ -317,7 +259,7 @@ void _cli_volts_all(uint16_t argc, char **argv, char *out) {
     sprintf(out + strlen(out), "Segment total: %.2fV", segment_sum);
     total_power /= DISCHARGE_R;
 
-    if (fsm_get_state(bal.fsm) != BAL_OFF) {
+    if (!bal_is_balancing()) {
         cell_v           = max / 10000;
         float max_soc    = 0.0862 * cell_v * cell_v * cell_v - 1.4260 * cell_v * cell_v + 6.0088 * cell_v - 6.551;
         cell_v           = (min + bal_get_threshold() - 10) / 10000;
@@ -405,18 +347,16 @@ void _cli_status(uint16_t argc, char **argv, char *out) {
 #define n_items 3
 
     char thresh[5] = {'\0'};
-    // TODO: Get bal threshold
-    // itoa((float)bal_get_threshold() / 10, thresh, 10);
+    itoa((float)bal_get_threshold() / 10, thresh, 10);
 
     char er_count[3] = {'\0'};
     itoa(error_count(), er_count, 10);
 
     // TODO: Fix this
-    // TODO: Get balancing state
     const char *values[n_items][2] = {
         {"BMS state", bms_state_names[fsm_get_state(bms.fsm)]},
         {"error count", er_count},
-        {"balancing state", bal_state_names[0]} // fsm_get_state(bal.fsm)]}};
+        {"balancing state", bal_state_names[bal_is_balancing()]}
     };
     //{"BMS state", (char *)fsm_bms.state_names[fsm_bms.current_state]}, {"error
     // count", er_count}, {"balancing", bal}, {"balancing threshold", thresh}};
@@ -435,14 +375,14 @@ void _cli_status(uint16_t argc, char **argv, char *out) {
 // TODO: Balancing actions
 void _cli_balance(uint16_t argc, char **argv, char *out) {
     strcpy(out, "Work in progress...\n\0");
-    /*
+    
     if (strcmp(argv[1], "on") == 0) {
-        if (argc > 2)
-            bal.target = atoi(argv[2]);
-        fsm_trigger_event(bal.fsm, EV_BAL_START);
+        // if (argc > 2)
+        //     bal.target = atoi(argv[2]);
+        bal_start();
         sprintf(out, "enabling balancing\r\n");
     } else if (strcmp(argv[1], "off") == 0) {
-        fsm_trigger_event(bal.fsm, EV_BAL_STOP);
+        bal_stop();
         sprintf(out, "disabling balancing\r\n");
     } else if (strcmp(argv[1], "thr") == 0) {
         if (argv[2] != NULL) {
@@ -453,15 +393,16 @@ void _cli_balance(uint16_t argc, char **argv, char *out) {
         }
         sprintf(out, "balancing threshold is %.2f mV\r\n", bal_get_threshold() / 10.0);
     } else if (strcmp(argv[1], "test") == 0) {
+        /*
         CAN_TxHeaderTypeDef tx_header;
         uint8_t buffer[CAN_MAX_PAYLOAD_LENGTH];
         uint8_t board;
-        bms_balancing_converted_t cells = { 0 };
+        uint32_t cells = 0;
 
         tx_header.ExtId = 0;
         tx_header.IDE   = CAN_ID_STD;
         tx_header.RTR   = CAN_RTR_DATA;
-        tx_header.StdId = BMS_BALANCING_FRAME_ID;
+        tx_header.StdId = BMS_SET_BALANCING_STATUS_FRAME_ID;
 
         board = atoi(argv[2]);
 
@@ -475,76 +416,16 @@ void _cli_balance(uint16_t argc, char **argv, char *out) {
         uint8_t c;
         for (uint8_t i = 3; i < argc; ++i) {
             c = atoi(argv[i]);
-            switch (c) {
-                case 0:
-                    cells.cells_cell0 = 1;
-                    break;
-                case 1:
-                    cells.cells_cell1 = 1;
-                    break;
-                case 2:
-                    cells.cells_cell2 = 1;
-                    break;
-                case 3:
-                    cells.cells_cell3 = 1;
-                    break;
-                case 4:
-                    cells.cells_cell4 = 1;
-                    break;
-                case 5:
-                    cells.cells_cell5 = 1;
-                    break;
-                case 6:
-                    cells.cells_cell6 = 1;
-                    break;
-                case 7:
-                    cells.cells_cell7 = 1;
-                    break;
-                case 8:
-                    cells.cells_cell8 = 1;
-                    break;
-                case 9:
-                    cells.cells_cell9 = 1;
-                    break;
-                case 10:
-                    cells.cells_cell10 = 1;
-                    break;
-                case 11:
-                    cells.cells_cell11 = 1;
-                    break;
-                case 12:
-                    cells.cells_cell12 = 1;
-                    break;
-                case 13:
-                    cells.cells_cell13 = 1;
-                    break;
-                case 14:
-                    cells.cells_cell14 = 1;
-                    break;
-                case 15:
-                    cells.cells_cell15 = 1;
-                    break;
-                case 16:
-                    cells.cells_cell16 = 1;
-                    break;
-                case 17:
-                    cells.cells_cell17 = 1;
-                    break;
-            }
+            cells |= 1 << c;
             sprintf(out + strlen(out), "%u,", c);
         }
 
-        // TODO: Missing bms_BALANCING_SIZE
-        tx_header.DLC = 8;// bms_BALANCING_SIZE;
 
-        // Convert cells values to raw
-        bms_balancing_t raw = { 0 };
-        bms_balancing_conversion_to_raw_struct(&raw, &cells);
-
-        bms_balancing_pack(buffer, &raw, BMS_BALANCING_BYTE_SIZE);
+        tx_header.DLC = bms_balancing_pack(buffer, &raw, BMS_BALANCING_BYTE_SIZE);
         can_send(&BMS_CAN, buffer, &tx_header);
 
         sprintf(out + strlen(out) - 1, "]\r\non board %d\r\n", board);
+        */
     } else if (argc < 2) {
         sprintf(
             out,
@@ -565,7 +446,6 @@ void _cli_balance(uint16_t argc, char **argv, char *out) {
             "- test <board> <cell0 cell1 ... cellN>\r\n",
             argv[0]);
     }
-    */
 }
 void _cli_soc(uint16_t argc, char **argv, char *out) {
     if (strcmp(argv[1], "reset") == 0) {
