@@ -14,12 +14,7 @@
 #include "tim.h"
 
 #include <stdlib.h>
-#ifndef max
-#define max(a, b) ((a) > (b) ? (a) : (b))
-#endif
-#ifndef min
-#define min(a, b) ((a) < (b) ? (a) : (b))
-#endif
+
 /**
  * Reaction times by the rules:
  * 	- 500ms for voltages and current

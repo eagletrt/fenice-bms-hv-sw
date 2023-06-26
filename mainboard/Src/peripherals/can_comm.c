@@ -582,7 +582,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
         } else {
             char buffer[50] = {0};
             sprintf(buffer, "%lx#%lx%lx\r\n", rx_header.StdId, *(uint32_t*)rx_data, *(((uint32_t*)rx_data)+1));
-            HAL_UART_Transmit(&CLI_UART, (uint8_t*)buffer, strlen(buffer), 100);
+            // HAL_UART_Transmit(&CLI_UART, (uint8_t*)buffer, strlen(buffer), 100);
         }
     }
 }

@@ -186,10 +186,10 @@ static const uint8_t TEMP_SENSOR_ADDRESS_CODING[TEMP_SENSORS_PER_STRIP] = {000, 
 
 
 enum {
-    FEEDBACK_TSAL_GREEN_FAULT_POS,
-    FEEDBACK_IMD_LATCHED_POS,
+    FEEDBACK_IMPLAUSIBILITY_DETECTED_POS = 0,
+    FEEDBACK_IMD_COCKPIT_POS,
     FEEDBACK_TSAL_GREEN_FAULT_LATCHED_POS,
-    FEEDBACK_BMS_LATCHED_POS,
+    FEEDBACK_BMS_COCKPIT_POS,
     FEEDBACK_EXT_LATCHED_POS,
     FEEDBACK_TSAL_GREEN_POS,
     FEEDBACK_TS_OVER_60V_STATUS_POS,
@@ -199,18 +199,9 @@ enum {
     FEEDBACK_AIRN_GATE_POS,
     FEEDBACK_PRECHARGE_STATUS_POS,
     FEEDBACK_TSP_OVER_60V_STATUS_POS,
-    FEEDBACK_CHECK_MUX_POS,
-    FEEDBACK_SD_IN_POS,
-    FEEDBACK_SD_OUT_POS,
-
-    FEEDBACK_MUX_N
-};
-
-enum {
-    FEEDBACK_RELAY_SD_POS = FEEDBACK_MUX_N,
     FEEDBACK_IMD_FAULT_POS,
+    FEEDBACK_CHECK_MUX_POS,
     FEEDBACK_SD_END_POS,
-
     FEEDBACK_N
 };
 
@@ -218,10 +209,10 @@ enum {
  * Feedback bit sets 
  */
 #define FEEDBACK_NULL                           0
-#define FEEDBACK_TSAL_GREEN_FAULT               ((feedback_t)1 << FEEDBACK_TSAL_GREEN_FAULT_POS)
-#define FEEDBACK_IMD_LATCHED                    ((feedback_t)1 << FEEDBACK_IMD_LATCHED_POS)
+#define FEEDBACK_IMPLAUSIBILITY_DETECTED        ((feedback_t)1 << FEEDBACK_IMPLAUSIBILITY_DETECTED_POS)
+#define FEEDBACK_IMD_COCKPIT                    ((feedback_t)1 << FEEDBACK_IMD_COCKPIT_POS)
 #define FEEDBACK_TSAL_GREEN_FAULT_LATCHED       ((feedback_t)1 << FEEDBACK_TSAL_GREEN_FAULT_LATCHED_POS)
-#define FEEDBACK_BMS_LATCHED                    ((feedback_t)1 << FEEDBACK_BMS_LATCHED_POS)
+#define FEEDBACK_BMS_COCKPIT                    ((feedback_t)1 << FEEDBACK_BMS_COCKPIT_POS)
 #define FEEDBACK_EXT_LATCHED                    ((feedback_t)1 << FEEDBACK_EXT_LATCHED_POS)
 #define FEEDBACK_TSAL_GREEN                     ((feedback_t)1 << FEEDBACK_TSAL_GREEN_POS)
 #define FEEDBACK_TS_OVER_60V_STATUS             ((feedback_t)1 << FEEDBACK_TS_OVER_60V_STATUS_POS)
@@ -231,14 +222,14 @@ enum {
 #define FEEDBACK_AIRN_GATE                      ((feedback_t)1 << FEEDBACK_AIRN_GATE_POS)
 #define FEEDBACK_PRECHARGE_STATUS               ((feedback_t)1 << FEEDBACK_PRECHARGE_STATUS_POS)
 #define FEEDBACK_TSP_OVER_60V_STATUS            ((feedback_t)1 << FEEDBACK_TSP_OVER_60V_STATUS_POS)
-#define FEEDBACK_CHECK_MUX                      ((feedback_t)1 << FEEDBACK_CHECK_MUX_POS)
-#define FEEDBACK_SD_IN                          ((feedback_t)1 << FEEDBACK_SD_IN_POS)
-#define FEEDBACK_SD_OUT                         ((feedback_t)1 << FEEDBACK_SD_OUT_POS)
-#define FEEDBACK_RELAY_SD                       ((feedback_t)1 << FEEDBACK_RELAY_SD_POS)
 #define FEEDBACK_IMD_FAULT                      ((feedback_t)1 << FEEDBACK_IMD_FAULT_POS)
+#define FEEDBACK_CHECK_MUX                      ((feedback_t)1 << FEEDBACK_CHECK_MUX_POS)
 #define FEEDBACK_SD_END                         ((feedback_t)1 << FEEDBACK_SD_END_POS)
 #define FEEDBACK_ALL                            (feedback_t)(((feedback_t)1 << (FEEDBACK_N)) - 1)
 
+// TODO: Get feedback from micro pins
+#define FEEDBACK_SD_IN                          ((feedback_t)1 << FEEDBACK_SD_IN_POS)
+#define FEEDBACK_SD_OUT                         ((feedback_t)1 << FEEDBACK_SD_OUT_POS)
 
 //===========================================================================
 //=========================== S160 current transducer =======================

@@ -34,9 +34,8 @@ void measures_check_flags() {
         current_check_errors();
         can_car_send(PRIMARY_HV_CURRENT_FRAME_ID);
         can_car_send(PRIMARY_TS_STATUS_FRAME_ID);
-        if (error_count() > 0) {
+        if (error_count() > 0)
             can_car_send(PRIMARY_HV_ERRORS_FRAME_ID);
-        }
         flags &= ~_50MS_INTERVAL_FLAG;
     }
     if (flags & _200MS_INTERVAL_FLAG) {
