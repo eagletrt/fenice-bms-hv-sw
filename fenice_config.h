@@ -1,11 +1,12 @@
 /**
- * @file		fenice_config.h
- * @brief		This file contains configuration settings for Fenice
+ * @file fenice_config.h
+ * @brief This file contains configuration settings for Fenice
  *
- * @date	Oct 07, 2019
+ * @date Oct 07, 2019
  * 
- * @author	Matteo Bonora [matteo.bonora@studenti.unitn.it]
- * @author	Simone Ruffini [simone.ruffini@studenti.unitn.it]
+ * @author Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @author Simone Ruffini [simone.ruffini@studenti.unitn.it]
+ * @author Antonio Gelain [antonio.gelain@studenti.unitn.it]
  */
 
 #ifndef FENICE_CONFIG_H
@@ -17,8 +18,8 @@
 //=================================== General ===============================
 //===========================================================================
 
-#define DISCHARGE_R     10//Ohm
-#define CELL_CAPACITY   3.9//Ah
+#define DISCHARGE_R     10  //Ohm
+#define CELL_CAPACITY   3.9 //Ah
 /**
  * Maximum can payload. for CAN 2.0A is 8 bytes
  */

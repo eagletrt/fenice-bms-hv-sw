@@ -18,6 +18,7 @@
 #include <math.h>
 #include <string.h>
 
+// TODO: Save only minimum, maximum and sum of all the temperatures of the pack
 temperature_t temperatures[PACK_TEMP_COUNT];
 
 void temperature_init() {

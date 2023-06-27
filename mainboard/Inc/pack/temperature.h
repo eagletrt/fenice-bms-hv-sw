@@ -12,6 +12,8 @@
 #include <inttypes.h>
 #include <mainboard_config.h>
 
+// TODO: Save only minimum, maximum and sum of all the temperatures of the pack
+
 typedef uint8_t temperature_t;
 
 void temperature_init();

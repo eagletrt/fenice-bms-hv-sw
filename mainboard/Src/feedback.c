@@ -1,10 +1,11 @@
 /**
- * @file		feedback.c
- * @brief		Feedback parsing utilities
+ * @file feedback.c
+ * @brief Feedback parsing utilities
  *
- * @date		Mar 16, 2021
- * @author  	Matteo Bonora [matteo.bonora@studenti.unitn.it]
- * @author  	Federico Carbone [federico.carbone@studenti.unitn.it]
+ * @date Mar 16, 2021
+ * @author Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @author Federico Carbone [federico.carbone@studenti.unitn.it]
+ * @author Antonio Gelain [antonio.gelain@studenti.unitn.it]
  */
 
 #include "feedback.h"

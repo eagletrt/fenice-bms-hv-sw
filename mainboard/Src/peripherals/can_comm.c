@@ -297,21 +297,21 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         primary_hv_cell_balancing_status_conversion_to_raw_struct(&raw_bal_status, &conv_bal_status);
 
         tx_header.DLC = primary_hv_cell_balancing_status_pack(buffer, &raw_bal_status, PRIMARY_HV_CELL_BALANCING_STATUS_BYTE_SIZE);
-    } else if (id == PRIMARY_HV_CELLS_TEMP_FRAME_ID) {
+    }
+    /*
+    else if (id == PRIMARY_HV_CELLS_TEMP_FRAME_ID) {
         uint8_t status = 0;
         temperature_t * temps = temperature_get_all();
 
         primary_hv_cells_temp_t raw_temps;
         primary_hv_cells_temp_converted_t conv_temps;
 
-        for (uint8_t i = 0; i < PACK_TEMP_COUNT; i += 6) {
+        for (uint8_t i = 0; i < PACK_TEMP_COUNT; i += 4) {
             conv_temps.start_index = i;
             conv_temps.temp_0 = temps[i];
             conv_temps.temp_1 = temps[i + 1];
             conv_temps.temp_2 = temps[i + 2];
             conv_temps.temp_3 = temps[i + 3];
-            conv_temps.temp_4 = temps[i + 4];
-            conv_temps.temp_5 = temps[i + 5];
 
             // Convert temperatures to raw
             primary_hv_cells_temp_conversion_to_raw_struct(&raw_temps, &conv_temps);
@@ -344,7 +344,9 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         }
 
         return status == 0 ? HAL_OK : HAL_ERROR;
-    } else if (id == PRIMARY_HV_CAN_FORWARD_STATUS_FRAME_ID) {
+    }
+    */ 
+    else if (id == PRIMARY_HV_CAN_FORWARD_STATUS_FRAME_ID) {
         primary_hv_can_forward_status_t raw_can_forward;
         primary_hv_can_forward_status_converted_t conv_can_forward;
 
@@ -478,14 +480,14 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
             primary_hv_cells_voltage_t fwd_volts;
 
             tx_header.StdId = PRIMARY_HV_CELLS_VOLTAGE_FRAME_ID;
-            tx_header.DLC = PRIMARY_HV_CELLS_VOLTAGE_BYTE_SIZE;
 
-            fwd_volts.start_index = raw_volts.start_index;
+            // Set start_index of the received cells between all cells of the pack
+            fwd_volts.start_index = raw_volts.cellboard_id * CELLBOARD_CELL_COUNT + raw_volts.start_index;
             fwd_volts.voltage_0 = raw_volts.voltage0;
             fwd_volts.voltage_1 = raw_volts.voltage1;
             fwd_volts.voltage_2 = raw_volts.voltage2;
 
-            primary_hv_cells_voltage_pack(buffer, &fwd_volts, PRIMARY_HV_CELLS_VOLTAGE_BYTE_SIZE);
+            tx_header.DLC = primary_hv_cells_voltage_pack(buffer, &fwd_volts, PRIMARY_HV_CELLS_VOLTAGE_BYTE_SIZE);
 
             can_send(&CAR_CAN, buffer, &tx_header);
         } else if (rx_header.StdId == BMS_TEMPERATURES_FRAME_ID) {
@@ -528,6 +530,22 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
                 raw_temps.temp1,
                 raw_temps.temp2,
                 raw_temps.temp3);
+
+            uint8_t buffer[8];
+            primary_hv_cells_temp_t fwd_temps;
+
+            tx_header.StdId = PRIMARY_HV_CELLS_TEMP_FRAME_ID;
+
+            // Set start_index of the received cells between all cells of the pack
+            fwd_temps.start_index = raw_temps.cellboard_id * CELLBOARD_CELL_COUNT + raw_temps.start_index;
+            fwd_temps.temp_0 = raw_temps.temp0;
+            fwd_temps.temp_1 = raw_temps.temp1;
+            fwd_temps.temp_2 = raw_temps.temp2;
+            fwd_temps.temp_3 = raw_temps.temp3;
+
+            tx_header.DLC = primary_hv_cells_temp_pack(buffer, &fwd_temps, PRIMARY_HV_CELLS_TEMP_BYTE_SIZE);
+
+            can_send(&CAR_CAN, buffer, &tx_header);
         } else if (rx_header.StdId == BMS_BOARD_STATUS_FRAME_ID) {
             uint8_t index = 0;
             bms_board_status_t status;
