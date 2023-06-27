@@ -107,6 +107,7 @@ HAL_StatusTypeDef _max22530_cmd_burst(MAX22530_HandleTypeDef * handler, uint16_t
 
     for (size_t i = 0; i < MAX22530_CHANNEL_COUNT; i++)
         data[i] = cmd[i * 2 + 2] | (((uint16_t)cmd[i * 2 + 1] & 0x0F) << 8);
+
     return HAL_OK;
 }
 
@@ -141,11 +142,10 @@ HAL_StatusTypeDef max22530_init(MAX22530_HandleTypeDef * handler,
     handler->gpio = gpio;
     handler->pin = pin;
 
-    uint8_t addr = (MAX22530_CONTROL_REG << 2) | (MAX22530_WR << 1); // Write on the control register
     uint16_t data = 0;
     // cmd[1] = (1 << 15); // Enable spi CRC (ENCRC)
 
-    return _max22530_cmd_write(handler, addr, data);
+    return _max22530_cmd_write(handler, MAX22530_CONTROL_REG, data);
 }
 float max22530_read_channel(MAX22530_HandleTypeDef * handler, MAX22530_CH channel) {
     if (handler == NULL)

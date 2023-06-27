@@ -96,7 +96,8 @@ char const *const feedback_names[FEEDBACK_N] = {
     [FEEDBACK_CHECK_MUX_POS]                = "FEEDBACK_CHECK_MUX",
     [FEEDBACK_SD_IN_POS]                    = "FEEDBACK_SD_IN",
     [FEEDBACK_SD_OUT_POS]                   = "FEEDBACK_SD_OUT",
-    [FEEDBACK_RELAY_SD_POS]                 = "FEEDBACK_RELAY_SD",
+    [FEEDBACK_SD_BMS_POS]                   = "FEEDBACK_SD_BMS",
+    [FEEDBACK_SD_IMD_POS]                   = "FEEDBACK_SD_IMD",
     [FEEDBACK_IMD_FAULT_POS]                = "FEEDBACK_IMD_FAULT",
     [FEEDBACK_SD_END_POS]                   = "FEEDBACK_SD_END"};
 
@@ -176,10 +177,10 @@ void _cli_volts(uint16_t argc, char **argv, char *out) {
             "max.........%.3f V\r\n"
             "min.........%.3f V\r\n"
             "delta.......%.3f V\r\n",
-            (float)internal_voltage_get_tsp(),
-            (float)internal_voltage_get_tsn(),
-            (float)internal_voltage_get_bat(),
-            (float)internal_voltage_get_shunt(),
+            internal_voltage_get_tsp(),
+            internal_voltage_get_tsn(),
+            internal_voltage_get_bat(),
+            internal_voltage_get_shunt(),
             sum,
             sum / PACK_CELL_COUNT,
             max,

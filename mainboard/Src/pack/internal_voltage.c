@@ -19,10 +19,10 @@
 
 /** @brief Internal voltages of the mainboard */
 struct internal_voltage {
-    voltage_t tsp;   // TS+ voltage
-    voltage_t bat;   // Battery voltage
-    voltage_t shunt; // Shunter voltage
-    voltage_t tsn;   // TS- voltage
+    float tsp;   // TS+ voltage
+    float bat;   // Battery voltage
+    float shunt; // Shunter voltage
+    float tsn;   // TS- voltage
 };
 
 // This module is a singleton
@@ -49,25 +49,25 @@ HAL_StatusTypeDef internal_voltage_measure() {
     if (status != HAL_OK)
         return status;
     
-    internal_voltages.tsp   = MAX22530_CONV_VALUE_TO_VOLTAGE(volts[MAX22530_VTS_CHANNEL]);
-    internal_voltages.tsn   = MAX22530_CONV_VALUE_TO_VOLTAGE(volts[MAX22530_TSN_CHANNEL]);
-    internal_voltages.shunt = MAX22530_CONV_VALUE_TO_VOLTAGE(volts[MAX22530_SHUNT_CHANNEL]);
-    internal_voltages.bat   = MAX22530_CONV_VALUE_TO_VOLTAGE(volts[MAX22530_VBATT_CHANNEL]);
+    internal_voltages.tsp   = volts[MAX22530_VTS_CHANNEL - 1];
+    internal_voltages.tsn   = volts[MAX22530_TSN_CHANNEL - 1];
+    internal_voltages.shunt = volts[MAX22530_SHUNT_CHANNEL - 1];
+    internal_voltages.bat   = volts[MAX22530_VBATT_CHANNEL - 1];
 
     // Check if difference between readings from the ADC and cellboards is greater than 10V
     error_toggle_check(fabsf(internal_voltages.bat - cell_voltage_get_sum()) > 10000, ERROR_INT_VOLTAGE_MISMATCH, 0);
     return HAL_OK;
 }
 
-voltage_t internal_voltage_get_tsp() {
+float internal_voltage_get_tsp() {
     return internal_voltages.tsp;
 }
-voltage_t internal_voltage_get_tsn() {
+float internal_voltage_get_tsn() {
     return internal_voltages.tsn;
 }
-voltage_t internal_voltage_get_shunt() {
+float internal_voltage_get_shunt() {
     return internal_voltages.shunt;
 }
-voltage_t internal_voltage_get_bat() {
+float internal_voltage_get_bat() {
     return internal_voltages.bat;
 }

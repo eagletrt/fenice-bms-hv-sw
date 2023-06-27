@@ -185,8 +185,8 @@ static const uint8_t TEMP_SENSOR_ADDRESS_CODING[TEMP_SENSORS_PER_STRIP] = {000, 
 #define PRECHARGE_VOLTAGE_THRESHOLD 0.95
 #define PRECHARGE_VOLTAGE_THRESHOLD_CARELINO 0.90
 
-
-enum {
+/** @brief Multiplexer feedbacks */
+typedef enum {
     FEEDBACK_IMPLAUSIBILITY_DETECTED_POS = 0,
     FEEDBACK_IMD_COCKPIT_POS,
     FEEDBACK_TSAL_GREEN_FAULT_LATCHED_POS,
@@ -203,12 +203,21 @@ enum {
     FEEDBACK_IMD_FAULT_POS,
     FEEDBACK_CHECK_MUX_POS,
     FEEDBACK_SD_END_POS,
-    FEEDBACK_N
-};
 
-/**
- * Feedback bit sets 
- */
+    FEEDBACK_MUX_N
+} MUX_FEEDBACK;
+
+/** @brief Shutdown feedbacks */
+typedef enum {
+    FEEDBACK_SD_OUT_POS = FEEDBACK_MUX_N,
+    FEEDBACK_SD_IN_POS,
+    FEEDBACK_SD_BMS_POS,
+    FEEDBACK_SD_IMD_POS,
+
+    FEEDBACK_N
+} SD_FEEDBACK;
+
+// Multiplexer feedbacks
 #define FEEDBACK_NULL                           0
 #define FEEDBACK_IMPLAUSIBILITY_DETECTED        ((feedback_t)1 << FEEDBACK_IMPLAUSIBILITY_DETECTED_POS)
 #define FEEDBACK_IMD_COCKPIT                    ((feedback_t)1 << FEEDBACK_IMD_COCKPIT_POS)
@@ -228,9 +237,11 @@ enum {
 #define FEEDBACK_SD_END                         ((feedback_t)1 << FEEDBACK_SD_END_POS)
 #define FEEDBACK_ALL                            (feedback_t)(((feedback_t)1 << (FEEDBACK_N)) - 1)
 
-// TODO: Get feedback from micro pins
-#define FEEDBACK_SD_IN                          ((feedback_t)1 << FEEDBACK_SD_IN_POS)
+// Shutdown feedbacks
 #define FEEDBACK_SD_OUT                         ((feedback_t)1 << FEEDBACK_SD_OUT_POS)
+#define FEEDBACK_SD_IN                          ((feedback_t)1 << FEEDBACK_SD_IN_POS)
+#define FEEDBACK_SD_BMS                         ((feedback_t)1 << FEEDBACK_SD_BMS_POS)
+#define FEEDBACK_SD_IMD                         ((feedback_t)1 << FEEDBACK_SD_IMD_POS)
 
 //===========================================================================
 //=========================== S160 current transducer =======================

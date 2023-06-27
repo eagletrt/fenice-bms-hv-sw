@@ -86,17 +86,11 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PAPin PAPin PAPin */
-  GPIO_InitStruct.Pin = FB_SD_BMS_Pin|FB_SD_IMD_Pin|SD_IN_Pin;
+  /*Configure GPIO pin : PtPin */
+  GPIO_InitStruct.Pin = FANS_DETECT_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : PBPin PBPin */
-  GPIO_InitStruct.Pin = SD_OUT_Pin|FANS_DETECT_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  HAL_GPIO_Init(FANS_DETECT_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PB12 PB4 */
   GPIO_InitStruct.Pin = GPIO_PIN_12|GPIO_PIN_4;

@@ -30,25 +30,25 @@ HAL_StatusTypeDef internal_voltage_measure();
  * 
  * @return float The TS+ voltage value
  */
-voltage_t internal_voltage_get_tsp();
+float internal_voltage_get_tsp();
 /**
  * @brief Get the TS- voltage
  * 
  * @return float The TS- voltage value
  */
-voltage_t internal_voltage_get_tsn();
+float internal_voltage_get_tsn();
 /**
  * @brief Get the shunt voltage
  * 
  * @return float The shunt voltage value
  */
-voltage_t internal_voltage_get_shunt();
+float internal_voltage_get_shunt();
 /**
  * @brief Get the battery voltage
  * 
  * @return float The battery voltage value
  */
-voltage_t internal_voltage_get_bat();
+float internal_voltage_get_bat();
 
 
 #endif // INTERNAL_VOLTAGE_H
