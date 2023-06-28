@@ -116,7 +116,7 @@ void feedback_get_feedback_states(feedback_feed_t out_value[FEEDBACK_N]) {
 }
 feedback_t feedback_check(feedback_t fb_check_mask, feedback_t fb_value) {
     // Set or reset connection error
-    error_toggle_check(HAL_GPIO_ReadPin(CONNS_DETECTION_GPIO_Port, CONNS_DETECTION_Pin) == GPIO_PIN_RESET, ERROR_CONNECTION, 0);
+    error_toggle_check(HAL_GPIO_ReadPin(CONNS_DETECTION_GPIO_Port, CONNS_DETECTION_Pin) == GPIO_PIN_RESET, ERROR_CONNECTOR_DISCONNECTED, 0);
 
     feedback_t differences = 0;
 

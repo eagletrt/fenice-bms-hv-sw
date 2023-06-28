@@ -144,6 +144,7 @@ int main(void)
     imd_init();
     feedback_init();
     fans_init();
+    
 
   /* USER CODE END 2 */
 

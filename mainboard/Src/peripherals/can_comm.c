@@ -20,6 +20,7 @@
 #include "internal_voltage.h"
 #include "cell_voltage.h"
 #include "temperature.h"
+#include "feedback.h"
 
 #include <string.h>
 
@@ -251,6 +252,12 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
                     else
                         conv_errors.errors_cellboard_internal = 1;
                     break;
+                case ERROR_CONNECTOR_DISCONNECTED:
+                    if (errors[i].state == STATE_WARNING)
+                        conv_errors.warnings_connector_disconnected = 1;
+                    else
+                        conv_errors.errors_connector_disconnected = 1;
+                    break;
                 case ERROR_FEEDBACK:
                     if (errors[i].state == STATE_WARNING)
                         conv_errors.warnings_feedback = 1;
@@ -370,9 +377,77 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         tx_header.DLC = primary_hv_version_pack(buffer, &raw_version, PRIMARY_HV_VERSION_BYTE_SIZE);
     } else if (id == PRIMARY_HV_FEEDBACKS_STATUS_FRAME_ID) {
         primary_hv_feedbacks_status_t raw_status;
-        // TODO: Set feedback status
         primary_hv_feedbacks_status_converted_t conv_status = { 0 };
-        conv_status.feedbacks_status_feedback_ts_over_60v_status = 1;
+
+        // Get feedbacks status
+        feedback_feed_t feedbacks[FEEDBACK_N] = { 0 };
+        feedback_get_feedback_states(feedbacks);
+        
+        // TODO: Set feedback status (is_circuitry)
+        for (size_t i = 0; i < FEEDBACK_N; i++) {
+            switch(i) {
+                case FEEDBACK_IMPLAUSIBILITY_DETECTED_POS:
+                    conv_status.feedbacks_status_feedback_implausibility_detected = feedbacks[i].state == FEEDBACK_STATE_H;
+                    break;
+                case FEEDBACK_IMD_COCKPIT_POS:
+                    conv_status.feedbacks_status_feedback_imd_cockpit = feedbacks[i].state == FEEDBACK_STATE_H;
+                    break;
+                case FEEDBACK_TSAL_GREEN_FAULT_LATCHED_POS:
+                    conv_status.feedbacks_status_feedback_tsal_green_fault_latched = feedbacks[i].state == FEEDBACK_STATE_H;
+                    break;
+                case FEEDBACK_BMS_COCKPIT_POS:
+                    conv_status.feedbacks_status_feedback_bms_cockpit = feedbacks[i].state == FEEDBACK_STATE_H;
+                    break;
+                case FEEDBACK_EXT_LATCHED_POS:
+                    conv_status.feedbacks_status_feedback_ext_latched = feedbacks[i].state == FEEDBACK_STATE_H;
+                    break;
+                case FEEDBACK_TSAL_GREEN_POS:
+                    conv_status.feedbacks_status_feedback_tsal_green = feedbacks[i].state == FEEDBACK_STATE_H;
+                    break;
+                case FEEDBACK_TS_OVER_60V_STATUS_POS:
+                    conv_status.feedbacks_status_feedback_ts_over_60v_status = feedbacks[i].state == FEEDBACK_STATE_H;
+                    break;
+                case FEEDBACK_AIRN_STATUS_POS:
+                    conv_status.feedbacks_status_feedback_airn_status = feedbacks[i].state == FEEDBACK_STATE_H;
+                    break;
+                case FEEDBACK_AIRP_STATUS_POS:
+                    conv_status.feedbacks_status_feedback_airp_status = feedbacks[i].state == FEEDBACK_STATE_H;
+                    break;
+                case FEEDBACK_AIRP_GATE_POS:
+                    conv_status.feedbacks_status_feedback_airp_gate = feedbacks[i].state == FEEDBACK_STATE_H;
+                    break;
+                case FEEDBACK_AIRN_GATE_POS:
+                    conv_status.feedbacks_status_feedback_airn_gate = feedbacks[i].state == FEEDBACK_STATE_H;
+                    break;
+                case FEEDBACK_PRECHARGE_STATUS_POS:
+                    conv_status.feedbacks_status_feedback_precharge_status = feedbacks[i].state == FEEDBACK_STATE_H;
+                    break;
+                case FEEDBACK_TSP_OVER_60V_STATUS_POS:
+                    conv_status.feedbacks_status_feedback_tsp_over_60v_status = feedbacks[i].state == FEEDBACK_STATE_H;
+                    break;
+                case FEEDBACK_IMD_FAULT_POS:
+                    conv_status.feedbacks_status_feedback_imd_fault = feedbacks[i].state == FEEDBACK_STATE_H;
+                    break;
+                case FEEDBACK_CHECK_MUX_POS:
+                    conv_status.feedbacks_status_feedback_check_mux = feedbacks[i].state == FEEDBACK_STATE_H;
+                    break;
+                case FEEDBACK_SD_END_POS:
+                    conv_status.feedbacks_status_feedback_sd_end = feedbacks[i].state == FEEDBACK_STATE_H;
+                    break;
+                case FEEDBACK_SD_OUT_POS:
+                    conv_status.feedbacks_status_feedback_sd_out = feedbacks[i].state == FEEDBACK_STATE_H;
+                    break;
+                case FEEDBACK_SD_IN_POS:
+                    conv_status.feedbacks_status_feedback_sd_in = feedbacks[i].state == FEEDBACK_STATE_H;
+                    break;
+                case FEEDBACK_SD_BMS_POS:
+                    conv_status.feedbacks_status_feedback_sd_bms = feedbacks[i].state == FEEDBACK_STATE_H;
+                    break;
+                case FEEDBACK_SD_IMD_POS:
+                    conv_status.feedbacks_status_feedback_sd_imd = feedbacks[i].state == FEEDBACK_STATE_H;
+                    break;
+            }
+        }
 
         primary_hv_feedbacks_status_conversion_to_raw_struct(&raw_status, &conv_status);
 

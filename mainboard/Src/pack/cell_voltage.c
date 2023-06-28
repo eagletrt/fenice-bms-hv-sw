@@ -57,7 +57,7 @@ voltage_t cell_voltage_get_min() {
     return min;
 }
 float cell_voltage_get_sum() {
-    cell_voltage_get_avg() * PACK_CELL_COUNT;
+    return cell_voltage_get_avg() * PACK_CELL_COUNT;
 }
 float cell_voltage_get_avg() {
     float avg = 0;

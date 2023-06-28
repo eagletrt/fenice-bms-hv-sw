@@ -64,20 +64,21 @@ const char *bms_state_names[BMS_NUM_STATES] =
 const char *bal_state_names[2] = { "off", "discharging" };
 
 const char *error_names[ERROR_NUM_ERRORS] = {
-    [ERROR_CELL_LOW_VOLTAGE]      = "low-voltage",
-    [ERROR_CELL_UNDER_VOLTAGE]    = "under-voltage",
-    [ERROR_CELL_OVER_VOLTAGE]     = "over-voltage",
-    [ERROR_CELL_OVER_TEMPERATURE] = "over-temperature",
-    [ERROR_CELL_HIGH_TEMPERATURE] = "high-temperature",
-    [ERROR_OVER_CURRENT]          = "over-current",
-    [ERROR_CAN]                   = "CAN",
-    [ERROR_INT_VOLTAGE_MISMATCH]  = "internal voltage mismatch",
-    [ERROR_CELLBOARD_COMM]        = "cellboard communication",
-    [ERROR_CELLBOARD_INTERNAL]    = "cellboard internal",
-    [ERROR_FEEDBACK]              = "feedback",
-    [ERROR_FEEDBACK_CIRCUITRY]    = "feedback_circuitry",
-    [ERROR_EEPROM_COMM]           = "EEPROM communication",
-    [ERROR_EEPROM_WRITE]          = "EEPROM write"};
+    [ERROR_CELL_LOW_VOLTAGE]       = "low-voltage",
+    [ERROR_CELL_UNDER_VOLTAGE]     = "under-voltage",
+    [ERROR_CELL_OVER_VOLTAGE]      = "over-voltage",
+    [ERROR_CELL_OVER_TEMPERATURE]  = "over-temperature",
+    [ERROR_CELL_HIGH_TEMPERATURE]  = "high-temperature",
+    [ERROR_OVER_CURRENT]           = "over-current",
+    [ERROR_CAN]                    = "CAN",
+    [ERROR_INT_VOLTAGE_MISMATCH]   = "internal voltage mismatch",
+    [ERROR_CELLBOARD_COMM]         = "cellboard communication",
+    [ERROR_CELLBOARD_INTERNAL]     = "cellboard internal",
+    [ERROR_CONNECTOR_DISCONNECTED] = "connection error",
+    [ERROR_FEEDBACK]               = "feedback",
+    [ERROR_FEEDBACK_CIRCUITRY]     = "feedback_circuitry",
+    [ERROR_EEPROM_COMM]            = "EEPROM communication",
+    [ERROR_EEPROM_WRITE]           = "EEPROM write"};
 
 char const *const feedback_names[FEEDBACK_N] = {
     [FEEDBACK_IMPLAUSIBILITY_DETECTED_POS]  = "FEEDBACK_IMPLAUSBILITY_DETECTED",
@@ -845,6 +846,13 @@ void _cli_pack(uint16_t argc, char **argv, char *out) {
                 value = PRECHARGE_OFF_VALUE;
             }
             pack_set_precharge(value);
+        }
+        else if (strcmp(argv[1], "fault") == 0) {
+            if (strcmp(argv[2], "on") == 0)
+                value = BMS_FAULT_ON_VALUE;
+            else
+                value = BMS_FAULT_OFF_VALUE;
+            pack_set_fault(value);
         }
 
         sprintf(out, "%s setted %s\r\n", argv[1], argv[2]);

@@ -6,15 +6,20 @@
 
 #include <string.h>
 
+// TODO: Check fans connection periodically
+
 void fans_init() {
-    pwm_set_period(&HTIM_PWM, 1);//PWM_FANS_STANDARD_PERIOD);
+    // Enable CH3N (disabled by default)
+    TIM_CCxChannelCmd(HTIM_PWM.Instance, TIM_CHANNEL_3, TIM_CCxN_ENABLE);
+
+    pwm_set_period(&HTIM_PWM, 1); //PWM_FANS_STANDARD_PERIOD);
     fans_set_speed(0.15);
     pwm_start_channel(&HTIM_PWM, PWM_FANS_CHANNEL);
 }
 void fans_set_speed(float power) {
     if (power > 1 || power < 0)
         return;
-    pwm_set_duty_cicle(&HTIM_PWM, PWM_FANS_CHANNEL, 1 - power);
+    pwm_set_duty_cicle(&HTIM_PWM, PWM_FANS_CHANNEL, power);
 }
 
 // credits to the master sborato PM Alex
@@ -199,7 +204,7 @@ void _play_note(NoteTypeDef note, TIM_HandleTypeDef *htim) {
 }
 
 void BUZ_sborati(TIM_HandleTypeDef *htim) {
-    NoteTypeDef *n = gandalf;
+    NoteTypeDef *n = fra_martino;
 
     while (n->note != End)
         _play_note(*n++, htim);
