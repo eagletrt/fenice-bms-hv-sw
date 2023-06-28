@@ -10,20 +10,21 @@
 
 #include "feedback.h"
 
-#include <stdbool.h>
-
 #include "error.h"
 #include "mainboard_config.h"
+#include "bms_fsm.h"
 
 
 #define feedback_mux_analog_threshold_h 9.5f / 4.3f
 #define feedback_mux_analog_threshold_l 0.4f / 4.3f
-#define feedback_check_mux_threshold_h  3.5f / 4.3f
-#define feedback_check_mux_threshold_l  3.1f / 4.3f
-
 // TODO: Check SD feedbacks thresholds
 #define feedback_sd_analog_threshold_h  9.5f / 4.3f
 #define feedback_sd_analog_threshold_l  0.4f / 4.3f
+
+#define FEEDBACK_CHECK_MUX_THRESHOLD_L 2.1f
+#define FEEDBACK_CHECK_MUX_THRESHOLD_H 2.8f 
+#define FEEDBACK_CHECK_MUX_HANDCART_THRESHOLD_L 1.2f
+#define FEEDBACK_CHECK_MUX_HANDCART_THRESHOLD_H 1.4f
 
 #define DMA_DATA_SIZE 5
 
@@ -46,6 +47,11 @@ uint16_t dma_data[DMA_DATA_SIZE] = { 0 };
  * @return false Otherwise
  */
 bool _is_adc_value_high(uint8_t index) {
+    if (index == FEEDBACK_CHECK_MUX_POS) {
+        if (bms.handcart_connected)
+            return FEEDBACK_CONVERT_ADC_MUX_TO_VOLTAGE(feedbacks[index]) > FEEDBACK_CHECK_MUX_HANDCART_THRESHOLD_H;
+        return FEEDBACK_CONVERT_ADC_MUX_TO_VOLTAGE(feedbacks[index]) > FEEDBACK_CHECK_MUX_THRESHOLD_H;
+    }
     if (index < FEEDBACK_MUX_N)
         return FEEDBACK_CONVERT_ADC_MUX_TO_VOLTAGE(feedbacks[index]) > feedback_mux_analog_threshold_h;
     return FEEDBACK_CONVERT_ADC_SD_TO_VOLTAGE(feedbacks[index]) > feedback_sd_analog_threshold_h;
@@ -58,6 +64,11 @@ bool _is_adc_value_high(uint8_t index) {
  * @return false Otherwise
  */
 bool _is_adc_value_low(uint8_t index) {
+    if (index == FEEDBACK_CHECK_MUX_POS) {
+        if (bms.handcart_connected)
+            return FEEDBACK_CONVERT_ADC_MUX_TO_VOLTAGE(feedbacks[index]) < FEEDBACK_CHECK_MUX_HANDCART_THRESHOLD_L;
+        return FEEDBACK_CONVERT_ADC_MUX_TO_VOLTAGE(feedbacks[index]) < FEEDBACK_CHECK_MUX_THRESHOLD_L;
+    }
     if (index == FEEDBACK_SD_END_POS)
         return FEEDBACK_CONVERT_ADC_MUX_TO_VOLTAGE(feedbacks[index]) < 0.5f;
     if (index == FEEDBACK_SD_IN_POS || index == FEEDBACK_SD_OUT_POS)
@@ -77,22 +88,35 @@ bool _is_adc_value_low(uint8_t index) {
 bool _is_adc_value_valid(uint8_t index) {
     return _is_adc_value_high(index) || _is_adc_value_low(index);
 }
-/**
- * @brief Check if the multiplexer feedback voltage is in the correct voltage range
- * 
- * @return true The MUX voltage is in the correct range
- * @return false Otherwise
- */
-bool _is_check_mux_ok() {
-    return !_is_adc_value_valid(FEEDBACK_CHECK_MUX_POS);
-}
-
 
 void feedback_init() {
     // Start feedbacks timer
     __HAL_TIM_CLEAR_IT(&HTIM_MUX, TIM_IT_UPDATE);
     __HAL_TIM_SET_AUTORELOAD(&HTIM_MUX, TIM_MS_TO_TICKS(&HTIM_MUX, MUX_INTERVAL_MS));
     HAL_TIM_Base_Start_IT(&HTIM_MUX);
+}
+bool is_check_mux_ok() {
+    return !_is_adc_value_valid(FEEDBACK_CHECK_MUX_POS);
+}
+feedback_feed_t feedback_get_feedback_state(size_t index) {
+    feedback_feed_t feedback;
+    feedback.voltage = (index < FEEDBACK_MUX_N) ?
+        FEEDBACK_CONVERT_ADC_MUX_TO_VOLTAGE(feedbacks[index]) :
+        FEEDBACK_CONVERT_ADC_SD_TO_VOLTAGE(feedbacks[index]);
+    
+    // Set status
+    if (index == FEEDBACK_CHECK_MUX_POS)
+        feedback.state = is_check_mux_ok() ? FEEDBACK_STATE_H : FEEDBACK_STATE_ERROR;
+    else {
+        if (_is_adc_value_high(index))
+            feedback.state = FEEDBACK_STATE_H;
+        else if (_is_adc_value_low(index))
+            feedback.state = FEEDBACK_STATE_L;
+        else
+            feedback.state = FEEDBACK_STATE_ERROR;
+    }
+    
+    return feedback;
 }
 void feedback_get_feedback_states(feedback_feed_t out_value[FEEDBACK_N]) {
     for (size_t i = 0; i < FEEDBACK_N; ++i) {
@@ -103,7 +127,7 @@ void feedback_get_feedback_states(feedback_feed_t out_value[FEEDBACK_N]) {
 
         // Set status
         if (i == FEEDBACK_CHECK_MUX_POS)
-            out_value[i].state = _is_check_mux_ok() ? FEEDBACK_STATE_H : FEEDBACK_STATE_ERROR;
+            out_value[i].state = is_check_mux_ok() ? FEEDBACK_STATE_H : FEEDBACK_STATE_ERROR;
         else {
             if (_is_adc_value_high(i))
                 out_value[i].state = FEEDBACK_STATE_H;
@@ -127,7 +151,7 @@ feedback_t feedback_check(feedback_t fb_check_mask, feedback_t fb_value) {
         if (fb_i & fb_check_mask) {
             // Check MUX status
             if (i == FEEDBACK_CHECK_MUX_POS) {
-                if (_is_check_mux_ok())
+                if (is_check_mux_ok())
                     error_reset(ERROR_FEEDBACK_CIRCUITRY, i);
                 else {
                     error_set(ERROR_FEEDBACK_CIRCUITRY, i, HAL_GetTick());

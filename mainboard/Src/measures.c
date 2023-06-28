@@ -52,6 +52,10 @@ void measures_check_flags() {
         }
         can_car_send(PRIMARY_HV_CAN_FORWARD_FRAME_ID);
         can_car_send(PRIMARY_HV_VERSION_FRAME_ID);
+
+        // Check if the fans are connected
+        error_toggle_check(HAL_GPIO_ReadPin(FANS_DETECT_GPIO_Port, FANS_DETECT_Pin) == GPIO_PIN_RESET, ERROR_FANS_DISCONNECTED, 0);
+
         flags &= ~_500MS_INTERVAL_FLAG;
     }
     if (flags & _5S_INTERVAL_FLAG) {

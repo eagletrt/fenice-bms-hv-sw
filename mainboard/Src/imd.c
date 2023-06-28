@@ -1,6 +1,7 @@
 #include "imd.h"
 
 #include <math.h>
+#include "feedback.h"
 
 uint32_t periodTicks = 0, dutyCycleTicks = 0;
 uint32_t icValRising = 0, icValFalling = 0;
@@ -27,7 +28,7 @@ uint8_t imd_get_period() {
 }
 
 uint8_t imd_is_fault() {
-    return !HAL_GPIO_ReadPin(FB_SD_IMD_GPIO_Port, FB_SD_IMD_Pin);
+    return is_check_mux_ok();
 }
 
 IMD_STATE imd_get_state() {

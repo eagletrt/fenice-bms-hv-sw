@@ -349,7 +349,7 @@ void _cli_temps_all(uint16_t argc, char **argv, char *out) {
 }
 
 void _cli_status(uint16_t argc, char **argv, char *out) {
-#define n_items 3
+#define n_items 4
 
     char thresh[5] = {'\0'};
     itoa((float)bal_get_threshold() / 10, thresh, 10);
@@ -357,11 +357,17 @@ void _cli_status(uint16_t argc, char **argv, char *out) {
     char er_count[3] = {'\0'};
     itoa(error_count(), er_count, 10);
 
-    // TODO: Fix this
+    char handcart_connected[13] = { '\0' };
+    if (bms.handcart_connected)
+        strncpy(handcart_connected, "connected", strlen("connected") + 1);
+    else
+        strncpy(handcart_connected, "disconnected", strlen("disconnected") + 1);
+
     const char *values[n_items][2] = {
         {"BMS state", bms_state_names[fsm_get_state(bms.fsm)]},
-        {"error count", er_count},
-        {"balancing state", bal_state_names[bal_is_balancing()]}
+        {"Error count", er_count},
+        {"Balancing state", bal_state_names[bal_is_balancing()]},
+        {"Handcart status", handcart_connected}
     };
     //{"BMS state", (char *)fsm_bms.state_names[fsm_bms.current_state]}, {"error
     // count", er_count}, {"balancing", bal}, {"balancing threshold", thresh}};
@@ -823,7 +829,18 @@ void _cli_fans(uint16_t argc, char **argv, char *out) {
 }
 
 void _cli_pack(uint16_t argc, char **argv, char *out) {
-    if (argc == 3) {
+    if (argc == 1) {
+        sprintf(out,
+            "AIR- status:      %s\r\n"
+            "AIR+ status:      %s\r\n"
+            "Precharge status: %s\r\n"
+            "Fault status:     %s\r\n",
+            (pack_get_airn_off() == AIRN_ON_VALUE ? "closed" : "open"),
+            (pack_get_airp_off() == AIRP_ON_VALUE ? "closed" : "open"),
+            (pack_get_precharge() == PRECHARGE_ON_VALUE ? "on" : "off"),
+            (pack_get_fault() == BMS_FAULT_ON_VALUE ? "on" : "off"));
+    }
+    else if (argc == 3) {
         uint8_t value;
         if (!strcmp(argv[1], "airn")) {
             if (!strcmp(argv[2], "on")) {

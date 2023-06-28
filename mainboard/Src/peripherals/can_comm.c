@@ -258,6 +258,12 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
                     else
                         conv_errors.errors_connector_disconnected = 1;
                     break;
+                case ERROR_FANS_DISCONNECTED:
+                    if (errors[i].state == STATE_WARNING)
+                        conv_errors.warnings_fans_disconnected = 1;
+                    else
+                        conv_errors.errors_fans_disconnected = 1;
+                    break;
                 case ERROR_FEEDBACK:
                     if (errors[i].state == STATE_WARNING)
                         conv_errors.warnings_feedback = 1;

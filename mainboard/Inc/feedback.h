@@ -12,6 +12,8 @@
 #define FEEDBACK_H
 
 #include <inttypes.h>
+#include <stdbool.h>
+#include <stddef.h>
 
 #include <../../fenice_config.h>
 
@@ -25,11 +27,13 @@ typedef uint32_t feedback_t;
 
 extern uint64_t feedback;
 
+// TODO: Check carefully feeback masks
+
 #define FEEDBACK_TS_OFF_HIGH \
     (FEEDBACK_CHECK_MUX | FEEDBACK_BMS_COCKPIT | FEEDBACK_IMD_COCKPIT | \
      FEEDBACK_IMD_FAULT | FEEDBACK_IMPLAUSIBILITY_DETECTED | FEEDBACK_AIRN_STATUS | \
      FEEDBACK_AIRP_STATUS | FEEDBACK_SD_IN | FEEDBACK_SD_OUT)
-#define FEEDBACK_TS_OFF_LOW (FEEDBACK_AIRN_GATE | FEEDBACK_AIRP_GATE | FEEDBACK_SD_BMS | FEEDBACK_SD_IMD)
+#define FEEDBACK_TS_OFF_LOW (FEEDBACK_AIRN_GATE | FEEDBACK_AIRP_GATE | FEEDBACK_SD_BMS | FEEDBACK_SD_IMD | FEEDBACK_SD_END)
 
 #define FEEDBACK_TS_OFF_VAL  (FEEDBACK_TS_OFF_HIGH)
 #define FEEDBACK_TS_OFF_MASK ((FEEDBACK_TS_OFF_HIGH) | (FEEDBACK_TS_OFF_LOW))
@@ -136,9 +140,22 @@ typedef struct {
     float voltage;
 } feedback_feed_t;
 
-
 /** @brief Initialize the feedbacks */
 void feedback_init();
+/**
+ * @brief Check if the multiplexer feedback voltage is in the correct voltage range
+ * 
+ * @return true The MUX voltage is in the correct range
+ * @return false Otherwise
+ */
+bool is_check_mux_ok();
+/**
+ * @brief Get the state of a single feedback
+ * 
+ * @param index The index of the feedback
+ * @return feedback_feed_t The feedback state
+ */
+feedback_feed_t feedback_get_feedback_state(size_t index);
 /**
  * @brief Get the state of the feedbacks
  * 
