@@ -328,6 +328,8 @@ void _cli_temps_all(uint16_t argc, char **argv, char *out) {
 }
 */
 void _cli_temps_all(uint16_t argc, char **argv, char *out) {
+    sprintf(out + strlen(out), "Sorry, not avilable...! :(\n");
+    /*
     out[0]                  = '\0';
     temperature_t *temp_all = temperature_get_all();
 
@@ -342,6 +344,7 @@ void _cli_temps_all(uint16_t argc, char **argv, char *out) {
     }
 
     sprintf(out + strlen(out), "\r\n");
+    */
 }
 
 void _cli_status(uint16_t argc, char **argv, char *out) {

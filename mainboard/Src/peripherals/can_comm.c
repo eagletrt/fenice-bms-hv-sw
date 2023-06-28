@@ -13,13 +13,13 @@
 #include "cli_bms.h"
 #include "pack/current.h"
 #include "pack/pack.h"
-#include "pack/temperature.h"
 #include "mainboard_config.h"
 #include "usart.h"
 #include "bootloader.h"
 #include "primary/primary_network.h"
 #include "internal_voltage.h"
 #include "cell_voltage.h"
+#include "temperature.h"
 
 #include <string.h>
 
@@ -474,7 +474,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
                 raw_volts.voltage1,
                 raw_volts.voltage2
             };
-            cell_voltage_set_cells(raw_volts.cellboard_id, raw_volts.start_index, volts, 3);
+            cell_voltage_set_cells(raw_volts.cellboard_id, volts, 3);
 
             uint8_t buffer[8];
             primary_hv_cells_voltage_t fwd_volts;
@@ -491,7 +491,6 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
 
             can_send(&CAR_CAN, buffer, &tx_header);
         } else if (rx_header.StdId == BMS_TEMPERATURES_FRAME_ID) {
-            uint8_t offset = 0;
             bms_temperatures_t raw_temps;
 
             bms_temperatures_unpack(&raw_temps, rx_data, BMS_TEMPERATURES_BYTE_SIZE);
@@ -499,37 +498,33 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
             switch (raw_temps.cellboard_id) {
                 case BMS_TEMPERATURES_CELLBOARD_ID_CELLBOARD_0_CHOICE:
                     ++cellboards_msgs.cellboard0;
-                    offset = temperature_get_cellboard_offset(0);
                     break;
                 case BMS_TEMPERATURES_CELLBOARD_ID_CELLBOARD_1_CHOICE:
                     ++cellboards_msgs.cellboard1;
-                    offset = temperature_get_cellboard_offset(1);
                     break;
                 case BMS_TEMPERATURES_CELLBOARD_ID_CELLBOARD_2_CHOICE:
                     ++cellboards_msgs.cellboard2;
-                    offset = temperature_get_cellboard_offset(2);
                     break;
                 case BMS_TEMPERATURES_CELLBOARD_ID_CELLBOARD_3_CHOICE:
                     ++cellboards_msgs.cellboard3;
-                    offset = temperature_get_cellboard_offset(3);
                     break;
                 case BMS_TEMPERATURES_CELLBOARD_ID_CELLBOARD_4_CHOICE:
                     ++cellboards_msgs.cellboard4;
-                    offset = temperature_get_cellboard_offset(4);
                     break;
                 case BMS_TEMPERATURES_CELLBOARD_ID_CELLBOARD_5_CHOICE:
                     ++cellboards_msgs.cellboard5;
-                    offset = temperature_get_cellboard_offset(5);
                     break;
                 default:
                     break;
             }
-            temperature_set_cells(
-                raw_temps.start_index + offset,
+
+            temperature_t temps[] = {
                 raw_temps.temp0,
                 raw_temps.temp1,
                 raw_temps.temp2,
-                raw_temps.temp3);
+                raw_temps.temp3,
+            };
+            temperature_set_cells(raw_temps.cellboard_id, temps, 4);
 
             uint8_t buffer[8];
             primary_hv_cells_temp_t fwd_temps;

@@ -15,28 +15,26 @@
 #include "stm32f4xx_hal.h"
 #include "../../fenice_config.h"
 
-// TODO: Save only maximum, minimum and average voltage values of the cellboards
+/** @brief Maximum, minimum and average of the cells of the pack */
+typedef struct {
+    voltage_t min[CELLBOARD_COUNT];
+    voltage_t max[CELLBOARD_COUNT];
+    float avg[CELLBOARD_COUNT];
+} cell_voltage;
+
 
 /** @brief Intialize the cell voltages */
 void cell_voltage_init();
 
 /**
- * @brief Get cells voltage values
- * 
- * @return voltage_t * A pointer to the array of cell voltages
- */
-voltage_t * cell_voltage_get_cells();
-/**
  * @brief Set cells voltage values
  * 
  * @param cellboard_id The index of the cellboard where the values are read from
- * @param offset The cell index offset
  * @param volts An array of voltages to set
  * @param len The length of the array
  * @return HAL_StatusTypeDef HAL_OK if all the values has been copied to the array
  */
 HAL_StatusTypeDef cell_voltage_set_cells(size_t cellboard_id,
-    size_t offset,
     voltage_t * volts,
     size_t len);
 /**

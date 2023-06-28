@@ -21,6 +21,7 @@
 #define feedback_check_mux_threshold_h  3.5f / 4.3f
 #define feedback_check_mux_threshold_l  3.1f / 4.3f
 
+// TODO: Check SD feedbacks thresholds
 #define feedback_sd_analog_threshold_h  9.5f / 4.3f
 #define feedback_sd_analog_threshold_l  0.4f / 4.3f
 
@@ -38,38 +39,43 @@ uint8_t fb_index = 0;
 uint16_t dma_data[DMA_DATA_SIZE] = { 0 };
 
 /**
- * @brief Check if a MUX voltage greater than the high threshold
+ * @brief Check if a feedback voltage is greater than the high threshold
  * 
- * @param index The index of the multiplexed value
+ * @param index The index of the feedback value
  * @return true If the voltage is greater than the threshold
  * @return false Otherwise
  */
-bool _is_adc_mux_value_high(uint8_t index) {
-    float val = FEEDBACK_CONVERT_ADC_MUX_TO_VOLTAGE(feedbacks[index]);
-    return val > feedback_mux_analog_threshold_h;
+bool _is_adc_value_high(uint8_t index) {
+    if (index < FEEDBACK_MUX_N)
+        return FEEDBACK_CONVERT_ADC_MUX_TO_VOLTAGE(feedbacks[index]) > feedback_mux_analog_threshold_h;
+    return FEEDBACK_CONVERT_ADC_SD_TO_VOLTAGE(feedbacks[index]) > feedback_sd_analog_threshold_h;
 }
 /**
- * @brief Check if MUX voltage is lower than the low threshold
+ * @brief Check if a feedback voltage is lower than the low threshold
  * 
- * @param index The index of the multiplexed value
+ * @param index The index of the feedback value
  * @return true If the voltage is lower than the threshold
  * @return false Otherwise
  */
-bool _is_adc_mux_value_low(uint8_t index) {
-    float val = FEEDBACK_CONVERT_ADC_MUX_TO_VOLTAGE(feedbacks[index]);
-    if (index == FEEDBACK_SD_END_POS || index == FEEDBACK_SD_IN_POS || index == FEEDBACK_SD_OUT_POS)
-        return val < 0.5f;
-    return val < feedback_mux_analog_threshold_l;
+bool _is_adc_value_low(uint8_t index) {
+    if (index == FEEDBACK_SD_END_POS)
+        return FEEDBACK_CONVERT_ADC_MUX_TO_VOLTAGE(feedbacks[index]) < 0.5f;
+    if (index == FEEDBACK_SD_IN_POS || index == FEEDBACK_SD_OUT_POS)
+        return FEEDBACK_CONVERT_ADC_SD_TO_VOLTAGE(feedbacks[index]) < 0.5f;
+
+    if (index < FEEDBACK_MUX_N)
+        return FEEDBACK_CONVERT_ADC_MUX_TO_VOLTAGE(feedbacks[index]) < feedback_mux_analog_threshold_l;
+    return FEEDBACK_CONVERT_ADC_SD_TO_VOLTAGE(feedbacks[index]) < feedback_sd_analog_threshold_l;
 }
 /**
- * @brief Check if the MUX voltage is valid
+ * @brief Check if the feedback voltage is valid
  * 
  * @param index The index of the multiplexed value
  * @return true If the voltage is valid
  * @return false Otherwise
  */
-bool _is_adc_mux_value_valid(uint8_t index) {
-    return _is_adc_mux_value_high(index) || _is_adc_mux_value_low(index);
+bool _is_adc_value_valid(uint8_t index) {
+    return _is_adc_value_high(index) || _is_adc_value_low(index);
 }
 /**
  * @brief Check if the multiplexer feedback voltage is in the correct voltage range
@@ -78,18 +84,7 @@ bool _is_adc_mux_value_valid(uint8_t index) {
  * @return false Otherwise
  */
 bool _is_check_mux_ok() {
-    return !_is_adc_mux_value_valid(FEEDBACK_CHECK_MUX_POS);
-}
-bool _is_adc_sd_value_high(uint8_t index) {
-    float val = FEEDBACK_CONVERT_ADC_SD_TO_VOLTAGE(feedbacks[index]);
-    return val > feedback_sd_analog_threshold_h;
-}
-bool _is_adc_sd_value_low(uint8_t index) {
-    float val = FEEDBACK_CONVERT_ADC_SD_TO_VOLTAGE(feedbacks[index]);
-    return val < feedback_sd_analog_threshold_l;
-}
-bool _is_adc_sd_value_valid(uint8_t index) {
-    return _is_adc_sd_value_high(index) || _is_adc_sd_value_low(index);
+    return !_is_adc_value_valid(FEEDBACK_CHECK_MUX_POS);
 }
 
 
@@ -100,52 +95,37 @@ void feedback_init() {
     HAL_TIM_Base_Start_IT(&HTIM_MUX);
 }
 void feedback_get_feedback_states(feedback_feed_t out_value[FEEDBACK_N]) {
-    size_t i;
-    // Get multiplexer feedbacks
-    for (i = 0; i < FEEDBACK_MUX_N; ++i) {
-        out_value[i].voltage = FEEDBACK_CONVERT_ADC_MUX_TO_VOLTAGE(feedbacks[i]);
+    for (size_t i = 0; i < FEEDBACK_N; ++i) {
+        // Set voltage
+        out_value[i].voltage = (i < FEEDBACK_MUX_N) ?
+            FEEDBACK_CONVERT_ADC_MUX_TO_VOLTAGE(feedbacks[i]) :
+            FEEDBACK_CONVERT_ADC_SD_TO_VOLTAGE(feedbacks[i]);
 
+        // Set status
         if (i == FEEDBACK_CHECK_MUX_POS)
             out_value[i].state = _is_check_mux_ok() ? FEEDBACK_STATE_H : FEEDBACK_STATE_ERROR;
         else {
-            // Check feedback state
-            if (_is_adc_mux_value_high(i))
+            if (_is_adc_value_high(i))
                 out_value[i].state = FEEDBACK_STATE_H;
-            else if (_is_adc_mux_value_low(i))
+            else if (_is_adc_value_low(i))
                 out_value[i].state = FEEDBACK_STATE_L;
             else
                 out_value[i].state = FEEDBACK_STATE_ERROR;
         }
     }
-
-    // Get shutdown feedbacks
-    for (; i < FEEDBACK_N; ++i) {
-        out_value[i].voltage = FEEDBACK_CONVERT_ADC_SD_TO_VOLTAGE(feedbacks[i]);
-
-        // Check feedback state
-        if (_is_adc_sd_value_high(i))
-            out_value[i].state = FEEDBACK_STATE_H;
-        else if (_is_adc_sd_value_low(i))
-            out_value[i].state = FEEDBACK_STATE_L;
-        else
-            out_value[i].state = FEEDBACK_STATE_ERROR;
-    }
 }
 feedback_t feedback_check(feedback_t fb_check_mask, feedback_t fb_value) {
-    // TODO: Set connection error
-    // if (HAL_GPIO_ReadPin(CONNS_DETECTION_GPIO_Port, CONNS_DETECTION_Pin) == GPIO_PIN_RESET)
-    //     error_set();
-    // else
-    //     error_reset();
+    // Set or reset connection error
+    error_toggle_check(HAL_GPIO_ReadPin(CONNS_DETECTION_GPIO_Port, CONNS_DETECTION_Pin) == GPIO_PIN_RESET, ERROR_CONNECTION, 0);
 
     feedback_t differences = 0;
-    size_t i;
-    for (i = 0; i < FEEDBACK_MUX_N; ++i) {
-        feedback_t fb_i     = 1U << i;
+
+    for (size_t i = 0; i < FEEDBACK_N; ++i) {
+        feedback_t fb_i = 1U << i;
         feedback_t fb_i_val = fb_value & fb_i;
 
         if (fb_i & fb_check_mask) {
-            // Check multiplexer
+            // Check MUX status
             if (i == FEEDBACK_CHECK_MUX_POS) {
                 if (_is_check_mux_ok())
                     error_reset(ERROR_FEEDBACK_CIRCUITRY, i);
@@ -155,9 +135,9 @@ feedback_t feedback_check(feedback_t fb_check_mask, feedback_t fb_value) {
                 }
             }
             else {
-                // Check if feedback voltage is valid
-                if (_is_adc_mux_value_valid(i)) {
-                    if ((fb_i_val && _is_adc_mux_value_high(i)) || (!fb_i_val && _is_adc_mux_value_low(i)))
+                // Check feedback voltages
+                if (_is_adc_value_valid(i)) {
+                    if ((fb_i_val && _is_adc_value_high(i)) || (!fb_i_val && _is_adc_value_low(i)))
                         error_reset(ERROR_FEEDBACK, i);
                     else {
                         error_set(ERROR_FEEDBACK, i, HAL_GetTick());
@@ -169,30 +149,6 @@ feedback_t feedback_check(feedback_t fb_check_mask, feedback_t fb_value) {
                     error_set(ERROR_FEEDBACK_CIRCUITRY, i, HAL_GetTick());
                     differences |= fb_i;
                 }
-            }
-        }
-        else
-            error_reset(ERROR_FEEDBACK, i);
-    }
-
-    for (; i < FEEDBACK_N; i++) {
-        feedback_t fb_i     = 1U << i;
-        feedback_t fb_i_val = fb_value & fb_i;
-
-        if (fb_i & fb_check_mask) {
-            // Check if feedback voltage is valid
-            if (_is_adc_sd_value_valid(i)) {
-                if ((fb_i_val && _is_adc_sd_value_high(i)) || (!fb_i_val && _is_adc_sd_value_low(i)))
-                    error_reset(ERROR_FEEDBACK, i);
-                else {
-                    error_set(ERROR_FEEDBACK, i, HAL_GetTick());
-                    differences |= fb_i;
-                }
-                error_reset(ERROR_FEEDBACK_CIRCUITRY, i);
-            }
-            else {
-                error_set(ERROR_FEEDBACK_CIRCUITRY, i, HAL_GetTick());
-                differences |= fb_i;
             }
         }
         else

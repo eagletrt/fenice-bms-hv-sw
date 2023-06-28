@@ -35,6 +35,8 @@
 #include "pack/pack.h"
 #include "soc.h"
 #include "internal_voltage.h"
+#include "cell_voltage.h"
+#include "temperature.h"
 #include "primary/primary_network.h"
 #include "can_comm.h"
 
@@ -130,6 +132,8 @@ int main(void)
     error_init();
 
     internal_voltage_init();
+    cell_voltage_init();
+    temperature_init();
     bal_init();
     bms_fsm_init();
     current_zero();

@@ -31,6 +31,7 @@ const uint32_t error_timeouts[ERROR_NUM_ERRORS] = {
     [ERROR_INT_VOLTAGE_MISMATCH]  = SOFT,
     [ERROR_CELLBOARD_COMM]        = 250,
     [ERROR_CELLBOARD_INTERNAL]    = SOFT,
+    [ERROR_CONNECTION]            = 250,
     [ERROR_FEEDBACK]              = SOFT,
     [ERROR_FEEDBACK_CIRCUITRY]    = SOFT,
     [ERROR_EEPROM_COMM]           = SOFT,
