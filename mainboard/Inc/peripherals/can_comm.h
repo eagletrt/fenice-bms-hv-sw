@@ -24,6 +24,7 @@ typedef enum { CAN_BITRATE_1MBIT, CAN_BITRATE_125KBIT } CAN_Bitrate;
 
 #define CAN_SLAVE_START_FILTER_BANK 14
 
+bool can_is_forwarding();
 void can_car_init();
 void can_bms_init();
 void can_tx_header_init();

@@ -142,11 +142,11 @@
 /** \brief Configure the desired CAN baudrate. */
 #define BOOT_COM_CAN_BAUDRATE           (1000000)
 /** \brief Configure CAN message ID target->host. */
-#define BOOT_COM_CAN_TX_MSG_ID          (0x7E1 /*| 0x80000000*/)
+#define BOOT_COM_CAN_TX_MSG_ID          (0x001 /*| 0x80000000*/)
 /** \brief Configure number of bytes in the target->host CAN message. */
 #define BOOT_COM_CAN_TX_MAX_DATA        (8)
 /** \brief Configure CAN message ID host->target. */
-#define BOOT_COM_CAN_RX_MSG_ID          (0x667 /*| 0x80000000*/)
+#define BOOT_COM_CAN_RX_MSG_ID          (0x002 /*| 0x80000000*/)
 /** \brief Configure number of bytes in the host->target CAN message. */
 #define BOOT_COM_CAN_RX_MAX_DATA        (8)
 /** \brief Select the desired CAN peripheral as a zero based index. */

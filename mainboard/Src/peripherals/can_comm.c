@@ -37,6 +37,10 @@ CAN_TxHeaderTypeDef tx_header;
 
 bool can_forward;
 
+bool can_is_forwarding() {
+    return can_forward;
+}
+
 void can_tx_header_init() {
     tx_header.ExtId = 0;
     tx_header.IDE   = CAN_ID_STD;
@@ -375,7 +379,7 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         primary_hv_version_t raw_version;
         primary_hv_version_converted_t conv_version;
 
-        conv_version.canlib_build_time = 1;
+        conv_version.canlib_build_time = CANLIB_BUILD_TIME;
         conv_version.component_version = 1;
 
         primary_hv_version_conversion_to_raw_struct(&raw_version, &conv_version);
@@ -513,7 +517,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
     }
 
     if (hcan->Instance == BMS_CAN.Instance) {
-        if (can_forward && (rx_header.StdId >= BMS_FLASH_CELLBOARD_0_RX_FRAME_ID && rx_header.StdId <= BMS_FLASH_CELLBOARD_5_RX_FRAME_ID)) {
+        if (can_forward && (rx_header.StdId >= BMS_FLASH_CELLBOARD_0_TX_FRAME_ID && rx_header.StdId <= BMS_FLASH_CELLBOARD_5_RX_FRAME_ID)) {
             uint8_t forward_data[8];
             tx_header.StdId = rx_header.StdId;
             tx_header.DLC = rx_header.DLC;
@@ -691,7 +695,7 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
     }
 
     if (hcan->Instance == CAR_CAN.Instance) {
-        if (can_forward && (rx_header.StdId >= BMS_FLASH_CELLBOARD_0_TX_FRAME_ID && rx_header.StdId <= BMS_FLASH_CELLBOARD_5_TX_FRAME_ID)) {
+        if (can_forward && (rx_header.StdId >= BMS_FLASH_CELLBOARD_0_TX_FRAME_ID && rx_header.StdId <= BMS_FLASH_CELLBOARD_5_RX_FRAME_ID)) {
             uint8_t forward_data[8];
             tx_header.StdId = rx_header.StdId;
             tx_header.DLC = rx_header.DLC;
@@ -735,7 +739,7 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
             
             bms.handcart_connected = handcart_status.connected;
         } else if (rx_header.StdId == PRIMARY_HV_CAN_FORWARD_FRAME_ID) {
-            if (fsm_get_state(bms.fsm) != BMS_IDLE) {
+            if (fsm_get_state(bms.fsm) != BMS_IDLE && fsm_get_state(bms.fsm) != BMS_FAULT) {
                 can_forward = 0;
                 return;
             }
@@ -753,7 +757,7 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
                     can_forward = 1;
                     break;
             }
-        } else if (rx_header.StdId == PRIMARY_BMS_HV_JMP_TO_BLT_FRAME_ID && fsm_get_state(bms.fsm) == BMS_IDLE && !bal_is_balancing()) {
+        } else if (rx_header.StdId == PRIMARY_BMS_HV_JMP_TO_BLT_FRAME_ID && (fsm_get_state(bms.fsm) == BMS_IDLE || fsm_get_state(bms.fsm) == BMS_FAULT) && !bal_is_balancing()) {
             HAL_NVIC_SystemReset();
         }
     }

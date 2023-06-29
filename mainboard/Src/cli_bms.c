@@ -164,9 +164,10 @@ void cli_bms_debug(char *text, size_t length) {
 
 void _cli_volts(uint16_t argc, char **argv, char *out) {
     if (strcmp(argv[1], "") == 0) {
-        float max = cell_voltage_get_max();
-        float min = cell_voltage_get_min();
-        float sum = cell_voltage_get_sum();
+        float max = CONVERT_VALUE_TO_VOLTAGE(cell_voltage_get_max());
+        float min = CONVERT_VALUE_TO_VOLTAGE(cell_voltage_get_min());
+        float sum = CONVERT_VALUE_TO_VOLTAGE(cell_voltage_get_sum());
+        float avg = CONVERT_VALUE_TO_VOLTAGE(cell_voltage_get_avg());
         sprintf(
             out,
             "vts+........%.2f V\r\n"
@@ -183,7 +184,7 @@ void _cli_volts(uint16_t argc, char **argv, char *out) {
             internal_voltage_get_bat(),
             internal_voltage_get_shunt(),
             sum,
-            sum / PACK_CELL_COUNT,
+            avg,
             max,
             min,
             max - min
@@ -349,7 +350,7 @@ void _cli_temps_all(uint16_t argc, char **argv, char *out) {
 }
 
 void _cli_status(uint16_t argc, char **argv, char *out) {
-#define n_items 4
+#define n_items 5
 
     char thresh[5] = {'\0'};
     itoa((float)bal_get_threshold() / 10, thresh, 10);
@@ -366,6 +367,7 @@ void _cli_status(uint16_t argc, char **argv, char *out) {
     const char *values[n_items][2] = {
         {"BMS state", bms_state_names[fsm_get_state(bms.fsm)]},
         {"Error count", er_count},
+        {"CAN forwarding", can_is_forwarding() ? "true" : "false"},
         {"Balancing state", bal_state_names[bal_is_balancing()]},
         {"Handcart status", handcart_connected}
     };

@@ -15,6 +15,8 @@
 #include "stm32f4xx_hal.h"
 #include "../../fenice_config.h"
 
+#define CONVERT_VALUE_TO_VOLTAGE(x) ((float)(x) / 10000)
+
 /** @brief Maximum, minimum and average of the cells of the pack */
 typedef struct {
     voltage_t min[CELLBOARD_COUNT];
