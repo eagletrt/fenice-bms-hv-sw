@@ -13,6 +13,9 @@
 
 #include <inttypes.h>
 
+#define CONVERT_VALUE_TO_TEMPERATURE(x) ((float)(x) / 2.56 - 20)
+#define CONVERT_TEMPERATURE_TO_VALUE(x) (((x) + 20) * 2.56)
+
 extern temperature_t temperatures[CELLBOARD_TEMP_SENSOR_COUNT];
 
 void temp_init();

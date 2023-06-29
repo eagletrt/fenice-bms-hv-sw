@@ -10,6 +10,7 @@
 
 #include "spi.h"
 
+
 voltage_t voltages[CELLBOARD_CELL_COUNT] = {0};
 
 voltage_t voltages_pup[CELLBOARD_CELL_COUNT] = {0};
@@ -53,7 +54,26 @@ void volt_open_wire_check() {
     ERROR_UNSET(ERROR_OPEN_WIRE);
 }
 
-uint16_t volt_get_min() {
+voltage_t volt_get_min() {
+    voltage_t min = UINT16_MAX;
+    for (size_t i = 0; i < CELLBOARD_CELL_COUNT; i++)
+        min = MIN(min, voltages[i]);
+    return min;
+}
+voltage_t volt_get_max() {
+    voltage_t max = 0;
+    for (size_t i = 0; i < CELLBOARD_CELL_COUNT; i++)
+        max = MAX(max, voltages[i]);
+    return max;
+}
+float volt_get_avg() {
+    float avg = 0;
+    for (size_t i = 0; i < CELLBOARD_CELL_COUNT; i++)
+        avg += voltages[i];
+    return avg / CELLBOARD_CELL_COUNT;
+}
+
+uint16_t volt_get_min_index() {
     uint16_t min = 0;
     for (uint16_t i = 0; i < CELLBOARD_CELL_COUNT; i++) {
         if (voltages[i] < voltages[min]) {

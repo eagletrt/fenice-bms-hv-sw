@@ -14,6 +14,9 @@
 #include <inttypes.h>
 #include "mainboard_config.h"
 
+#define CONVERT_VALUE_TO_TEMPERATURE(x) ((float)(x) / 2.56 - 20)
+#define CONVERT_TEMPERATURE_TO_VALUE(x) (((x) + 20) * 2.56)
+
 typedef uint8_t temperature_t;
 
 /** @brief Minimum, maximum and average temperatures of the cells of the pack */
@@ -61,7 +64,8 @@ float temperature_get_average();
  * @param len The length of the array
  */
 HAL_StatusTypeDef temperature_set_cells(size_t cellboard_id,
-    temperature_t * temps,
-    size_t len);
+    temperature_t min,
+    temperature_t max,
+    float avg);
 
 #endif // TEMPERATURE_H

@@ -15,6 +15,7 @@
 #include "stm32f4xx_hal.h"
 #include "../../fenice_config.h"
 
+#define CONVERT_VOLTAGE_TO_VALUE(x) ((x) * 10000)
 #define CONVERT_VALUE_TO_VOLTAGE(x) ((float)(x) / 10000)
 
 /** @brief Maximum, minimum and average of the cells of the pack */
@@ -32,13 +33,15 @@ void cell_voltage_init();
  * @brief Set cells voltage values
  * 
  * @param cellboard_id The index of the cellboard where the values are read from
- * @param volts An array of voltages to set
- * @param len The length of the array
+ * @param min The minimum voltage value
+ * @param max The maximum voltage value
+ * @param avg The average of the voltage values
  * @return HAL_StatusTypeDef HAL_OK if all the values has been copied to the array
  */
 HAL_StatusTypeDef cell_voltage_set_cells(size_t cellboard_id,
-    voltage_t * volts,
-    size_t len);
+    voltage_t min,
+    voltage_t max,
+    float avg);
 /**
  * @brief Get the maximum voltage value of the pack
  * 

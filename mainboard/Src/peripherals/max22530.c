@@ -147,7 +147,7 @@ HAL_StatusTypeDef max22530_init(MAX22530_HandleTypeDef * handler,
 
     return _max22530_cmd_write(handler, MAX22530_CONTROL_REG, data);
 }
-float max22530_read_channel(MAX22530_HandleTypeDef * handler, MAX22530_CH channel) {
+uint16_t max22530_read_channel(MAX22530_HandleTypeDef * handler, MAX22530_CH channel) {
     if (handler == NULL)
         return -1;
 
@@ -156,9 +156,9 @@ float max22530_read_channel(MAX22530_HandleTypeDef * handler, MAX22530_CH channe
 
     if (data < 0)
         return -1;
-    return MAX22530_CONV_VALUE_TO_VOLTAGE(data);
+    return data;
 }
-HAL_StatusTypeDef max22530_read_all_channels(MAX22530_HandleTypeDef * handler, float volts[MAX22530_CHANNEL_COUNT]) {
+HAL_StatusTypeDef max22530_read_all_channels(MAX22530_HandleTypeDef * handler, uint16_t volts[MAX22530_CHANNEL_COUNT]) {
     if (handler == NULL)
         return HAL_ERROR;
 
@@ -171,6 +171,6 @@ HAL_StatusTypeDef max22530_read_all_channels(MAX22530_HandleTypeDef * handler, f
 
     // Convert and copy values
     for (size_t i = 0; i < MAX22530_CHANNEL_COUNT; i++)
-        volts[i] = MAX22530_CONV_VALUE_TO_VOLTAGE(data[i]);
+        volts[i] = data[i];
     return HAL_OK;
 }

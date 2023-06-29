@@ -148,7 +148,7 @@ int main(void)
 
             char buf[500] = {'\0'};
             sprintf(buf, "[%.2f]\r\n", HAL_GetTick() / 1000.0);
-            uint16_t min = volt_get_min();
+            uint16_t min = volt_get_min_index();
 
             for (uint8_t i = 0; i < CELLBOARD_CELL_COUNT; i++) {
                 sprintf(buf + strlen(buf), "%3u %-.3fV", i, (float)voltages[i] / 10000);

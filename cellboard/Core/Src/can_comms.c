@@ -112,9 +112,30 @@ void can_send(uint16_t topic_id) {
             _can_send(&BMS_CAN, buffer, &tx_header);
             HAL_Delay(1);
         }
-
         return;
-    } else if (topic_id == BMS_VOLTAGES_FRAME_ID) {
+    }
+    else if (topic_id == BMS_TEMPERATURES_INFO_FRAME_ID) {
+        tx_header.StdId = BMS_TEMPERATURES_INFO_FRAME_ID;
+
+        register uint8_t i;
+        for (i = 0; i < CELLBOARD_TEMP_SENSOR_COUNT; i += 4) {
+            bms_temperatures_info_t raw_temps;
+            bms_temperatures_info_converted_t conv_temps;
+
+            conv_temps.cellboard_id = cellboard_index;
+            conv_temps.min_temp = temp_get_min();
+            conv_temps.max_temp = temp_get_max();
+            conv_temps.avg_temp = temp_get_average();
+
+            bms_temperatures_info_conversion_to_raw_struct(&raw_temps, &conv_temps);
+            
+            tx_header.DLC = bms_temperatures_info_pack(buffer, &raw_temps, BMS_TEMPERATURES_INFO_BYTE_SIZE);
+            _can_send(&BMS_CAN, buffer, &tx_header);
+            HAL_Delay(1);
+        }
+        return;
+    } 
+    else if (topic_id == BMS_VOLTAGES_FRAME_ID) {
         tx_header.StdId = BMS_VOLTAGES_FRAME_ID;
 
         register uint8_t i;
@@ -128,9 +149,9 @@ void can_send(uint16_t topic_id) {
                 : cellboard_index;
 
             conv_volts.start_index = i;
-            conv_volts.voltage0 = voltages[i];
-            conv_volts.voltage1 = voltages[i + 1];
-            conv_volts.voltage2 = voltages[i + 2];
+            conv_volts.voltage0 = CONVERT_VALUE_TO_VOLTAGE(voltages[i]);
+            conv_volts.voltage1 = CONVERT_VALUE_TO_VOLTAGE(voltages[i + 1]);
+            conv_volts.voltage2 = CONVERT_VALUE_TO_VOLTAGE(voltages[i + 2]);
 
             // Convert voltage to raw
             bms_voltages_conversion_to_raw_struct(&raw_volts, &conv_volts);
@@ -140,6 +161,28 @@ void can_send(uint16_t topic_id) {
             HAL_Delay(1);
         }
         return;
+    }
+    else if (topic_id == BMS_VOLTAGES_INFO_FRAME_ID) {
+        tx_header.StdId = BMS_VOLTAGES_INFO_FRAME_ID;
+
+        register uint8_t i;
+        for (i = 0; i < CELLBOARD_CELL_COUNT; i += 3) {
+            bms_voltages_info_t raw_volts;
+            bms_voltages_info_converted_t conv_volts;
+     
+            // Add cellboard index in the payload
+            conv_volts.cellboard_id = cellboard_index;
+            conv_volts.min_voltage = CONVERT_VALUE_TO_VOLTAGE(volt_get_min());
+            conv_volts.max_voltage = CONVERT_VALUE_TO_VOLTAGE(volt_get_max());
+            conv_volts.avg_voltage = CONVERT_VALUE_TO_VOLTAGE(volt_get_avg());
+
+            // Convert voltage to raw
+            bms_voltages_info_conversion_to_raw_struct(&raw_volts, &conv_volts);
+
+            tx_header.DLC = bms_voltages_info_pack(buffer, &raw_volts, BMS_VOLTAGES_INFO_BYTE_SIZE);
+            _can_send(&BMS_CAN, buffer, &tx_header);
+            HAL_Delay(1);
+        }
     }
 }
 

@@ -14,6 +14,9 @@
 
 #include "stm32f4xx_hal.h"
 #include "../../fenice_config.h"
+#include "max22530.h"
+
+#define CONVERT_VALUE_TO_INTERNAL_VOLTAGE(x) MAX22530_CONV_VALUE_TO_VOLTAGE(x)
 
 /** @brief Initializes the adc and internal voltages */
 void internal_voltage_init();
@@ -28,27 +31,27 @@ HAL_StatusTypeDef internal_voltage_measure();
 /**
  * @brief Get the TS+ voltage
  * 
- * @return float The TS+ voltage value
+ * @return uint16_t The TS+ voltage value
  */
-float internal_voltage_get_tsp();
+uint16_t internal_voltage_get_tsp();
 /**
  * @brief Get the TS- voltage
  * 
- * @return float The TS- voltage value
+ * @return uint16_t The TS- voltage value
  */
-float internal_voltage_get_tsn();
+uint16_t internal_voltage_get_tsn();
 /**
  * @brief Get the shunt voltage
  * 
- * @return float The shunt voltage value
+ * @return uint16_t The shunt voltage value
  */
-float internal_voltage_get_shunt();
+uint16_t internal_voltage_get_shunt();
 /**
  * @brief Get the battery voltage
  * 
- * @return float The battery voltage value
+ * @return uint16_t The battery voltage value
  */
-float internal_voltage_get_bat();
+uint16_t internal_voltage_get_bat();
 
 
 #endif // INTERNAL_VOLTAGE_H

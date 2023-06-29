@@ -179,10 +179,10 @@ void _cli_volts(uint16_t argc, char **argv, char *out) {
             "max.........%.3f V\r\n"
             "min.........%.3f V\r\n"
             "delta.......%.3f V\r\n",
-            internal_voltage_get_tsp(),
-            internal_voltage_get_tsn(),
-            internal_voltage_get_bat(),
-            internal_voltage_get_shunt(),
+            CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_tsp()),
+            CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_tsn()),
+            CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_bat()),
+            CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_shunt()),
             sum,
             avg,
             max,

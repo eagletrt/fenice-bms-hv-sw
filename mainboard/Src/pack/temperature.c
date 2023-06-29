@@ -21,7 +21,7 @@
 static cell_temperature cell_temps;
 
 void temperature_init() {
-    memset(cell_temps.min, 0, CELLBOARD_COUNT * sizeof(temperature_t));
+    memset(cell_temps.min, UINT16_MAX, CELLBOARD_COUNT * sizeof(temperature_t));
     memset(cell_temps.max, 0, CELLBOARD_COUNT * sizeof(temperature_t));
     memset(cell_temps.avg, 0, CELLBOARD_COUNT * sizeof(float));
 }
@@ -53,20 +53,13 @@ float temperature_get_average() {
 }
 
 HAL_StatusTypeDef temperature_set_cells(size_t cellboard_id,
-    temperature_t * temps,
-    size_t len) {
-    if (temps == NULL || len > TEMP_SENSOR_COUNT || cellboard_id > CELLBOARD_COUNT)
-        return HAL_ERROR;
-    
-    // Update min, max and average voltages
-    const float perc = 1.f / (TEMP_SENSOR_COUNT - len);
-    float sum = 0;
-    for (size_t i = 0; i < len; i++) {
-        cell_temps.max[cellboard_id] = MAX(cell_temps.max[cellboard_id], temps[i]);
-        cell_temps.min[cellboard_id] = MIN(cell_temps.min[cellboard_id], temps[i]);
-        sum += temps[i];
-    }
-    cell_temps.avg[cellboard_id] = cell_temps.avg[cellboard_id] * (1 - perc) + sum * perc;
+    temperature_t min,
+    temperature_t max,
+    float avg) {
+
+    cell_temps.min[cellboard_id] = min;
+    cell_temps.max[cellboard_id] = max;
+    cell_temps.avg[cellboard_id] = avg;
 
     return HAL_OK;
 }

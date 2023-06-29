@@ -26,20 +26,13 @@ void cell_voltage_init() {
     memset(cell_volts.avg, 0, CELLBOARD_COUNT * sizeof(float));
 }
 HAL_StatusTypeDef cell_voltage_set_cells(size_t cellboard_id,
-    voltage_t * volts,
-    size_t len) {
-    if (volts == NULL || len > CELLBOARD_CELL_COUNT || cellboard_id > CELLBOARD_COUNT)
-        return HAL_ERROR;
+    voltage_t min,
+    voltage_t max,
+    float avg) {
 
-    // Update min, max and average voltages
-    const float perc = len / (float)(CELLBOARD_CELL_COUNT + len);
-    float sum = 0;
-    for (size_t i = 0; i < len; i++) {
-        cell_volts.max[cellboard_id] = MAX(cell_volts.max[cellboard_id], volts[i]);
-        cell_volts.min[cellboard_id] = MIN(cell_volts.min[cellboard_id], volts[i]);
-        sum += volts[i];
-    }
-    cell_volts.avg[cellboard_id] = cell_volts.avg[cellboard_id] * (1.f - perc) + sum * perc;
+    cell_volts.min[cellboard_id] = min;
+    cell_volts.max[cellboard_id] = max;
+    cell_volts.avg[cellboard_id] = avg;
     
     return HAL_OK;
 }

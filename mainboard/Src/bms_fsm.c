@@ -328,14 +328,14 @@ void _precharge_handler(fsm FSM, uint8_t event) {
 
         case BMS_EV_PRECHARGE_CHECK:
             char c[5] = {'\0'};
-            snprintf(c, 5, "%4.2f", internal_voltage_get_tsp() / (internal_voltage_get_bat() * PRECHARGE_VOLTAGE_THRESHOLD));
+            snprintf(c, 5, "%4.2f", CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_tsp()) / (CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_bat()) * PRECHARGE_VOLTAGE_THRESHOLD));
             cli_bms_debug(c, 5);
 
             if (HAL_GetTick() - tick > 10000 ||
                 (!bms.handcart_connected && internal_voltage_get_tsp() > 0 &&
-                 internal_voltage_get_tsp() >= internal_voltage_get_bat() * PRECHARGE_VOLTAGE_THRESHOLD) ||
-                (bms.handcart_connected && internal_voltage_get_tsp() > 0 &&
-                 internal_voltage_get_tsp() >= internal_voltage_get_bat() * PRECHARGE_VOLTAGE_THRESHOLD_CARELINO)) {
+                 CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_tsp()) >= CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_bat()) * PRECHARGE_VOLTAGE_THRESHOLD) ||
+                (bms.handcart_connected && CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_tsp()) > 0 &&
+                 CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_tsp()) >= CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_bat()) * PRECHARGE_VOLTAGE_THRESHOLD_CARELINO)) {
                 pack_set_airp_off(AIRP_ON_VALUE);
                 // _stop_fb_check_timer();
                 cli_bms_debug("Precharge ok", 18);

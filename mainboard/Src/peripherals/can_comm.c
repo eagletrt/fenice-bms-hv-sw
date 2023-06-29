@@ -130,13 +130,13 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         primary_hv_voltage_t raw_volts = { 0 };
         primary_hv_voltage_converted_t conv_volts = { 0 };
 
-        conv_volts.bus_voltage = internal_voltage_get_tsp();
-        conv_volts.pack_voltage = internal_voltage_get_bat();
+        conv_volts.bus_voltage  = CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_tsp());
+        conv_volts.pack_voltage = CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_bat());
+        conv_volts.max_cell_voltage = CONVERT_VALUE_TO_VOLTAGE(cell_voltage_get_max());
+        conv_volts.min_cell_voltage = CONVERT_VALUE_TO_VOLTAGE(cell_voltage_get_min());
 
         primary_hv_voltage_conversion_to_raw_struct(&raw_volts, &conv_volts);
 
-        raw_volts.max_cell_voltage = cell_voltage_get_max();
-        raw_volts.min_cell_voltage = cell_voltage_get_min();
 
         tx_header.DLC = primary_hv_voltage_pack(buffer, &raw_volts, PRIMARY_HV_VOLTAGE_BYTE_SIZE);
     } else if (id == PRIMARY_HV_CURRENT_FRAME_ID) {
@@ -144,7 +144,7 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         primary_hv_current_converted_t conv_curr;
 
         conv_curr.current = current_get_current();
-        conv_curr.power = conv_curr.current * internal_voltage_get_tsp();
+        conv_curr.power = conv_curr.current * CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_tsp());
 
         primary_hv_current_conversion_to_raw_struct(&raw_curr, &conv_curr);
 
@@ -529,7 +529,10 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
         error_reset(ERROR_CAN, 1);
         if (rx_header.StdId == BMS_VOLTAGES_FRAME_ID) {
             bms_voltages_t raw_volts;
+            bms_voltages_converted_t conv_volts;
             bms_voltages_unpack(&raw_volts, rx_data, BMS_VOLTAGES_BYTE_SIZE);
+
+            bms_voltages_raw_to_conversion_struct(&conv_volts, &raw_volts);
 
             switch (raw_volts.cellboard_id) {
                 case BMS_VOLTAGES_CELLBOARD_ID_CELLBOARD_0_CHOICE:
@@ -554,33 +557,47 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
                     break;
             }
 
-            voltage_t volts[] = {
-                raw_volts.voltage0,
-                raw_volts.voltage1,
-                raw_volts.voltage2
-            };
-            cell_voltage_set_cells(raw_volts.cellboard_id, volts, 3);
-
             uint8_t buffer[8];
-            primary_hv_cells_voltage_t fwd_volts;
+            primary_hv_cells_voltage_t raw_fwd_volts;
+            primary_hv_cells_voltage_converted_t conv_fwd_volts;
 
             tx_header.StdId = PRIMARY_HV_CELLS_VOLTAGE_FRAME_ID;
 
             // Set start_index of the received cells between all cells of the pack
-            fwd_volts.start_index = raw_volts.cellboard_id * CELLBOARD_CELL_COUNT + raw_volts.start_index;
-            fwd_volts.voltage_0 = raw_volts.voltage0;
-            fwd_volts.voltage_1 = raw_volts.voltage1;
-            fwd_volts.voltage_2 = raw_volts.voltage2;
+            conv_fwd_volts.start_index = conv_volts.cellboard_id * CELLBOARD_CELL_COUNT + conv_volts.start_index;
+            conv_fwd_volts.voltage_0 = conv_volts.voltage0;
+            conv_fwd_volts.voltage_1 = conv_volts.voltage1;
+            conv_fwd_volts.voltage_2 = conv_volts.voltage2;
 
-            tx_header.DLC = primary_hv_cells_voltage_pack(buffer, &fwd_volts, PRIMARY_HV_CELLS_VOLTAGE_BYTE_SIZE);
+            primary_hv_cells_voltage_conversion_to_raw_struct(&raw_fwd_volts, &conv_fwd_volts);
+
+            tx_header.DLC = primary_hv_cells_voltage_pack(buffer, &raw_fwd_volts, PRIMARY_HV_CELLS_VOLTAGE_BYTE_SIZE);
 
             can_send(&CAR_CAN, buffer, &tx_header);
-        } else if (rx_header.StdId == BMS_TEMPERATURES_FRAME_ID) {
-            bms_temperatures_t raw_temps;
+        }
+        else if (rx_header.StdId == BMS_VOLTAGES_INFO_FRAME_ID) {
+            bms_voltages_info_t raw_volts;
+            bms_voltages_info_converted_t conv_volts;
 
+            bms_voltages_info_unpack(&raw_volts, rx_data, BMS_VOLTAGES_INFO_BYTE_SIZE);
+
+            bms_voltages_info_raw_to_conversion_struct(&conv_volts, &raw_volts);
+
+            cell_voltage_set_cells(
+                conv_volts.cellboard_id,
+                CONVERT_VOLTAGE_TO_VALUE(conv_volts.min_voltage),
+                CONVERT_VOLTAGE_TO_VALUE(conv_volts.max_voltage),
+                CONVERT_VOLTAGE_TO_VALUE(conv_volts.avg_voltage));
+        }
+        else if (rx_header.StdId == BMS_TEMPERATURES_FRAME_ID) {
+            bms_temperatures_t raw_temps;
+            bms_temperatures_converted_t conv_temps;
+            
             bms_temperatures_unpack(&raw_temps, rx_data, BMS_TEMPERATURES_BYTE_SIZE);
 
-            switch (raw_temps.cellboard_id) {
+            bms_temperatures_raw_to_conversion_struct(&conv_temps, &raw_temps);
+
+            switch (conv_temps.cellboard_id) {
                 case BMS_TEMPERATURES_CELLBOARD_ID_CELLBOARD_0_CHOICE:
                     ++cellboards_msgs.cellboard0;
                     break;
@@ -603,30 +620,40 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
                     break;
             }
 
-            temperature_t temps[] = {
-                raw_temps.temp0,
-                raw_temps.temp1,
-                raw_temps.temp2,
-                raw_temps.temp3,
-            };
-            temperature_set_cells(raw_temps.cellboard_id, temps, 4);
-
             uint8_t buffer[8];
-            primary_hv_cells_temp_t fwd_temps;
+            primary_hv_cells_temp_t raw_fwd_temps;
+            primary_hv_cells_temp_converted_t conv_fwd_temps;
 
             tx_header.StdId = PRIMARY_HV_CELLS_TEMP_FRAME_ID;
 
             // Set start_index of the received cells between all cells of the pack
-            fwd_temps.start_index = raw_temps.cellboard_id * CELLBOARD_CELL_COUNT + raw_temps.start_index;
-            fwd_temps.temp_0 = raw_temps.temp0;
-            fwd_temps.temp_1 = raw_temps.temp1;
-            fwd_temps.temp_2 = raw_temps.temp2;
-            fwd_temps.temp_3 = raw_temps.temp3;
+            conv_fwd_temps.start_index = conv_temps.cellboard_id * CELLBOARD_CELL_COUNT + conv_temps.start_index;
+            conv_fwd_temps.temp_0 = conv_temps.temp0;
+            conv_fwd_temps.temp_1 = conv_temps.temp1;
+            conv_fwd_temps.temp_2 = conv_temps.temp2;
+            conv_fwd_temps.temp_3 = conv_temps.temp3;
 
-            tx_header.DLC = primary_hv_cells_temp_pack(buffer, &fwd_temps, PRIMARY_HV_CELLS_TEMP_BYTE_SIZE);
+            primary_hv_cells_temp_conversion_to_raw_struct(&raw_fwd_temps, &conv_fwd_temps);
+
+            tx_header.DLC = primary_hv_cells_temp_pack(buffer, &raw_fwd_temps, PRIMARY_HV_CELLS_TEMP_BYTE_SIZE);
 
             can_send(&CAR_CAN, buffer, &tx_header);
-        } else if (rx_header.StdId == BMS_BOARD_STATUS_FRAME_ID) {
+        }
+        else if (rx_header.StdId == BMS_TEMPERATURES_INFO_FRAME_ID) {
+            bms_temperatures_info_t raw_temps;
+            bms_temperatures_info_converted_t conv_temps;
+
+            bms_temperatures_info_unpack(&raw_temps, rx_data, BMS_TEMPERATURES_INFO_BYTE_SIZE);
+
+            bms_temperatures_info_raw_to_conversion_struct(&conv_temps, &raw_temps);
+
+            temperature_set_cells(
+                conv_temps.cellboard_id,
+                CONVERT_TEMPERATURE_TO_VALUE(conv_temps.min_temp),
+                CONVERT_TEMPERATURE_TO_VALUE(conv_temps.max_temp),
+                CONVERT_TEMPERATURE_TO_VALUE(conv_temps.avg_temp));
+        }
+        else if (rx_header.StdId == BMS_BOARD_STATUS_FRAME_ID) {
             uint8_t index = 0;
             bms_board_status_t status;
 

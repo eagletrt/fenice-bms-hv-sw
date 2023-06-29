@@ -92,7 +92,7 @@ int8_t max22530_get_rev(MAX22530_HandleTypeDef * handler);
  * @param channel ADC channel to select
  * @return float The returned value or -1 if there is an error during communication
  */
-float max22530_read_channel(MAX22530_HandleTypeDef * handler, MAX22530_CH channel);
+uint16_t max22530_read_channel(MAX22530_HandleTypeDef * handler, MAX22530_CH channel);
 /**
  * @brief Read data from all the channels
  * 
@@ -100,4 +100,4 @@ float max22530_read_channel(MAX22530_HandleTypeDef * handler, MAX22530_CH channe
  * @param volts Array where the data is stored
  * @return HAL_StatusTypeDef The status of the SPI communication
  */
-HAL_StatusTypeDef max22530_read_all_channels(MAX22530_HandleTypeDef * handler, float volts[MAX22530_CHANNEL_COUNT]);
+HAL_StatusTypeDef max22530_read_all_channels(MAX22530_HandleTypeDef * handler, uint16_t volts[MAX22530_CHANNEL_COUNT]);

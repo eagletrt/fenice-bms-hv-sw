@@ -12,17 +12,16 @@
 
 #include <math.h>
 
-#include "max22530.h"
 #include "mainboard_config.h"
 #include "main.h"
 #include "cell_voltage.h"
 
 /** @brief Internal voltages of the mainboard */
 struct internal_voltage {
-    float tsp;   // TS+ voltage
-    float bat;   // Battery voltage
-    float shunt; // Shunter voltage
-    float tsn;   // TS- voltage
+    uint16_t tsp;   // TS+ voltage
+    uint16_t bat;   // Battery voltage
+    uint16_t shunt; // Shunter voltage
+    uint16_t tsn;   // TS- voltage
 };
 
 // This module is a singleton
@@ -43,7 +42,7 @@ void internal_voltage_init() {
 
 HAL_StatusTypeDef internal_voltage_measure() {
     // Read voltages from the adc
-    float volts[MAX22530_CHANNEL_COUNT] = { 0 };
+    uint16_t volts[MAX22530_CHANNEL_COUNT] = { 0 };
     HAL_StatusTypeDef status = max22530_read_all_channels(&internal_adc, volts);
 
     if (status != HAL_OK)
@@ -55,19 +54,19 @@ HAL_StatusTypeDef internal_voltage_measure() {
     internal_voltages.bat   = volts[MAX22530_VBATT_CHANNEL - 1];
 
     // Check if difference between readings from the ADC and cellboards is greater than 10V
-    error_toggle_check(fabsf(internal_voltages.bat - cell_voltage_get_sum()) > 10000, ERROR_INT_VOLTAGE_MISMATCH, 0);
+    error_toggle_check(fabsf(CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltages.bat) - CONVERT_VALUE_TO_VOLTAGE(cell_voltage_get_sum())) > 10000, ERROR_INT_VOLTAGE_MISMATCH, 0);
     return HAL_OK;
 }
 
-float internal_voltage_get_tsp() {
+uint16_t internal_voltage_get_tsp() {
     return internal_voltages.tsp;
 }
-float internal_voltage_get_tsn() {
+uint16_t internal_voltage_get_tsn() {
     return internal_voltages.tsn;
 }
-float internal_voltage_get_shunt() {
+uint16_t internal_voltage_get_shunt() {
     return internal_voltages.shunt;
 }
-float internal_voltage_get_bat() {
+uint16_t internal_voltage_get_bat() {
     return internal_voltages.bat;
 }
