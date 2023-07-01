@@ -25,6 +25,7 @@ typedef struct {
     float avg[CELLBOARD_COUNT];
 } cell_voltage;
 
+extern cell_voltage cell_volts;
 
 /** @brief Intialize the cell voltages */
 void cell_voltage_init();

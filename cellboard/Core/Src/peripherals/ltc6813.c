@@ -50,7 +50,7 @@ void ltc6813_adcv(SPI_HandleTypeDef *spi) {
     uint8_t cmd[4];
     uint16_t cmd_pec;
     cmd[0]  = (uint8_t)0b00000011;
-    cmd[1]  = (uint8_t)0b01100000;
+    cmd[1]  = (uint8_t)0b01110000;
     cmd_pec = ltc6813_pec15(2, cmd);
     cmd[2]  = (uint8_t)(cmd_pec >> 8);
     cmd[3]  = (uint8_t)(cmd_pec);
@@ -80,7 +80,7 @@ void ltc6813_adow(SPI_HandleTypeDef *spi, LTC6813_ADOW_PUP pup) {
     uint8_t cmd[4];
     uint16_t cmd_pec;
     cmd[0]  = (uint8_t)0b00000011;
-    cmd[1]  = (uint8_t)0b00101000 | pup;
+    cmd[1]  = (uint8_t)0b00111000 | pup;
     cmd_pec = ltc6813_pec15(2, cmd);
     cmd[2]  = (uint8_t)(cmd_pec >> 8);
     cmd[3]  = (uint8_t)(cmd_pec);
@@ -132,6 +132,29 @@ HAL_StatusTypeDef ltc6813_poll_convertion(SPI_HandleTypeDef *hspi, uint32_t time
 }
 
 void ltc6813_wrcfg(SPI_HandleTypeDef *hspi, wrcfg_register reg, uint8_t cfgr[8]) {
+    uint8_t cmd[4] = {0};
+
+    if (reg == WRCFGA) {
+        cmd[1] = 1;
+    } else if (reg == WRCFGB) {
+        // WRCFGB
+        cmd[1] = 0b00100100;
+    }
+
+    uint16_t cmd_pec = ltc6813_pec15(2, cmd);
+    cmd[2]           = (uint8_t)(cmd_pec >> 8);
+    cmd[3]           = (uint8_t)(cmd_pec);
+
+    ltc6813_enable_cs(hspi);
+    HAL_SPI_Transmit(hspi, cmd, 4, 100);
+
+    // set the configuration for the #i ltc on the chain
+    // GPIO configs are equal for all ltcs
+    //cfgr[GPIO_CFGAR_POS] = GPIO_CONFIG + ((!GPIO_CFGAR_MASK) | cfgr[GPIO_CFGAR_POS]);
+    HAL_SPI_Transmit(hspi, cfgr, 8, 100);
+    ltc6813_disable_cs(hspi);
+}
+void ltc6813_rdcfg(SPI_HandleTypeDef *hspi, wrcfg_register reg, uint8_t cfgr[8]) {
     uint8_t cmd[4] = {0};
 
     if (reg == WRCFGA) {

@@ -55,7 +55,7 @@ void volt_open_wire_check() {
 }
 
 voltage_t volt_get_min() {
-    voltage_t min = UINT16_MAX;
+    voltage_t min = CELL_MAX_VOLTAGE;
     for (size_t i = 0; i < CELLBOARD_CELL_COUNT; i++)
         min = MIN(min, voltages[i]);
     return min;
@@ -80,7 +80,6 @@ uint16_t volt_get_min_index() {
             min = i;
         }
     }
-
     return min;
 }
 

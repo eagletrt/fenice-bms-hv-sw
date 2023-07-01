@@ -198,7 +198,7 @@ CXXFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 # LDFLAGS
 #######################################
 # link script
-LDSCRIPT = STM32L432KBUx_FLASH_shifted.ld
+LDSCRIPT = STM32L432KBUx_FLASH.ld
 
 # libraries
 LIBS = -lc -lm -lnosys 

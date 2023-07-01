@@ -18,7 +18,7 @@
 #include <../../fenice_config.h>
 
 
-#define MUX_INTERVAL_MS 0.1
+#define MUX_INTERVAL_MS 0.5
 
 #define FB_CHECK_INTERVAL_MS 2
 #define FB_TIMEOUT_MS        100

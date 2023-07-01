@@ -18,15 +18,15 @@
 #include <math.h>
 #include <string.h>
 
-static cell_temperature cell_temps;
+cell_temperature cell_temps;
 
 void temperature_init() {
-    memset(cell_temps.min, UINT16_MAX, CELLBOARD_COUNT * sizeof(temperature_t));
+    memset(cell_temps.min, CONVERT_TEMPERATURE_TO_VALUE(CELL_MAX_TEMPERATURE), CELLBOARD_COUNT * sizeof(temperature_t));
     memset(cell_temps.max, 0, CELLBOARD_COUNT * sizeof(temperature_t));
     memset(cell_temps.avg, 0, CELLBOARD_COUNT * sizeof(float));
 }
 void temperature_check_errors() {
-    temperature_t max_temp = temperature_get_max();
+    float max_temp = CONVERT_VALUE_TO_TEMPERATURE(temperature_get_max());
     error_toggle_check(max_temp > CELL_MAX_TEMPERATURE - 10, ERROR_CELL_HIGH_TEMPERATURE, 0);
     error_toggle_check(max_temp > CELL_MAX_TEMPERATURE, ERROR_CELL_OVER_TEMPERATURE, 0);
 }
@@ -37,7 +37,7 @@ temperature_t temperature_get_max() {
     return max;
 }
 temperature_t temperature_get_min() {
-    temperature_t min = 0;
+    temperature_t min = CELL_MAX_TEMPERATURE;
     for (size_t i = 0; i < CELLBOARD_COUNT; i++)
         min = MIN(min, cell_temps.min[i]);
     return min;

@@ -26,6 +26,8 @@ typedef struct {
     float avg[CELLBOARD_COUNT];
 } cell_temperature;
 
+extern cell_temperature cell_temps;
+
 /** @brief Initialize cell temperatures */
 void temperature_init();
 

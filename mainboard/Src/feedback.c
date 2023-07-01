@@ -17,12 +17,15 @@
 
 #define feedback_mux_analog_threshold_h 9.5f / 4.3f
 #define feedback_mux_analog_threshold_l 0.4f / 4.3f
-// TODO: Check SD feedbacks thresholds
-#define feedback_sd_analog_threshold_h  9.5f / 4.3f
-#define feedback_sd_analog_threshold_l  0.4f / 4.3f
+
+#define FEEDBACK_SD_THRESHOLD_H 10.0f // V
+#define FEEDBACK_SD_THRESHOLD_L 1.0f  // V
+#define FEEDBACK_SD_DIVIDER_RATIO 0.233f
+#define feedback_sd_analog_threshold_l (FEEDBACK_SD_DIVIDER_RATIO * FEEDBACK_SD_THRESHOLD_L)
+#define feedback_sd_analog_threshold_h (FEEDBACK_SD_DIVIDER_RATIO * FEEDBACK_SD_THRESHOLD_H)
 
 #define FEEDBACK_CHECK_MUX_THRESHOLD_L 2.1f
-#define FEEDBACK_CHECK_MUX_THRESHOLD_H 2.8f 
+#define FEEDBACK_CHECK_MUX_THRESHOLD_H 2.8f
 #define FEEDBACK_CHECK_MUX_HANDCART_THRESHOLD_L 1.2f
 #define FEEDBACK_CHECK_MUX_HANDCART_THRESHOLD_H 1.4f
 

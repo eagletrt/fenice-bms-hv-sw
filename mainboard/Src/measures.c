@@ -53,6 +53,7 @@ void measures_check_flags() {
         }
         can_car_send(PRIMARY_HV_CAN_FORWARD_FRAME_ID);
         can_car_send(PRIMARY_HV_VERSION_FRAME_ID);
+        can_car_send(PRIMARY_HV_FEEDBACKS_STATUS_FRAME_ID);
 
         // Check if the fans are connected
         error_toggle_check(HAL_GPIO_ReadPin(FANS_DETECT_GPIO_Port, FANS_DETECT_Pin) == GPIO_PIN_RESET, ERROR_FANS_DISCONNECTED, 0);
@@ -67,7 +68,7 @@ void measures_check_flags() {
 
 void measures_voltage_current_soc() {
     if (internal_voltage_measure() == HAL_OK)
-        current_read(internal_voltage_get_shunt());
+        current_read(CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_shunt()));
     soc_sample_energy(HAL_GetTick());
 }
 

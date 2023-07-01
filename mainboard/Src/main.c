@@ -131,6 +131,7 @@ int main(void)
     cli_bms_init();
     error_init();
 
+    fans_init();
     internal_voltage_init();
     cell_voltage_init();
     temperature_init();
@@ -143,9 +144,7 @@ int main(void)
     measures_init();
     imd_init();
     feedback_init();
-    fans_init();
     
-
   /* USER CODE END 2 */
 
   /* Infinite loop */

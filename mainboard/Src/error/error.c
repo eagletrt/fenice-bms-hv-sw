@@ -218,7 +218,7 @@ void error_dump(error_t errors[]) {
 }
 
 void _error_handle_tim_oc_irq() {
-    fsm_transition(bms.fsm, BMS_FAULT);
+    fsm_trigger_event(bms.fsm, BMS_EV_FAULT);
     error_set_fatal(error_get_top());
     HAL_TIM_OC_Stop_IT(&HTIM_ERR, TIM_CHANNEL_1);
 }

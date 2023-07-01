@@ -74,6 +74,8 @@ void bal_fsm_init() {
     state.exit    = cooldown_exit;
     fsm_set_state(bal.fsm, BAL_COOLDOWN, &state);
 
+    fsm_start(bal.fsm);
+
     // Set autoreload of balancing timer
     __HAL_TIM_SET_AUTORELOAD(&TIM_DISCHARGE, TIM_MS_TO_TICKS(&TIM_DISCHARGE, BAL_CYCLE_LENGTH));
 }
@@ -227,7 +229,6 @@ void bal_timers_handler(TIM_HandleTypeDef *htim, fsm handle) {
         }
     }
 }
-
 
 void bal_oc_timer_handler(TIM_HandleTypeDef *htim) {
     if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1) {

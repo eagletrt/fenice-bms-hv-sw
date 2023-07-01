@@ -18,10 +18,10 @@
 #include "main.h"
 #include "bms_fsm.h"
 
-static cell_voltage cell_volts;
+cell_voltage cell_volts;
 
 void cell_voltage_init() {
-    memset(cell_volts.min, UINT16_MAX, CELLBOARD_COUNT * sizeof(voltage_t));
+    memset(cell_volts.min, CELL_MAX_VOLTAGE, CELLBOARD_COUNT * sizeof(voltage_t));
     memset(cell_volts.max, 0, CELLBOARD_COUNT * sizeof(voltage_t));
     memset(cell_volts.avg, 0, CELLBOARD_COUNT * sizeof(float));
 }
@@ -44,7 +44,7 @@ voltage_t cell_voltage_get_max() {
     return max;
 }
 voltage_t cell_voltage_get_min() {
-    voltage_t min = UINT16_MAX;
+    voltage_t min = CELL_MAX_VOLTAGE;
     for (size_t i = 0; i < CELLBOARD_COUNT; i++)
         min = MIN(min, cell_volts.min[i]);
     return min;

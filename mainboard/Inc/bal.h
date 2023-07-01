@@ -28,12 +28,18 @@ voltage_t bal_get_threshold();
  */
 void bal_set_threshold(uint16_t thresh);
 /**
- * @brief Check if the cellboard are balancing or not
+ * @brief Check if the cellboards are balancing or not
  * 
- * @return true If any cellboard is balancing
- * @return false If no cellboard are balancing
+ * @return true If any cellboards is balancing
+ * @return false If no cellboards are balancing
  */
 bool bal_is_balancing();
+/**
+ * @brief Set if the cellboards are balancing or not
+ * 
+ * @param is_bal True if any cellboard is balancing false
+ */
+void bal_set_is_balancing(uint8_t cellboard_id, bool is_bal);
 /**
  * @brief Workaround for can_bms_send
  * 

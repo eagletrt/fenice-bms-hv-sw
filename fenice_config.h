@@ -143,6 +143,10 @@ static const uint8_t TEMP_SENSOR_ADDRESS_CODING[TEMP_SENSORS_PER_STRIP] = {000, 
 #define CELL_MAX_VOLTAGE  42000
 
 /**
+ * Minimum cell temperature (°C)
+ */
+#define CELL_MIN_TEMPERATURE -20.0
+/**
  * Maximum cell temperature (°C)
  */
 #define CELL_MAX_TEMPERATURE 60.0

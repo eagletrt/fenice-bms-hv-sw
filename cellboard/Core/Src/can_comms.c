@@ -196,13 +196,17 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
     ERROR_UNSET(ERROR_CAN);
 
     if (rx_header.StdId == BMS_SET_BALANCING_STATUS_FRAME_ID) {
-        bms_set_balancing_status_t balancing;
-        bms_set_balancing_status_unpack(&balancing, rx_data, BMS_SET_BALANCING_STATUS_BYTE_SIZE);
+        bms_set_balancing_status_t raw_bal;
+        bms_set_balancing_status_converted_t conv_bal;
+        bms_set_balancing_status_unpack(&raw_bal, rx_data, BMS_SET_BALANCING_STATUS_BYTE_SIZE);
 
-        bal_fsm_set_threshold(balancing.threshold);
-        bal.target = balancing.target;
+        bms_set_balancing_status_raw_to_conversion_struct(&conv_bal, &raw_bal);
+
+        bal_fsm_set_threshold(conv_bal.threshold);
+        bal.target = conv_bal.target;
+        bal.status = conv_bal.balancing_status;
         
-        switch(balancing.balancing_status) {
+        switch(conv_bal.balancing_status) {
             case bms_set_balancing_status_balancing_status_OFF:
                 fsm_trigger_event(bal.fsm, EV_BAL_STOP);
                 break;

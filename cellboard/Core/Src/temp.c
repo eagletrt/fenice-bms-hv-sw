@@ -12,13 +12,14 @@
 #include "i2c.h"
 
 #include <math.h>
+#include <float.h>
 
 #define TEMP_INIT_TIMEOUT 100
 
-temperature_t temperatures[CELLBOARD_TEMP_SENSOR_COUNT] = {0};
-temperature_t average                                   = 0;
-temperature_t max                                       = 0;
-temperature_t min                                       = 0;
+temperature_t temperatures[CELLBOARD_TEMP_SENSOR_COUNT] = { 0 };
+temperature_t average = 0;
+temperature_t max = 0;
+temperature_t min = CELL_MAX_TEMPERATURE;
 
 static const uint8_t adc_addresses[6] = {
     ADCTEMP_CELL_1_ADR,
@@ -65,7 +66,9 @@ void temp_measure(uint8_t adc_index) {
             ERROR_UNSET(ERROR_TEMP_COMM_0 + adc_index);
 
             max = MAX(temperatures[temp_index], max);
-            min = MIN(temperatures[temp_index], min);
+            // Skip temperature below cell minimum temperature
+            if (temperatures[temp_index] >= CELL_MIN_TEMPERATURE + FLT_EPSILON)
+                min = MIN(temperatures[temp_index], min);
         }
     }
 }
@@ -76,10 +79,14 @@ void temp_measure_all() {
     }
 
     double sum = 0;
+    size_t tot = 0;
     for (uint16_t i = 0; i < CELLBOARD_TEMP_SENSOR_COUNT; i++) {
-        sum += temperatures[i];
+        if (temperatures[i] >= CELL_MIN_TEMPERATURE + FLT_EPSILON) {
+            sum += temperatures[i];
+            tot++;
+        }
     }
-    average = sum / CELLBOARD_TEMP_SENSOR_COUNT;
+    average = sum / tot;
 }
 
 temperature_t temp_get_average() {
@@ -92,8 +99,4 @@ temperature_t temp_get_max() {
 
 temperature_t temp_get_min() {
     return min;
-}
-
-uint8_t temp_serialize(float temp) {
-    return MIN(255, MAX(0, round(temp * 4.0)));
 }

@@ -201,9 +201,16 @@ void _cli_volts(uint16_t argc, char **argv, char *out) {
     }
 }
 
-// TODO: Print all cells voltages
 void _cli_volts_all(uint16_t argc, char **argv, char *out) {
-    sprintf(out + strlen(out), "Sorry, not avilable...! :(\n");
+    sprintf(out, "     MIN      MAX      AVG\r\n");
+    for (size_t i = 0; i < CELLBOARD_COUNT; i++) {
+        sprintf(out + strlen(out), "%d    %.2fV    %.2fV    %.2fV\r\n",
+            i + 1,
+            CONVERT_VALUE_TO_VOLTAGE(cell_volts.min[i]),
+            CONVERT_VALUE_TO_VOLTAGE(cell_volts.max[i]),
+            CONVERT_VALUE_TO_VOLTAGE(cell_volts.avg[i]));
+    }
+    sprintf(out + strlen(out), "\r\n");
     /*
     voltage_t * cells = cell_voltage_get_cells();
 
@@ -279,15 +286,18 @@ void _cli_volts_all(uint16_t argc, char **argv, char *out) {
 
 void _cli_temps(uint16_t argc, char **argv, char *out) {
     if (strcmp(argv[1], "") == 0) {
+        float min = CONVERT_VALUE_TO_TEMPERATURE(temperature_get_min());
+        float max = CONVERT_VALUE_TO_TEMPERATURE(temperature_get_max());
+        float avg = CONVERT_VALUE_TO_TEMPERATURE(temperature_get_average());
         sprintf(
             out,
             "average.....%.2f °C\r\nmax.........%.2f "
             "C\r\nmin.........%.2f °C\r\n"
             "delta.......%.2f °C\r\n",
-            (float)temperature_get_average() / 10,
-            temperature_get_max() / 2.56 - 20,
-            temperature_get_min() / 2.56 - 20,
-            (temperature_get_max() - temperature_get_min()) / 2.56 - 20);
+            avg,
+            max,
+            min,
+            max - min);
     } else if (strcmp(argv[1], "all") == 0) {
         _cli_temps_all(argc, &argv[1], out);
     } else {
@@ -330,8 +340,15 @@ void _cli_temps_all(uint16_t argc, char **argv, char *out) {
 }
 */
 void _cli_temps_all(uint16_t argc, char **argv, char *out) {
-    sprintf(out + strlen(out), "Sorry, not avilable...! :(\n");
-    /*
+    sprintf(out, "     MIN         MAX         AVG\r\n");
+    for (size_t i = 0; i < CELLBOARD_COUNT; i++) {
+        sprintf(out + strlen(out), "%d   %6.2f°C    %6.2f°C    %6.2f°C\r\n",
+            i,
+            CONVERT_VALUE_TO_TEMPERATURE(cell_temps.min[i]),
+            CONVERT_VALUE_TO_TEMPERATURE(cell_temps.max[i]),
+            CONVERT_VALUE_TO_TEMPERATURE(cell_temps.avg[i]));
+    }
+    sprintf(out + strlen(out), "\r\n");/*
     out[0]                  = '\0';
     temperature_t *temp_all = temperature_get_all();
 
@@ -874,7 +891,7 @@ void _cli_pack(uint16_t argc, char **argv, char *out) {
             pack_set_fault(value);
         }
 
-        sprintf(out, "%s setted %s\r\n", argv[1], argv[2]);
+        sprintf(out, "%s set %s\r\n", argv[1], argv[2]);
     } else if (argc == 2) {
     }
 }

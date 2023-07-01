@@ -81,9 +81,8 @@ size_t ltc6813_read_voltages(SPI_HandleTypeDef *hspi, voltage_t *volts) {
 }
 
 void ltc6813_build_dcc(uint32_t cells, uint8_t cfgar[8], uint8_t cfgbr[8]) {
-    for (uint8_t i = 0; i < LTC6813_CELL_COUNT; ++i) {
-        uint8_t is_cell_selected = 0;
-        cells |= 1 << i;
+    for (size_t i = 0; i < LTC6813_CELL_COUNT; ++i) {
+        uint8_t is_cell_selected = (cells & (1 << i)) != 0;
 
         if (is_cell_selected) {
             if (i < 8)

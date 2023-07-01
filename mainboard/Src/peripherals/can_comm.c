@@ -390,71 +390,71 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         primary_hv_feedbacks_status_converted_t conv_status = { 0 };
 
         // Get feedbacks status
-        feedback_feed_t feedbacks[FEEDBACK_N] = { 0 };
-        feedback_get_feedback_states(feedbacks);
+        feedback_feed_t fbs[FEEDBACK_N] = { 0 };
+        feedback_get_feedback_states(fbs);
         
         // TODO: Set feedback status (is_circuitry)
         for (size_t i = 0; i < FEEDBACK_N; i++) {
             switch(i) {
                 case FEEDBACK_IMPLAUSIBILITY_DETECTED_POS:
-                    conv_status.feedbacks_status_feedback_implausibility_detected = feedbacks[i].state == FEEDBACK_STATE_H;
+                    conv_status.feedbacks_status_feedback_implausibility_detected = fbs[i].state == FEEDBACK_STATE_H;
                     break;
                 case FEEDBACK_IMD_COCKPIT_POS:
-                    conv_status.feedbacks_status_feedback_imd_cockpit = feedbacks[i].state == FEEDBACK_STATE_H;
+                    conv_status.feedbacks_status_feedback_imd_cockpit = fbs[i].state == FEEDBACK_STATE_H;
                     break;
                 case FEEDBACK_TSAL_GREEN_FAULT_LATCHED_POS:
-                    conv_status.feedbacks_status_feedback_tsal_green_fault_latched = feedbacks[i].state == FEEDBACK_STATE_H;
+                    conv_status.feedbacks_status_feedback_tsal_green_fault_latched = fbs[i].state == FEEDBACK_STATE_H;
                     break;
                 case FEEDBACK_BMS_COCKPIT_POS:
-                    conv_status.feedbacks_status_feedback_bms_cockpit = feedbacks[i].state == FEEDBACK_STATE_H;
+                    conv_status.feedbacks_status_feedback_bms_cockpit = fbs[i].state == FEEDBACK_STATE_H;
                     break;
                 case FEEDBACK_EXT_LATCHED_POS:
-                    conv_status.feedbacks_status_feedback_ext_latched = feedbacks[i].state == FEEDBACK_STATE_H;
+                    conv_status.feedbacks_status_feedback_ext_latched = fbs[i].state == FEEDBACK_STATE_H;
                     break;
                 case FEEDBACK_TSAL_GREEN_POS:
-                    conv_status.feedbacks_status_feedback_tsal_green = feedbacks[i].state == FEEDBACK_STATE_H;
+                    conv_status.feedbacks_status_feedback_tsal_green = fbs[i].state == FEEDBACK_STATE_H;
                     break;
                 case FEEDBACK_TS_OVER_60V_STATUS_POS:
-                    conv_status.feedbacks_status_feedback_ts_over_60v_status = feedbacks[i].state == FEEDBACK_STATE_H;
+                    conv_status.feedbacks_status_feedback_ts_over_60v_status = fbs[i].state == FEEDBACK_STATE_H;
                     break;
                 case FEEDBACK_AIRN_STATUS_POS:
-                    conv_status.feedbacks_status_feedback_airn_status = feedbacks[i].state == FEEDBACK_STATE_H;
+                    conv_status.feedbacks_status_feedback_airn_status = fbs[i].state == FEEDBACK_STATE_H;
                     break;
                 case FEEDBACK_AIRP_STATUS_POS:
-                    conv_status.feedbacks_status_feedback_airp_status = feedbacks[i].state == FEEDBACK_STATE_H;
+                    conv_status.feedbacks_status_feedback_airp_status = fbs[i].state == FEEDBACK_STATE_H;
                     break;
                 case FEEDBACK_AIRP_GATE_POS:
-                    conv_status.feedbacks_status_feedback_airp_gate = feedbacks[i].state == FEEDBACK_STATE_H;
+                    conv_status.feedbacks_status_feedback_airp_gate = fbs[i].state == FEEDBACK_STATE_H;
                     break;
                 case FEEDBACK_AIRN_GATE_POS:
-                    conv_status.feedbacks_status_feedback_airn_gate = feedbacks[i].state == FEEDBACK_STATE_H;
+                    conv_status.feedbacks_status_feedback_airn_gate = fbs[i].state == FEEDBACK_STATE_H;
                     break;
                 case FEEDBACK_PRECHARGE_STATUS_POS:
-                    conv_status.feedbacks_status_feedback_precharge_status = feedbacks[i].state == FEEDBACK_STATE_H;
+                    conv_status.feedbacks_status_feedback_precharge_status = fbs[i].state == FEEDBACK_STATE_H;
                     break;
                 case FEEDBACK_TSP_OVER_60V_STATUS_POS:
-                    conv_status.feedbacks_status_feedback_tsp_over_60v_status = feedbacks[i].state == FEEDBACK_STATE_H;
+                    conv_status.feedbacks_status_feedback_tsp_over_60v_status = fbs[i].state == FEEDBACK_STATE_H;
                     break;
                 case FEEDBACK_IMD_FAULT_POS:
-                    conv_status.feedbacks_status_feedback_imd_fault = feedbacks[i].state == FEEDBACK_STATE_H;
+                    conv_status.feedbacks_status_feedback_imd_fault = fbs[i].state == FEEDBACK_STATE_H;
                     break;
                 case FEEDBACK_CHECK_MUX_POS:
-                    conv_status.feedbacks_status_feedback_check_mux = feedbacks[i].state == FEEDBACK_STATE_H;
+                    conv_status.feedbacks_status_feedback_check_mux = fbs[i].state == FEEDBACK_STATE_H;
                     break;
                 case FEEDBACK_SD_END_POS:
-                    conv_status.feedbacks_status_feedback_sd_end = feedbacks[i].state == FEEDBACK_STATE_H;
+                    conv_status.feedbacks_status_feedback_sd_end = fbs[i].state == FEEDBACK_STATE_H;
                     break;
                 case FEEDBACK_SD_OUT_POS:
-                    conv_status.feedbacks_status_feedback_sd_out = feedbacks[i].state == FEEDBACK_STATE_H;
+                    conv_status.feedbacks_status_feedback_sd_out = fbs[i].state == FEEDBACK_STATE_H;
                     break;
                 case FEEDBACK_SD_IN_POS:
-                    conv_status.feedbacks_status_feedback_sd_in = feedbacks[i].state == FEEDBACK_STATE_H;
+                    conv_status.feedbacks_status_feedback_sd_in = fbs[i].state == FEEDBACK_STATE_H;
                     break;
                 case FEEDBACK_SD_BMS_POS:
-                    conv_status.feedbacks_status_feedback_sd_bms = feedbacks[i].state == FEEDBACK_STATE_H;
+                    conv_status.feedbacks_status_feedback_sd_bms = fbs[i].state == FEEDBACK_STATE_H;
                     break;
                 case FEEDBACK_SD_IMD_POS:
-                    conv_status.feedbacks_status_feedback_sd_imd = feedbacks[i].state == FEEDBACK_STATE_H;
+                    conv_status.feedbacks_status_feedback_sd_imd = fbs[i].state == FEEDBACK_STATE_H;
                     break;
             }
         }
@@ -480,9 +480,13 @@ HAL_StatusTypeDef can_bms_send(uint16_t id) {
 
         for (size_t i = 0; i < CELLBOARD_COUNT; ++i) {
             bms_set_balancing_status_t raw_bal = { 0 };
-            raw_bal.balancing_status = bal_need_balancing();
-            raw_bal.target = MAX(CELL_MIN_VOLTAGE, cell_voltage_get_min());
-            raw_bal.threshold = MIN(BAL_MAX_VOLTAGE_THRESHOLD, bal_get_threshold());
+            bms_set_balancing_status_converted_t conv_bal = { 0 };
+            
+            conv_bal.balancing_status = bal_need_balancing();
+            conv_bal.target = MAX(CONVERT_VALUE_TO_VOLTAGE(CELL_MIN_VOLTAGE), cell_voltage_get_min());
+            conv_bal.threshold = MIN(CONVERT_VALUE_TO_VOLTAGE(BAL_MAX_VOLTAGE_THRESHOLD), bal_get_threshold());
+
+            bms_set_balancing_status_conversion_to_raw_struct(&raw_bal, &conv_bal);
 
             tx_header.DLC = bms_set_balancing_status_pack(buffer, &raw_bal, BMS_SET_BALANCING_STATUS_BYTE_SIZE);
             status |= can_send(&BMS_CAN, buffer, &tx_header);
@@ -527,6 +531,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
         }
 
         error_reset(ERROR_CAN, 1);
+
         if (rx_header.StdId == BMS_VOLTAGES_FRAME_ID) {
             bms_voltages_t raw_volts;
             bms_voltages_converted_t conv_volts;
@@ -627,7 +632,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
             tx_header.StdId = PRIMARY_HV_CELLS_TEMP_FRAME_ID;
 
             // Set start_index of the received cells between all cells of the pack
-            conv_fwd_temps.start_index = conv_temps.cellboard_id * CELLBOARD_CELL_COUNT + conv_temps.start_index;
+            conv_fwd_temps.start_index = conv_temps.cellboard_id * TEMP_SENSOR_COUNT + conv_temps.start_index;
             conv_fwd_temps.temp_0 = conv_temps.temp0;
             conv_fwd_temps.temp_1 = conv_temps.temp1;
             conv_fwd_temps.temp_2 = conv_temps.temp2;
@@ -686,6 +691,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
             }
             
             // TODO: set balancing status
+            bal_set_is_balancing(status.cellboard_id, status.balancing_status);
             // bal.status[index] = status.balancing_status;
             /*
             if (index == 0)
