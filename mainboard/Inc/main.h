@@ -64,10 +64,10 @@ void Error_Handler(void);
 #define ITS_CH1_GPIO_Port GPIOC
 #define PROBING_3V3_Pin GPIO_PIN_0
 #define PROBING_3V3_GPIO_Port GPIOA
-#define FB_SD_BMS_Pin GPIO_PIN_1
-#define FB_SD_BMS_GPIO_Port GPIOA
-#define FB_SD_IMD_Pin GPIO_PIN_2
+#define FB_SD_IMD_Pin GPIO_PIN_1
 #define FB_SD_IMD_GPIO_Port GPIOA
+#define FB_SD_BMS_Pin GPIO_PIN_2
+#define FB_SD_BMS_GPIO_Port GPIOA
 #define SD_IN_Pin GPIO_PIN_3
 #define SD_IN_GPIO_Port GPIOA
 #define MUX_IN_Pin GPIO_PIN_4

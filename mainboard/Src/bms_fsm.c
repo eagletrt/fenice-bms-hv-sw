@@ -201,6 +201,9 @@ void _idle_entry(fsm FSM) {
     can_car_send(PRIMARY_TS_STATUS_FRAME_ID);
 
     pack_set_default_off(0);
+
+    feedback_start_measurement();
+
     _start_fb_check_timer();
     cli_bms_debug("idle state", 10);
 }
@@ -208,14 +211,18 @@ void _idle_entry(fsm FSM) {
 void _idle_handler(fsm FSM, uint8_t event) {
     switch (event) {
         case BMS_EV_TS_ON:
-            if (feedback_check(FEEDBACK_TS_OFF_MASK, FEEDBACK_TS_OFF_VAL) == 0)
+            if (!feedback_is_conversion_finished())
+                fsm_trigger_event(FSM, BMS_EV_TS_ON);
+            else if (feedback_check(FEEDBACK_TS_OFF_MASK, FEEDBACK_TS_OFF_VAL) == 0)
                 fsm_transition(FSM, BMS_AIRN_CLOSE);
             break;
         case BMS_EV_FAULT:
             fsm_transition(FSM, BMS_FAULT);
             break;
         case BMS_EV_FB_CHECK:
-            feedback_check(FEEDBACK_TS_OFF_MASK, FEEDBACK_TS_OFF_VAL);
+            if (feedback_is_conversion_finished())
+                feedback_check(FEEDBACK_TS_OFF_MASK, FEEDBACK_TS_OFF_VAL);
+            break;
     }
 }
 
@@ -224,6 +231,8 @@ void _idle_exit(fsm FSM) {
 }
 
 void _airn_close_entry(fsm FSM) {
+    feedback_start_measurement();
+
     _start_fb_check_timer();
     _start_fb_timeout_timer();
     fsm_trigger_event(FSM, BMS_EV_FB_CHECK);
@@ -239,7 +248,7 @@ void _airn_close_handler(fsm FSM, uint8_t event) {
             fsm_transition(FSM, BMS_FAULT);
             break;
         case BMS_EV_FB_CHECK:
-            if (feedback_check(FEEDBACK_AIRN_CLOSE_MASK, FEEDBACK_AIRN_CLOSE_VAL) == 0) {
+            if (feedback_is_conversion_finished() && feedback_check(FEEDBACK_AIRN_CLOSE_MASK, FEEDBACK_AIRN_CLOSE_VAL) == 0) {
                 pack_set_airn_off(AIRN_ON_VALUE);
                 fsm_transition(FSM, BMS_AIRN_STATUS);
             }
@@ -252,11 +261,13 @@ void _airn_close_handler(fsm FSM, uint8_t event) {
 }
 
 void _airn_close_exit(fsm FSM) {
-    _stop_fb_check_timer();
     _stop_fb_timeout_timer();
+    _stop_fb_check_timer();
 }
 
 void _airn_status_entry(fsm FSM) {
+    feedback_start_measurement();
+
     _start_fb_check_timer();
     _start_fb_timeout_timer();
     fsm_trigger_event(FSM, BMS_EV_FB_CHECK);
@@ -271,7 +282,7 @@ void _airn_status_handler(fsm FSM, uint8_t event) {
             fsm_transition(FSM, BMS_FAULT);
             break;
         case BMS_EV_FB_CHECK:
-            if (feedback_check(FEEDBACK_AIRN_STATUS_MASK, FEEDBACK_AIRN_STATUS_VAL) == 0) {
+            if (feedback_is_conversion_finished() && feedback_check(FEEDBACK_AIRN_STATUS_MASK, FEEDBACK_AIRN_STATUS_VAL) == 0) {
                 pack_set_precharge(PRECHARGE_ON_VALUE);
                 fsm_transition(FSM, BMS_PRECHARGE);
             }
@@ -291,6 +302,8 @@ void _airn_status_exit(fsm FSM) {
 uint32_t tick;
 
 void _precharge_entry(fsm FSM) {
+    feedback_start_measurement();
+
     _start_pc_check_timer();
     _start_pc_timeout_timer();
     _start_fb_check_timer();
@@ -315,7 +328,7 @@ void _precharge_handler(fsm FSM, uint8_t event) {
             break;
 
         case BMS_EV_FB_CHECK:
-            if (feedback_check(FEEDBACK_PC_ON_MASK, FEEDBACK_PC_ON_VAL) == 0) {
+            if (feedback_is_conversion_finished() && feedback_check(FEEDBACK_PC_ON_MASK, FEEDBACK_PC_ON_VAL) == 0) {
                 _stop_fb_timeout_timer();
             }
             break;
@@ -336,10 +349,13 @@ void _precharge_handler(fsm FSM, uint8_t event) {
                  CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_tsp()) >= CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_bat()) * PRECHARGE_VOLTAGE_THRESHOLD) ||
                 (bms.handcart_connected && CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_tsp()) > 0 &&
                  CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_tsp()) >= CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_bat()) * PRECHARGE_VOLTAGE_THRESHOLD_CARELINO)) {
-                pack_set_airp_off(AIRP_ON_VALUE);
-                // _stop_fb_check_timer();
-                cli_bms_debug("Precharge ok", 18);
-                fsm_transition(bms.fsm, BMS_ON);
+
+                if (feedback_is_conversion_finished() && feedback_check(FEEDBACK_PC_ON_MASK, FEEDBACK_PC_ON_VAL) == 0) {
+                    pack_set_airp_off(AIRP_ON_VALUE);
+                    // _stop_fb_check_timer();
+                    cli_bms_debug("Precharge ok", 18);
+                    fsm_transition(bms.fsm, BMS_ON);
+                }
             }
             break;
         case BMS_EV_FAULT:

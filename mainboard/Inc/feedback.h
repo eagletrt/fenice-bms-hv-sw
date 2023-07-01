@@ -18,22 +18,21 @@
 #include <../../fenice_config.h>
 
 
-#define MUX_INTERVAL_MS 0.5
+#define MUX_INTERVAL_MS 0.3
 
 #define FB_CHECK_INTERVAL_MS 2
-#define FB_TIMEOUT_MS        100
+#define FB_TIMEOUT_MS        150
 
 typedef uint32_t feedback_t;
 
 extern uint64_t feedback;
 
-// TODO: Check carefully feeback masks
 
 #define FEEDBACK_TS_OFF_HIGH \
     (FEEDBACK_CHECK_MUX | FEEDBACK_BMS_COCKPIT | FEEDBACK_IMD_COCKPIT | \
      FEEDBACK_IMD_FAULT | FEEDBACK_IMPLAUSIBILITY_DETECTED | FEEDBACK_AIRN_STATUS | \
-     FEEDBACK_AIRP_STATUS | FEEDBACK_SD_IN | FEEDBACK_SD_OUT)
-#define FEEDBACK_TS_OFF_LOW (FEEDBACK_AIRN_GATE | FEEDBACK_AIRP_GATE | FEEDBACK_SD_BMS | FEEDBACK_SD_IMD | FEEDBACK_SD_END)
+     FEEDBACK_AIRP_STATUS | FEEDBACK_SD_IN | FEEDBACK_SD_OUT | FEEDBACK_SD_END)
+#define FEEDBACK_TS_OFF_LOW (FEEDBACK_AIRN_GATE | FEEDBACK_AIRP_GATE | FEEDBACK_SD_BMS | FEEDBACK_SD_IMD)
 
 #define FEEDBACK_TS_OFF_VAL  (FEEDBACK_TS_OFF_HIGH)
 #define FEEDBACK_TS_OFF_MASK ((FEEDBACK_TS_OFF_HIGH) | (FEEDBACK_TS_OFF_LOW))
@@ -67,6 +66,7 @@ extern uint64_t feedback;
 #define FEEDBACK_PC_ON_VAL  (FEEDBACK_PC_ON_HIGH)
 #define FEEDBACK_PC_ON_MASK ((FEEDBACK_PC_ON_HIGH) | (FEEDBACK_PC_ON_LOW))
 
+// TODO: Check carefully feeback masks
 #define FEEDBACK_ON_HIGH (FEEDBACK_CHECK_MUX | FEEDBACK_AIRN_GATE | FEEDBACK_AIRP_GATE)
 #define FEEDBACK_ON_LOW \
     (FEEDBACK_AIRN_STATUS | FEEDBACK_AIRP_STATUS | FEEDBACK_TS_OVER_60V_STATUS | \
@@ -173,6 +173,16 @@ feedback_t feedback_check(feedback_t fb_check_mask, feedback_t fb_value);
 
 /** @brief Set next multiplexer index */
 void feedback_set_next_mux_index();
+/** @brief Start feedbacks measurement */
+void feedback_start_measurement();
+/**
+ * @brief Check if the ADC conversion is finished
+ * 
+ * @return true The conversion is complete
+ * @return false The conversion is still running
+ */
+bool feedback_is_conversion_finished();
+
 
 /** @brief Feedback timer callback handler */
 void _feedback_handle_tim_elapsed_irq();

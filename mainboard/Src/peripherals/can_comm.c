@@ -746,10 +746,10 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 
             switch (ts_status.ts_status_set) {
                 case primary_set_ts_status_das_ts_status_set_OFF:
-                    fsm_trigger_event(bms.fsm, BMS_EV_TS_OFF);
+                    // fsm_trigger_event(bms.fsm, BMS_EV_TS_OFF);
                     break;
                 case primary_set_ts_status_das_ts_status_set_ON:
-                    fsm_trigger_event(bms.fsm, BMS_EV_TS_ON);
+                    // fsm_trigger_event(bms.fsm, BMS_EV_TS_ON);
                     break;
             }
         } else if (rx_header.StdId == PRIMARY_SET_CELL_BALANCING_STATUS_FRAME_ID) {

@@ -234,7 +234,7 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* adcHandle)
     PA4     ------> ADC1_IN4
     PB0     ------> ADC1_IN8
     */
-    GPIO_InitStruct.Pin = PROBING_3V3_Pin|FB_SD_BMS_Pin|FB_SD_IMD_Pin|SD_IN_Pin
+    GPIO_InitStruct.Pin = PROBING_3V3_Pin|FB_SD_IMD_Pin|FB_SD_BMS_Pin|SD_IN_Pin
                           |MUX_IN_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -378,7 +378,7 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* adcHandle)
     PA4     ------> ADC1_IN4
     PB0     ------> ADC1_IN8
     */
-    HAL_GPIO_DeInit(GPIOA, PROBING_3V3_Pin|FB_SD_BMS_Pin|FB_SD_IMD_Pin|SD_IN_Pin
+    HAL_GPIO_DeInit(GPIOA, PROBING_3V3_Pin|FB_SD_IMD_Pin|FB_SD_BMS_Pin|SD_IN_Pin
                           |MUX_IN_Pin);
 
     HAL_GPIO_DeInit(SD_OUT_GPIO_Port, SD_OUT_Pin);
