@@ -660,9 +660,12 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
         }
         else if (rx_header.StdId == BMS_BOARD_STATUS_FRAME_ID) {
             uint8_t index = 0;
-            bms_board_status_t status;
+            bms_board_status_t raw_status;
+            bms_board_status_converted_t conv_status;
 
-            bms_board_status_unpack(&status, rx_data, BMS_BOARD_STATUS_BYTE_SIZE);
+            bms_board_status_unpack(&raw_status, rx_data, BMS_BOARD_STATUS_BYTE_SIZE);
+
+            bms_board_status_raw_to_conversion_struct(&conv_status, &raw_status);
             switch (rx_header.StdId) {
                 case BMS_TEMPERATURES_CELLBOARD_ID_CELLBOARD_0_CHOICE:
                     ++cellboards_msgs.cellboard0;
@@ -689,9 +692,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
                     index = 5;
                     break;
             }
-            
-            // TODO: set balancing status
-            bal_set_is_balancing(status.cellboard_id, status.balancing_status);
+            bal_set_is_balancing(conv_status.cellboard_id, conv_status.balancing_status);
             // bal.status[index] = status.balancing_status;
             /*
             if (index == 0)
@@ -699,17 +700,61 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
             else if (index == 3)
                 status.errors &= ~0b10000000;  //those adc are not working
             */
-            uint32_t error_status = status.errors_can_comm |
-                status.errors_ltc_comm |
-                status.errors_open_wire |
-                status.errors_temp_comm_0 | 
-                status.errors_temp_comm_1 | 
-                status.errors_temp_comm_2 | 
-                status.errors_temp_comm_3 | 
-                status.errors_temp_comm_4 | 
-                status.errors_temp_comm_5;
+            uint32_t error_status = conv_status.errors_can_comm |
+                conv_status.errors_ltc_comm |
+                conv_status.errors_open_wire |
+                conv_status.errors_temp_comm_0 | 
+                conv_status.errors_temp_comm_1 | 
+                conv_status.errors_temp_comm_2 | 
+                conv_status.errors_temp_comm_3 | 
+                conv_status.errors_temp_comm_4 | 
+                conv_status.errors_temp_comm_5;
 
             error_toggle_check(error_status != 0, ERROR_CELLBOARD_INTERNAL, index);
+
+            tx_header.StdId = PRIMARY_HV_CELL_BALANCING_STATUS_FRAME_ID;
+
+            uint8_t buffer[8];
+            primary_hv_cell_balancing_status_t raw_fwd_status;
+            primary_hv_cell_balancing_status_converted_t conv_fwd_status;
+
+            conv_fwd_status.cellboard_id = conv_status.cellboard_id;
+            conv_fwd_status.balancing_status = conv_status.balancing_status;
+
+            conv_fwd_status.errors_can_comm = conv_status.errors_can_comm;
+            conv_fwd_status.errors_ltc_comm = conv_status.errors_ltc_comm;
+            conv_fwd_status.errors_open_wire = conv_status.errors_open_wire;
+            conv_fwd_status.errors_temp_comm_0 = conv_status.errors_temp_comm_0;
+            conv_fwd_status.errors_temp_comm_1 = conv_status.errors_temp_comm_1;
+            conv_fwd_status.errors_temp_comm_2 = conv_status.errors_temp_comm_2;
+            conv_fwd_status.errors_temp_comm_3 = conv_status.errors_temp_comm_3;
+            conv_fwd_status.errors_temp_comm_4 = conv_status.errors_temp_comm_4;
+            conv_fwd_status.errors_temp_comm_5 = conv_status.errors_temp_comm_5;
+
+            conv_fwd_status.balancing_cells_cell0 = conv_status.balancing_cells_cell0;
+            conv_fwd_status.balancing_cells_cell1 = conv_status.balancing_cells_cell1;
+            conv_fwd_status.balancing_cells_cell2 = conv_status.balancing_cells_cell2;
+            conv_fwd_status.balancing_cells_cell3 = conv_status.balancing_cells_cell3;
+            conv_fwd_status.balancing_cells_cell4 = conv_status.balancing_cells_cell4;
+            conv_fwd_status.balancing_cells_cell5 = conv_status.balancing_cells_cell5;
+            conv_fwd_status.balancing_cells_cell6 = conv_status.balancing_cells_cell6;
+            conv_fwd_status.balancing_cells_cell7 = conv_status.balancing_cells_cell7;
+            conv_fwd_status.balancing_cells_cell8 = conv_status.balancing_cells_cell8;
+            conv_fwd_status.balancing_cells_cell9 = conv_status.balancing_cells_cell9;
+            conv_fwd_status.balancing_cells_cell10 = conv_status.balancing_cells_cell10;
+            conv_fwd_status.balancing_cells_cell11 = conv_status.balancing_cells_cell11;
+            conv_fwd_status.balancing_cells_cell12 = conv_status.balancing_cells_cell12;
+            conv_fwd_status.balancing_cells_cell13 = conv_status.balancing_cells_cell13;
+            conv_fwd_status.balancing_cells_cell14 = conv_status.balancing_cells_cell14;
+            conv_fwd_status.balancing_cells_cell15 = conv_status.balancing_cells_cell15;
+            conv_fwd_status.balancing_cells_cell16 = conv_status.balancing_cells_cell16;
+            conv_fwd_status.balancing_cells_cell17 = conv_status.balancing_cells_cell17;
+
+            primary_hv_cell_balancing_status_conversion_to_raw_struct(&raw_fwd_status, &conv_fwd_status);
+
+            tx_header.DLC = primary_hv_cell_balancing_status_pack(buffer, &raw_fwd_status, PRIMARY_HV_CELL_BALANCING_STATUS_BYTE_SIZE);
+
+            can_send(&CAR_CAN, buffer, &tx_header);
         } else {
             char buffer[50] = {0};
             sprintf(buffer, "%lx#%lx%lx\r\n", rx_header.StdId, *(uint32_t*)rx_data, *(((uint32_t*)rx_data)+1));
@@ -746,10 +791,10 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 
             switch (ts_status.ts_status_set) {
                 case primary_set_ts_status_das_ts_status_set_OFF:
-                    // fsm_trigger_event(bms.fsm, BMS_EV_TS_OFF);
+                    fsm_trigger_event(bms.fsm, BMS_EV_TS_OFF);
                     break;
                 case primary_set_ts_status_das_ts_status_set_ON:
-                    // fsm_trigger_event(bms.fsm, BMS_EV_TS_ON);
+                    fsm_trigger_event(bms.fsm, BMS_EV_TS_ON);
                     break;
             }
         } else if (rx_header.StdId == PRIMARY_SET_CELL_BALANCING_STATUS_FRAME_ID) {

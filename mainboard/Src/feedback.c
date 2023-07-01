@@ -24,8 +24,8 @@
 #define feedback_sd_analog_threshold_l (FEEDBACK_SD_DIVIDER_RATIO * FEEDBACK_SD_THRESHOLD_L)
 #define feedback_sd_analog_threshold_h (FEEDBACK_SD_DIVIDER_RATIO * FEEDBACK_SD_THRESHOLD_H)
 
-#define FEEDBACK_CHECK_MUX_THRESHOLD_L 2.1f
-#define FEEDBACK_CHECK_MUX_THRESHOLD_H 2.8f
+#define FEEDBACK_CHECK_MUX_THRESHOLD_L 2.2f
+#define FEEDBACK_CHECK_MUX_THRESHOLD_H 3.0f
 #define FEEDBACK_CHECK_MUX_HANDCART_THRESHOLD_L 1.2f
 #define FEEDBACK_CHECK_MUX_HANDCART_THRESHOLD_H 1.4f
 
@@ -195,11 +195,14 @@ void feedback_set_next_mux_index() {
 void feedback_start_measurement() {
     fb_index = 0;
     conversion_finished = 0;
+    HAL_GPIO_WritePin(MUX_A0_GPIO_Port, MUX_A0_Pin, (fb_index & 0b00000001));
+    HAL_GPIO_WritePin(MUX_A1_GPIO_Port, MUX_A1_Pin, (fb_index & 0b00000010));
+    HAL_GPIO_WritePin(MUX_A2_GPIO_Port, MUX_A2_Pin, (fb_index & 0b00000100));
+    HAL_GPIO_WritePin(MUX_A3_GPIO_Port, MUX_A3_Pin, (fb_index & 0b00001000));
 }
 bool feedback_is_conversion_finished() {
     return conversion_finished;
 }
-
 
 void _feedback_handle_tim_elapsed_irq() {
     HAL_ADC_Start_DMA(&ADC_MUX, (uint32_t *)dma_data, DMA_DATA_SIZE);

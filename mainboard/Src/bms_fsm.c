@@ -190,8 +190,6 @@ void bms_set_led_blinker() {
 
     blink_reset(&(bms.led));
     HAL_GPIO_WritePin(bms.led.port, bms.led.pin, GPIO_PIN_SET);
-
-    can_car_send(PRIMARY_TS_STATUS_FRAME_ID);
 }
 void bms_blink_led() {
     blink_run(&bms.led);
@@ -201,6 +199,7 @@ void _idle_entry(fsm FSM) {
     can_car_send(PRIMARY_TS_STATUS_FRAME_ID);
 
     pack_set_default_off(0);
+    pack_set_fault(BMS_FAULT_OFF_VALUE);
 
     feedback_start_measurement();
 
@@ -344,7 +343,7 @@ void _precharge_handler(fsm FSM, uint8_t event) {
             snprintf(c, 5, "%4.2f", CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_tsp()) / (CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_bat()) * PRECHARGE_VOLTAGE_THRESHOLD));
             cli_bms_debug(c, 5);
 
-            if (HAL_GetTick() - tick > 10000 ||
+            if (/* HAL_GetTick() - tick > 10000 || */
                 (!bms.handcart_connected && internal_voltage_get_tsp() > 0 &&
                  CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_tsp()) >= CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_bat()) * PRECHARGE_VOLTAGE_THRESHOLD) ||
                 (bms.handcart_connected && CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_tsp()) > 0 &&
@@ -352,6 +351,7 @@ void _precharge_handler(fsm FSM, uint8_t event) {
 
                 if (feedback_is_conversion_finished() && feedback_check(FEEDBACK_PC_ON_MASK, FEEDBACK_PC_ON_VAL) == 0) {
                     pack_set_airp_off(AIRP_ON_VALUE);
+                    // pack_set_precharge(PRECHARGE_OFF_VALUE);
                     // _stop_fb_check_timer();
                     cli_bms_debug("Precharge ok", 18);
                     fsm_transition(bms.fsm, BMS_ON);
@@ -371,12 +371,15 @@ void _precharge_exit(fsm FSM) {
 }
 
 void _on_entry(fsm FSM) {
+    feedback_start_measurement();
+
     _start_fb_timeout_timer();
     can_car_send(PRIMARY_TS_STATUS_FRAME_ID);
 
     cli_bms_debug("on state", 8);
 }
 
+size_t feed = 0;
 void _on_handler(fsm FSM, uint8_t event) {
     switch (event) {
         case BMS_EV_TS_OFF:
@@ -387,13 +390,36 @@ void _on_handler(fsm FSM, uint8_t event) {
             fsm_transition(FSM, BMS_FAULT);
             break;
         case BMS_EV_FB_CHECK:
-            if (feedback_check(FEEDBACK_ON_MASK, FEEDBACK_ON_VAL) != 0) {
-                pack_set_default_off(0);
-                fsm_transition(FSM, BMS_IDLE);
+            if (feedback_is_conversion_finished()) {
+                if ((feed = feedback_check(FEEDBACK_ON_MASK, FEEDBACK_ON_VAL)) != 0) {
+                    char msg[100] = { 0 };
+                    for (size_t i = 1; i < FEEDBACK_N; i++) {
+                        if (feed & (1 << i))
+                            sprintf(msg + strlen(msg), "%d %d\r\n", i, feedbacks[i]);
+                    }
+                    cli_bms_debug(msg, strlen(msg));
+
+                    can_car_send(PRIMARY_HV_FEEDBACKS_STATUS_FRAME_ID);
+                    can_car_send(PRIMARY_TS_STATUS_FRAME_ID);
+                    cli_bms_debug("FB check sborato...!\r\n", strlen("FB check sborato...!\r\n"));
+                    pack_set_default_off(0);
+                    fsm_transition(FSM, BMS_IDLE);
+                }
+                feedback_start_measurement();
             }
             break;
         case BMS_EV_FB_TIMEOUT:
-            if (feedback_check(FEEDBACK_ON_MASK, FEEDBACK_ON_VAL) != 0) {
+            if (feedback_is_conversion_finished() && (feed = feedback_check(FEEDBACK_ON_MASK, FEEDBACK_ON_VAL)) != 0) {
+                char msg[100] = { 0 };
+                for (size_t i = 0; i < FEEDBACK_N; i++) {
+                    if (feed & (1 << i))
+                        sprintf(msg + strlen(msg), "%d %d\r\n", i, feedbacks[i]);
+                }
+                cli_bms_debug(msg, strlen(msg));
+
+                can_car_send(PRIMARY_HV_FEEDBACKS_STATUS_FRAME_ID);
+                can_car_send(PRIMARY_TS_STATUS_FRAME_ID);
+                cli_bms_debug("FB timeout sborato...!\r\n", strlen("FB timeout sborato...!\r\n"));
                 pack_set_default_off(0);
                 fsm_transition(FSM, BMS_IDLE);
                 return;
@@ -411,6 +437,7 @@ void _on_exit(fsm FSM) {
 
 void _fault_entry(fsm FSM) {
     pack_set_fault(BMS_FAULT_ON_VALUE);
+
     pack_set_default_off(0);
     _start_fb_check_timer();
 

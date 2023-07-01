@@ -78,7 +78,33 @@ void can_send(uint16_t topic_id) {
             ? bms_board_status_cellboard_id_CELLBOARD_5
             : cellboard_index;
 
-        // TODO: set errors?
+        conv_state.errors_can_comm = ERROR_GET(ERROR_CAN);
+        conv_state.errors_ltc_comm = ERROR_GET(ERROR_LTC_COMM);
+        conv_state.errors_open_wire = ERROR_GET(ERROR_OPEN_WIRE);
+        conv_state.errors_temp_comm_0 = ERROR_GET(ERROR_TEMP_COMM_0);
+        conv_state.errors_temp_comm_1 = ERROR_GET(ERROR_TEMP_COMM_1);
+        conv_state.errors_temp_comm_2 = ERROR_GET(ERROR_TEMP_COMM_2);
+        conv_state.errors_temp_comm_3 = ERROR_GET(ERROR_TEMP_COMM_3);
+        conv_state.errors_temp_comm_4 = ERROR_GET(ERROR_TEMP_COMM_4);
+
+        conv_state.balancing_cells_cell0  = bal.cells & 1;
+        conv_state.balancing_cells_cell1  = bal.cells & (1 << 1);
+        conv_state.balancing_cells_cell2  = bal.cells & (1 << 2);
+        conv_state.balancing_cells_cell3  = bal.cells & (1 << 3);
+        conv_state.balancing_cells_cell4  = bal.cells & (1 << 4);
+        conv_state.balancing_cells_cell5  = bal.cells & (1 << 5);
+        conv_state.balancing_cells_cell6  = bal.cells & (1 << 6);
+        conv_state.balancing_cells_cell7  = bal.cells & (1 << 7);
+        conv_state.balancing_cells_cell8  = bal.cells & (1 << 8);
+        conv_state.balancing_cells_cell9  = bal.cells & (1 << 9);
+        conv_state.balancing_cells_cell10 = bal.cells & (1 << 10);
+        conv_state.balancing_cells_cell11 = bal.cells & (1 << 11);
+        conv_state.balancing_cells_cell12 = bal.cells & (1 << 12);
+        conv_state.balancing_cells_cell13 = bal.cells & (1 << 13);
+        conv_state.balancing_cells_cell14 = bal.cells & (1 << 14);
+        conv_state.balancing_cells_cell15 = bal.cells & (1 << 15);
+        conv_state.balancing_cells_cell16 = bal.cells & (1 << 16);
+        conv_state.balancing_cells_cell17 = bal.cells & (1 << 17);
 
         bms_board_status_conversion_to_raw_struct(&raw_state, &conv_state);
 
