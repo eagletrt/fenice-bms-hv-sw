@@ -41,7 +41,6 @@
 uint16_t feedbacks[FEEDBACK_N] = { 0 };
 uint8_t fb_index = 0;
 uint16_t dma_data[DMA_DATA_SIZE] = { 0 };
-bool conversion_finished = 0;
 
 /**
  * @brief Check if a feedback voltage is greater than the high threshold
@@ -185,26 +184,15 @@ feedback_t feedback_check(feedback_t fb_check_mask, feedback_t fb_value) {
     return differences;
 }
 
-void feedback_set_next_mux_index() {
-    fb_index = (fb_index + 1) % FEEDBACK_MUX_N;
+void _feedback_set_mux_index() {
     HAL_GPIO_WritePin(MUX_A0_GPIO_Port, MUX_A0_Pin, (fb_index & 0b00000001));
     HAL_GPIO_WritePin(MUX_A1_GPIO_Port, MUX_A1_Pin, (fb_index & 0b00000010));
     HAL_GPIO_WritePin(MUX_A2_GPIO_Port, MUX_A2_Pin, (fb_index & 0b00000100));
     HAL_GPIO_WritePin(MUX_A3_GPIO_Port, MUX_A3_Pin, (fb_index & 0b00001000));
-}
-void feedback_start_measurement() {
-    fb_index = 0;
-    conversion_finished = 0;
-    HAL_GPIO_WritePin(MUX_A0_GPIO_Port, MUX_A0_Pin, (fb_index & 0b00000001));
-    HAL_GPIO_WritePin(MUX_A1_GPIO_Port, MUX_A1_Pin, (fb_index & 0b00000010));
-    HAL_GPIO_WritePin(MUX_A2_GPIO_Port, MUX_A2_Pin, (fb_index & 0b00000100));
-    HAL_GPIO_WritePin(MUX_A3_GPIO_Port, MUX_A3_Pin, (fb_index & 0b00001000));
-}
-bool feedback_is_conversion_finished() {
-    return conversion_finished;
 }
 
 void _feedback_handle_tim_elapsed_irq() {
+    _feedback_set_mux_index();
     HAL_ADC_Start_DMA(&ADC_MUX, (uint32_t *)dma_data, DMA_DATA_SIZE);
 }
 void _feedback_handle_adc_cnv_cmpl_irq() {
@@ -215,8 +203,5 @@ void _feedback_handle_adc_cnv_cmpl_irq() {
     feedbacks[FEEDBACK_SD_BMS_POS] = dma_data[DMA_DATA_SD_BMS];
     feedbacks[FEEDBACK_SD_IMD_POS] = dma_data[DMA_DATA_SD_IMD];
 
-    if (!conversion_finished && fb_index == FEEDBACK_MUX_N - 1)
-        conversion_finished = 1;
-
-    feedback_set_next_mux_index();
+    fb_index = (fb_index + 1) % FEEDBACK_MUX_N;
 }

@@ -16,7 +16,9 @@
 #include "../../fenice_config.h"
 #include "max22530.h"
 
-#define CONVERT_VALUE_TO_INTERNAL_VOLTAGE(x) MAX22530_CONV_VALUE_TO_VOLTAGE(x)
+#define INTERNAL_VOLTAGE_DIVIDER_RATIO 0.003
+#define CONVERT_VALUE_TO_INTERNAL_ADC_VOLTAGE(x) MAX22530_CONV_VALUE_TO_VOLTAGE(x)
+#define CONVERT_VALUE_TO_INTERNAL_VOLTAGE(x) (CONVERT_VALUE_TO_INTERNAL_ADC_VOLTAGE(x) / INTERNAL_VOLTAGE_DIVIDER_RATIO)
 
 /** @brief Initializes the adc and internal voltages */
 void internal_voltage_init();

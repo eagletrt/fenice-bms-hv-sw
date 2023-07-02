@@ -18,7 +18,7 @@
 #include <../../fenice_config.h>
 
 
-#define MUX_INTERVAL_MS 0.3
+#define MUX_INTERVAL_MS 0.2
 
 #define FB_CHECK_INTERVAL_MS 3
 #define FB_TIMEOUT_MS        150
@@ -169,18 +169,6 @@ void feedback_get_feedback_states(feedback_feed_t out_value[FEEDBACK_N]);
  * @return feedback_t An integer where each bit set to 1 represent a feedback which voltage is invalid
  */
 feedback_t feedback_check(feedback_t fb_check_mask, feedback_t fb_value);
-
-/** @brief Set next multiplexer index */
-void feedback_set_next_mux_index();
-/** @brief Start feedbacks measurement */
-void feedback_start_measurement();
-/**
- * @brief Check if the ADC conversion is finished
- * 
- * @return true The conversion is complete
- * @return false The conversion is still running
- */
-bool feedback_is_conversion_finished();
 
 
 /** @brief Feedback timer callback handler */

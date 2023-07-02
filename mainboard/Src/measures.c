@@ -40,8 +40,8 @@ void measures_check_flags() {
         flags &= ~_50MS_INTERVAL_FLAG;
     }
     if (flags & _200MS_INTERVAL_FLAG) {
-        can_cellboards_check();
         temperature_check_errors();
+        can_cellboards_check();
         can_car_send(PRIMARY_HV_TEMP_FRAME_ID);
         can_car_send(PRIMARY_HV_FEEDBACKS_STATUS_FRAME_ID);
         flags &= ~_200MS_INTERVAL_FLAG;
@@ -68,7 +68,7 @@ void measures_check_flags() {
 
 void measures_voltage_current_soc() {
     if (internal_voltage_measure() == HAL_OK)
-        current_read(CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_shunt()));
+        current_read(CONVERT_VALUE_TO_INTERNAL_ADC_VOLTAGE(internal_voltage_get_shunt()));
     soc_sample_energy(HAL_GetTick());
 }
 

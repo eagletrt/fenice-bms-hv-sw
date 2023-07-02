@@ -9,7 +9,6 @@
 #include "can_comms.h"
 
 #include "bal_fsm.h"
-#include "bootloader.h"
 #include "can.h"
 #include "cellboard_config.h"
 #include "error.h"
@@ -86,6 +85,7 @@ void can_send(uint16_t topic_id) {
         conv_state.errors_temp_comm_2 = ERROR_GET(ERROR_TEMP_COMM_2);
         conv_state.errors_temp_comm_3 = ERROR_GET(ERROR_TEMP_COMM_3);
         conv_state.errors_temp_comm_4 = ERROR_GET(ERROR_TEMP_COMM_4);
+        conv_state.errors_temp_comm_5 = ERROR_GET(ERROR_TEMP_COMM_5);
 
         conv_state.balancing_cells_cell0  = bal.cells & 1;
         conv_state.balancing_cells_cell1  = bal.cells & (1 << 1);

@@ -48,6 +48,7 @@ void measurements_flags_check() {
         temp_measure_all();
         can_send(BMS_TEMPERATURES_FRAME_ID);
         can_send(BMS_TEMPERATURES_INFO_FRAME_ID);
+        can_send(BMS_BOARD_STATUS_FRAME_ID);
         // can_send(0);
         flags &= ~MEASUREMENTS_TEMPS_READ_FLAG;
     }

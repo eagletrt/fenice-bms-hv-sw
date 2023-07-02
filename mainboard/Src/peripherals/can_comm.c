@@ -179,9 +179,9 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         primary_hv_temp_t raw_temp;
         primary_hv_temp_converted_t conv_temp;
         
-        conv_temp.average_temp = (float)temperature_get_average() / 2.56f * 655.36f;
-        conv_temp.min_temp = (float)temperature_get_min() / 2.56f * 655.36f;
-        conv_temp.max_temp = (float)temperature_get_max() / 2.56f * 655.36f;
+        conv_temp.average_temp = CONVERT_VALUE_TO_TEMPERATURE(temperature_get_average());
+        conv_temp.min_temp = CONVERT_VALUE_TO_TEMPERATURE(temperature_get_min());
+        conv_temp.max_temp = CONVERT_VALUE_TO_TEMPERATURE(temperature_get_max());
 
         // Convert temperatures to raw
         primary_hv_temp_conversion_to_raw_struct(&raw_temp, &conv_temp);
@@ -588,6 +588,29 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
 
             bms_voltages_info_raw_to_conversion_struct(&conv_volts, &raw_volts);
 
+            switch (conv_volts.cellboard_id) {
+                case BMS_VOLTAGES_INFO_CELLBOARD_ID_CELLBOARD_0_CHOICE:
+                    ++cellboards_msgs.cellboard0;
+                    break;
+                case BMS_VOLTAGES_INFO_CELLBOARD_ID_CELLBOARD_1_CHOICE:
+                    ++cellboards_msgs.cellboard1;
+                    break;
+                case BMS_VOLTAGES_INFO_CELLBOARD_ID_CELLBOARD_2_CHOICE:
+                    ++cellboards_msgs.cellboard2;
+                    break;
+                case BMS_VOLTAGES_INFO_CELLBOARD_ID_CELLBOARD_3_CHOICE:
+                    ++cellboards_msgs.cellboard3;
+                    break;
+                case BMS_VOLTAGES_INFO_CELLBOARD_ID_CELLBOARD_4_CHOICE:
+                    ++cellboards_msgs.cellboard4;
+                    break;
+                case BMS_VOLTAGES_INFO_CELLBOARD_ID_CELLBOARD_5_CHOICE:
+                    ++cellboards_msgs.cellboard5;
+                    break;
+                default:
+                    break;
+            }
+
             cell_voltage_set_cells(
                 conv_volts.cellboard_id,
                 CONVERT_VOLTAGE_TO_VALUE(conv_volts.min_voltage),
@@ -652,6 +675,29 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
 
             bms_temperatures_info_raw_to_conversion_struct(&conv_temps, &raw_temps);
 
+            switch (conv_temps.cellboard_id) {
+                case BMS_TEMPERATURES_INFO_CELLBOARD_ID_CELLBOARD_0_CHOICE:
+                    ++cellboards_msgs.cellboard0;
+                    break;
+                case BMS_TEMPERATURES_INFO_CELLBOARD_ID_CELLBOARD_1_CHOICE:
+                    ++cellboards_msgs.cellboard1;
+                    break;
+                case BMS_TEMPERATURES_INFO_CELLBOARD_ID_CELLBOARD_2_CHOICE:
+                    ++cellboards_msgs.cellboard2;
+                    break;
+                case BMS_TEMPERATURES_INFO_CELLBOARD_ID_CELLBOARD_3_CHOICE:
+                    ++cellboards_msgs.cellboard3;
+                    break;
+                case BMS_TEMPERATURES_INFO_CELLBOARD_ID_CELLBOARD_4_CHOICE:
+                    ++cellboards_msgs.cellboard4;
+                    break;
+                case BMS_TEMPERATURES_INFO_CELLBOARD_ID_CELLBOARD_5_CHOICE:
+                    ++cellboards_msgs.cellboard5;
+                    break;
+                default:
+                    break;
+            }
+
             temperature_set_cells(
                 conv_temps.cellboard_id,
                 CONVERT_TEMPERATURE_TO_VALUE(conv_temps.min_temp),
@@ -706,8 +752,8 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
                 conv_status.errors_temp_comm_0 | 
                 conv_status.errors_temp_comm_1 | 
                 conv_status.errors_temp_comm_2 | 
-                conv_status.errors_temp_comm_3 | 
-                conv_status.errors_temp_comm_4 | 
+                conv_status.errors_temp_comm_3 |
+                conv_status.errors_temp_comm_4 |
                 conv_status.errors_temp_comm_5;
 
             error_toggle_check(error_status != 0, ERROR_CELLBOARD_INTERNAL, index);

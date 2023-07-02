@@ -15,7 +15,7 @@
 #include "mainboard_config.h"
 
 #define CONVERT_VALUE_TO_TEMPERATURE(x) ((float)(x) / 2.56 - 20)
-#define CONVERT_TEMPERATURE_TO_VALUE(x) (((x) + 20) * 2.56)
+#define CONVERT_TEMPERATURE_TO_VALUE(x) (((x) + 20) * 2.56f)
 
 typedef uint8_t temperature_t;
 

@@ -46,9 +46,11 @@ void soc_init() {
 void soc_sample_energy(uint32_t timestamp) {
     soc_params params = *(soc_params *)config_get(&soc_config);
 
+    float vbat = internal_voltage_get_bat() * 1.8f / 4095;
+
     // Sample current values for SoC calculation
-    energy_sample_energy(&energy_total, (current_get_current() * internal_voltage_get_bat()) / 10.0f, timestamp);
-    energy_sample_energy(&energy_last_charge, (current_get_current() * internal_voltage_get_bat()) / 10.0f, timestamp);
+    energy_sample_energy(&energy_total, (current_get_current() * vbat) / 10.0f, timestamp);
+    energy_sample_energy(&energy_last_charge, (current_get_current() * vbat) / 10.0f, timestamp);
 
     // Update newly-calculated energy values to the energy structure
     params.charge_joule = energy_get_joule(energy_last_charge);
@@ -66,6 +68,9 @@ void soc_save_to_eeprom() {
 void soc_reset_soc() {
     energy_set_count(&energy_last_charge, 0);
     energy_set_time(&energy_last_charge, 0);
+
+    energy_set_count(&energy_total, 0);
+    energy_set_time(&energy_total, 0);
 }
 
 float soc_get_soc() {

@@ -9,9 +9,11 @@
 
 #include "bal.h"
 
+#include <string.h>
+
 #include "config.h"
 #include "can_comm.h"
-
+#include "cli_bms.h"
 
 // TODO: Start and stop balancing per cellboard
 
@@ -45,7 +47,7 @@ bool bal_is_balancing() {
 void bal_set_is_balancing(uint8_t cellboard_id, bool is_bal) {
     // Set the bit of the cellboard who's balancing
     is_balancing &= ~(1 << cellboard_id);
-    is_balancing |= (1 << cellboard_id);
+    is_balancing |= (1 << cellboard_id) & is_bal;
 }
 bool bal_need_balancing() {
     return set_balancing;
@@ -56,7 +58,9 @@ void bal_init() {
     set_balancing = false;
     config_init(&config, CONF_ADDR, CONF_VER, &bal_params_default, sizeof(bal_params));
 }
+
 void bal_start() {
+    cli_bms_debug("Starting balancing...\r\n", strlen("Starting balancing...\r\n"));
     set_balancing = true;
     can_bms_send(BMS_SET_BALANCING_STATUS_FRAME_ID);
     set_balancing = false;

@@ -37,7 +37,7 @@ temperature_t temperature_get_max() {
     return max;
 }
 temperature_t temperature_get_min() {
-    temperature_t min = CELL_MAX_TEMPERATURE;
+    temperature_t min = CONVERT_TEMPERATURE_TO_VALUE(CELL_MAX_TEMPERATURE);
     for (size_t i = 0; i < CELLBOARD_COUNT; i++)
         min = MIN(min, cell_temps.min[i]);
     return min;

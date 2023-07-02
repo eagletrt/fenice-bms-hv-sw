@@ -67,7 +67,9 @@ void temp_measure(uint8_t adc_index) {
 
             max = MAX(temperatures[temp_index], max);
             // Skip temperature below cell minimum temperature
-            if (temperatures[temp_index] >= CELL_MIN_TEMPERATURE + FLT_EPSILON)
+            // FIXME: Broken temperature readings
+            // if (temperatures[temp_index] >= CELL_MIN_TEMPERATURE + FLT_EPSILON)
+            if (temperatures[temp_index] >= -5.f)
                 min = MIN(temperatures[temp_index], min);
         }
     }
@@ -81,7 +83,9 @@ void temp_measure_all() {
     double sum = 0;
     size_t tot = 0;
     for (uint16_t i = 0; i < CELLBOARD_TEMP_SENSOR_COUNT; i++) {
-        if (temperatures[i] >= CELL_MIN_TEMPERATURE + FLT_EPSILON) {
+        // FIXME: Broken temperature readings
+        // if (temperatures[i] >= CELL_MIN_TEMPERATURE + FLT_EPSILON) {
+        if (temperatures[i] >= -5.f) {
             sum += temperatures[i];
             tot++;
         }
