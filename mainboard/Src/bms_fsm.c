@@ -304,6 +304,7 @@ void _precharge_entry(fsm FSM) {
     cli_bms_debug("Entered precharge", 18);
 }
 
+bool is_fb_timeout_triggered_old = false;
 void _precharge_handler(fsm FSM, uint8_t event) {
     switch (event) {
         case BMS_EV_PRECHARGE_TIMEOUT:
@@ -322,9 +323,13 @@ void _precharge_handler(fsm FSM, uint8_t event) {
             break;
 
         case BMS_EV_FB_TIMEOUT:
-            cli_bms_debug("Precharge FB timeout", 20);
-            pack_set_default_off(0);
-            fsm_transition(FSM, BMS_IDLE);
+            if (is_fb_timeout_triggered_old)
+                is_fb_timeout_triggered_old = false;
+            else {
+                cli_bms_debug("Precharge FB timeout", 20);
+                pack_set_default_off(0);
+                fsm_transition(FSM, BMS_IDLE);
+            }
             break;
 
         case BMS_EV_PRECHARGE_CHECK:
@@ -460,6 +465,8 @@ void _bms_handle_tim_oc_irq(TIM_HandleTypeDef *htim) {
             fsm_trigger_event(bms.fsm, BMS_EV_FB_CHECK);
             break;
         case HAL_TIM_ACTIVE_CHANNEL_4:
+            if (fsm_get_state(bms.fsm) == BMS_AIRN_STATUS)
+                is_fb_timeout_triggered_old = true;
             fsm_trigger_event(bms.fsm, BMS_EV_FB_TIMEOUT);
             break;
         default:
