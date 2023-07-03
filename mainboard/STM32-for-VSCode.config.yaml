@@ -24,8 +24,10 @@ ldscript: STM32F446RETx_FLASH.ld # linker script
 cDefinitions: 
   - USE_HAL_DRIVER
   - STM32F446xx
-  - bms_NETWORK_IMPLEMENTATION
   - primary_NETWORK_IMPLEMENTATION
+  - bms_NETWORK_IMPLEMENTATION
+  - primary_WATCHDOG_IMPLEMENTATION 
+  - bms_WATCHDOG_IMPLEMENTATION 
 
 cxxDefinitions: []
 asDefinitions: []

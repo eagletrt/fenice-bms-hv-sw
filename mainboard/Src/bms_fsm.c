@@ -21,6 +21,7 @@
 #include "peripherals/can_comm.h"
 #include "tim.h"
 #include "internal_voltage.h"
+#include "watchdog.h"
 
 
 #include <inttypes.h>
@@ -208,7 +209,7 @@ void _idle_entry(fsm FSM) {
 void _idle_handler(fsm FSM, uint8_t event) {
     switch (event) {
         case BMS_EV_TS_ON:
-            if (feedback_check(FEEDBACK_TS_OFF_MASK, FEEDBACK_TS_OFF_VAL) == 0)
+            if (!is_watchdog_timed_out() && feedback_check(FEEDBACK_TS_OFF_MASK, FEEDBACK_TS_OFF_VAL) == 0)
                 fsm_transition(FSM, BMS_AIRN_CLOSE);
             break;
         case BMS_EV_FAULT:
@@ -236,11 +237,15 @@ void _airn_close_entry(fsm FSM) {
 
 void _airn_close_handler(fsm FSM, uint8_t event) {
     switch (event) {
+        case BMS_EV_TS_OFF:
+            pack_set_default_off(0);
+            fsm_transition(FSM, BMS_IDLE);
+            break;
         case BMS_EV_FAULT:
             fsm_transition(FSM, BMS_FAULT);
             break;
         case BMS_EV_FB_CHECK:
-            if (feedback_check(FEEDBACK_AIRN_CLOSE_MASK, FEEDBACK_AIRN_CLOSE_VAL) == 0) {
+            if (!is_watchdog_timed_out() && feedback_check(FEEDBACK_AIRN_CLOSE_MASK, FEEDBACK_AIRN_CLOSE_VAL) == 0) {
                 pack_set_airn_off(AIRN_ON_VALUE);
                 fsm_transition(FSM, BMS_AIRN_STATUS);
             }
@@ -268,11 +273,15 @@ void _airn_status_entry(fsm FSM) {
 
 void _airn_status_handler(fsm FSM, uint8_t event) {
     switch (event) {
+        case BMS_EV_TS_OFF:
+            pack_set_default_off(0);
+            fsm_transition(FSM, BMS_IDLE);
+            break;
         case BMS_EV_FAULT:
             fsm_transition(FSM, BMS_FAULT);
             break;
         case BMS_EV_FB_CHECK:
-            if (feedback_check(FEEDBACK_AIRN_STATUS_MASK, FEEDBACK_AIRN_STATUS_VAL) == 0) {
+            if (!is_watchdog_timed_out() && feedback_check(FEEDBACK_AIRN_STATUS_MASK, FEEDBACK_AIRN_STATUS_VAL) == 0) {
                 pack_set_precharge(PRECHARGE_ON_VALUE);
                 fsm_transition(FSM, BMS_PRECHARGE);
             }
@@ -317,7 +326,7 @@ void _precharge_handler(fsm FSM, uint8_t event) {
             break;
 
         case BMS_EV_FB_CHECK:
-            if (feedback_check(FEEDBACK_PC_ON_MASK, FEEDBACK_PC_ON_VAL) == 0) {
+            if (!is_watchdog_timed_out() && feedback_check(FEEDBACK_PC_ON_MASK, FEEDBACK_PC_ON_VAL) == 0) {
                 _stop_fb_timeout_timer();
             }
             break;
@@ -344,7 +353,7 @@ void _precharge_handler(fsm FSM, uint8_t event) {
                 (bms.handcart_connected && CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_tsp()) > 0 &&
                  CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_tsp()) >= CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_bat()) * PRECHARGE_VOLTAGE_THRESHOLD_CARELINO))) {
 
-                if (feedback_check(FEEDBACK_PC_ON_MASK, FEEDBACK_PC_ON_VAL) == 0) {
+                if (!is_watchdog_timed_out() && feedback_check(FEEDBACK_PC_ON_MASK, FEEDBACK_PC_ON_VAL) == 0) {
                     pack_set_airp_off(AIRP_ON_VALUE);
                     // pack_set_precharge(PRECHARGE_OFF_VALUE);
                     // _stop_fb_check_timer();
@@ -383,7 +392,7 @@ void _on_handler(fsm FSM, uint8_t event) {
             fsm_transition(FSM, BMS_FAULT);
             break;
         case BMS_EV_FB_CHECK:
-            if ((feed = feedback_check(FEEDBACK_ON_MASK, FEEDBACK_ON_VAL)) != 0) {
+            if (is_watchdog_timed_out() || (feed = feedback_check(FEEDBACK_ON_MASK, FEEDBACK_ON_VAL)) != 0) {
                 char msg[50] = { 0 };
                 for (size_t i = 1; i < FEEDBACK_N; i++) {
                     if (feed & (1 << i))
@@ -400,7 +409,7 @@ void _on_handler(fsm FSM, uint8_t event) {
             }
             break;
         case BMS_EV_FB_TIMEOUT:
-            if ((feed = feedback_check(FEEDBACK_ON_MASK, FEEDBACK_ON_VAL)) != 0) {
+            if (is_watchdog_timed_out() || (feed = feedback_check(FEEDBACK_ON_MASK, FEEDBACK_ON_VAL)) != 0) {
                 char msg[50] = { 0 };
                 for (size_t i = 0; i < FEEDBACK_N; i++) {
                     if (feed & (1 << i))
@@ -439,7 +448,7 @@ void _fault_entry(fsm FSM) {
 void _fault_handler(fsm FSM, uint8_t event) {
     switch (event) {
         case BMS_EV_FB_CHECK:
-            if (error_get_fatal() == 0 && feedback_check(FEEDBACK_FAULT_EXIT_MASK, FEEDBACK_FAULT_EXIT_VAL) == 0)
+            if (error_get_fatal() == 0 && !is_watchdog_timed_out() && feedback_check(FEEDBACK_FAULT_EXIT_MASK, FEEDBACK_FAULT_EXIT_VAL) == 0)
                 fsm_transition(FSM, BMS_IDLE);
             break;
     }

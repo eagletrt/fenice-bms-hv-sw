@@ -89,6 +89,7 @@ Src/stm32f4xx_it.c \
 Src/system_stm32f4xx.c \
 Src/tim.c \
 Src/usart.c \
+Src/watchdog.c \
 lib/can/lib/bms/bms_network.c \
 lib/can/lib/primary/primary_network.c \
 lib/can/lib/secondary/secondary_network.c \
@@ -160,7 +161,9 @@ C_DEFS =  \
 -DSTM32F446xx \
 -DUSE_HAL_DRIVER \
 -Dbms_NETWORK_IMPLEMENTATION \
--Dprimary_NETWORK_IMPLEMENTATION
+-Dbms_WATCHDOG_IMPLEMENTATION \
+-Dprimary_NETWORK_IMPLEMENTATION \
+-Dprimary_WATCHDOG_IMPLEMENTATION
 
 
 # CXX defines

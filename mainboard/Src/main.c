@@ -39,6 +39,7 @@
 #include "temperature.h"
 #include "primary/primary_network.h"
 #include "can_comm.h"
+#include "watchdog.h"
 
 #include <m95256.h>
 #include <string.h>
@@ -144,6 +145,7 @@ int main(void)
     measures_init();
     imd_init();
     feedback_init();
+    watchdog_init();
     
   /* USER CODE END 2 */
 

@@ -21,6 +21,7 @@
 #include "cell_voltage.h"
 #include "temperature.h"
 #include "feedback.h"
+#include "watchdog.h"
 
 #include <string.h>
 
@@ -705,6 +706,9 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
                 CONVERT_TEMPERATURE_TO_VALUE(conv_temps.avg_temp));
         }
         else if (rx_header.StdId == BMS_BOARD_STATUS_FRAME_ID) {
+            // Reset the watchdog timer
+            watchdog_reset(rx_header.StdId);
+            
             uint8_t index = 0;
             bms_board_status_t raw_status;
             bms_board_status_converted_t conv_status;
@@ -830,7 +834,11 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 
         error_reset(ERROR_CAN, 1);
 
-        if (rx_header.StdId == PRIMARY_SET_TS_STATUS_DAS_FRAME_ID || rx_header.StdId == PRIMARY_SET_TS_STATUS_HANDCART_FRAME_ID) {
+        if (rx_header.StdId == PRIMARY_CAR_STATUS_FRAME_ID) {
+            // Reset the watchdog timer
+            watchdog_reset(rx_header.StdId);
+        }
+        else if (rx_header.StdId == PRIMARY_SET_TS_STATUS_DAS_FRAME_ID || rx_header.StdId == PRIMARY_SET_TS_STATUS_HANDCART_FRAME_ID) {
             primary_set_ts_status_das_t ts_status;
 
             primary_set_ts_status_das_unpack(&ts_status, rx_data, PRIMARY_SET_TS_STATUS_DAS_BYTE_SIZE);

@@ -8,6 +8,7 @@
 #include "temperature.h"
 #include "internal_voltage.h"
 #include "cell_voltage.h"
+#include "watchdog.h"
 
 measures_flags_t flags;
 
@@ -61,6 +62,7 @@ void measures_check_flags() {
         flags &= ~_500MS_INTERVAL_FLAG;
     }
     if (flags & _5S_INTERVAL_FLAG) {
+        watchdog_routine();
         soc_save_to_eeprom();
         flags &= ~_5S_INTERVAL_FLAG;
     }
