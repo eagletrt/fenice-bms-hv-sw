@@ -15,8 +15,8 @@
 #include "bms_fsm.h"
 
 
-#define feedback_mux_analog_threshold_h 9.5f / 4.3f
-#define feedback_mux_analog_threshold_l 0.4f / 4.3f
+#define feedback_mux_analog_threshold_h 2.2f
+#define feedback_mux_analog_threshold_l 0.7f
 
 #define FEEDBACK_SD_THRESHOLD_H 10.0f // V
 #define FEEDBACK_SD_THRESHOLD_L 1.0f  // V
@@ -24,10 +24,13 @@
 #define feedback_sd_analog_threshold_l (FEEDBACK_SD_DIVIDER_RATIO * FEEDBACK_SD_THRESHOLD_L)
 #define feedback_sd_analog_threshold_h (FEEDBACK_SD_DIVIDER_RATIO * FEEDBACK_SD_THRESHOLD_H)
 
-#define FEEDBACK_CHECK_MUX_THRESHOLD_L 2.2f
-#define FEEDBACK_CHECK_MUX_THRESHOLD_H 3.0f
-#define FEEDBACK_CHECK_MUX_HANDCART_THRESHOLD_L 1.2f
-#define FEEDBACK_CHECK_MUX_HANDCART_THRESHOLD_H 1.4f
+#define FEEDBACK_CHECK_MUX_THRESHOLD_L 2.4f // V
+#define FEEDBACK_CHECK_MUX_THRESHOLD_H 3.4f // V
+
+#define FEEDBACK_IMD_FAULT_HANDCART_THRESHOLD_L 0.7f // V
+#define FEEDBACK_IMD_FAULT_HANDCART_THRESHOLD_H 1.5f // V
+#define FEEDBACK_CHECK_MUX_HANDCART_THRESHOLD_L 1.3f // V
+#define FEEDBACK_CHECK_MUX_HANDCART_THRESHOLD_H 1.7f // V
 
 #define DMA_DATA_SIZE 5
 
@@ -55,6 +58,8 @@ bool _is_adc_value_high(uint8_t index) {
             return FEEDBACK_CONVERT_ADC_MUX_TO_VOLTAGE(feedbacks[index]) > FEEDBACK_CHECK_MUX_HANDCART_THRESHOLD_H;
         return FEEDBACK_CONVERT_ADC_MUX_TO_VOLTAGE(feedbacks[index]) > FEEDBACK_CHECK_MUX_THRESHOLD_H;
     }
+    if (index == FEEDBACK_IMD_FAULT_POS && bms.handcart_connected)
+        return FEEDBACK_CONVERT_ADC_MUX_TO_VOLTAGE(feedbacks[index]) > FEEDBACK_IMD_FAULT_HANDCART_THRESHOLD_H;
     if (index < FEEDBACK_MUX_N)
         return FEEDBACK_CONVERT_ADC_MUX_TO_VOLTAGE(feedbacks[index]) > feedback_mux_analog_threshold_h;
     return FEEDBACK_CONVERT_ADC_SD_TO_VOLTAGE(feedbacks[index]) > feedback_sd_analog_threshold_h;
@@ -72,6 +77,8 @@ bool _is_adc_value_low(uint8_t index) {
             return FEEDBACK_CONVERT_ADC_MUX_TO_VOLTAGE(feedbacks[index]) < FEEDBACK_CHECK_MUX_HANDCART_THRESHOLD_L;
         return FEEDBACK_CONVERT_ADC_MUX_TO_VOLTAGE(feedbacks[index]) < FEEDBACK_CHECK_MUX_THRESHOLD_L;
     }
+    if (index == FEEDBACK_IMD_FAULT_POS && bms.handcart_connected)
+        return FEEDBACK_CONVERT_ADC_MUX_TO_VOLTAGE(feedbacks[index]) < FEEDBACK_IMD_FAULT_HANDCART_THRESHOLD_L;
     if (index == FEEDBACK_SD_END_POS)
         return FEEDBACK_CONVERT_ADC_MUX_TO_VOLTAGE(feedbacks[index]) < 0.5f;
     if (index == FEEDBACK_SD_IN_POS || index == FEEDBACK_SD_OUT_POS)

@@ -396,19 +396,20 @@ void _on_handler(fsm FSM, uint8_t event) {
             break;
         case BMS_EV_FB_CHECK:
             if (/* is_watchdog_timed_out() || */ HAL_GetTick() - time > 4 && (feed = feedback_check(FEEDBACK_ON_MASK, FEEDBACK_ON_VAL)) != 0) {
-                char msg[50] = { 0 };
-                for (size_t i = 1; i < FEEDBACK_N; i++) {
-                    if (feed & (1 << i))
-                        sprintf(msg + strlen(msg), "%d %d\r\n", i, feedbacks[i]);
-                }
-                if (strlen(msg) > 0)
-                    cli_bms_debug(msg, strlen(msg));
+                // char msg[50] = { 0 };
+                // for (size_t i = 1; i < FEEDBACK_N; i++) {
+                //     if (feed & (1 << i))
+                //         sprintf(msg + strlen(msg), "%d %d\r\n", i, feedbacks[i]);
+                // }
+                // if (strlen(msg) > 0)
+                //     cli_bms_debug(msg, strlen(msg));
 
                 can_car_send(PRIMARY_HV_FEEDBACKS_STATUS_FRAME_ID);
                 can_car_send(PRIMARY_TS_STATUS_FRAME_ID);
                 cli_bms_debug("FB check sborato...!\r\n", strlen("FB check sborato...!\r\n"));
-                pack_set_default_off(0);
-                fsm_transition(FSM, BMS_IDLE);
+                // TODO: Remove comments
+                // pack_set_default_off(0);
+                // fsm_transition(FSM, BMS_IDLE);
             }
             break;
         case BMS_EV_FB_TIMEOUT:
