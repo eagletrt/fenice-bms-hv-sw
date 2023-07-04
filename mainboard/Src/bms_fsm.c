@@ -15,13 +15,19 @@ The finite state machine has:
 #include "bms_fsm.h"
 
 #include <string.h>
-#include "cli_bms"
+
+#include "can_comm.h"
+#include "primary/primary_network.h"
+#include "cli_bms.h"
+#include "feedback.h"
+#include "pack/pack.h"
 
 // SEARCH FOR Your Code Here FOR CODE INSERTION POINTS!
 
 // GLOBALS
 // State human-readable names
 const char *state_names[] = {"init", "idle", "fatal_error", "wait_airn_close", "wait_ts_precharge", "wait_airp_close", "wait_ts_precharlsge", "ts_on"};
+char debug_msg[100] = { 0 };
 
 // List of state functions
 state_func_t *const state_table[NUM_STATES] = {
@@ -69,13 +75,12 @@ state_t do_init(state_data_t *data) {
   cli_bms_debug("[FSM] In state init", 19);
   /* Your Code Here */
 
-  char msg[100] = { 0 };
   switch (next_state) {
     case STATE_IDLE:
       break;
     default:
-      sprintf(msg, "[FSM] Cannot pass from init to %s, remaining in this state\n", state_names[next_state]);
-      cli_bms_debug(msg, strlen(msg));
+      sprintf(debug_msg, "[FSM] Cannot pass from init to %s, remaining in this state", state_names[next_state]);
+      cli_bms_debug(debug_msg, strlen(debug_msg));
       next_state = NO_CHANGE;
   }
   
@@ -91,7 +96,6 @@ state_t do_idle(state_data_t *data) {
   cli_bms_debug("[FSM] In state idle", 19);
   /* Your Code Here */
   
-  char msg[100] = { 0 };
   switch (next_state) {
     case NO_CHANGE:
     case STATE_IDLE:
@@ -99,8 +103,8 @@ state_t do_idle(state_data_t *data) {
     case STATE_WAIT_AIRN_CLOSE:
       break;
     default:
-      sprintf(msg, "[FSM] Cannot pass from idle to %s, remaining in this state", state_names[next_state]);
-      cli_bms_debug(msg, strlen(msg));
+      sprintf(debug_msg, "[FSM] Cannot pass from idle to %s, remaining in this state", state_names[next_state]);
+      cli_bms_debug(debug_msg, strlen(debug_msg));
       next_state = NO_CHANGE;
   }
   
@@ -113,7 +117,7 @@ state_t do_idle(state_data_t *data) {
 state_t do_fatal_error(state_data_t *data) {
   state_t next_state = NO_CHANGE;
   
-  cli_bms_debug("[FSM] In state fatal_error");
+  cli_bms_debug("[FSM] In state fatal_error", 26);
   /* Your Code Here */
   
   switch (next_state) {
@@ -122,7 +126,8 @@ state_t do_fatal_error(state_data_t *data) {
     case STATE_FATAL_ERROR:
       break;
     default:
-      syslog(LOG_WARNING, "[FSM] Cannot pass from fatal_error to %s, remaining in this state", state_names[next_state]);
+      sprintf(debug_msg, "[FSM] Cannot pass from fatal_error to %s, remaining in this state", state_names[next_state]);
+      cli_bms_debug(debug_msg, strlen(debug_msg));
       next_state = NO_CHANGE;
   }
   
@@ -135,7 +140,7 @@ state_t do_fatal_error(state_data_t *data) {
 state_t do_wait_airn_close(state_data_t *data) {
   state_t next_state = NO_CHANGE;
   
-  syslog(LOG_INFO, "[FSM] In state wait_airn_close");
+  cli_bms_debug("[FSM] In state wait_airn_close", 30);
   /* Your Code Here */
   
   switch (next_state) {
@@ -145,7 +150,8 @@ state_t do_wait_airn_close(state_data_t *data) {
     case STATE_WAIT_TS_PRECHARGE:
       break;
     default:
-      syslog(LOG_WARNING, "[FSM] Cannot pass from wait_airn_close to %s, remaining in this state", state_names[next_state]);
+      sprintf(debug_msg, "[FSM] Cannot pass from wait_airn_close to %s, remaining in this state", state_names[next_state]);
+      cli_bms_debug(debug_msg, strlen(debug_msg));
       next_state = NO_CHANGE;
   }
   
@@ -158,7 +164,7 @@ state_t do_wait_airn_close(state_data_t *data) {
 state_t do_wait_ts_precharge(state_data_t *data) {
   state_t next_state = STATE_FATAL_ERROR;
   
-  syslog(LOG_INFO, "[FSM] In state wait_ts_precharge");
+  cli_bms_debug("[FSM] In state wait_ts_precharge", 32);
   /* Your Code Here */
   
   switch (next_state) {
@@ -167,7 +173,8 @@ state_t do_wait_ts_precharge(state_data_t *data) {
     case STATE_WAIT_TS_PRECHARLSGE:
       break;
     default:
-      syslog(LOG_WARNING, "[FSM] Cannot pass from wait_ts_precharge to %s, remaining in this state", state_names[next_state]);
+      sprintf(debug_msg, "[FSM] Cannot pass from wait_ts_precharge to %s, remaining in this state", state_names[next_state]);
+      cli_bms_debug(debug_msg, strlen(debug_msg));
       next_state = NO_CHANGE;
   }
   
@@ -180,7 +187,7 @@ state_t do_wait_ts_precharge(state_data_t *data) {
 state_t do_wait_airp_close(state_data_t *data) {
   state_t next_state = NO_CHANGE;
   
-  syslog(LOG_INFO, "[FSM] In state wait_airp_close");
+  cli_bms_debug("[FSM] In state wait_airp_close", 30);
   /* Your Code Here */
   
   switch (next_state) {
@@ -190,7 +197,8 @@ state_t do_wait_airp_close(state_data_t *data) {
     case STATE_TS_ON:
       break;
     default:
-      syslog(LOG_WARNING, "[FSM] Cannot pass from wait_airp_close to %s, remaining in this state", state_names[next_state]);
+      sprintf(debug_msg, "[FSM] Cannot pass from wait_airp_close to %s, remaining in this state", state_names[next_state]);
+      cli_bms_debug(debug_msg, strlen(debug_msg));
       next_state = NO_CHANGE;
   }
   
@@ -203,14 +211,15 @@ state_t do_wait_airp_close(state_data_t *data) {
 state_t do_wait_ts_precharlsge(state_data_t *data) {
   state_t next_state = NO_CHANGE;
   
-  syslog(LOG_INFO, "[FSM] In state wait_ts_precharlsge");
+  cli_bms_debug("[FSM] In state wait_ts_precharlsge", 34);
   /* Your Code Here */
   
   switch (next_state) {
     case NO_CHANGE:
       break;
     default:
-      syslog(LOG_WARNING, "[FSM] Cannot pass from wait_ts_precharlsge to %s, remaining in this state", state_names[next_state]);
+      sprintf(debug_msg, "[FSM] Cannot pass from wait_ts_precharlsge to %s, remaining in this state", state_names[next_state]);
+      cli_bms_debug(debug_msg, strlen(debug_msg));
       next_state = NO_CHANGE;
   }
   
@@ -223,7 +232,7 @@ state_t do_wait_ts_precharlsge(state_data_t *data) {
 state_t do_ts_on(state_data_t *data) {
   state_t next_state = NO_CHANGE;
   
-  syslog(LOG_INFO, "[FSM] In state ts_on");
+  cli_bms_debug("[FSM] In state ts_on", 20);
   /* Your Code Here */
   
   switch (next_state) {
@@ -233,7 +242,8 @@ state_t do_ts_on(state_data_t *data) {
     case STATE_TS_ON:
       break;
     default:
-      syslog(LOG_WARNING, "[FSM] Cannot pass from ts_on to %s, remaining in this state", state_names[next_state]);
+      sprintf(debug_msg, "[FSM] Cannot pass from ts_on to %s, remaining in this state", state_names[next_state]);
+      cli_bms_debug(debug_msg, strlen(debug_msg));
       next_state = NO_CHANGE;
   }
   
@@ -257,126 +267,137 @@ state_t do_ts_on(state_data_t *data) {
 // This function is called in 1 transition:
 // 1. from init to idle
 void init_to_idle(state_data_t *data) {
-  syslog(LOG_INFO, "[FSM] State transition init_to_idle");
+  cli_bms_debug("[FSM] State transition init_to_idle", 35);
+
+  // Send status via can
+  can_car_send(PRIMARY_TS_STATUS_FRAME_ID);
+
+  // Set pack pins
+  pack_set_default_off(0);
+  pack_set_fault(BMS_FAULT_OFF_VALUE);
+
+  // Start feedback check timer
+  _start_fb_check_timer();
+
   /* Your Code Here */
 }
 
 // This function is called in 1 transition:
 // 1. from idle to idle
 void stay_idle(state_data_t *data) {
-  syslog(LOG_INFO, "[FSM] State transition stay_idle");
+  cli_bms_debug("[FSM] State transition stay_idle", 32);
   /* Your Code Here */
 }
 
 // This function is called in 1 transition:
 // 1. from idle to fatal_error
 void set_idle_fatal_error(state_data_t *data) {
-  syslog(LOG_INFO, "[FSM] State transition set_idle_fatal_error");
+  cli_bms_debug("[FSM] State transition set_idle_fatal_error", 43);
   /* Your Code Here */
 }
 
 // This function is called in 1 transition:
 // 1. from idle to wait_airn_close
 void close_airn(state_data_t *data) {
-  syslog(LOG_INFO, "[FSM] State transition close_airn");
+  cli_bms_debug("[FSM] State transition close_airn", 33);
   /* Your Code Here */
 }
 
 // This function is called in 1 transition:
 // 1. from fatal_error to idle
 void fatal_error_to_idle(state_data_t *data) {
-  syslog(LOG_INFO, "[FSM] State transition fatal_error_to_idle");
+  cli_bms_debug("[FSM] State transition fatal_error_to_idle", 42);
   /* Your Code Here */
 }
 
 // This function is called in 1 transition:
 // 1. from fatal_error to fatal_error
 void stay_fatal_error(state_data_t *data) {
-  syslog(LOG_INFO, "[FSM] State transition stay_fatal_error");
+  cli_bms_debug("[FSM] State transition stay_fatal_error", 39);
   /* Your Code Here */
 }
 
 // This function is called in 1 transition:
 // 1. from wait_airn_close to fatal_error
 void set_airn_fatal_error(state_data_t *data) {
-  syslog(LOG_INFO, "[FSM] State transition set_airn_fatal_error");
+  cli_bms_debug("[FSM] State transition set_airn_fatal_error", 43);
   /* Your Code Here */
 }
 
 // This function is called in 1 transition:
 // 1. from wait_airn_close to wait_airn_close
 void check_airn_close(state_data_t *data) {
-  syslog(LOG_INFO, "[FSM] State transition check_airn_close");
+  cli_bms_debug("[FSM] State transition check_airn_close", 39);
   /* Your Code Here */
 }
 
 // This function is called in 1 transition:
 // 1. from wait_airn_close to wait_ts_precharge
 void start_precharge(state_data_t *data) {
-  syslog(LOG_INFO, "[FSM] State transition start_precharge");
+  cli_bms_debug("[FSM] State transition start_precharge", 38);
   /* Your Code Here */
 }
 
 // This function is called in 1 transition:
 // 1. from wait_ts_precharge to fatal_error
 void set_precharge_fatal_error(state_data_t *data) {
-  syslog(LOG_INFO, "[FSM] State transition set_precharge_fatal_error");
+  cli_bms_debug("[FSM] State transition set_precharge_fatal_error", 48);
   /* Your Code Here */
 }
 
 // This function is called in 1 transition:
 // 1. from wait_ts_precharge to wait_airp_close
 void close_airp(state_data_t *data) {
-  syslog(LOG_INFO, "[FSM] State transition close_airp");
+  cli_bms_debug("[FSM] State transition close_airp", 33);
   /* Your Code Here */
 }
 
 // This function is called in 1 transition:
 // 1. from wait_ts_precharge to wait_ts_precharlsge
 void stay_wait_ts_precharge(state_data_t *data) {
-  syslog(LOG_INFO, "[FSM] State transition stay_wait_ts_precharge");
+  cli_bms_debug("[FSM] State transition stay_wait_ts_precharge", 45);
   /* Your Code Here */
 }
 
 // This function is called in 1 transition:
 // 1. from wait_airp_close to fatal_error
 void set_airp_fatal_error(state_data_t *data) {
-  syslog(LOG_INFO, "[FSM] State transition set_airp_fatal_error");
+  cli_bms_debug("[FSM] State transition set_airp_fatal_error", 43);
   /* Your Code Here */
 }
 
 // This function is called in 1 transition:
 // 1. from wait_airp_close to wait_airp_close
 void stay_wait_airp_close(state_data_t *data) {
-  syslog(LOG_INFO, "[FSM] State transition stay_wait_airp_close");
+  cli_bms_debug("[FSM] State transition stay_wait_airp_close", 43);
   /* Your Code Here */
 }
 
 // This function is called in 1 transition:
 // 1. from wait_airp_close to ts_on
 void set_ts_on(state_data_t *data) {
-  syslog(LOG_INFO, "[FSM] State transition set_ts_on");
+  cli_bms_debug("[FSM] State transition set_ts_on", 32);
   /* Your Code Here */
 }
 
 // This function is called in 1 transition:
 // 1. from ts_on to idle
 void ts_on_to_idle(state_data_t *data) {
-  syslog(LOG_INFO, "[FSM] State transition ts_on_to_idle");
+  cli_bms_debug("[FSM] State transition ts_on_to_idle", 36);
   /* Your Code Here */
 }
 
 // This function is called in 1 transition:
 // 1. from ts_on to fatal_error
 void set_ts_fatal_error(state_data_t *data) {
-  syslog(LOG_INFO, "[FSM] State transition set_ts_fatal_error");
+  cli_bms_debug("[FSM] State transition set_ts_fatal_error", 41);
   /* Your Code Here */
 }
 
 // This function is called in 1 transition:
 // 1. from ts_on to ts_on
 void stay_ts_on(state_data_t *data) {
-  syslog(LOG_INFO, "[FSM] State transition stay_ts_on");
+  cli_bms_debug("[FSM] State transition stay_ts_on", 33);
   /* Your Code Here */
 }
 
