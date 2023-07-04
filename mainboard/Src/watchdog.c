@@ -63,7 +63,7 @@ void watchdog_routine() {
     for (size_t i = 0; i < PRIMARY_WATCHDOG_IDS_SIZE; i++) {
         // Check if the primary watchdog has timed out
         uint16_t id = watchdog_primary_ids[i];
-        bool timed_out = CANLIB_BITSET_ARRAY(car_watchdog.activated, primary_watchdog_index_from_id(id));
+        bool timed_out = CANLIB_BITTEST_ARRAY(car_watchdog.timeout, primary_watchdog_index_from_id(id));
         if (timed_out) {
             char msg[50] = { 0 };
             sprintf(msg, "Car watchdog id: %d\n", id);
@@ -76,7 +76,7 @@ void watchdog_routine() {
     for (size_t i = 0; i < BMS_WATCHDOG_IDS_SIZE; i++) {
         // Check if the bms watchdog has timed out
         uint16_t id = watchdog_bms_ids[i];
-        bool timed_out = CANLIB_BITSET_ARRAY(cell_watchdog.activated, bms_watchdog_index_from_id(id));
+        bool timed_out = CANLIB_BITTEST_ARRAY(cell_watchdog.timeout, bms_watchdog_index_from_id(id));
         if (timed_out) {
             char msg[50] = { 0 };
             sprintf(msg, "Cell watchdog id: %d\n", id);

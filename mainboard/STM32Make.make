@@ -91,8 +91,11 @@ Src/tim.c \
 Src/usart.c \
 Src/watchdog.c \
 lib/can/lib/bms/bms_network.c \
+lib/can/lib/bms/bms_watchdog.c \
 lib/can/lib/primary/primary_network.c \
+lib/can/lib/primary/primary_watchdog.c \
 lib/can/lib/secondary/secondary_network.c \
+lib/can/lib/secondary/secondary_watchdog.c \
 lib/micro-libs/blink/blink.c \
 lib/micro-libs/cli/cli.c \
 lib/micro-libs/fsm/fsm.c \
