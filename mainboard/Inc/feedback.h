@@ -18,14 +18,24 @@
 #include <../../fenice_config.h>
 
 
-#define MUX_INTERVAL_MS 0.2
-
-#define FB_CHECK_INTERVAL_MS 3
-#define FB_TIMEOUT_MS        150
-
 typedef uint32_t feedback_t;
+
 extern uint16_t feedbacks[FEEDBACK_N];
-extern uint64_t feedback;
+
+
+#define FEEDBACK_IDLE_HIGH \
+    ( \
+        FEEDBACK_IMPLAUSIBILITY_DETECTED | \
+        FEEDBACK_IMD_COCKPIT | \
+        FEEDBACK_TSAL_GREEN_FAULT_LATCHED | \
+    )
+
+
+
+
+
+
+
 
 
 #define FEEDBACK_TS_OFF_HIGH \
@@ -120,11 +130,6 @@ extern uint64_t feedback;
 #define FEEDBACK_ON_MASK FEEDBACK_ALL
 */
 
-#define FEEDBACK_MUX_VREF 3.3f
-#define FEEDBACK_SD_VREF 13.f
-
-#define FEEDBACK_CONVERT_ADC_MUX_TO_VOLTAGE(VALUE) ((VALUE) * (FEEDBACK_MUX_VREF / 4095))
-#define FEEDBACK_CONVERT_ADC_SD_TO_VOLTAGE(VALUE) ((VALUE) * (FEEDBACK_SD_VREF / 4095))
 
 /** @brief State of the feedbacks */
 typedef enum {
@@ -147,7 +152,14 @@ void feedback_init();
  * @return true The MUX voltage is in the correct range
  * @return false Otherwise
  */
-bool is_check_mux_ok();
+bool feedback_is_mux_ok();
+/**
+ * @brief Check if the feedbacks are updated
+ * 
+ * @return true The feedbacks are updated
+ * @return false 
+ */
+bool feedback_is_updated();
 /**
  * @brief Get the state of a single feedback
  * 
@@ -169,6 +181,9 @@ void feedback_get_feedback_states(feedback_feed_t out_value[FEEDBACK_N]);
  * @return feedback_t An integer where each bit set to 1 represent a feedback which voltage is invalid
  */
 feedback_t feedback_check(feedback_t fb_check_mask, feedback_t fb_value);
+/** @brief Request a feedback update */
+void feedback_request_update();
+
 
 
 /** @brief Feedback timer callback handler */

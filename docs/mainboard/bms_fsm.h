@@ -94,11 +94,4 @@ extern transition_func_t *const transition_table[NUM_STATES][NUM_STATES];
 // state manager
 state_t run_state(state_t cur_state, state_data_t *data);
 
-/** @brief Run the fsm */
-void fsm_run();
-/** @brief Set the led blinker pattern */
-void bms_set_led_blinker();
-/** @brief Run the led blinking pattern */
-void bms_blink_led();
-
 #endif

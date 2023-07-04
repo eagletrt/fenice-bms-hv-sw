@@ -6,7 +6,8 @@
  * @author	Matteo Bonora [matteo.bonora@studenti.unitn.it]
  */
 
-#pragma once
+#ifndef CAN_COMM_H
+#define CAN_COMM_H
 
 #include "bms/bms_network.h"
 #include "primary/primary_network.h"
@@ -24,6 +25,8 @@ typedef enum { CAN_BITRATE_1MBIT, CAN_BITRATE_125KBIT } CAN_Bitrate;
 
 #define CAN_SLAVE_START_FILTER_BANK 14
 
+extern bool is_handcart_connected;
+
 bool can_is_forwarding();
 void can_car_init();
 void can_bms_init();
@@ -33,3 +36,5 @@ HAL_StatusTypeDef can_car_send(uint16_t id);
 HAL_StatusTypeDef can_bms_send(uint16_t id);
 void can_cellboards_check();
 void CAN_change_bitrate(CAN_HandleTypeDef *hcan, CAN_Bitrate bitrate);
+
+#endif // CAN_COMM_H

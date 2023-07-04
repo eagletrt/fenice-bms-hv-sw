@@ -21,6 +21,9 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
+#include <string.h>
+#include <stdbool.h>
+
 #include "bal.h"
 #include "bms_fsm.h"
 #include "cli_bms.h"
@@ -42,7 +45,7 @@
 #include "watchdog.h"
 
 #include <m95256.h>
-#include <string.h>
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -63,7 +66,7 @@
 
 /* USER CODE BEGIN PV */
 
-fsm super_fsm;
+bool is_handcart_connected = false;
 
 /* USER CODE END PV */
 
@@ -156,7 +159,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-        fsm_run(bms.fsm);
+        fsm_run();
         
         measures_check_flags();
         

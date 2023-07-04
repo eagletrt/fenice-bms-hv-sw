@@ -37,6 +37,7 @@ struct {
 CAN_TxHeaderTypeDef tx_header;
 
 bool can_forward;
+bool is_handcart_connected = false;
 
 bool can_is_forwarding() {
     return can_forward;
@@ -874,7 +875,7 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 
             primary_handcart_status_unpack(&handcart_status, rx_data, PRIMARY_HANDCART_STATUS_BYTE_SIZE);
             
-            bms.handcart_connected = handcart_status.connected;
+            is_handcart_connected = handcart_status.connected;
         } else if (rx_header.StdId == PRIMARY_HV_CAN_FORWARD_FRAME_ID) {
             if (fsm_get_state(bms.fsm) != BMS_IDLE && fsm_get_state(bms.fsm) != BMS_FAULT) {
                 can_forward = 0;
