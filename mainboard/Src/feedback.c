@@ -68,7 +68,7 @@ bool _is_adc_value_high(uint8_t index) {
             return FEEDBACK_CONVERT_ADC_MUX_TO_VOLTAGE(feedbacks[index]) > FEEDBACK_CHECK_MUX_HANDCART_THRESHOLD_H;
         return FEEDBACK_CONVERT_ADC_MUX_TO_VOLTAGE(feedbacks[index]) > FEEDBACK_CHECK_MUX_THRESHOLD_H;
     }
-    if (index == FEEDBACK_IMD_FAULT_POS && bms.handcart_connected)
+    if (index == FEEDBACK_IMD_FAULT_POS && is_handcart_connected)
         return FEEDBACK_CONVERT_ADC_MUX_TO_VOLTAGE(feedbacks[index]) > FEEDBACK_IMD_FAULT_HANDCART_THRESHOLD_H;
     if (index < FEEDBACK_MUX_N)
         return FEEDBACK_CONVERT_ADC_MUX_TO_VOLTAGE(feedbacks[index]) > FEEDBACK_MUX_ANALOG_THRESHOLD_H;
@@ -87,7 +87,7 @@ bool _is_adc_value_low(uint8_t index) {
             return FEEDBACK_CONVERT_ADC_MUX_TO_VOLTAGE(feedbacks[index]) < FEEDBACK_CHECK_MUX_HANDCART_THRESHOLD_L;
         return FEEDBACK_CONVERT_ADC_MUX_TO_VOLTAGE(feedbacks[index]) < FEEDBACK_CHECK_MUX_THRESHOLD_L;
     }
-    if (index == FEEDBACK_IMD_FAULT_POS && bms.handcart_connected)
+    if (index == FEEDBACK_IMD_FAULT_POS && is_handcart_connected)
         return FEEDBACK_CONVERT_ADC_MUX_TO_VOLTAGE(feedbacks[index]) < FEEDBACK_IMD_FAULT_HANDCART_THRESHOLD_L;
     if (index == FEEDBACK_SD_END_POS)
         return FEEDBACK_CONVERT_ADC_MUX_TO_VOLTAGE(feedbacks[index]) < 0.5f;
@@ -153,7 +153,7 @@ void feedback_get_feedback_states(feedback_feed_t out_value[FEEDBACK_N]) {
     for (size_t i = 0; i < FEEDBACK_N; i++)
         out_value[i] = feedback_get_feedback_state(i);
 }
-feedback_t feedback_check(feedback_t mask, feedback_t value) {
+feedback_t feedback_check(feedback_t value) {
     // Set or reset connection error
     error_toggle_check(HAL_GPIO_ReadPin(CONNS_DETECTION_GPIO_Port, CONNS_DETECTION_Pin) == GPIO_PIN_RESET, ERROR_CONNECTOR_DISCONNECTED, 0);
 
@@ -161,36 +161,31 @@ feedback_t feedback_check(feedback_t mask, feedback_t value) {
     for (size_t i = 0; i < FEEDBACK_N; i++) {
         feedback_t feedback = 1 << i;
         
-        // Check if feeedbacks is in the mask
-        if (feedback & mask) {
-            if (i == FEEDBACK_CHECK_MUX_POS) {
-                if (feedback_is_mux_ok())
-                    error_reset(ERROR_FEEDBACK_CIRCUITRY, i);
-                else {
-                    error_set(ERROR_FEEDBACK_CIRCUITRY, i, HAL_GetTick());
-                    diff |= feedback;
-                }
-            }
+        if (i == FEEDBACK_CHECK_MUX_POS) {
+            if (feedback_is_mux_ok())
+                error_reset(ERROR_FEEDBACK_CIRCUITRY, i);
             else {
-                feedback_t fb_val = value & feedback;
-                // Check feedback voltages
-                if (_is_adc_value_valid(i)) {
-                    if ((fb_val && _is_adc_value_high(i)) || (!fb_val && _is_adc_value_low(i)))
-                        error_reset(ERROR_FEEDBACK, i);
-                    else {
-                        error_set(ERROR_FEEDBACK, i, HAL_GetTick());
-                        diff |= feedback;
-                    }
-                    error_reset(ERROR_FEEDBACK_CIRCUITRY, i);
-                }
-                else {
-                    error_set(ERROR_FEEDBACK_CIRCUITRY, i, HAL_GetTick());
-                    diff |= feedback;
-                }
+                error_set(ERROR_FEEDBACK_CIRCUITRY, i, HAL_GetTick());
+                diff |= feedback;
             }
         }
-        else
-            error_reset(ERROR_FEEDBACK, i);
+        else {
+            feedback_t fb_val = value & feedback;
+            // Check feedback voltages
+            if (_is_adc_value_valid(i)) {
+                if ((fb_val && _is_adc_value_high(i)) || (!fb_val && _is_adc_value_low(i)))
+                    error_reset(ERROR_FEEDBACK, i);
+                else {
+                    error_set(ERROR_FEEDBACK, i, HAL_GetTick());
+                    diff |= feedback;
+                }
+                error_reset(ERROR_FEEDBACK_CIRCUITRY, i);
+            }
+            else {
+                error_set(ERROR_FEEDBACK_CIRCUITRY, i, HAL_GetTick());
+                diff |= feedback;
+            }
+        }
     }
 
     return diff;

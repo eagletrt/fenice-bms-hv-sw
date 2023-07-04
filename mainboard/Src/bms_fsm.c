@@ -156,7 +156,7 @@ state_t do_idle(state_data_t *data) {
   /* Your Code Here */
   if (error_get_fatal() > 0)
     next_state = STATE_FATAL_ERROR;
-  else if (feedback_is_updated() && feedback_check(FEEDBACK_TS_OFF_MASK, FEEDBACK_TS_OFF_VAL) == 0)
+  else if (feedback_is_updated() && feedback_check(FEEDBACK_IDLE_HIGH) == 0)
     next_state = STATE_WAIT_AIRN_CLOSE;
 
   switch (next_state) {
@@ -208,7 +208,9 @@ state_t do_wait_airn_close(state_data_t *data) {
   
   cli_bms_debug("[FSM] In state wait_airn_close", 30);
   /* Your Code Here */
-  if (feedback_is_updated() && feedback_check(FEEDBACK_AIRN_CLOSE_MASK, FEEDBACK_AIRN_CLOSE_VAL) == 0)
+  if (error_get_fatal() > 0)
+    next_state = STATE_FATAL_ERROR;
+  else if (feedback_is_updated() && feedback_check(FEEDBACK_AIRN_CHECK_HIGH) == 0)
     next_state = STATE_WAIT_TS_PRECHARGE;
 
   switch (next_state) {
@@ -234,7 +236,9 @@ state_t do_wait_ts_precharge(state_data_t *data) {
   
   cli_bms_debug("[FSM] In state wait_ts_precharge", 32);
   /* Your Code Here */
-  if (feedback_is_updated() && feedback_check(FEEDBACK_PC_ON_MASK, FEEDBACK_PC_ON_VAL) == 0)
+  if (error_get_fatal() > 0)
+    next_state = STATE_FATAL_ERROR;
+  else if (feedback_is_updated() && feedback_check(FEEDBACK_PRECHARGE_CHECK_HIGH) == 0)
     next_state = STATE_WAIT_AIRP_CLOSE;
   
   switch (next_state) {
@@ -260,7 +264,9 @@ state_t do_wait_airp_close(state_data_t *data) {
   
   cli_bms_debug("[FSM] In state wait_airp_close", 30);
   /* Your Code Here */
-  if (feedback_is_updated() && feedback_check(FEEDBACK_AIRP_CLOSE_MASK, FEEDBACK_AIRP_CLOSE_VAL) == 0)
+  if (error_get_fatal() > 0)
+    next_state = STATE_FATAL_ERROR;
+  else if (feedback_is_updated() && feedback_check(FEEDBACK_AIRP_CHECK_HIGH) == 0)
     next_state = STATE_WAIT_TS_PRECHARGE;
   
   switch (next_state) {
@@ -286,7 +292,11 @@ state_t do_ts_on(state_data_t *data) {
   
   cli_bms_debug("[FSM] In state ts_on", 20);
   /* Your Code Here */
-  
+  if (error_get_fatal() > 0)
+    next_state = STATE_FATAL_ERROR;
+  if (feedback_is_updated() && feedback_check(FEEDBACK_TS_ON_CHECK_HIGH) != 0)
+    next_state = STATE_IDLE;
+
   switch (next_state) {
     case NO_CHANGE:
     case STATE_IDLE:
