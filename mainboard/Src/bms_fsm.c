@@ -374,7 +374,10 @@ void _precharge_exit(fsm FSM) {
     _stop_fb_check_timer();
 }
 
+
+size_t time;
 void _on_entry(fsm FSM) {
+    time = HAL_GetTick();
     _start_fb_timeout_timer();
     can_car_send(PRIMARY_TS_STATUS_FRAME_ID);
 
@@ -392,7 +395,7 @@ void _on_handler(fsm FSM, uint8_t event) {
             fsm_transition(FSM, BMS_FAULT);
             break;
         case BMS_EV_FB_CHECK:
-            if (/* is_watchdog_timed_out() || */ (feed = feedback_check(FEEDBACK_ON_MASK, FEEDBACK_ON_VAL)) != 0) {
+            if (/* is_watchdog_timed_out() || */ HAL_GetTick() - time > 4 && (feed = feedback_check(FEEDBACK_ON_MASK, FEEDBACK_ON_VAL)) != 0) {
                 char msg[50] = { 0 };
                 for (size_t i = 1; i < FEEDBACK_N; i++) {
                     if (feed & (1 << i))
