@@ -1,0 +1,35 @@
+digraph "bms_hv_fsm" {
+    
+    init
+    idle
+    fatal_error
+    wait_airn_close
+    wait_ts_precharge
+    wait_airp_close
+    ts_on
+
+    init -> idle [label="init_to_idle"]
+
+    idle -> idle [label="stay_idle"]
+    idle -> fatal_error [label="set_idle_fatal_error"]
+    idle -> wait_airn_close [label="close_airn"]
+
+    wait_airn_close -> wait_airn_close [label="check_airn_close"]
+    wait_airn_close -> fatal_error [label="set_airn_fatal_error"]
+    wait_airn_close -> wait_ts_precharge [label="start_precharge"]
+
+    wait_ts_precharge -> wait_ts_precharlsge [label="stay_wait_ts_precharge"]
+    wait_ts_precharge -> fatal_error [label="set_precharge_fatal_error"]
+    wait_ts_precharge -> wait_airp_close [label="close_airp"]
+
+    wait_airp_close -> wait_airp_close [label="stay_wait_airp_close"]
+    wait_airp_close -> fatal_error [label="set_airp_fatal_error"]
+    wait_airp_close -> ts_on [label="set_ts_on"]
+
+    ts_on -> ts_on [label="stay_ts_on"]
+    ts_on -> fatal_error [label="set_ts_fatal_error"]
+    ts_on -> idle [label="ts_on_to_idle"]
+
+    fatal_error -> fatal_error [label="stay_fatal_error"]
+    fatal_error -> idle [label="fatal_error_to_idle"]
+}
