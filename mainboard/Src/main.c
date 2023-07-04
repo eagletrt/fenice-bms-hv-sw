@@ -145,7 +145,7 @@ int main(void)
     measures_init();
     imd_init();
     feedback_init();
-    watchdog_init();
+    // watchdog_init();
     
   /* USER CODE END 2 */
 

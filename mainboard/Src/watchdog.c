@@ -1,12 +1,14 @@
 #include "watchdog.h"
 
 #include <stddef.h>
+#include <string.h> // Used for memset in primary and bms watchdogs
 
 #include "primary/primary_network.h"
 #include "primary/primary_watchdog.h"
 #include "bms/bms_network.h"
 #include "bms/bms_watchdog.h"
 #include "bms_fsm.h"
+#include "cli_bms.h"
 
 #define PRIMARY_WATCHDOG_IDS_SIZE 1
 #define BMS_WATCHDOG_IDS_SIZE 1
@@ -63,6 +65,10 @@ void watchdog_routine() {
         uint16_t id = watchdog_primary_ids[i];
         bool timed_out = CANLIB_BITSET_ARRAY(car_watchdog.activated, primary_watchdog_index_from_id(id));
         if (timed_out) {
+            char msg[50] = { 0 };
+            sprintf(msg, "Car watchdog id: %d\n", id);
+            cli_bms_debug(msg, strlen(msg));
+
             car_watchdog_timed_out = true;
             fsm_trigger_event(bms.fsm, BMS_EV_TS_OFF);
         }
@@ -72,8 +78,12 @@ void watchdog_routine() {
         uint16_t id = watchdog_bms_ids[i];
         bool timed_out = CANLIB_BITSET_ARRAY(cell_watchdog.activated, bms_watchdog_index_from_id(id));
         if (timed_out) {
+            char msg[50] = { 0 };
+            sprintf(msg, "Cell watchdog id: %d\n", id);
+            cli_bms_debug(msg, strlen(msg));
+
             cell_watchdog_timed_out = true;
-            fsm_trigger_event(bms.fsm, BMS_EV_FAULT);
+            fsm_trigger_event(bms.fsm, BMS_EV_TS_OFF);
         }
     }
 }

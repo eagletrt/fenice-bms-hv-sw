@@ -62,7 +62,7 @@ void measures_check_flags() {
         flags &= ~_500MS_INTERVAL_FLAG;
     }
     if (flags & _5S_INTERVAL_FLAG) {
-        watchdog_routine();
+        // watchdog_routine();
         soc_save_to_eeprom();
         flags &= ~_5S_INTERVAL_FLAG;
     }

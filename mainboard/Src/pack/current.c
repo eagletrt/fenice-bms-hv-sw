@@ -34,7 +34,7 @@ current_t _current_convert_high(float volt) {
 }
 
 current_t _current_convert_shunt(float volt) {
-    return (volt - 0.468205124) / (1e-4f * 500);
+    return (volt - 0.468205124) / (1e-4f * 75);
 }
 
 void current_start_measure() {
