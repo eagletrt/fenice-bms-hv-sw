@@ -401,7 +401,7 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
 
         // Get feedbacks status
         feedback_feed_t fbs[FEEDBACK_N] = { 0 };
-        feedback_get_all_states(fbs, is_handcart_connected);
+        feedback_get_all_states(fbs);
         
         // TODO: Set feedback status (is_circuitry)
         for (size_t i = 0; i < FEEDBACK_N; i++) {

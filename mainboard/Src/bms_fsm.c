@@ -114,6 +114,14 @@ void _start_timeout(size_t channel, size_t interrupt, size_t timeout) {
     HAL_TIM_OC_Start_IT(&HTIM_BMS, channel);
 }
 
+bool _requested_ts_on() {
+    return set_ts_request.is_new && set_ts_request.next_state == STATE_WAIT_AIRN_CLOSE;
+}
+bool _requested_ts_off() {
+    return set_ts_request.is_new && set_ts_request.next_state == STATE_IDLE;
+}
+
+
 /*  ____  _        _       
  * / ___|| |_ __ _| |_ ___ 
  * \___ \| __/ _` | __/ _ \
@@ -155,16 +163,12 @@ state_t do_idle(state_data_t *data) {
   
   // cli_bms_debug("[FSM] In state idle", 19);
   /* Your Code Here */
+
+  // Check for fatal errors
   if (error_get_fatal() > 0)
     next_state = STATE_FATAL_ERROR;
-  else if (set_ts_request.is_new &&
-    set_ts_request.next_state == STATE_WAIT_AIRN_CLOSE &&
-    !feedback_need_update() &&
-    feedback_check_mux_vdc(is_handcart_connected) &&
-    feedback_check_mux(FEEDBACK_IDLE_HIGH, is_handcart_connected) == 0 &&
-    feedback_check_sd(FEEDBACK_IDLE_HIGH) == 0) {
-        next_state = STATE_WAIT_AIRN_CLOSE;
-    }
+  else if (_requested_ts_on() && feedback_is_ok(FEEDBACK_IDLE_MASK, FEEDBACK_IDLE_HIGH))
+    next_state = STATE_WAIT_AIRN_CLOSE;
 
   switch (next_state) {
     case NO_CHANGE:
@@ -190,7 +194,8 @@ state_t do_fatal_error(state_data_t *data) {
   // cli_bms_debug("[FSM] In state fatal_error", 26);
   /* Your Code Here */
 
-  if (error_get_fatal() == 0)
+  // Check errors and feedbacks
+  if (error_get_fatal() == 0 && feedback_is_ok(FEEDBACK_FATAL_ERROR_MASK, FEEDBACK_FATAL_ERROR_HIGH))
     next_state = STATE_IDLE;
   
   switch (next_state) {
@@ -215,18 +220,15 @@ state_t do_wait_airn_close(state_data_t *data) {
   
   // cli_bms_debug("[FSM] In state wait_airn_close", 30);
   /* Your Code Here */
-  if (airn_timeout || error_get_fatal() > 0)
+
+  // Check fatal errors
+  if (error_get_fatal() > 0)
     next_state = STATE_FATAL_ERROR;
-  else if (set_ts_request.is_new && set_ts_request.next_state == STATE_IDLE)
+  else if (_requested_ts_off() || airn_timeout)
     next_state = STATE_IDLE;
-  else if (!feedback_need_update()) {
-    if (feedback_check_mux_vdc(is_handcart_connected) &&
-        feedback_check_mux(FEEDBACK_AIRN_CHECK_HIGH, is_handcart_connected) == 0 &&
-        feedback_check_sd(FEEDBACK_AIRN_CHECK_HIGH) == 0)
-        next_state = STATE_WAIT_TS_PRECHARGE;
-    else {
-        next_state = STATE_FATAL_ERROR;
-    }
+  else if (feedback_is_ok(FEEDBACK_AIRN_CHECK_MASK, FEEDBACK_AIRN_CHECK_HIGH)) {
+    next_state = STATE_WAIT_TS_PRECHARGE;
+    HAL_Delay(1000);
   }
 
   switch (next_state) {
@@ -253,18 +255,16 @@ state_t do_wait_ts_precharge(state_data_t *data) {
   
   // cli_bms_debug("[FSM] In state wait_ts_precharge", 32);
   /* Your Code Here */
-  if (precharge_timeout || error_get_fatal() > 0)
+
+  // Check fatal errors
+  if (error_get_fatal() > 0)
     next_state = STATE_FATAL_ERROR;
-  else if (set_ts_request.is_new && set_ts_request.next_state == STATE_IDLE)
+  else if (_requested_ts_off() || precharge_timeout)
     next_state = STATE_IDLE;
-  else if (!feedback_need_update()) {
-    if (feedback_check_mux_vdc(is_handcart_connected) &&
-        feedback_check_mux(FEEDBACK_PRECHARGE_CHECK_HIGH, is_handcart_connected) == 0 &&
-        feedback_check_sd(FEEDBACK_PRECHARGE_CHECK_HIGH) == 0)
-        next_state = STATE_WAIT_AIRP_CLOSE;
-    else
-        next_state = STATE_FATAL_ERROR;
-  }
+  else if (feedback_is_ok(FEEDBACK_PRECHARGE_CHECK_MASK, FEEDBACK_PRECHARGE_CHECK_HIGH)) {
+    next_state = STATE_WAIT_AIRP_CLOSE;
+        HAL_Delay(5000);
+    }
   
   switch (next_state) {
     case NO_CHANGE:
@@ -290,17 +290,13 @@ state_t do_wait_airp_close(state_data_t *data) {
   
   // cli_bms_debug("[FSM] In state wait_airp_close", 30);
   /* Your Code Here */
-  if (airp_timeout || error_get_fatal() > 0)
+  if (error_get_fatal() > 0)
     next_state = STATE_FATAL_ERROR;
-  else if (set_ts_request.is_new && set_ts_request.next_state == STATE_IDLE)
+  else if (_requested_ts_off() || airp_timeout)
     next_state = STATE_IDLE;
-  else if (!feedback_need_update()) {
-    if (feedback_check_mux_vdc(is_handcart_connected) &&
-        feedback_check_mux(FEEDBACK_AIRP_CHECK_HIGH, is_handcart_connected) == 0 &&
-        feedback_check_sd(FEEDBACK_AIRP_CHECK_HIGH) == 0)
-        next_state = STATE_WAIT_TS_PRECHARGE;
-    else
-        next_state = STATE_FATAL_ERROR;
+  else if (feedback_is_ok(FEEDBACK_AIRP_CHECK_MASK, FEEDBACK_AIRP_CHECK_HIGH)) {
+    next_state = STATE_TS_ON;
+    HAL_Delay(1000);
   }
   
   switch (next_state) {
@@ -327,15 +323,9 @@ state_t do_ts_on(state_data_t *data) {
   
   // cli_bms_debug("[FSM] In state ts_on", 20);
   /* Your Code Here */
-  if (error_get_fatal() > 0 ||
-    (!feedback_need_update() &&
-        (
-            !feedback_check_mux_vdc(is_handcart_connected) ||
-            feedback_check_mux(FEEDBACK_TS_ON_CHECK_HIGH, is_handcart_connected) != 0 ||
-            feedback_check_sd(FEEDBACK_TS_ON_CHECK_HIGH) != 0 ))) {
-        next_state = STATE_FATAL_ERROR;
-    }
-  if (set_ts_request.is_new && set_ts_request.next_state == STATE_IDLE)
+  if (error_get_fatal() > 0)
+    next_state = STATE_FATAL_ERROR;
+  else if (_requested_ts_off() || !feedback_is_ok(FEEDBACK_TS_ON_CHECK_MASK, FEEDBACK_TS_ON_CHECK_HIGH))
     next_state = STATE_IDLE;
 
   switch (next_state) {

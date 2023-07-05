@@ -27,6 +27,7 @@
 #define HTIM_MEASURES htim4
 #define HTIM_BAL      htim5
 #define HTIM_CLI      htim6
+#define HTIM_US       htim7
 #define HTIM_BMS      htim8
 #define HTIM_MUX      htim10
 
