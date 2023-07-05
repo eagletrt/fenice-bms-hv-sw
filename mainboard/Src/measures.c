@@ -48,7 +48,7 @@ void measures_check_flags() {
         flags &= ~_200MS_INTERVAL_FLAG;
     }
     if (flags & _500MS_INTERVAL_FLAG) {
-        if (bms.handcart_connected) {
+        if (is_handcart_connected) {
             can_car_send(PRIMARY_HV_CELLS_TEMP_FRAME_ID);
             can_car_send(PRIMARY_HV_CELLS_VOLTAGE_FRAME_ID);
             can_car_send(PRIMARY_HV_CELL_BALANCING_STATUS_FRAME_ID);

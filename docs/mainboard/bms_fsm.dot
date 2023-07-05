@@ -16,19 +16,22 @@ digraph "bms_hv_fsm" {
 
     wait_airn_close -> wait_airn_close
     wait_airn_close -> fatal_error [label="set_fatal_error"]
+    wait_airn_close -> idle [label="set_ts_off"]
     wait_airn_close -> wait_ts_precharge [label="start_precharge"]
 
     wait_ts_precharge -> wait_ts_precharge
     wait_ts_precharge -> fatal_error [label="set_fatal_error"]
+    wait_ts_precharge -> idle [label="set_ts_off"]
     wait_ts_precharge -> wait_airp_close [label="close_airp"]
 
     wait_airp_close -> wait_airp_close
     wait_airp_close -> fatal_error [label="set_fatal_error"]
+    wait_airp_close -> idle [label="set_ts_off"]
     wait_airp_close -> ts_on [label="set_ts_on"]
 
     ts_on -> ts_on
     ts_on -> fatal_error [label="set_fatal_error"]
-    ts_on -> idle [label="ts_on_to_idle"]
+    ts_on -> idle [label="set_ts_off"]
 
     fatal_error -> fatal_error
     fatal_error -> idle [label="fatal_error_to_idle"]

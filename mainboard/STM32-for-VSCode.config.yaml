@@ -68,7 +68,6 @@ includeDirectories:
   - lib/can/lib/
   - lib/micro-libs/llist/**
   - lib/micro-libs/priority-queue/**
-  - lib/micro-libs/fsm/**
   - lib/micro-libs/cli/**
   - lib/micro-libs/m95256/**
   - lib/micro-libs/blink/**
@@ -88,7 +87,6 @@ sourceFiles:
   - lib/can/lib/secondary/*.c
   - lib/micro-libs/llist/**
   - lib/micro-libs/priority-queue/**
-  - lib/micro-libs/fsm/**
   - lib/micro-libs/cli/**
   - lib/micro-libs/m95256/**
   - lib/micro-libs/blink/**

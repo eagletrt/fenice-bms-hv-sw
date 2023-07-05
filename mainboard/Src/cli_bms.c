@@ -1,11 +1,12 @@
 /**
- * @file		cli_bms.c
- * @brief		cli instance for bms
+ * @file cli_bms.c
+ * @brief cli instance for bms
  *
- * @date		Mar 29,2020
+ * @date Mar 29,2020
  *
- * @author		Matteo Bonora [matteo.bonora@studenti.unitn.it]
- * @author		Simone Ruffini [simone.ruffini@studenti.unitn.it]
+ * @author Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @author Simone Ruffini [simone.ruffini@studenti.unitn.it]
+ * @author Antonio Gelain [antonio.gelain@studenti.unitn.it]
  */
 
 #include "cli_bms.h"
@@ -30,6 +31,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#define CELLBOARD_DISTR_ADDR 0x50
+#define CELLBOARD_DISTR_VER  0x01
 
 // TODO: don't count manually
 #define N_COMMANDS 21
@@ -58,8 +62,15 @@ cli_command_func_t _cli_sigterm;
 cli_command_func_t _cli_taba;
 cli_command_func_t _cli_sborat;
 
-const char *bms_state_names[BMS_NUM_STATES] =
-    {[BMS_IDLE] = "idle", [BMS_PRECHARGE] = "precharge", [BMS_ON] = "run", [BMS_FAULT] = "fault"};
+const char * bms_state_names[NUM_STATES] = {
+    [STATE_INIT] = "init",
+    [STATE_IDLE] = "idle",
+    [STATE_WAIT_AIRN_CLOSE] = "airn_close",
+    [STATE_WAIT_TS_PRECHARGE] = "precharge",
+    [STATE_WAIT_AIRP_CLOSE] = "airn_close",
+    [STATE_TS_ON] = "ts_on",
+    [STATE_FATAL_ERROR] = "fault"
+};
 
 const char *bal_state_names[2] = { "off", "discharging" };
 
@@ -124,7 +135,14 @@ cli_command_func_t *commands[N_COMMANDS] = {
 cli_t cli_bms;
 bool dmesg_ena = true;
 
+config_t cellboard_distribution;
+
+
 void cli_bms_init() {
+    // Update cellboard distrbution in the EEPROM
+    uint8_t cell_distr_default[CELLBOARD_COUNT] = { 0, 1, 2, 3, 4, 5 };
+    config_init(&cellboard_distribution, CELLBOARD_DISTR_ADDR, CELLBOARD_DISTR_VER, cell_distr_default, 6);
+
     cli_bms.uart           = &CLI_UART;
     cli_bms.cmds.functions = commands;
     cli_bms.cmds.names     = command_names;
@@ -376,13 +394,13 @@ void _cli_status(uint16_t argc, char **argv, char *out) {
     itoa(error_count(), er_count, 10);
 
     char handcart_connected[13] = { '\0' };
-    if (bms.handcart_connected)
+    if (is_handcart_connected)
         strncpy(handcart_connected, "connected", strlen("connected") + 1);
     else
         strncpy(handcart_connected, "disconnected", strlen("disconnected") + 1);
 
     const char *values[n_items][2] = {
-        {"BMS state", bms_state_names[fsm_get_state(bms.fsm)]},
+        {"BMS state", bms_state_names[fsm_get_state()]},
         {"Error count", er_count},
         {"CAN forwarding", can_is_forwarding() ? "true" : "false"},
         {"Balancing state", bal_state_names[bal_is_balancing()]},
@@ -519,10 +537,12 @@ void _cli_errors(uint16_t argc, char **argv, char *out) {
 
 void _cli_ts(uint16_t argc, char **argv, char *out) {
     if (strcmp(argv[1], "on") == 0) {
-        fsm_trigger_event(bms.fsm, BMS_EV_TS_ON);
+        set_ts_request.is_new = true;
+        set_ts_request.next_state = STATE_WAIT_AIRN_CLOSE;
         sprintf(out, "triggered TS ON event\r\n");
     } else if (strcmp(argv[1], "off") == 0) {
-        fsm_trigger_event(bms.fsm, BMS_EV_TS_OFF);
+        set_ts_request.is_new = true;
+        set_ts_request.next_state = STATE_IDLE;
         sprintf(out, "triggered TS OFF event\r\n");
     } else if (argc < 2) {
         sprintf(
@@ -789,6 +809,13 @@ void cli_watch_flush_handler() {
     }
 }
 
+uint8_t * bms_get_cellboard_distribution() {
+    return (uint8_t *)config_get(&cellboard_distribution);
+}
+void bms_set_cellboard_distribution(uint8_t distribution[static 6]) {
+    config_set(&cellboard_distribution, (void *)distribution);
+    config_write(&cellboard_distribution);
+}
 void _cli_cellboard_distribution(uint16_t argc, char **argv, char *out) {
     *out = '\0';
     if (argc == 1) {

@@ -98,7 +98,6 @@ lib/can/lib/secondary/secondary_network.c \
 lib/can/lib/secondary/secondary_watchdog.c \
 lib/micro-libs/blink/blink.c \
 lib/micro-libs/cli/cli.c \
-lib/micro-libs/fsm/fsm.c \
 lib/micro-libs/llist/llist.c \
 lib/micro-libs/m95256/m95256.c \
 lib/micro-libs/priority-queue/priority_queue.c \
@@ -193,7 +192,6 @@ C_INCLUDES =  \
 -Ilib/can/lib/ \
 -Ilib/micro-libs/blink \
 -Ilib/micro-libs/cli \
--Ilib/micro-libs/fsm \
 -Ilib/micro-libs/llist \
 -Ilib/micro-libs/m95256 \
 -Ilib/micro-libs/priority-queue \

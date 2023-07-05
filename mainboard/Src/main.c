@@ -66,7 +66,7 @@
 
 /* USER CODE BEGIN PV */
 
-bool is_handcart_connected = false;
+bool is_handcart_connected = true;
 
 /* USER CODE END PV */
 
@@ -140,7 +140,6 @@ int main(void)
     cell_voltage_init();
     temperature_init();
     bal_init();
-    bms_fsm_init();
     current_zero();
     soc_init();
     can_bms_init();

@@ -37,7 +37,6 @@ struct {
 CAN_TxHeaderTypeDef tx_header;
 
 bool can_forward;
-bool is_handcart_connected = false;
 
 bool can_is_forwarding() {
     return can_forward;
@@ -156,20 +155,29 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         primary_ts_status_converted_t conv_status;
         conv_status.ts_status = primary_ts_status_ts_status_IDLE;
 
-        switch (fsm_get_state(bms.fsm)) {
-            case BMS_IDLE:
+        switch (fsm_get_state()) {
+            case STATE_INIT:
+                conv_status.ts_status = primary_ts_status_ts_status_INIT;
+                break;
+            case STATE_IDLE:
                 conv_status.ts_status = primary_ts_status_ts_status_IDLE;
                 break;
-            case BMS_AIRN_CLOSE:
-            case BMS_AIRN_STATUS:
-            case BMS_PRECHARGE:
+            case STATE_WAIT_AIRN_CLOSE:
+                conv_status.ts_status = primary_ts_status_ts_status_AIRN_CLOSE;
+                break;
+            case STATE_WAIT_TS_PRECHARGE:
                 conv_status.ts_status = primary_ts_status_ts_status_PRECHARGE;
                 break;
-            case BMS_ON:
+            case STATE_WAIT_AIRP_CLOSE:
+                conv_status.ts_status = primary_ts_status_ts_status_AIRP_CLOSE;
+                break;
+            case STATE_TS_ON:
                 conv_status.ts_status = primary_ts_status_ts_status_TS_ON;
                 break;
-            case BMS_FAULT:
+            case STATE_FATAL_ERROR:
                 conv_status.ts_status = primary_ts_status_ts_status_FATAL_ERROR;
+                break;
+            default:
                 break;
         }
 
@@ -851,10 +859,12 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 
             switch (ts_status.ts_status_set) {
                 case primary_set_ts_status_das_ts_status_set_OFF:
-                    fsm_trigger_event(bms.fsm, BMS_EV_TS_OFF);
+                    set_ts_request.is_new = true;
+                    set_ts_request.next_state = STATE_IDLE;
                     break;
                 case primary_set_ts_status_das_ts_status_set_ON:
-                    fsm_trigger_event(bms.fsm, BMS_EV_TS_ON);
+                    set_ts_request.is_new = true;
+                    set_ts_request.next_state = STATE_WAIT_AIRN_CLOSE;
                     break;
             }
         } else if (rx_header.StdId == PRIMARY_SET_CELL_BALANCING_STATUS_FRAME_ID) {
@@ -875,10 +885,11 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 
             primary_handcart_status_unpack(&handcart_status, rx_data, PRIMARY_HANDCART_STATUS_BYTE_SIZE);
 
-            // TODO: Set handcart connection to false if disconnected            
+            // TODO: Set handcart connection to false if disconnected (watchdog?)
             is_handcart_connected = handcart_status.connected;
         } else if (rx_header.StdId == PRIMARY_HV_CAN_FORWARD_FRAME_ID) {
-            if (fsm_get_state(bms.fsm) != BMS_IDLE && fsm_get_state(bms.fsm) != BMS_FAULT) {
+            state_t fsm_state = fsm_get_state();
+            if (fsm_state != STATE_INIT && fsm_state != STATE_IDLE && fsm_state != STATE_FATAL_ERROR) {
                 can_forward = 0;
                 return;
             }
@@ -896,8 +907,11 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
                     can_forward = 1;
                     break;
             }
-        } else if (rx_header.StdId == PRIMARY_BMS_HV_JMP_TO_BLT_FRAME_ID && (fsm_get_state(bms.fsm) == BMS_IDLE || fsm_get_state(bms.fsm) == BMS_FAULT) && !bal_is_balancing()) {
-            HAL_NVIC_SystemReset();
+        }
+        else {
+            state_t state = fsm_get_state();
+            if (rx_header.StdId == PRIMARY_BMS_HV_JMP_TO_BLT_FRAME_ID && (state == STATE_INIT || state == STATE_IDLE || state == STATE_FATAL_ERROR) && !bal_is_balancing())
+                HAL_NVIC_SystemReset();
         }
     }
 }

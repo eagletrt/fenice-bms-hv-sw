@@ -70,7 +70,8 @@ void watchdog_routine() {
             cli_bms_debug(msg, strlen(msg));
 
             car_watchdog_timed_out = true;
-            fsm_trigger_event(bms.fsm, BMS_EV_TS_OFF);
+            // TODO: Change event with request
+            // fsm_trigger_event(bms.fsm, BMS_EV_TS_OFF);
         }
     }
     for (size_t i = 0; i < BMS_WATCHDOG_IDS_SIZE; i++) {
@@ -83,7 +84,8 @@ void watchdog_routine() {
             cli_bms_debug(msg, strlen(msg));
 
             cell_watchdog_timed_out = true;
-            fsm_trigger_event(bms.fsm, BMS_EV_TS_OFF);
+            // TODO: Change event with request
+            // fsm_trigger_event(bms.fsm, BMS_EV_TS_OFF);
         }
     }
 }

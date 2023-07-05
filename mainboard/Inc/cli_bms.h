@@ -13,6 +13,7 @@
 
 #include "cli.h"
 #include "../../fenice_config.h"
+#include "config.h"
 
 #define NORMAL_COLOR           "\033[0m"
 #define RED_BG(S)              "\033[0;41m" S NORMAL_COLOR
@@ -21,6 +22,7 @@
 #define RED_BG_ON_YELLOW_FG(S) "\033[0;31;43m" S NORMAL_COLOR
 
 extern cli_t cli_bms;
+extern config_t cellboard_distribution;
 
 void cli_bms_init();
 
