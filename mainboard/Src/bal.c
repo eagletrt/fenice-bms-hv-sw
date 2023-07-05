@@ -66,5 +66,6 @@ void bal_start() {
     set_balancing = false;
 }
 void bal_stop() {
+    set_balancing = false;
     can_bms_send(BMS_SET_BALANCING_STATUS_FRAME_ID);
 }

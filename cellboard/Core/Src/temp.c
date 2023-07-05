@@ -76,6 +76,8 @@ void temp_measure(uint8_t adc_index) {
 }
 
 void temp_measure_all() {
+    max = 0;
+    min = CELL_MAX_TEMPERATURE;
     for (uint8_t adc = 0; adc < TEMP_ADC_COUNT; adc++) {
         temp_measure(adc);
     }

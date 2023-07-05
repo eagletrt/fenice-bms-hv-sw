@@ -479,13 +479,16 @@ HAL_StatusTypeDef can_bms_send(uint16_t id) {
     if (id == BMS_SET_BALANCING_STATUS_FRAME_ID) {
         uint8_t status = 0;
 
+        bool bal_status = bal_need_balancing();
+
+
         for (size_t i = 0; i < CELLBOARD_COUNT; ++i) {
             bms_set_balancing_status_t raw_bal = { 0 };
             bms_set_balancing_status_converted_t conv_bal = { 0 };
             
             conv_bal.balancing_status = bal_need_balancing();
-            conv_bal.target = MAX(CONVERT_VALUE_TO_VOLTAGE(CELL_MIN_VOLTAGE), cell_voltage_get_min());
-            conv_bal.threshold = MIN(CONVERT_VALUE_TO_VOLTAGE(BAL_MAX_VOLTAGE_THRESHOLD), bal_get_threshold());
+            conv_bal.target = MAX(CELL_MIN_VOLTAGE, cell_voltage_get_min());
+            conv_bal.threshold = MIN(BAL_MAX_VOLTAGE_THRESHOLD, bal_get_threshold());
 
             bms_set_balancing_status_conversion_to_raw_struct(&raw_bal, &conv_bal);
 
