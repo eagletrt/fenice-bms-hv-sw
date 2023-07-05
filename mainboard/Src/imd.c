@@ -28,7 +28,7 @@ uint8_t imd_get_period() {
 }
 
 uint8_t imd_is_fault() {
-    return !feedback_is_mux_ok();
+    return !feedback_check_mux_vdc(is_handcart_connected);
 }
 
 IMD_STATE imd_get_state() {

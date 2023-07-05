@@ -9,6 +9,8 @@
 #ifndef MAINBOARD_CONFIG_H
 #define MAINBOARD_CONFIG_H
 
+#include <stdbool.h>
+
 #include "../../fenice_config.h"
 #include "spi.h"
 #include "tim.h"
@@ -40,5 +42,8 @@
 
 #define STATE_LED_GPIO LED2_GPIO_Port
 #define STATE_LED_PIN  LED2_Pin
+
+extern bool is_handcart_connected;
+
 
 #endif

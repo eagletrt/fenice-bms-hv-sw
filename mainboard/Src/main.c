@@ -66,7 +66,7 @@
 
 /* USER CODE BEGIN PV */
 
-bool is_handcart_connected = true;
+bool is_handcart_connected = false;
 
 /* USER CODE END PV */
 

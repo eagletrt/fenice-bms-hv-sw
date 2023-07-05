@@ -683,7 +683,7 @@ void _cli_can_forward(uint16_t argc, char **argv, char *out) {
 
 void _cli_feedbacks(uint16_t argc, char **argv, char *out) {
     feedback_feed_t f[FEEDBACK_N];
-    feedback_get_feedback_states(f);
+    feedback_get_all_states(f, is_handcart_connected);
     *out = '\0';
     for (uint8_t i = 0; i < FEEDBACK_N; ++i) {
         sprintf(

@@ -157,8 +157,14 @@ state_t do_idle(state_data_t *data) {
   /* Your Code Here */
   if (error_get_fatal() > 0)
     next_state = STATE_FATAL_ERROR;
-  else if (set_ts_request.is_new && set_ts_request.next_state == STATE_WAIT_AIRN_CLOSE && feedback_is_updated() && feedback_check(FEEDBACK_IDLE_HIGH) == 0)
-    next_state = STATE_WAIT_AIRN_CLOSE;
+  else if (set_ts_request.is_new &&
+    set_ts_request.next_state == STATE_WAIT_AIRN_CLOSE &&
+    !feedback_need_update() &&
+    feedback_check_mux_vdc(is_handcart_connected) &&
+    feedback_check_mux(FEEDBACK_IDLE_HIGH, is_handcart_connected) == 0 &&
+    feedback_check_sd(FEEDBACK_IDLE_HIGH) == 0) {
+        next_state = STATE_WAIT_AIRN_CLOSE;
+    }
 
   switch (next_state) {
     case NO_CHANGE:
@@ -213,8 +219,10 @@ state_t do_wait_airn_close(state_data_t *data) {
     next_state = STATE_FATAL_ERROR;
   else if (set_ts_request.is_new && set_ts_request.next_state == STATE_IDLE)
     next_state = STATE_IDLE;
-  else if (feedback_is_updated()) {
-    if (feedback_check(FEEDBACK_AIRN_CHECK_HIGH) == 0)
+  else if (!feedback_need_update()) {
+    if (feedback_check_mux_vdc(is_handcart_connected) &&
+        feedback_check_mux(FEEDBACK_AIRN_CHECK_HIGH, is_handcart_connected) == 0 &&
+        feedback_check_sd(FEEDBACK_AIRN_CHECK_HIGH) == 0)
         next_state = STATE_WAIT_TS_PRECHARGE;
     else {
         next_state = STATE_FATAL_ERROR;
@@ -249,8 +257,10 @@ state_t do_wait_ts_precharge(state_data_t *data) {
     next_state = STATE_FATAL_ERROR;
   else if (set_ts_request.is_new && set_ts_request.next_state == STATE_IDLE)
     next_state = STATE_IDLE;
-  else if (feedback_is_updated()) {
-    if (feedback_check(FEEDBACK_PRECHARGE_CHECK_HIGH) == 0)
+  else if (!feedback_need_update()) {
+    if (feedback_check_mux_vdc(is_handcart_connected) &&
+        feedback_check_mux(FEEDBACK_PRECHARGE_CHECK_HIGH, is_handcart_connected) == 0 &&
+        feedback_check_sd(FEEDBACK_PRECHARGE_CHECK_HIGH) == 0)
         next_state = STATE_WAIT_AIRP_CLOSE;
     else
         next_state = STATE_FATAL_ERROR;
@@ -284,8 +294,10 @@ state_t do_wait_airp_close(state_data_t *data) {
     next_state = STATE_FATAL_ERROR;
   else if (set_ts_request.is_new && set_ts_request.next_state == STATE_IDLE)
     next_state = STATE_IDLE;
-  else if (feedback_is_updated()) {
-    if (feedback_check(FEEDBACK_AIRP_CHECK_HIGH) == 0)
+  else if (!feedback_need_update()) {
+    if (feedback_check_mux_vdc(is_handcart_connected) &&
+        feedback_check_mux(FEEDBACK_AIRP_CHECK_HIGH, is_handcart_connected) == 0 &&
+        feedback_check_sd(FEEDBACK_AIRP_CHECK_HIGH) == 0)
         next_state = STATE_WAIT_TS_PRECHARGE;
     else
         next_state = STATE_FATAL_ERROR;
@@ -315,8 +327,14 @@ state_t do_ts_on(state_data_t *data) {
   
   // cli_bms_debug("[FSM] In state ts_on", 20);
   /* Your Code Here */
-  if (error_get_fatal() > 0 || (feedback_is_updated() && feedback_check(FEEDBACK_TS_ON_CHECK_HIGH) != 0))
-    next_state = STATE_FATAL_ERROR;
+  if (error_get_fatal() > 0 ||
+    (!feedback_need_update() &&
+        (
+            !feedback_check_mux_vdc(is_handcart_connected) ||
+            feedback_check_mux(FEEDBACK_TS_ON_CHECK_HIGH, is_handcart_connected) != 0 ||
+            feedback_check_sd(FEEDBACK_TS_ON_CHECK_HIGH) != 0 ))) {
+        next_state = STATE_FATAL_ERROR;
+    }
   if (set_ts_request.is_new && set_ts_request.next_state == STATE_IDLE)
     next_state = STATE_IDLE;
 
@@ -363,9 +381,6 @@ void init_to_idle(state_data_t *data) {
   pack_set_default_off(0);
   pack_set_fault(BMS_FAULT_OFF_VALUE);
   current_zero();
-
-  // Request a new feedback measure
-  feedback_request_update();
 }
 
 // This function is called in 4 transitions:
@@ -400,9 +415,6 @@ void close_airn(state_data_t *data) {
   // Close AIR-
   pack_set_airn_off(AIRN_ON_VALUE);
 
-  // Request a new feedback measure
-  feedback_request_update();
-
   // Start AIR- timeout timer
   _start_timeout(AIRN_TIMEOUT_CHANNEL, AIRN_TIMEOUT_INTERRUPT, AIRN_CHECK_TIMEOUT);
 }
@@ -418,9 +430,6 @@ void fatal_error_to_idle(state_data_t *data) {
 
   // Reset fault status
   pack_set_fault(BMS_FAULT_OFF_VALUE);
-
-  // Request a new feedback measure
-  feedback_request_update();
 }
 
 // This function is called in 3 transitions:
@@ -436,9 +445,6 @@ void set_ts_off(state_data_t *data) {
 
   // Reset timeouts
   _reset_timeouts();
-
-  // Request a new feedback measure
-  feedback_request_update();
 
   // Set blinking led pattern
   bms_set_led_blinker();
@@ -459,9 +465,6 @@ void start_precharge(state_data_t *data) {
   // Start precharge
   pack_set_precharge(PRECHARGE_ON_VALUE);
   
-  // Request a new feedback measure
-  feedback_request_update();
-
   // Start precharge timeout timer
   _start_timeout(PRECHARGE_TIMEOUT_CHANNEL, PRECHARGE_TIMEOUT_INTERRUPT, PRECHARGE_TIMEOUT);
 }
@@ -481,9 +484,6 @@ void close_airp(state_data_t *data) {
   // Close AIR+
   pack_set_airp_off(AIRP_ON_VALUE);
 
-  // Request a new feedback measure
-  feedback_request_update();
-
   // Start AIR+ timeout timer
   _start_timeout(AIRP_TIMEOUT_CHANNEL, AIRP_TIMEOUT_INTERRUPT, AIRP_CHECK_TIMEOUT);
 }
@@ -493,9 +493,6 @@ void close_airp(state_data_t *data) {
 void set_ts_on(state_data_t *data) {
   cli_bms_debug("[FSM] State transition set_ts_on", 32);
   /* Your Code Here */
-
-  // Request a new feedback measure
-  feedback_request_update();
 
   // Stop AIR+ timeout timer
   _stop_timeout(AIRP_TIMEOUT_CHANNEL, AIRP_TIMEOUT_INTERRUPT);
@@ -535,8 +532,8 @@ void fsm_run() {
     // Blink the led
     bms_blink_led();
 
-    // Set feedback errors
-    feedback_set_errors(fsm_state);
+    // Set or reset connection error
+    error_toggle_check(HAL_GPIO_ReadPin(CONNS_DETECTION_GPIO_Port, CONNS_DETECTION_Pin) == GPIO_PIN_RESET, ERROR_CONNECTOR_DISCONNECTED, 0);
 
     // Run the FSM and updates
     fsm_state = run_state(fsm_state, NULL);
