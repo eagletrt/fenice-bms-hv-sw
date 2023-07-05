@@ -874,7 +874,8 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
             primary_handcart_status_t handcart_status;
 
             primary_handcart_status_unpack(&handcart_status, rx_data, PRIMARY_HANDCART_STATUS_BYTE_SIZE);
-            
+
+            // TODO: Set handcart connection to false if disconnected            
             is_handcart_connected = handcart_status.connected;
         } else if (rx_header.StdId == PRIMARY_HV_CAN_FORWARD_FRAME_ID) {
             if (fsm_get_state(bms.fsm) != BMS_IDLE && fsm_get_state(bms.fsm) != BMS_FAULT) {

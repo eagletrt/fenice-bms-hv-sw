@@ -14,7 +14,9 @@ The finite state machine has:
 
 #ifndef BMS_FSM_H
 #define BMS_FSM_H
+
 #include <stdlib.h>
+#include <stdbool.h>
 
 // State data object
 // By default set to void; override this typedef or load the proper
@@ -96,6 +98,12 @@ state_t run_state(state_t cur_state, state_data_t *data);
 
 /** @brief Run the fsm */
 void fsm_run();
+/**
+ * @brief Get the state of the FSM
+ * 
+ * @return state_t The current state of the FSM
+ */
+state_t fsm_get_state();
 /** @brief Set the led blinker pattern */
 void bms_set_led_blinker();
 /** @brief Run the led blinking pattern */

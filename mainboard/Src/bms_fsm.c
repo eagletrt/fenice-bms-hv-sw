@@ -208,7 +208,7 @@ state_t do_wait_airn_close(state_data_t *data) {
   
   cli_bms_debug("[FSM] In state wait_airn_close", 30);
   /* Your Code Here */
-  if (error_get_fatal() > 0)
+  if (airn_timeout || error_get_fatal() > 0)
     next_state = STATE_FATAL_ERROR;
   else if (feedback_is_updated() && feedback_check(FEEDBACK_AIRN_CHECK_HIGH) == 0)
     next_state = STATE_WAIT_TS_PRECHARGE;
@@ -236,7 +236,7 @@ state_t do_wait_ts_precharge(state_data_t *data) {
   
   cli_bms_debug("[FSM] In state wait_ts_precharge", 32);
   /* Your Code Here */
-  if (error_get_fatal() > 0)
+  if (precharge_timeout || error_get_fatal() > 0)
     next_state = STATE_FATAL_ERROR;
   else if (feedback_is_updated() && feedback_check(FEEDBACK_PRECHARGE_CHECK_HIGH) == 0)
     next_state = STATE_WAIT_AIRP_CLOSE;
@@ -264,7 +264,7 @@ state_t do_wait_airp_close(state_data_t *data) {
   
   cli_bms_debug("[FSM] In state wait_airp_close", 30);
   /* Your Code Here */
-  if (error_get_fatal() > 0)
+  if (airp_timeout || error_get_fatal() > 0)
     next_state = STATE_FATAL_ERROR;
   else if (feedback_is_updated() && feedback_check(FEEDBACK_AIRP_CHECK_HIGH) == 0)
     next_state = STATE_WAIT_TS_PRECHARGE;
@@ -509,6 +509,9 @@ void fsm_run() {
     bms_blink_led();
     // Run the FSM and updates
     fsm_state = run_state(fsm_state, NULL);
+}
+state_t fsm_get_state() {
+    return fsm_state;
 }
 void bms_set_led_blinker() {
     uint8_t pattern_count = 0;
