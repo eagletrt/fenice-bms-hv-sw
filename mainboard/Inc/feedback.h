@@ -16,6 +16,7 @@
 #include <stddef.h>
 
 #include <../../fenice_config.h>
+#include "bms_fsm.h"
 
 
 typedef uint32_t feedback_t;
@@ -161,7 +162,12 @@ void feedback_get_feedback_states(feedback_feed_t out_value[FEEDBACK_N]);
 feedback_t feedback_check(feedback_t value);
 /** @brief Request a feedback update */
 void feedback_request_update();
-
+/**
+ * @brief Set the errors of the feedbacks
+ * 
+ * @param state The current state of the FSM
+ */
+void feedback_set_errors(state_t state);
 
 
 /** @brief Feedback timer callback handler */

@@ -14,6 +14,7 @@
 #include "mainboard_config.h"
 #include "bms_fsm.h"
 #include "can_comm.h"
+#include "error_list_ref.h"
 
 
 #define FEEDBACK_MUX_ANALOG_THRESHOLD_H 2.2f
@@ -154,37 +155,29 @@ void feedback_get_feedback_states(feedback_feed_t out_value[FEEDBACK_N]) {
         out_value[i] = feedback_get_feedback_state(i);
 }
 feedback_t feedback_check(feedback_t value) {
-    // Set or reset connection error
-    error_toggle_check(HAL_GPIO_ReadPin(CONNS_DETECTION_GPIO_Port, CONNS_DETECTION_Pin) == GPIO_PIN_RESET, ERROR_CONNECTOR_DISCONNECTED, 0);
-
     feedback_t diff = 0;
     for (size_t i = 0; i < FEEDBACK_N; i++) {
         feedback_t feedback = 1 << i;
+
+        // TODO: Remove, only for handcart test
+        if (feedback == FEEDBACK_TSAL_GREEN || feedback == FEEDBACK_TSAL_GREEN_FAULT_LATCHED)
+            continue;
         
+        // Set errors
         if (i == FEEDBACK_CHECK_MUX_POS) {
-            if (feedback_is_mux_ok())
-                error_reset(ERROR_FEEDBACK_CIRCUITRY, i);
-            else {
-                error_set(ERROR_FEEDBACK_CIRCUITRY, i, HAL_GetTick());
+            if (!feedback_is_mux_ok())
                 diff |= feedback;
-            }
         }
         else {
-            feedback_t fb_val = value & feedback;
+            feedback_t fb_val = feedback & value;
+
             // Check feedback voltages
             if (_is_adc_value_valid(i)) {
-                if ((fb_val && _is_adc_value_high(i)) || (!fb_val && _is_adc_value_low(i)))
-                    error_reset(ERROR_FEEDBACK, i);
-                else {
-                    error_set(ERROR_FEEDBACK, i, HAL_GetTick());
+                if (!( (fb_val && _is_adc_value_high(i)) || (!fb_val && _is_adc_value_low(i)) ))
                     diff |= feedback;
-                }
-                error_reset(ERROR_FEEDBACK_CIRCUITRY, i);
             }
-            else {
-                error_set(ERROR_FEEDBACK_CIRCUITRY, i, HAL_GetTick());
+            else
                 diff |= feedback;
-            }
         }
     }
 
@@ -196,8 +189,11 @@ void feedback_request_update() {
 }
 
 void _feedback_handle_tim_elapsed_irq() {
+    // Set or reset connection error
+    error_toggle_check(HAL_GPIO_ReadPin(CONNS_DETECTION_GPIO_Port, CONNS_DETECTION_Pin) == GPIO_PIN_RESET, ERROR_CONNECTOR_DISCONNECTED, 0);
+
     if (fb_index == 0)
-        mux_update_count = 0;
+        mux_update_count = FEEDBACK_MUX_N;
     _feedback_set_mux_index();
     HAL_ADC_Start_DMA(&ADC_MUX, (uint32_t *)dma_data, DMA_DATA_SIZE);
 }
@@ -211,4 +207,50 @@ void _feedback_handle_adc_cnv_cmpl_irq() {
 
     ++mux_update_count;
     fb_index = (fb_index + 1) % FEEDBACK_MUX_N;
+}
+
+feedback_t _feedback_value_from_state(state_t state) {
+    switch(state) {
+        case STATE_IDLE:
+            return FEEDBACK_IDLE_HIGH;
+        case STATE_WAIT_AIRN_CLOSE:
+            return FEEDBACK_AIRN_CHECK_HIGH;
+        case STATE_WAIT_TS_PRECHARGE:
+            return FEEDBACK_AIRN_CHECK_HIGH;
+        case STATE_WAIT_AIRP_CLOSE:
+            return FEEDBACK_AIRP_CHECK_HIGH;
+        case STATE_TS_ON:
+            return FEEDBACK_TS_ON_CHECK_HIGH;
+        default:
+            break;
+    }
+    return NO_CHANGE;
+}
+void feedback_set_errors(state_t state) {
+    feedback_t value = _feedback_value_from_state(state);
+
+    for (size_t i = 0; i < FEEDBACK_N; i++) {
+        feedback_t feedback = 1 << i;
+        // Set errors
+        if (i == FEEDBACK_CHECK_MUX_POS) {
+            if (feedback_is_mux_ok())
+                error_reset(ERROR_FEEDBACK_CIRCUITRY, i);
+            else
+                error_set(ERROR_FEEDBACK_CIRCUITRY, i, HAL_GetTick());
+        }
+        else {
+            feedback_t fb_val = feedback & value;
+
+            // Check feedback voltages
+            if (_is_adc_value_valid(i)) {
+                if ((fb_val && _is_adc_value_high(i)) || (!fb_val && _is_adc_value_low(i)))
+                    error_reset(ERROR_FEEDBACK, i);
+                else
+                    error_set(ERROR_FEEDBACK, i, HAL_GetTick());
+                error_reset(ERROR_FEEDBACK_CIRCUITRY, i);
+            }
+            else
+                error_set(ERROR_FEEDBACK_CIRCUITRY, i, HAL_GetTick());
+        }
+    }
 }

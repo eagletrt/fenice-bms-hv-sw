@@ -157,10 +157,8 @@ state_t do_idle(state_data_t *data) {
   /* Your Code Here */
   if (error_get_fatal() > 0)
     next_state = STATE_FATAL_ERROR;
-  else if (set_ts_request.is_new && set_ts_request.next_state == STATE_WAIT_AIRN_CLOSE && feedback_is_updated() && feedback_check(FEEDBACK_IDLE_HIGH) == 0) {
-    set_ts_request.is_new = false;
+  else if (set_ts_request.is_new && set_ts_request.next_state == STATE_WAIT_AIRN_CLOSE && feedback_is_updated() && feedback_check(FEEDBACK_IDLE_HIGH) == 0)
     next_state = STATE_WAIT_AIRN_CLOSE;
-  }
 
   switch (next_state) {
     case NO_CHANGE:
@@ -213,12 +211,15 @@ state_t do_wait_airn_close(state_data_t *data) {
   /* Your Code Here */
   if (airn_timeout || error_get_fatal() > 0)
     next_state = STATE_FATAL_ERROR;
-  else if (set_ts_request.is_new && set_ts_request.next_state == STATE_IDLE) {
-    set_ts_request.is_new = false;
+  else if (set_ts_request.is_new && set_ts_request.next_state == STATE_IDLE)
     next_state = STATE_IDLE;
+  else if (feedback_is_updated()) {
+    if (feedback_check(FEEDBACK_AIRN_CHECK_HIGH) == 0)
+        next_state = STATE_WAIT_TS_PRECHARGE;
+    else {
+        next_state = STATE_FATAL_ERROR;
+    }
   }
-  else if (feedback_is_updated() && feedback_check(FEEDBACK_AIRN_CHECK_HIGH) == 0)
-    next_state = STATE_WAIT_TS_PRECHARGE;
 
   switch (next_state) {
     case NO_CHANGE:
@@ -246,12 +247,14 @@ state_t do_wait_ts_precharge(state_data_t *data) {
   /* Your Code Here */
   if (precharge_timeout || error_get_fatal() > 0)
     next_state = STATE_FATAL_ERROR;
-  else if (set_ts_request.is_new && set_ts_request.next_state == STATE_IDLE) {
-    set_ts_request.is_new = false;
+  else if (set_ts_request.is_new && set_ts_request.next_state == STATE_IDLE)
     next_state = STATE_IDLE;
+  else if (feedback_is_updated()) {
+    if (feedback_check(FEEDBACK_PRECHARGE_CHECK_HIGH) == 0)
+        next_state = STATE_WAIT_AIRP_CLOSE;
+    else
+        next_state = STATE_FATAL_ERROR;
   }
-  else if (feedback_is_updated() && feedback_check(FEEDBACK_PRECHARGE_CHECK_HIGH) == 0)
-    next_state = STATE_WAIT_AIRP_CLOSE;
   
   switch (next_state) {
     case NO_CHANGE:
@@ -279,12 +282,14 @@ state_t do_wait_airp_close(state_data_t *data) {
   /* Your Code Here */
   if (airp_timeout || error_get_fatal() > 0)
     next_state = STATE_FATAL_ERROR;
-  else if (set_ts_request.is_new && set_ts_request.next_state == STATE_IDLE) {
-    set_ts_request.is_new = false;
+  else if (set_ts_request.is_new && set_ts_request.next_state == STATE_IDLE)
     next_state = STATE_IDLE;
+  else if (feedback_is_updated()) {
+    if (feedback_check(FEEDBACK_AIRP_CHECK_HIGH) == 0)
+        next_state = STATE_WAIT_TS_PRECHARGE;
+    else
+        next_state = STATE_FATAL_ERROR;
   }
-  else if (feedback_is_updated() && feedback_check(FEEDBACK_AIRP_CHECK_HIGH) == 0)
-    next_state = STATE_WAIT_TS_PRECHARGE;
   
   switch (next_state) {
     case NO_CHANGE:
@@ -310,9 +315,9 @@ state_t do_ts_on(state_data_t *data) {
   
   // cli_bms_debug("[FSM] In state ts_on", 20);
   /* Your Code Here */
-  if (error_get_fatal() > 0)
+  if (error_get_fatal() > 0 || (feedback_is_updated() && feedback_check(FEEDBACK_TS_ON_CHECK_HIGH) != 0))
     next_state = STATE_FATAL_ERROR;
-  if ((set_ts_request.is_new && set_ts_request.next_state == STATE_IDLE) || (feedback_is_updated() && feedback_check(FEEDBACK_TS_ON_CHECK_HIGH) != 0))
+  if (set_ts_request.is_new && set_ts_request.next_state == STATE_IDLE)
     next_state = STATE_IDLE;
 
   switch (next_state) {
@@ -429,6 +434,9 @@ void set_ts_off(state_data_t *data) {
   // Set default pack status
   pack_set_default_off(0);
 
+  // Reset timeouts
+  _reset_timeouts();
+
   // Request a new feedback measure
   feedback_request_update();
 
@@ -512,7 +520,10 @@ void set_ts_on(state_data_t *data) {
  */
 
 state_t run_state(state_t cur_state, state_data_t *data) {
+  bool received_request = set_ts_request.is_new;
   state_t new_state = state_table[cur_state](data);
+  if (received_request)
+    set_ts_request.is_new = false;
   if (new_state == NO_CHANGE) new_state = cur_state;
   transition_func_t *transition = transition_table[cur_state][new_state];
   if (transition)
@@ -523,6 +534,10 @@ state_t run_state(state_t cur_state, state_data_t *data) {
 void fsm_run() {
     // Blink the led
     bms_blink_led();
+
+    // Set feedback errors
+    feedback_set_errors(fsm_state);
+
     // Run the FSM and updates
     fsm_state = run_state(fsm_state, NULL);
 }
