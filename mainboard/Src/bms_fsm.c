@@ -226,10 +226,8 @@ state_t do_wait_airn_close(state_data_t *data) {
     next_state = STATE_FATAL_ERROR;
   else if (_requested_ts_off() || airn_timeout)
     next_state = STATE_IDLE;
-  else if (feedback_is_ok(FEEDBACK_AIRN_CHECK_MASK, FEEDBACK_AIRN_CHECK_HIGH)) {
+  else if (feedback_is_ok(FEEDBACK_AIRN_CHECK_MASK, FEEDBACK_AIRN_CHECK_HIGH))
     next_state = STATE_WAIT_TS_PRECHARGE;
-    HAL_Delay(1000);
-  }
 
   switch (next_state) {
     case NO_CHANGE:
@@ -261,10 +259,8 @@ state_t do_wait_ts_precharge(state_data_t *data) {
     next_state = STATE_FATAL_ERROR;
   else if (_requested_ts_off() || precharge_timeout)
     next_state = STATE_IDLE;
-  else if (feedback_is_ok(FEEDBACK_PRECHARGE_CHECK_MASK, FEEDBACK_PRECHARGE_CHECK_HIGH)) {
+  else if (feedback_is_ok(FEEDBACK_PRECHARGE_CHECK_MASK, FEEDBACK_PRECHARGE_CHECK_HIGH))
     next_state = STATE_WAIT_AIRP_CLOSE;
-        HAL_Delay(5000);
-    }
   
   switch (next_state) {
     case NO_CHANGE:
@@ -294,10 +290,8 @@ state_t do_wait_airp_close(state_data_t *data) {
     next_state = STATE_FATAL_ERROR;
   else if (_requested_ts_off() || airp_timeout)
     next_state = STATE_IDLE;
-  else if (feedback_is_ok(FEEDBACK_AIRP_CHECK_MASK, FEEDBACK_AIRP_CHECK_HIGH)) {
+  else if (feedback_is_ok(FEEDBACK_AIRP_CHECK_MASK, FEEDBACK_AIRP_CHECK_HIGH))
     next_state = STATE_TS_ON;
-    HAL_Delay(1000);
-  }
   
   switch (next_state) {
     case NO_CHANGE:
