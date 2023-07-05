@@ -210,11 +210,12 @@ void cooldown_exit(fsm FSM) {
 }
 
 void bal_timers_handler(TIM_HandleTypeDef *htim, fsm handle) {
-    if (htim->Instance == TIM_DISCHARGE.Instance) {
-        bal.cells = 0;
-        fsm_trigger_event(bal.fsm, EV_BAL_STOP);
-    }
-    else if (htim->Instance == TIM_COOLDOWN.Instance) {
+    // if (htim->Instance == TIM_DISCHARGE.Instance) {
+    //     bal.cells = 0;
+    //     fsm_trigger_event(bal.fsm, EV_BAL_STOP);
+    // }
+    // else
+    if (htim->Instance == TIM_COOLDOWN.Instance) {
         switch (htim->Channel) {
             case HAL_TIM_ACTIVE_CHANNEL_1:
                 // Start cooldown

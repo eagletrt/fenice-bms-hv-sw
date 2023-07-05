@@ -153,11 +153,11 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
     } else if (id == PRIMARY_TS_STATUS_FRAME_ID) {
         primary_ts_status_t raw_status;
         primary_ts_status_converted_t conv_status;
-        conv_status.ts_status = primary_ts_status_ts_status_OFF;
+        conv_status.ts_status = primary_ts_status_ts_status_IDLE;
 
         switch (fsm_get_state(bms.fsm)) {
             case BMS_IDLE:
-                conv_status.ts_status = primary_ts_status_ts_status_OFF;
+                conv_status.ts_status = primary_ts_status_ts_status_IDLE;
                 break;
             case BMS_AIRN_CLOSE:
             case BMS_AIRN_STATUS:
@@ -165,10 +165,10 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
                 conv_status.ts_status = primary_ts_status_ts_status_PRECHARGE;
                 break;
             case BMS_ON:
-                conv_status.ts_status = primary_ts_status_ts_status_ON;
+                conv_status.ts_status = primary_ts_status_ts_status_TS_ON;
                 break;
             case BMS_FAULT:
-                conv_status.ts_status = primary_ts_status_ts_status_FATAL;
+                conv_status.ts_status = primary_ts_status_ts_status_FATAL_ERROR;
                 break;
         }
 
@@ -480,15 +480,16 @@ HAL_StatusTypeDef can_bms_send(uint16_t id) {
         uint8_t status = 0;
 
         bool bal_status = bal_need_balancing();
-
+        uint16_t target = MAX(CELL_MIN_VOLTAGE, cell_voltage_get_min());
+        uint16_t threshold = MIN(BAL_MAX_VOLTAGE_THRESHOLD, bal_get_threshold());
 
         for (size_t i = 0; i < CELLBOARD_COUNT; ++i) {
             bms_set_balancing_status_t raw_bal = { 0 };
             bms_set_balancing_status_converted_t conv_bal = { 0 };
             
-            conv_bal.balancing_status = bal_need_balancing();
-            conv_bal.target = MAX(CELL_MIN_VOLTAGE, cell_voltage_get_min());
-            conv_bal.threshold = MIN(BAL_MAX_VOLTAGE_THRESHOLD, bal_get_threshold());
+            conv_bal.balancing_status = bal_status;
+            conv_bal.target = target;
+            conv_bal.threshold = threshold;
 
             bms_set_balancing_status_conversion_to_raw_struct(&raw_bal, &conv_bal);
 
@@ -746,6 +747,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
                     break;
             }
             bal_set_is_balancing(conv_status.cellboard_id, conv_status.balancing_status);
+
             // bal.status[index] = status.balancing_status;
             /*
             if (index == 0)

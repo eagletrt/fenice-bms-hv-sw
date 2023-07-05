@@ -124,7 +124,7 @@ void bms_set_cellboard_distribution(uint8_t distribution[static 6]) {
 
 void bms_fsm_init() {
     bms.fsm                = fsm_init(BMS_NUM_STATES, BMS_EV_NUM, &bms_blink_led, &bms_set_led_blinker);
-    bms.handcart_connected = false;
+    bms.handcart_connected = true;
 
     fsm_state state;
     state.run     = NULL;
