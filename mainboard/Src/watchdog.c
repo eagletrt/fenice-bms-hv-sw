@@ -1,3 +1,11 @@
+/**
+ * @file watchdog.c
+ * @brief Functions and structure to handle watchdog timeouts
+ * 
+ * @date Jul 06, 2023
+ * 
+ * @author Antonio Gelain [antonio.gelain@studenti.unitn.it]
+ */
 #include "watchdog.h"
 
 #include <stddef.h>
@@ -9,8 +17,9 @@
 #include "bms/bms_watchdog.h"
 #include "bms_fsm.h"
 #include "cli_bms.h"
+#include "error.h"
 
-#define PRIMARY_WATCHDOG_IDS_SIZE 2
+#define PRIMARY_WATCHDOG_IDS_SIZE 1
 #define BMS_WATCHDOG_IDS_SIZE 1
 
 primary_watchdog car_watchdog = { 0 };
@@ -22,7 +31,8 @@ bool cell_watchdog_timed_out = false;
 /** @brief Primary IDs monitored by the watchdog */
 const uint16_t watchdog_primary_ids[PRIMARY_WATCHDOG_IDS_SIZE] = {
     PRIMARY_CAR_STATUS_FRAME_ID,
-    PRIMARY_HANDCART_STATUS_FRAME_ID
+    // TODO: Add handcart watchdog only when using handcart
+    // PRIMARY_HANDCART_STATUS_FRAME_ID
 };
 /** @brief Bms IDs monitored by the watchdog */
 const uint16_t watchdog_bms_ids[BMS_WATCHDOG_IDS_SIZE] = {
@@ -71,8 +81,15 @@ void watchdog_routine() {
             cli_bms_debug(msg, strlen(msg));
 
             car_watchdog_timed_out = true;
+
+#if !defined(WATCHDOG_IGNORE_PRIMARY) && !defined(WATCHDOG_IGNORE)
+            // Set error
+            error_set(ERROR_CAN, 0, HAL_GetTick());
+
+            // Send TS off request
             set_ts_request.is_new = true;
             set_ts_request.next_state = STATE_IDLE;
+#endif // WATCHDOG_IGNORE_PRIMARY && WATCHDOG_IGNORE
         }
     }
     for (size_t i = 0; i < BMS_WATCHDOG_IDS_SIZE; i++) {
@@ -85,8 +102,14 @@ void watchdog_routine() {
             cli_bms_debug(msg, strlen(msg));
 
             cell_watchdog_timed_out = true;
+#if !defined(WATCHDOG_IGNORE_BMS) && !defined(WATCHDOG_IGNORE)
+            // Set error
+            error_set(ERROR_CAN, 1, HAL_GetTick());
+
+            // Send TS off request
             set_ts_request.is_new = true;
             set_ts_request.next_state = STATE_IDLE;
+#endif // WATCHDOG_IGNORE_BMS && WATCHDOG_IGNORE
         }
     }
 }
