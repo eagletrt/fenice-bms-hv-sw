@@ -10,6 +10,8 @@
 
 #include "feedback.h"
 
+#include <string.h>
+
 #include "error.h"
 #include "mainboard_config.h"
 #include "bms_fsm.h"
@@ -19,7 +21,7 @@
 
 // Multiplexer feedback thresholds
 #define FEEDBACK_MUX_ANALOG_THRESHOLD_H 2.2f
-#define FEEDBACK_MUX_ANALOG_THRESHOLD_L 0.7f
+#define FEEDBACK_MUX_ANALOG_THRESHOLD_L 0.7f // TODO: Check AIRN_STATUS and AIRP_STATUS slightly above threshold
 
 // Shutdown feedbacks threshold
 #define FEEDBACK_SD_THRESHOLD_H 10.0f // V
@@ -57,9 +59,11 @@
 
 #define FEEDBACK_UPDATE_THRESHOLD_MS (MUX_INTERVAL_MS * (FEEDBACK_MUX_N + 2))
 
+#define FEEDBACK_QUEUE_SIZE 5
 
 struct {
-    uint16_t voltages[FEEDBACK_N];
+    uint16_t voltages[FEEDBACK_N][FEEDBACK_QUEUE_SIZE];
+    uint8_t index[FEEDBACK_N];
     bool has_converted;
 } feedbacks;
 
@@ -82,16 +86,33 @@ void _feedback_handle_tim_elapsed_irq() {
 }
 void _feedback_handle_adc_cnv_cmpl_irq() {
     if (!feedbacks.has_converted) {
+        size_t j = feedbacks.index[fb_index];
+
         // Save DMA data
-        feedbacks.voltages[fb_index] = dma_data[DMA_DATA_MUX_FB];
-        feedbacks.voltages[FEEDBACK_SD_IN_POS]  = dma_data[DMA_DATA_SD_IN];
-        feedbacks.voltages[FEEDBACK_SD_OUT_POS] = dma_data[DMA_DATA_SD_OUT];
-        feedbacks.voltages[FEEDBACK_SD_BMS_POS] = dma_data[DMA_DATA_SD_BMS];
-        feedbacks.voltages[FEEDBACK_SD_IMD_POS] = dma_data[DMA_DATA_SD_IMD];
+        feedbacks.voltages[fb_index][j] = dma_data[DMA_DATA_MUX_FB];
+        feedbacks.voltages[FEEDBACK_SD_IN_POS][feedbacks.index[FEEDBACK_SD_IN_POS]]   = dma_data[DMA_DATA_SD_IN];
+        feedbacks.voltages[FEEDBACK_SD_OUT_POS][feedbacks.index[FEEDBACK_SD_OUT_POS]] = dma_data[DMA_DATA_SD_OUT];
+        feedbacks.voltages[FEEDBACK_SD_BMS_POS][feedbacks.index[FEEDBACK_SD_BMS_POS]] = dma_data[DMA_DATA_SD_BMS];
+        feedbacks.voltages[FEEDBACK_SD_IMD_POS][feedbacks.index[FEEDBACK_SD_IMD_POS]] = dma_data[DMA_DATA_SD_IMD];
+
+        // Update queue indices
+        feedbacks.index[fb_index] = (feedbacks.index[fb_index] + 1) % FEEDBACK_QUEUE_SIZE;
+        feedbacks.index[FEEDBACK_SD_IN_POS]  = (feedbacks.index[FEEDBACK_SD_IN_POS]  + 1) % FEEDBACK_QUEUE_SIZE;
+        feedbacks.index[FEEDBACK_SD_OUT_POS] = (feedbacks.index[FEEDBACK_SD_OUT_POS] + 1) % FEEDBACK_QUEUE_SIZE;
+        feedbacks.index[FEEDBACK_SD_BMS_POS] = (feedbacks.index[FEEDBACK_SD_BMS_POS] + 1) % FEEDBACK_QUEUE_SIZE;
+        feedbacks.index[FEEDBACK_SD_IMD_POS] = (feedbacks.index[FEEDBACK_SD_IMD_POS] + 1) % FEEDBACK_QUEUE_SIZE;
 
         fb_index = (fb_index + 1) % FEEDBACK_MUX_N;
         feedbacks.has_converted = true;
     }
+}
+
+FEEDBACK_STATE _feedback_get_majority(size_t low, size_t high, size_t error) {
+    if (low > high && low > error)
+        return FEEDBACK_STATE_L;
+    if (high > low && high > error)
+        return FEEDBACK_STATE_H;
+    return FEEDBACK_STATE_ERROR;
 }
 
 void feedback_init() {
@@ -103,17 +124,17 @@ void feedback_init() {
     // Start microseconds timer
     // HAL_TIM_Base_Start(&HTIM_US);
 
-    for (size_t i = 0; i < FEEDBACK_N; i++)
-        feedbacks.voltages[i] = 0;
+    for (size_t i = 0; i < FEEDBACK_N; i++) {
+        memset(feedbacks.voltages[i], 0, FEEDBACK_QUEUE_SIZE * sizeof(uint16_t));
+        feedbacks.index[i] = 0;
+    }
     feedbacks.has_converted = true;
 }
 
 // TODO: Check all feedbacks and do not return false immediately
 bool feedback_is_ok(feedback_t mask, feedback_t value) {
-    bool is_low = false;
-    bool is_high = false;
-
     for (size_t i = 0; i < FEEDBACK_N; i++) {
+        size_t low = 0, high = 0, error = 0;
         feedback_t feedback = 1 << i;
 
         // Skip feedbacks not in mask
@@ -124,57 +145,94 @@ bool feedback_is_ok(feedback_t mask, feedback_t value) {
 
         // Check handcart
         if (is_handcart_connected && i == FEEDBACK_IMD_FAULT_POS) {
-            // Check IMD fault for handcart
-            is_low = feedbacks.voltages[i] <= FEEDBACK_CONVERT_VOLTAGE_TO_ADC_MUX(FEEDBACK_IMD_FAULT_HANDCART_THRESHOLD_L);
-            is_high = feedbacks.voltages[i] >= FEEDBACK_CONVERT_VOLTAGE_TO_ADC_MUX(FEEDBACK_IMD_FAULT_HANDCART_THRESHOLD_H);
+            for (size_t j = 0; j < FEEDBACK_QUEUE_SIZE; j++) {
+                // Check IMD fault for handcart
+                if (feedbacks.voltages[i][j] <= FEEDBACK_CONVERT_VOLTAGE_TO_ADC_MUX(FEEDBACK_IMD_FAULT_HANDCART_THRESHOLD_L))
+                    low++;
+                else if (feedbacks.voltages[i][j] >= FEEDBACK_CONVERT_VOLTAGE_TO_ADC_MUX(FEEDBACK_IMD_FAULT_HANDCART_THRESHOLD_H))
+                    high++;
+                else
+                    error++;
+            }
         }
         else if (is_handcart_connected && i == FEEDBACK_CHECK_MUX_POS) {
-            // Check multiplexer VDC for handcart
-            is_low = feedbacks.voltages[i] <= FEEDBACK_CONVERT_VOLTAGE_TO_ADC_MUX(FEEDBACK_CHECK_MUX_HANDCART_THRESHOLD_H);
-            is_high = feedbacks.voltages[i] >= FEEDBACK_CONVERT_VOLTAGE_TO_ADC_MUX(FEEDBACK_CHECK_MUX_HANDCART_THRESHOLD_L);
+            for (size_t j = 0; j < FEEDBACK_QUEUE_SIZE; j++) {
+                // Check multiplexer VDC for handcart
+                if (feedbacks.voltages[i][j] >= FEEDBACK_CONVERT_VOLTAGE_TO_ADC_MUX(FEEDBACK_CHECK_MUX_HANDCART_THRESHOLD_H))
+                    error++;
+                else if (feedbacks.voltages[i][j] <= FEEDBACK_CONVERT_VOLTAGE_TO_ADC_MUX(FEEDBACK_CHECK_MUX_HANDCART_THRESHOLD_L))
+                    error++;
+                else
+                    high++;
+            }
+
+            FEEDBACK_STATE state = _feedback_get_majority(low, high, error);
 
             // TODO: Check for low state
-            if (is_low && is_high)
+            if (state == FEEDBACK_STATE_H)
                 error_reset(ERROR_FEEDBACK, i);
             else {
                 error_set(ERROR_FEEDBACK, i, HAL_GetTick());
                 return false;
             }
+            continue;
         }
         else if (i == FEEDBACK_CHECK_MUX_POS) {
-            // Check multiplexer VDC
-            is_low = feedbacks.voltages[i] <= FEEDBACK_CONVERT_VOLTAGE_TO_ADC_MUX(FEEDBACK_CHECK_MUX_THRESHOLD_H);
-            is_high = feedbacks.voltages[i] >= FEEDBACK_CONVERT_VOLTAGE_TO_ADC_MUX(FEEDBACK_CHECK_MUX_THRESHOLD_L);
+            for (size_t j = 0; j < FEEDBACK_QUEUE_SIZE; j++) {
+                // Check multiplexer VDC
+                if (feedbacks.voltages[i][j] >= FEEDBACK_CONVERT_VOLTAGE_TO_ADC_MUX(FEEDBACK_CHECK_MUX_THRESHOLD_H))
+                    error++;
+                else if(feedbacks.voltages[i][j] <= FEEDBACK_CONVERT_VOLTAGE_TO_ADC_MUX(FEEDBACK_CHECK_MUX_THRESHOLD_L))
+                    error++;
+                else
+                    high++;
+            }
+
+            FEEDBACK_STATE state = _feedback_get_majority(low, high, error);
 
             // TODO: Check for low state
-            if (is_low && is_high)
+            if (state == FEEDBACK_STATE_H)
                 error_reset(ERROR_FEEDBACK, i);
             else {
                 error_set(ERROR_FEEDBACK, i, HAL_GetTick());
                 return false;
             }
+            continue;
         }
         else if (i < FEEDBACK_MUX_N) {
-            is_low = feedbacks.voltages[i] <= FEEDBACK_CONVERT_VOLTAGE_TO_ADC_MUX(FEEDBACK_MUX_ANALOG_THRESHOLD_L);
-            is_high = feedbacks.voltages[i] >= FEEDBACK_CONVERT_VOLTAGE_TO_ADC_MUX(FEEDBACK_MUX_ANALOG_THRESHOLD_H);
+            for (size_t j = 0; j < FEEDBACK_QUEUE_SIZE; j++) {
+                if (feedbacks.voltages[i][j] <= FEEDBACK_CONVERT_VOLTAGE_TO_ADC_MUX(FEEDBACK_MUX_ANALOG_THRESHOLD_L))
+                    low++;
+                else if (feedbacks.voltages[i][j] >= FEEDBACK_CONVERT_VOLTAGE_TO_ADC_MUX(FEEDBACK_MUX_ANALOG_THRESHOLD_H))
+                    high++;
+                else
+                    error++;
+            }
         }
         else if (i < FEEDBACK_N) {
-            is_low = feedbacks.voltages[i] <= FEEDBACK_CONVERT_VOLTAGE_TO_ADC_MUX(FEEDBACK_SD_ANALOG_THRESHOLD_L);
-            is_high = feedbacks.voltages[i] >= FEEDBACK_CONVERT_VOLTAGE_TO_ADC_MUX(FEEDBACK_SD_ANALOG_THRESHOLD_H);
+            for (size_t j = 0; j < FEEDBACK_QUEUE_SIZE; j++) {
+                if (feedbacks.voltages[i][j] <= FEEDBACK_CONVERT_VOLTAGE_TO_ADC_MUX(FEEDBACK_SD_ANALOG_THRESHOLD_L))
+                    low++;
+                else if(feedbacks.voltages[i][j] >= FEEDBACK_CONVERT_VOLTAGE_TO_ADC_MUX(FEEDBACK_SD_ANALOG_THRESHOLD_H))
+                    high++;
+                else
+                    error++;
+            }
         }
         else {
             error_set(ERROR_FEEDBACK_CIRCUITRY, i, HAL_GetTick());
             return false;
         }
 
+        FEEDBACK_STATE state = _feedback_get_majority(low, high, error);
+
         // Check for errors
-        if ((fb_val && is_high) || (!fb_val && is_low))
-            error_reset(ERROR_FEEDBACK, i);
-        else {
+        if (state == FEEDBACK_STATE_ERROR || (fb_val && state == FEEDBACK_STATE_L) || (!fb_val && state == FEEDBACK_STATE_H)) {
             error_set(ERROR_FEEDBACK, i, HAL_GetTick());
             return false;
         }
-
+        else
+            error_reset(ERROR_FEEDBACK, i);
         error_reset(ERROR_FEEDBACK_CIRCUITRY, i);
     }
 
@@ -182,55 +240,122 @@ bool feedback_is_ok(feedback_t mask, feedback_t value) {
 }
 
 feedback_feed_t feedback_get_state(size_t index) {
+    size_t queue_index = feedbacks.index[index];
+    size_t low = 0, high = 0, error = 0;
+
     feedback_feed_t feed;
     // Set voltage
     feed.voltage = (index < FEEDBACK_MUX_N) ?
-        FEEDBACK_CONVERT_ADC_MUX_TO_VOLTAGE(feedbacks.voltages[index]) :
-        FEEDBACK_CONVERT_ADC_SD_TO_VOLTAGE(feedbacks.voltages[index]);
+        FEEDBACK_CONVERT_ADC_MUX_TO_VOLTAGE(feedbacks.voltages[index][queue_index]) :
+        FEEDBACK_CONVERT_ADC_SD_TO_VOLTAGE(feedbacks.voltages[index][queue_index]);
     
     // Check handcart
     if (is_handcart_connected && index == FEEDBACK_IMD_FAULT_POS) {
-        // Check IMD fault for handcart
-        if (feedbacks.voltages[index] <= FEEDBACK_CONVERT_VOLTAGE_TO_ADC_MUX(FEEDBACK_IMD_FAULT_HANDCART_THRESHOLD_L))
-            feed.state = FEEDBACK_STATE_L;
-        else if (feedbacks.voltages[index] >= FEEDBACK_CONVERT_VOLTAGE_TO_ADC_MUX(FEEDBACK_IMD_FAULT_HANDCART_THRESHOLD_H))
-            feed.state = FEEDBACK_STATE_H;
-        else
-            feed.state = FEEDBACK_STATE_ERROR;
+        for (size_t j = 0; j < FEEDBACK_QUEUE_SIZE; j++) {
+            // Check IMD fault for handcart
+            if (feedbacks.voltages[index][j] <= FEEDBACK_CONVERT_VOLTAGE_TO_ADC_MUX(FEEDBACK_IMD_FAULT_HANDCART_THRESHOLD_L)) {
+                low++;
+                if (j == queue_index)
+                    feed.cur_state = FEEDBACK_STATE_L;
+            }
+            else if (feedbacks.voltages[index][j] >= FEEDBACK_CONVERT_VOLTAGE_TO_ADC_MUX(FEEDBACK_IMD_FAULT_HANDCART_THRESHOLD_H)) {
+                high++;
+                if (j == queue_index)
+                    feed.cur_state = FEEDBACK_STATE_H;
+            }
+            else {
+                error++;
+                if (j == queue_index)
+                    feed.cur_state = FEEDBACK_STATE_ERROR;
+            }
+        }
     }
     else if (is_handcart_connected && index == FEEDBACK_CHECK_MUX_POS) {
-        // Check multiplexer VDC for handcart
-        if (feedbacks.voltages[index] <= FEEDBACK_CONVERT_VOLTAGE_TO_ADC_MUX(FEEDBACK_CHECK_MUX_HANDCART_THRESHOLD_H) &&
-                feedbacks.voltages[index] >= FEEDBACK_CONVERT_VOLTAGE_TO_ADC_MUX(FEEDBACK_CHECK_MUX_HANDCART_THRESHOLD_L))
-            feed.state = FEEDBACK_STATE_H;
-        else
-            feed.state = FEEDBACK_STATE_ERROR;
+        for (size_t j = 0; j < FEEDBACK_QUEUE_SIZE; j++) {
+            // Check multiplexer VDC for handcart
+            if (feedbacks.voltages[index][j] >= FEEDBACK_CONVERT_VOLTAGE_TO_ADC_MUX(FEEDBACK_CHECK_MUX_HANDCART_THRESHOLD_H)) {
+                error++;
+                if (j == queue_index)
+                    feed.cur_state = FEEDBACK_STATE_ERROR;
+            }
+            else if (feedbacks.voltages[index][j] <= FEEDBACK_CONVERT_VOLTAGE_TO_ADC_MUX(FEEDBACK_CHECK_MUX_HANDCART_THRESHOLD_L)) {
+                error++;
+                if (j == queue_index)
+                    feed.cur_state = FEEDBACK_STATE_ERROR;
+            }
+            else {
+                high++;
+                if (j == queue_index)
+                    feed.cur_state = FEEDBACK_STATE_H;
+            }
+        }
+
+        feed.real_state = _feedback_get_majority(low, high, error);
+        return feed;
     }
     else if (index == FEEDBACK_CHECK_MUX_POS) {
-        // Check multiplexer VDC
-        if (feedbacks.voltages[index] <= FEEDBACK_CONVERT_VOLTAGE_TO_ADC_MUX(FEEDBACK_CHECK_MUX_THRESHOLD_H) &&
-                feedbacks.voltages[index] >= FEEDBACK_CONVERT_VOLTAGE_TO_ADC_MUX(FEEDBACK_CHECK_MUX_THRESHOLD_L))
-            feed.state = FEEDBACK_STATE_H;
-        else
-            feed.state = FEEDBACK_STATE_ERROR;
+        for (size_t j = 0; j < FEEDBACK_QUEUE_SIZE; j++) {
+            // Check multiplexer VDC
+            if (feedbacks.voltages[index][j] >= FEEDBACK_CONVERT_VOLTAGE_TO_ADC_MUX(FEEDBACK_CHECK_MUX_THRESHOLD_H)) {
+                error++;
+                if (j == queue_index)
+                    feed.cur_state = FEEDBACK_STATE_ERROR;
+            }
+            else if(feedbacks.voltages[index][j] <= FEEDBACK_CONVERT_VOLTAGE_TO_ADC_MUX(FEEDBACK_CHECK_MUX_THRESHOLD_L)) {
+                error++;
+                if (j == queue_index)
+                    feed.cur_state = FEEDBACK_STATE_ERROR;
+            }
+            else {
+                high++;
+                if (j == queue_index)
+                    feed.cur_state = FEEDBACK_STATE_H;
+            }
+        }
+        
+        feed.real_state = _feedback_get_majority(low, high, error);
+        return feed;
     }
     else if (index < FEEDBACK_MUX_N) {
-        if (feedbacks.voltages[index] <= FEEDBACK_CONVERT_VOLTAGE_TO_ADC_MUX(FEEDBACK_MUX_ANALOG_THRESHOLD_L))
-            feed.state = FEEDBACK_STATE_L;
-        else if (feedbacks.voltages[index] >= FEEDBACK_CONVERT_VOLTAGE_TO_ADC_MUX(FEEDBACK_MUX_ANALOG_THRESHOLD_H))
-            feed.state = FEEDBACK_STATE_H;
-        else
-            feed.state = FEEDBACK_STATE_ERROR;
+        for (size_t j = 0; j < FEEDBACK_QUEUE_SIZE; j++) {
+            if (feedbacks.voltages[index][j] <= FEEDBACK_CONVERT_VOLTAGE_TO_ADC_MUX(FEEDBACK_MUX_ANALOG_THRESHOLD_L)) {
+                low++;
+                if (j == queue_index)
+                    feed.cur_state = FEEDBACK_STATE_L;
+            }
+            else if (feedbacks.voltages[index][j] >= FEEDBACK_CONVERT_VOLTAGE_TO_ADC_MUX(FEEDBACK_MUX_ANALOG_THRESHOLD_H)) {
+                high++;
+                if (j == queue_index)
+                    feed.cur_state = FEEDBACK_STATE_H;
+            }
+            else {
+                error++;
+                if (j == queue_index)
+                    feed.cur_state = FEEDBACK_STATE_ERROR;
+            }
+        }
     }
     else if (index < FEEDBACK_N) {
-        if (feedbacks.voltages[index] <= FEEDBACK_CONVERT_VOLTAGE_TO_ADC_MUX(FEEDBACK_SD_ANALOG_THRESHOLD_L))
-            feed.state = FEEDBACK_STATE_L;
-        else if (feedbacks.voltages[index] >= FEEDBACK_CONVERT_VOLTAGE_TO_ADC_MUX(FEEDBACK_SD_ANALOG_THRESHOLD_H))
-            feed.state = FEEDBACK_STATE_H;
-        else
-            feed.state = FEEDBACK_STATE_ERROR;
+        for (size_t j = 0; j < FEEDBACK_QUEUE_SIZE; j++) {
+            if (feedbacks.voltages[index][j] <= FEEDBACK_CONVERT_VOLTAGE_TO_ADC_MUX(FEEDBACK_SD_ANALOG_THRESHOLD_L)) {
+                low++;
+                if (j == queue_index)
+                    feed.cur_state = FEEDBACK_STATE_L;
+            }
+            else if(feedbacks.voltages[index][j] >= FEEDBACK_CONVERT_VOLTAGE_TO_ADC_MUX(FEEDBACK_SD_ANALOG_THRESHOLD_H)) {
+                high++;
+                if (j == queue_index)
+                    feed.cur_state = FEEDBACK_STATE_H;
+            }
+            else {
+                error++;
+                if (j == queue_index)
+                    feed.cur_state = FEEDBACK_STATE_ERROR;
+            }
+        }
     }
 
+    feed.real_state = _feedback_get_majority(low, high, error);
     return feed;
 }
 void feedback_get_all_states(feedback_feed_t out_value[FEEDBACK_N]) {

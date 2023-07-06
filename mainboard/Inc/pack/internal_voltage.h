@@ -12,6 +12,8 @@
 #ifndef INTERNAL_VOLTAGE_H
 #define INTERNAL_VOLTAGE_H
 
+#include <stdbool.h>
+
 #include "stm32f4xx_hal.h"
 #include "../../fenice_config.h"
 #include "max22530.h"
@@ -19,6 +21,9 @@
 #define INTERNAL_VOLTAGE_DIVIDER_RATIO 0.003
 #define CONVERT_VALUE_TO_INTERNAL_ADC_VOLTAGE(x) MAX22530_CONV_VALUE_TO_VOLTAGE(x)
 #define CONVERT_VALUE_TO_INTERNAL_VOLTAGE(x) (CONVERT_VALUE_TO_INTERNAL_ADC_VOLTAGE(x) / INTERNAL_VOLTAGE_DIVIDER_RATIO)
+
+#define INTERNAL_VOLTAGE_PRECHARGE_THRESHOLD 0.95f
+#define INTERNAL_VOLTAGE_PRECHARGE_HANDCART_THRESHOLD 0.90f // See rules
 
 /** @brief Initializes the adc and internal voltages */
 void internal_voltage_init();
@@ -55,5 +60,12 @@ uint16_t internal_voltage_get_shunt();
  */
 uint16_t internal_voltage_get_bat();
 
+/**
+ * @brief Check if the precharge is complete
+ * 
+ * @return true If the precharge is complete
+ * @return false Otherwise
+ */
+bool internal_voltage_is_precharge_complete();
 
 #endif // INTERNAL_VOLTAGE_H

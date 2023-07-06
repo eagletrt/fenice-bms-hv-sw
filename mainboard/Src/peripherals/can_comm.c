@@ -399,64 +399,64 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         for (size_t i = 0; i < FEEDBACK_N; i++) {
             switch(i) {
                 case FEEDBACK_IMPLAUSIBILITY_DETECTED_POS:
-                    conv_status.feedbacks_status_feedback_implausibility_detected = fbs[i].state == FEEDBACK_STATE_H;
+                    conv_status.feedbacks_status_feedback_implausibility_detected = fbs[i].real_state == FEEDBACK_STATE_H;
                     break;
                 case FEEDBACK_IMD_COCKPIT_POS:
-                    conv_status.feedbacks_status_feedback_imd_cockpit = fbs[i].state == FEEDBACK_STATE_H;
+                    conv_status.feedbacks_status_feedback_imd_cockpit = fbs[i].real_state == FEEDBACK_STATE_H;
                     break;
                 case FEEDBACK_TSAL_GREEN_FAULT_LATCHED_POS:
-                    conv_status.feedbacks_status_feedback_tsal_green_fault_latched = fbs[i].state == FEEDBACK_STATE_H;
+                    conv_status.feedbacks_status_feedback_tsal_green_fault_latched = fbs[i].real_state == FEEDBACK_STATE_H;
                     break;
                 case FEEDBACK_BMS_COCKPIT_POS:
-                    conv_status.feedbacks_status_feedback_bms_cockpit = fbs[i].state == FEEDBACK_STATE_H;
+                    conv_status.feedbacks_status_feedback_bms_cockpit = fbs[i].real_state == FEEDBACK_STATE_H;
                     break;
                 case FEEDBACK_EXT_LATCHED_POS:
-                    conv_status.feedbacks_status_feedback_ext_latched = fbs[i].state == FEEDBACK_STATE_H;
+                    conv_status.feedbacks_status_feedback_ext_latched = fbs[i].real_state == FEEDBACK_STATE_H;
                     break;
                 case FEEDBACK_TSAL_GREEN_POS:
-                    conv_status.feedbacks_status_feedback_tsal_green = fbs[i].state == FEEDBACK_STATE_H;
+                    conv_status.feedbacks_status_feedback_tsal_green = fbs[i].real_state == FEEDBACK_STATE_H;
                     break;
                 case FEEDBACK_TS_OVER_60V_STATUS_POS:
-                    conv_status.feedbacks_status_feedback_ts_over_60v_status = fbs[i].state == FEEDBACK_STATE_H;
+                    conv_status.feedbacks_status_feedback_ts_over_60v_status = fbs[i].real_state == FEEDBACK_STATE_H;
                     break;
                 case FEEDBACK_AIRN_STATUS_POS:
-                    conv_status.feedbacks_status_feedback_airn_status = fbs[i].state == FEEDBACK_STATE_H;
+                    conv_status.feedbacks_status_feedback_airn_status = fbs[i].real_state == FEEDBACK_STATE_H;
                     break;
                 case FEEDBACK_AIRP_STATUS_POS:
-                    conv_status.feedbacks_status_feedback_airp_status = fbs[i].state == FEEDBACK_STATE_H;
+                    conv_status.feedbacks_status_feedback_airp_status = fbs[i].real_state == FEEDBACK_STATE_H;
                     break;
                 case FEEDBACK_AIRP_GATE_POS:
-                    conv_status.feedbacks_status_feedback_airp_gate = fbs[i].state == FEEDBACK_STATE_H;
+                    conv_status.feedbacks_status_feedback_airp_gate = fbs[i].real_state == FEEDBACK_STATE_H;
                     break;
                 case FEEDBACK_AIRN_GATE_POS:
-                    conv_status.feedbacks_status_feedback_airn_gate = fbs[i].state == FEEDBACK_STATE_H;
+                    conv_status.feedbacks_status_feedback_airn_gate = fbs[i].real_state == FEEDBACK_STATE_H;
                     break;
                 case FEEDBACK_PRECHARGE_STATUS_POS:
-                    conv_status.feedbacks_status_feedback_precharge_status = fbs[i].state == FEEDBACK_STATE_H;
+                    conv_status.feedbacks_status_feedback_precharge_status = fbs[i].real_state == FEEDBACK_STATE_H;
                     break;
                 case FEEDBACK_TSP_OVER_60V_STATUS_POS:
-                    conv_status.feedbacks_status_feedback_tsp_over_60v_status = fbs[i].state == FEEDBACK_STATE_H;
+                    conv_status.feedbacks_status_feedback_tsp_over_60v_status = fbs[i].real_state == FEEDBACK_STATE_H;
                     break;
                 case FEEDBACK_IMD_FAULT_POS:
-                    conv_status.feedbacks_status_feedback_imd_fault = fbs[i].state == FEEDBACK_STATE_H;
+                    conv_status.feedbacks_status_feedback_imd_fault = fbs[i].real_state == FEEDBACK_STATE_H;
                     break;
                 case FEEDBACK_CHECK_MUX_POS:
-                    conv_status.feedbacks_status_feedback_check_mux = fbs[i].state == FEEDBACK_STATE_H;
+                    conv_status.feedbacks_status_feedback_check_mux = fbs[i].real_state == FEEDBACK_STATE_H;
                     break;
                 case FEEDBACK_SD_END_POS:
-                    conv_status.feedbacks_status_feedback_sd_end = fbs[i].state == FEEDBACK_STATE_H;
+                    conv_status.feedbacks_status_feedback_sd_end = fbs[i].real_state == FEEDBACK_STATE_H;
                     break;
                 case FEEDBACK_SD_OUT_POS:
-                    conv_status.feedbacks_status_feedback_sd_out = fbs[i].state == FEEDBACK_STATE_H;
+                    conv_status.feedbacks_status_feedback_sd_out = fbs[i].real_state == FEEDBACK_STATE_H;
                     break;
                 case FEEDBACK_SD_IN_POS:
-                    conv_status.feedbacks_status_feedback_sd_in = fbs[i].state == FEEDBACK_STATE_H;
+                    conv_status.feedbacks_status_feedback_sd_in = fbs[i].real_state == FEEDBACK_STATE_H;
                     break;
                 case FEEDBACK_SD_BMS_POS:
-                    conv_status.feedbacks_status_feedback_sd_bms = fbs[i].state == FEEDBACK_STATE_H;
+                    conv_status.feedbacks_status_feedback_sd_bms = fbs[i].real_state == FEEDBACK_STATE_H;
                     break;
                 case FEEDBACK_SD_IMD_POS:
-                    conv_status.feedbacks_status_feedback_sd_imd = fbs[i].state == FEEDBACK_STATE_H;
+                    conv_status.feedbacks_status_feedback_sd_imd = fbs[i].real_state == FEEDBACK_STATE_H;
                     break;
             }
         }

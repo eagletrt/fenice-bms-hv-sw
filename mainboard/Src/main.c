@@ -134,9 +134,10 @@ int main(void)
     current_start_measure();
 
     cli_bms_init();
-    error_init();
 
+    error_init();
     fans_init();
+
     internal_voltage_init();
     cell_voltage_init();
     temperature_init();

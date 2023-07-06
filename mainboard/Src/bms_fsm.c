@@ -26,6 +26,7 @@ The finite state machine has:
 #include "can_comm.h"
 #include "cli_bms.h"
 #include "blink.h"
+#include "internal_voltage.h"
 
 #define AIRN_TIMEOUT_CHANNEL TIM_CHANNEL_1
 #define PRECHARGE_TIMEOUT_CHANNEL TIM_CHANNEL_2
@@ -257,9 +258,14 @@ state_t do_wait_ts_precharge(state_data_t *data) {
   // Check fatal errors
   if (error_get_fatal() > 0)
     next_state = STATE_FATAL_ERROR;
-  else if (_requested_ts_off() || precharge_timeout)
+  else if (_requested_ts_off() || precharge_timeout) {
+    if (precharge_timeout)
+        cli_bms_debug("Precharge timeout", 17);
+    if (_requested_ts_off())
+        cli_bms_debug("Requested TS off", 16);
     next_state = STATE_IDLE;
-  else if (feedback_is_ok(FEEDBACK_PRECHARGE_CHECK_MASK, FEEDBACK_PRECHARGE_CHECK_HIGH))
+  }
+  else if (feedback_is_ok(FEEDBACK_PRECHARGE_CHECK_MASK, FEEDBACK_PRECHARGE_CHECK_HIGH) && internal_voltage_is_precharge_complete())
     next_state = STATE_WAIT_AIRP_CLOSE;
   
   switch (next_state) {
@@ -288,8 +294,11 @@ state_t do_wait_airp_close(state_data_t *data) {
   /* Your Code Here */
   if (error_get_fatal() > 0)
     next_state = STATE_FATAL_ERROR;
-  else if (_requested_ts_off() || airp_timeout)
+  else if (_requested_ts_off() || airp_timeout) {
+    if (airp_timeout)
+        cli_bms_debug("AIR+ timeout", 12);
     next_state = STATE_IDLE;
+  }
   else if (feedback_is_ok(FEEDBACK_AIRP_CHECK_MASK, FEEDBACK_AIRP_CHECK_HIGH))
     next_state = STATE_TS_ON;
   
@@ -317,8 +326,12 @@ state_t do_ts_on(state_data_t *data) {
   
   // cli_bms_debug("[FSM] In state ts_on", 20);
   /* Your Code Here */
-  if (error_get_fatal() > 0)
+  if (error_get_fatal() > 0) {
+    error_t errors[30];
+    error_dump(errors);
+    cli_bms_debug("TS on errors", 12);
     next_state = STATE_FATAL_ERROR;
+  }
   else if (_requested_ts_off() || !feedback_is_ok(FEEDBACK_TS_ON_CHECK_MASK, FEEDBACK_TS_ON_CHECK_HIGH)) {
     next_state = STATE_IDLE;
   }
@@ -399,8 +412,6 @@ void close_airn(state_data_t *data) {
 
   // Close AIR-
   pack_set_airn_off(AIRN_ON_VALUE);
-  // TODO: Remove delay
-  HAL_Delay(1000);
 
   // Start AIR- timeout timer
   _start_timeout(AIRN_TIMEOUT_CHANNEL, AIRN_TIMEOUT_INTERRUPT, AIRN_CHECK_TIMEOUT);
@@ -451,8 +462,6 @@ void start_precharge(state_data_t *data) {
 
   // Start precharge
   pack_set_precharge(PRECHARGE_ON_VALUE);
-  // TODO: Remove delay
-  HAL_Delay(3000);
   
   // Start precharge timeout timer
   _start_timeout(PRECHARGE_TIMEOUT_CHANNEL, PRECHARGE_TIMEOUT_INTERRUPT, PRECHARGE_TIMEOUT);
@@ -472,8 +481,6 @@ void close_airp(state_data_t *data) {
 
   // Close AIR+
   pack_set_airp_off(AIRP_ON_VALUE);
-  // TODO: Remove delay
-  HAL_Delay(1000);
 
   // Start AIR+ timeout timer
   _start_timeout(AIRP_TIMEOUT_CHANNEL, AIRP_TIMEOUT_INTERRUPT, AIRP_CHECK_TIMEOUT);

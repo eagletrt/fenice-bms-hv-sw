@@ -688,13 +688,16 @@ void _cli_feedbacks(uint16_t argc, char **argv, char *out) {
     for (uint8_t i = 0; i < FEEDBACK_N; ++i) {
         sprintf(
             out + strlen(out),
-            "%02d - %-40s: %s, %.4f\n\r",
+            "%02d - %-40s: %s, %.4f, %s\n\r",
             i,
             feedback_names[i],
-            f[i].state == FEEDBACK_STATE_H   ? "1"
-            : f[i].state == FEEDBACK_STATE_L ? "0"
+            f[i].real_state == FEEDBACK_STATE_H   ? "1"
+            : f[i].real_state == FEEDBACK_STATE_L ? "0"
                                              : "E",
-            f[i].voltage);
+            f[i].voltage,
+            f[i].cur_state == FEEDBACK_STATE_H   ? "1"
+            : f[i].cur_state == FEEDBACK_STATE_L ? "0"
+                                             : "E");
     }
 }
 

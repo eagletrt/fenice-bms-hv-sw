@@ -28,7 +28,6 @@
         FEEDBACK_TSAL_GREEN_FAULT_LATCHED | \
         FEEDBACK_BMS_COCKPIT | \
         FEEDBACK_EXT_LATCHED | \
-        FEEDBACK_TSAL_GREEN | \
         FEEDBACK_TS_OVER_60V_STATUS | \
         FEEDBACK_AIRN_STATUS | \
         FEEDBACK_AIRP_STATUS | \
@@ -57,7 +56,6 @@
         FEEDBACK_TSAL_GREEN_FAULT_LATCHED | \
         FEEDBACK_BMS_COCKPIT | \
         FEEDBACK_EXT_LATCHED | \
-        FEEDBACK_TSAL_GREEN | \
         FEEDBACK_TS_OVER_60V_STATUS | \
         FEEDBACK_AIRN_STATUS | \
         FEEDBACK_AIRP_STATUS | \
@@ -198,7 +196,8 @@ typedef enum {
 
 /** @brief Information about feedbacks */
 typedef struct {
-    FEEDBACK_STATE state;
+    FEEDBACK_STATE real_state;
+    FEEDBACK_STATE cur_state;
     float voltage;
 } feedback_feed_t;
 

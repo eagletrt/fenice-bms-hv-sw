@@ -70,3 +70,14 @@ uint16_t internal_voltage_get_shunt() {
 uint16_t internal_voltage_get_bat() {
     return internal_voltages.bat;
 }
+
+bool internal_voltage_is_precharge_complete() {
+    float tsp = CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltages.tsp);
+    float target;
+    if (is_handcart_connected)
+        target = CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltages.bat) * INTERNAL_VOLTAGE_PRECHARGE_HANDCART_THRESHOLD;
+    else
+        target = CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltages.bat) * INTERNAL_VOLTAGE_PRECHARGE_THRESHOLD;
+    
+    return tsp >= target;
+}
