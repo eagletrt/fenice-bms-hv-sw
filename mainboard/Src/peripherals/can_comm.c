@@ -720,7 +720,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
         }
         else if (rx_header.StdId == BMS_BOARD_STATUS_FRAME_ID) {
             // Reset the watchdog timer
-            // watchdog_reset(rx_header.StdId);
+            watchdog_reset(rx_header.StdId);
             
             uint8_t index = 0;
             bms_board_status_t raw_status;
@@ -850,7 +850,7 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 
         if (rx_header.StdId == PRIMARY_CAR_STATUS_FRAME_ID) {
             // Reset the watchdog timer
-            // watchdog_reset(rx_header.StdId);
+            watchdog_reset(rx_header.StdId);
         }
         else if (rx_header.StdId == PRIMARY_SET_TS_STATUS_DAS_FRAME_ID || rx_header.StdId == PRIMARY_SET_TS_STATUS_HANDCART_FRAME_ID) {
             primary_set_ts_status_das_t ts_status;
@@ -885,7 +885,9 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 
             primary_handcart_status_unpack(&handcart_status, rx_data, PRIMARY_HANDCART_STATUS_BYTE_SIZE);
 
-            // TODO: Set handcart connection to false if disconnected (watchdog?)
+            // Reset watchdog
+            watchdog_reset(PRIMARY_HANDCART_STATUS_FRAME_ID);
+
             is_handcart_connected = handcart_status.connected;
         } else if (rx_header.StdId == PRIMARY_HV_CAN_FORWARD_FRAME_ID) {
             state_t fsm_state = fsm_get_state();

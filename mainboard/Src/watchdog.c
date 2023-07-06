@@ -10,7 +10,7 @@
 #include "bms_fsm.h"
 #include "cli_bms.h"
 
-#define PRIMARY_WATCHDOG_IDS_SIZE 1
+#define PRIMARY_WATCHDOG_IDS_SIZE 2
 #define BMS_WATCHDOG_IDS_SIZE 1
 
 primary_watchdog car_watchdog = { 0 };
@@ -21,7 +21,8 @@ bool cell_watchdog_timed_out = false;
 
 /** @brief Primary IDs monitored by the watchdog */
 const uint16_t watchdog_primary_ids[PRIMARY_WATCHDOG_IDS_SIZE] = {
-    PRIMARY_CAR_STATUS_FRAME_ID
+    PRIMARY_CAR_STATUS_FRAME_ID,
+    PRIMARY_HANDCART_STATUS_FRAME_ID
 };
 /** @brief Bms IDs monitored by the watchdog */
 const uint16_t watchdog_bms_ids[BMS_WATCHDOG_IDS_SIZE] = {
@@ -70,8 +71,8 @@ void watchdog_routine() {
             cli_bms_debug(msg, strlen(msg));
 
             car_watchdog_timed_out = true;
-            // TODO: Change event with request
-            // fsm_trigger_event(bms.fsm, BMS_EV_TS_OFF);
+            set_ts_request.is_new = true;
+            set_ts_request.next_state = STATE_IDLE;
         }
     }
     for (size_t i = 0; i < BMS_WATCHDOG_IDS_SIZE; i++) {
@@ -84,8 +85,8 @@ void watchdog_routine() {
             cli_bms_debug(msg, strlen(msg));
 
             cell_watchdog_timed_out = true;
-            // TODO: Change event with request
-            // fsm_trigger_event(bms.fsm, BMS_EV_TS_OFF);
+            set_ts_request.is_new = true;
+            set_ts_request.next_state = STATE_IDLE;
         }
     }
 }
