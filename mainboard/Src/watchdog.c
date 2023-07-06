@@ -56,11 +56,17 @@ bool is_watchdog_timed_out() {
 
 void watchdog_reset(uint16_t id) {
     if (primary_id_is_message(id)) {
+        // Reset errors
+        // error_reset(ERROR_CAN, 0);
+
         // Reset primary watchdog
         primary_watchdog_reset(&car_watchdog, id, HAL_GetTick());
         car_watchdog_timed_out = false;
     }
     else if (bms_id_is_message(id)) {
+        // Reset errors
+        // error_reset(ERROR_CAN, 1);
+
         // Reset bms watchdog
         bms_watchdog_reset(&cell_watchdog, id, HAL_GetTick());
         cell_watchdog_timed_out = false;
@@ -84,7 +90,7 @@ void watchdog_routine() {
 
 #if !defined(WATCHDOG_IGNORE_PRIMARY) && !defined(WATCHDOG_IGNORE)
             // Set error
-            error_set(ERROR_CAN, 0, HAL_GetTick());
+            // error_set(ERROR_CAN, 0, HAL_GetTick());
 
             // Send TS off request
             set_ts_request.is_new = true;
@@ -104,7 +110,7 @@ void watchdog_routine() {
             cell_watchdog_timed_out = true;
 #if !defined(WATCHDOG_IGNORE_BMS) && !defined(WATCHDOG_IGNORE)
             // Set error
-            error_set(ERROR_CAN, 1, HAL_GetTick());
+            // error_set(ERROR_CAN, 1, HAL_GetTick());
 
             // Send TS off request
             set_ts_request.is_new = true;

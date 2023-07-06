@@ -25,17 +25,9 @@
 
 #include <string.h>
 
-struct {
-    uint16_t cellboard0;
-    uint16_t cellboard1;
-    uint16_t cellboard2;
-    uint16_t cellboard3;
-    uint16_t cellboard4;
-    uint16_t cellboard5;
-} cellboards_msgs;
-
 CAN_TxHeaderTypeDef tx_header;
 
+uint32_t time_since_last_comm[CELLBOARD_COUNT];
 bool can_forward;
 
 bool can_is_forwarding() {
@@ -552,29 +544,8 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
             bms_voltages_unpack(&raw_volts, rx_data, BMS_VOLTAGES_BYTE_SIZE);
 
             bms_voltages_raw_to_conversion_struct(&conv_volts, &raw_volts);
-
-            switch (raw_volts.cellboard_id) {
-                case BMS_VOLTAGES_CELLBOARD_ID_CELLBOARD_0_CHOICE:
-                    ++cellboards_msgs.cellboard0;
-                    break;
-                case BMS_VOLTAGES_CELLBOARD_ID_CELLBOARD_1_CHOICE:
-                    ++cellboards_msgs.cellboard1;
-                    break;
-                case BMS_VOLTAGES_CELLBOARD_ID_CELLBOARD_2_CHOICE:
-                    ++cellboards_msgs.cellboard2;
-                    break;
-                case BMS_VOLTAGES_CELLBOARD_ID_CELLBOARD_3_CHOICE:
-                    ++cellboards_msgs.cellboard3;
-                    break;
-                case BMS_VOLTAGES_CELLBOARD_ID_CELLBOARD_4_CHOICE:
-                    ++cellboards_msgs.cellboard4;
-                    break;
-                case BMS_VOLTAGES_CELLBOARD_ID_CELLBOARD_5_CHOICE:
-                    ++cellboards_msgs.cellboard5;
-                    break;
-                default:
-                    break;
-            }
+            
+            time_since_last_comm[conv_volts.cellboard_id] = HAL_GetTick();
 
             uint8_t buffer[8];
             primary_hv_cells_voltage_t raw_fwd_volts;
@@ -602,28 +573,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
 
             bms_voltages_info_raw_to_conversion_struct(&conv_volts, &raw_volts);
 
-            switch (conv_volts.cellboard_id) {
-                case BMS_VOLTAGES_INFO_CELLBOARD_ID_CELLBOARD_0_CHOICE:
-                    ++cellboards_msgs.cellboard0;
-                    break;
-                case BMS_VOLTAGES_INFO_CELLBOARD_ID_CELLBOARD_1_CHOICE:
-                    ++cellboards_msgs.cellboard1;
-                    break;
-                case BMS_VOLTAGES_INFO_CELLBOARD_ID_CELLBOARD_2_CHOICE:
-                    ++cellboards_msgs.cellboard2;
-                    break;
-                case BMS_VOLTAGES_INFO_CELLBOARD_ID_CELLBOARD_3_CHOICE:
-                    ++cellboards_msgs.cellboard3;
-                    break;
-                case BMS_VOLTAGES_INFO_CELLBOARD_ID_CELLBOARD_4_CHOICE:
-                    ++cellboards_msgs.cellboard4;
-                    break;
-                case BMS_VOLTAGES_INFO_CELLBOARD_ID_CELLBOARD_5_CHOICE:
-                    ++cellboards_msgs.cellboard5;
-                    break;
-                default:
-                    break;
-            }
+            time_since_last_comm[conv_volts.cellboard_id] = HAL_GetTick();
 
             cell_voltage_set_cells(
                 conv_volts.cellboard_id,
@@ -639,28 +589,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
 
             bms_temperatures_raw_to_conversion_struct(&conv_temps, &raw_temps);
 
-            switch (conv_temps.cellboard_id) {
-                case BMS_TEMPERATURES_CELLBOARD_ID_CELLBOARD_0_CHOICE:
-                    ++cellboards_msgs.cellboard0;
-                    break;
-                case BMS_TEMPERATURES_CELLBOARD_ID_CELLBOARD_1_CHOICE:
-                    ++cellboards_msgs.cellboard1;
-                    break;
-                case BMS_TEMPERATURES_CELLBOARD_ID_CELLBOARD_2_CHOICE:
-                    ++cellboards_msgs.cellboard2;
-                    break;
-                case BMS_TEMPERATURES_CELLBOARD_ID_CELLBOARD_3_CHOICE:
-                    ++cellboards_msgs.cellboard3;
-                    break;
-                case BMS_TEMPERATURES_CELLBOARD_ID_CELLBOARD_4_CHOICE:
-                    ++cellboards_msgs.cellboard4;
-                    break;
-                case BMS_TEMPERATURES_CELLBOARD_ID_CELLBOARD_5_CHOICE:
-                    ++cellboards_msgs.cellboard5;
-                    break;
-                default:
-                    break;
-            }
+            time_since_last_comm[conv_temps.cellboard_id] = HAL_GetTick();
 
             uint8_t buffer[8];
             primary_hv_cells_temp_t raw_fwd_temps;
@@ -689,28 +618,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
 
             bms_temperatures_info_raw_to_conversion_struct(&conv_temps, &raw_temps);
 
-            switch (conv_temps.cellboard_id) {
-                case BMS_TEMPERATURES_INFO_CELLBOARD_ID_CELLBOARD_0_CHOICE:
-                    ++cellboards_msgs.cellboard0;
-                    break;
-                case BMS_TEMPERATURES_INFO_CELLBOARD_ID_CELLBOARD_1_CHOICE:
-                    ++cellboards_msgs.cellboard1;
-                    break;
-                case BMS_TEMPERATURES_INFO_CELLBOARD_ID_CELLBOARD_2_CHOICE:
-                    ++cellboards_msgs.cellboard2;
-                    break;
-                case BMS_TEMPERATURES_INFO_CELLBOARD_ID_CELLBOARD_3_CHOICE:
-                    ++cellboards_msgs.cellboard3;
-                    break;
-                case BMS_TEMPERATURES_INFO_CELLBOARD_ID_CELLBOARD_4_CHOICE:
-                    ++cellboards_msgs.cellboard4;
-                    break;
-                case BMS_TEMPERATURES_INFO_CELLBOARD_ID_CELLBOARD_5_CHOICE:
-                    ++cellboards_msgs.cellboard5;
-                    break;
-                default:
-                    break;
-            }
+            time_since_last_comm[conv_temps.cellboard_id] = HAL_GetTick();
 
             temperature_set_cells(
                 conv_temps.cellboard_id,
@@ -729,32 +637,9 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
             bms_board_status_unpack(&raw_status, rx_data, BMS_BOARD_STATUS_BYTE_SIZE);
 
             bms_board_status_raw_to_conversion_struct(&conv_status, &raw_status);
-            switch (rx_header.StdId) {
-                case BMS_TEMPERATURES_CELLBOARD_ID_CELLBOARD_0_CHOICE:
-                    ++cellboards_msgs.cellboard0;
-                    index = 0;
-                    break;
-                case BMS_TEMPERATURES_CELLBOARD_ID_CELLBOARD_1_CHOICE:
-                    ++cellboards_msgs.cellboard1;
-                    index = 1;
-                    break;
-                case BMS_TEMPERATURES_CELLBOARD_ID_CELLBOARD_2_CHOICE:
-                    ++cellboards_msgs.cellboard2;
-                    index = 2;
-                    break;
-                case BMS_TEMPERATURES_CELLBOARD_ID_CELLBOARD_3_CHOICE:
-                    ++cellboards_msgs.cellboard3;
-                    index = 3;
-                    break;
-                case BMS_TEMPERATURES_CELLBOARD_ID_CELLBOARD_4_CHOICE:
-                    ++cellboards_msgs.cellboard4;
-                    index = 4;
-                    break;
-                case BMS_TEMPERATURES_CELLBOARD_ID_CELLBOARD_5_CHOICE:
-                    ++cellboards_msgs.cellboard5;
-                    index = 5;
-                    break;
-            }
+            
+            time_since_last_comm[conv_status.cellboard_id] = HAL_GetTick();
+
             bal_set_is_balancing(conv_status.cellboard_id, conv_status.balancing_status);
 
             // bal.status[index] = status.balancing_status;
@@ -820,8 +705,8 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
 
             can_send(&CAR_CAN, buffer, &tx_header);
         } else {
-            char buffer[50] = {0};
-            sprintf(buffer, "%lx#%lx%lx\r\n", rx_header.StdId, *(uint32_t*)rx_data, *(((uint32_t*)rx_data)+1));
+            // char buffer[50] = {0};
+            // sprintf(buffer, "%lx#%lx%lx\r\n", rx_header.StdId, *(uint32_t*)rx_data, *(((uint32_t*)rx_data)+1));
             // HAL_UART_Transmit(&CLI_UART, (uint8_t*)buffer, strlen(buffer), 100);
         }
     }
@@ -943,12 +828,7 @@ void CAN_change_bitrate(CAN_HandleTypeDef *hcan, CAN_Bitrate bitrate) {
 }
 
 void can_cellboards_check() {
-    error_toggle_check(cellboards_msgs.cellboard0 == 0, ERROR_CELLBOARD_COMM, 0);
-    error_toggle_check(cellboards_msgs.cellboard1 == 0, ERROR_CELLBOARD_COMM, 1);
-    error_toggle_check(cellboards_msgs.cellboard2 == 0, ERROR_CELLBOARD_COMM, 2);
-    error_toggle_check(cellboards_msgs.cellboard3 == 0, ERROR_CELLBOARD_COMM, 3);
-    error_toggle_check(cellboards_msgs.cellboard4 == 0, ERROR_CELLBOARD_COMM, 4);
-    error_toggle_check(cellboards_msgs.cellboard5 == 0, ERROR_CELLBOARD_COMM, 5);
-
-    memset(&cellboards_msgs, 0, sizeof(cellboards_msgs));
+    for (size_t i = 0; i < CELLBOARD_COUNT; i++)
+        error_toggle_check(HAL_GetTick() - time_since_last_comm[i] >= CELLBOARD_COMM_TIMEOUT, ERROR_CELLBOARD_COMM, i);
+    memset(&time_since_last_comm, 0, CELLBOARD_COUNT * sizeof(uint32_t));
 }

@@ -42,7 +42,6 @@ void measures_check_flags() {
     }
     if (flags & _200MS_INTERVAL_FLAG) {
         temperature_check_errors();
-        can_cellboards_check();
         can_car_send(PRIMARY_HV_TEMP_FRAME_ID);
         can_car_send(PRIMARY_HV_FEEDBACKS_STATUS_FRAME_ID);
         flags &= ~_200MS_INTERVAL_FLAG;
@@ -55,6 +54,7 @@ void measures_check_flags() {
         }
         can_car_send(PRIMARY_HV_CAN_FORWARD_FRAME_ID);
         can_car_send(PRIMARY_HV_VERSION_FRAME_ID);
+        can_cellboards_check();
 
         // Check if the fans are connected
         error_toggle_check(HAL_GPIO_ReadPin(FANS_DETECT_GPIO_Port, FANS_DETECT_Pin) == GPIO_PIN_RESET, ERROR_FANS_DISCONNECTED, 0);

@@ -66,12 +66,12 @@ void measurements_oc_handler(TIM_HandleTypeDef *htim) {
                 htim,
                 VOLTS_START_CONVERTION_CHANNEL,
                 cnt + TIM_MS_TO_TICKS(htim, VOLT_MEASURE_INTERVAL - VOLT_MEASURE_TIME));
-            __HAL_TIM_SetCompare(htim, VOLTS_READ_CHANNEL, cnt + TIM_MS_TO_TICKS(htim, VOLT_MEASURE_INTERVAL));
+            __HAL_TIM_SetCompare(htim, VOLTS_READ_CHANNEL, cnt + TIM_MS_TO_TICKS(htim, VOLT_MEASURE_INTERVAL + cellboard_index));
             flags |= MEASUREMENTS_VOLTS_READ_FLAG;
             break;
 
         case TEMPS_READ_ACTIVE_CHANNEL:
-            __HAL_TIM_SetCompare(htim, TEMPS_READ_CHANNEL, cnt + TIM_MS_TO_TICKS(htim, TEMP_MEASURE_INTERVAL));
+            __HAL_TIM_SetCompare(htim, TEMPS_READ_CHANNEL, cnt + TIM_MS_TO_TICKS(htim, TEMP_MEASURE_INTERVAL + cellboard_index));
             flags |= MEASUREMENTS_TEMPS_READ_FLAG;
             break;
 

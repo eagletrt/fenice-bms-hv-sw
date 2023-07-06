@@ -21,7 +21,7 @@
 #include <math.h>
 #include <string.h>
 
-#define RETRANSMISSION_MAX_ATTEMPTS 5
+#define RETRANSMISSION_MAX_ATTEMPTS 1
 uint8_t retransmission_attempts[3] = {0};
 
 HAL_StatusTypeDef CAN_WAIT(CAN_HandleTypeDef *hcan, uint8_t timeout) {
