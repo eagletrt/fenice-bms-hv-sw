@@ -4,6 +4,7 @@
 [submodule "mainboard/lib/micro-libs"]
 	path = mainboard/lib/micro-libs
 	url = git@github.com:eagletrt/micro-libs.git
+    branch = error-utils
 [submodule "cellboard/Core/Lib/micro-libs"]
 	path = cellboard/Core/Lib/micro-libs
 	url = git@github.com:eagletrt/micro-libs

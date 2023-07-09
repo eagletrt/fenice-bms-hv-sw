@@ -74,8 +74,7 @@ void measures_check_flags() {
         // Check errors
         can_cellboards_check();
         // Check if fans are connected
-        // TODO: Crash when printing error to cli
-        // error_toggle_check(HAL_GPIO_ReadPin(FANS_DETECT_GPIO_Port, FANS_DETECT_Pin) == GPIO_PIN_RESET, ERROR_FANS_DISCONNECTED, 0);
+        error_toggle_check(HAL_GPIO_ReadPin(FANS_DETECT_GPIO_Port, FANS_DETECT_Pin) == GPIO_PIN_RESET, ERROR_FANS_DISCONNECTED, 0);
     }
     // 5 s interval
     if (_MEASURE_CHECK_INTERVAL(MEASURE_INTERVAL_5S)) {

@@ -1,5 +1,7 @@
 #include "adc124s021.h"
 
+#include "mainboard_config.h"
+
 #define ADC124S021_VREF                       3.3f
 #define ADC124S021_CONV_VALUE_TO_VOLTAGE_T(x) ((x) * (ADC124S021_VREF / 4095))
 

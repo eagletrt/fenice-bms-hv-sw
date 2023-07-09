@@ -62,7 +62,7 @@ float cell_voltage_get_avg() {
 void cell_voltage_check_errors() {
     voltage_t min = cell_voltage_get_min();
     voltage_t max = cell_voltage_get_max();
-    error_toggle_check(max > CELL_MAX_VOLTAGE, ERROR_CELL_OVER_VOLTAGE, 0);
-    error_toggle_check(min < CELL_MIN_VOLTAGE, ERROR_CELL_UNDER_VOLTAGE, 0);
-    error_toggle_check(min < CELL_WARN_VOLTAGE, ERROR_CELL_LOW_VOLTAGE, 0);
+    ERROR_TOGGLE_CHECK(max > CELL_MAX_VOLTAGE, ERROR_CELL_OVER_VOLTAGE, 0);
+    ERROR_TOGGLE_CHECK(min < CELL_MIN_VOLTAGE, ERROR_CELL_UNDER_VOLTAGE, 0);
+    ERROR_TOGGLE_CHECK(min < CELL_WARN_VOLTAGE, ERROR_CELL_LOW_VOLTAGE, 0);
 }
