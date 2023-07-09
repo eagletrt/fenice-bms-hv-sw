@@ -48,25 +48,11 @@ typedef enum {
     ERROR_COUNT
 } __attribute__((__packed__)) ErrorId;
 
-/** @brief Timeout for each error type */
-const uint32_t error_timeout[ERROR_COUNT] = {
-    [ERROR_CELL_LOW_VOLTAGE]       = ERROR_TIMEOUT_NEVER,
-    [ERROR_CELL_UNDER_VOLTAGE]     = 450,
-    [ERROR_CELL_OVER_VOLTAGE]      = 450,
-    [ERROR_CELL_HIGH_TEMPERATURE]  = ERROR_TIMEOUT_NEVER,
-    [ERROR_CELL_OVER_TEMPERATURE]  = 750,
-    [ERROR_OVER_CURRENT]           = 450,
-    [ERROR_CAN_COMM]               = ERROR_TIMEOUT_NEVER,
-    [ERROR_VOLTAGE_MISMATCH]       = ERROR_TIMEOUT_NEVER,
-    [ERROR_CELLBOARD_COMM]         = 250,
-    [ERROR_CELLBOARD_INTERNAL]     = ERROR_TIMEOUT_NEVER,
-    [ERROR_CONNECTOR_DISCONNECTED] = 250,
-    [ERROR_FANS_DISCONNECTED]      = ERROR_TIMEOUT_NEVER,
-    [ERROR_FEEDBACK]               = ERROR_TIMEOUT_NEVER,
-    [ERROR_FEEDBACK_CIRCUITRY]     = ERROR_TIMEOUT_NEVER,
-    [ERROR_EEPROM_COMM]            = ERROR_TIMEOUT_NEVER,
-    [ERROR_EEPROM_WRITE]           = ERROR_TIMEOUT_NEVER
-};
+/**
+ * @brief Errors timeout
+ * @details Each timeout correspond to its error type (see the ErrorId structure)
+ */
+extern const uint32_t error_timeout[ERROR_COUNT];
 
 /**
  * @brief Initialize the error handler
@@ -93,9 +79,21 @@ HAL_StatusTypeDef error_reset(size_t index, size_t offset);
 /**
  * @brief Get the number of currently running errors
  * 
- * @return size_t The number of errors
+ * @return size_t The number of running errors
  */
-size_t error_count();
+size_t error_running_count();
+/**
+ * @brief Get the number of currently expired errors
+ * 
+ * @return size_t The number of expired errors
+ */
+size_t error_expired_count();
+/**
+ * @brief Reset all currently expired errors
+ * 
+ * @return HAL_StatusTypeDef The result of the operation
+ */
+HAL_StatusTypeDef error_reset_all_expired();
 /**
  * @brief Callback function that should be called when the timer elapses
  * 
