@@ -112,7 +112,7 @@ HAL_StatusTypeDef can_send(CAN_HandleTypeDef *hcan, uint8_t *buffer, CAN_TxHeade
 }
 
 HAL_StatusTypeDef can_car_send(uint16_t id) {
-    uint8_t buffer[CAN_MAX_PAYLOAD_LENGTH];
+    uint8_t buffer[CAN_MAX_PAYLOAD_LENGTH] = { 0 };
 
     if(can_forward && id != PRIMARY_HV_CAN_FORWARD_STATUS_FRAME_ID)
         return HAL_BUSY;
