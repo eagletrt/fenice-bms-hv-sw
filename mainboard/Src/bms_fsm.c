@@ -328,8 +328,8 @@ state_t do_ts_on(state_data_t *data) {
   // cli_bms_debug("[FSM] In state ts_on", 20);
   /* Your Code Here */
   if (error_get_fatal() > 0) {
-    error_t errors[30];
-    error_dump(errors);
+    // error_t errors[30];
+    // error_dump(errors);
     cli_bms_debug("TS on errors", 12);
     next_state = STATE_FATAL_ERROR;
   }
@@ -535,7 +535,7 @@ void fsm_run() {
     bms_blink_led();
 
     // Set or reset connection error
-    error_toggle_check(HAL_GPIO_ReadPin(CONNS_DETECTION_GPIO_Port, CONNS_DETECTION_Pin) == GPIO_PIN_RESET, ERROR_CONNECTOR_DISCONNECTED, 0);
+    ERROR_TOGGLE_CHECK(HAL_GPIO_ReadPin(CONNS_DETECTION_GPIO_Port, CONNS_DETECTION_Pin) == GPIO_PIN_RESET, ERROR_CONNECTOR_DISCONNECTED, 0);
 
     // Run the FSM and updates
     fsm_state = run_state(fsm_state, NULL);

@@ -54,9 +54,9 @@ bool config_read(config_t *config) {
 
             return true;
         }
-    } else {
-        error_set(ERROR_EEPROM_COMM, 0, HAL_GetTick());
     }
+    else
+        error_set(ERROR_EEPROM_COMM, 0);
     return false;
 }
 
@@ -80,12 +80,12 @@ bool config_write(config_t *config) {
                     return true;
                 }
 
-                error_set(ERROR_EEPROM_WRITE, 0, HAL_GetTick());
+                error_set(ERROR_EEPROM_WRITE, 0);
                 return false;
             }
 
         } else {
-            error_set(ERROR_EEPROM_COMM, 0, HAL_GetTick());
+            error_set(ERROR_EEPROM_COMM, 0);
             return false;
         }
     }

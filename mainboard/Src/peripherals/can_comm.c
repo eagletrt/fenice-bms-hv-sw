@@ -100,11 +100,11 @@ HAL_StatusTypeDef can_send(CAN_HandleTypeDef *hcan, uint8_t *buffer, CAN_TxHeade
 
     HAL_StatusTypeDef status = HAL_CAN_AddTxMessage(hcan, header, buffer, NULL);
     if (status != HAL_OK) {
-        error_set(ERROR_CAN, 0, HAL_GetTick());
+        error_set(ERROR_CAN_COMM, 0);
         //cli_bms_debug("CAN: Error sending message", 27);
 
     } else {
-        error_reset(ERROR_CAN, 0);
+        error_reset(ERROR_CAN_COMM, 0);
     }
 
     return status;
@@ -192,6 +192,8 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         primary_hv_errors_t raw_errors = { 0 };
         primary_hv_errors_converted_t conv_errors  = { 0 };
 
+        // TODO: Send errors via CAN
+        /*
         error_t errors[100];
         error_dump(errors);
 
@@ -233,13 +235,13 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
                     else
                         conv_errors.errors_over_current = 1;
                     break;
-                case ERROR_CAN:
+                case ERROR_CAN_COMM:
                     if (errors[i].state == STATE_WARNING)
                         conv_errors.warnings_can = 1;
                     else
                         conv_errors.errors_can = 1;
                     break;
-                case ERROR_INT_VOLTAGE_MISMATCH:
+                case ERROR_VOLTAGE_MISMATCH:
                     if (errors[i].state == STATE_WARNING)
                         conv_errors.warnings_int_voltage_mismatch = 1;
                     else
@@ -297,6 +299,7 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
                     break;
             }
         }
+        */
 
         // Convert errors to raw
         primary_hv_errors_conversion_to_raw_struct(&raw_errors, &conv_errors);
@@ -472,7 +475,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
     CAN_RxHeaderTypeDef rx_header;
 
     if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rx_header, rx_data) != HAL_OK) {
-        error_set(ERROR_CAN, 1, HAL_GetTick());
+        error_set(ERROR_CAN_COMM, 1);
         cli_bms_debug("CAN: Error receiving message", 29);
         return;
     }
@@ -487,7 +490,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
             return;
         }
 
-        error_reset(ERROR_CAN, 1);
+        error_reset(ERROR_CAN_COMM, 1);
 
         if (rx_header.StdId == BMS_VOLTAGES_FRAME_ID) {
             bms_voltages_t raw_volts;
@@ -610,7 +613,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
                 conv_status.errors_temp_comm_4 |
                 conv_status.errors_temp_comm_5;
 
-            error_toggle_check(error_status != 0, ERROR_CELLBOARD_INTERNAL, index);
+            ERROR_TOGGLE_CHECK(error_status != 0, ERROR_CELLBOARD_INTERNAL, index);
 
             tx_header.StdId = PRIMARY_HV_CELL_BALANCING_STATUS_FRAME_ID;
 
@@ -667,7 +670,7 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
     uint8_t rx_data[8] = {'\0'};
     CAN_RxHeaderTypeDef rx_header;
     if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO1, &rx_header, rx_data) != HAL_OK) {
-        error_set(ERROR_CAN, 1, HAL_GetTick());
+        error_set(ERROR_CAN_COMM, 1);
         cli_bms_debug("CAN: Error receiving message", 29);
         return;
     }
@@ -682,7 +685,7 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
             return;
         }
 
-        error_reset(ERROR_CAN, 1);
+        error_reset(ERROR_CAN_COMM, 1);
 
         if (rx_header.StdId == PRIMARY_CAR_STATUS_FRAME_ID) {
             // Reset the watchdog timer
@@ -780,5 +783,5 @@ void CAN_change_bitrate(CAN_HandleTypeDef *hcan, CAN_Bitrate bitrate) {
 
 void can_cellboards_check() {
     for (size_t i = 0; i < CELLBOARD_COUNT; i++)
-        error_toggle_check(HAL_GetTick() - time_since_last_comm[i] >= CELLBOARD_COMM_TIMEOUT, ERROR_CELLBOARD_COMM, i);
+        ERROR_TOGGLE_CHECK(HAL_GetTick() - time_since_last_comm[i] >= CELLBOARD_COMM_TIMEOUT, ERROR_CELLBOARD_COMM, i);
 }
