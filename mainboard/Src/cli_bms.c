@@ -11,56 +11,273 @@
 
 #include "cli_bms.h"
 
-#include "bal.h"
 #include "bms_fsm.h"
-#include "can.h"
-#include "can_comm.h"
-#include "error/error.h"
-#include "fans_buzzer.h"
-#include "feedback.h"
-#include "imd.h"
-#include "mainboard_config.h"
-#include "pack/pack.h"
-#include "pack/temperature.h"
-#include "soc.h"
-#include "usart.h"
-#include "bms/bms_network.h"
-#include "internal_voltage.h"
-#include "cell_voltage.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
-#define CELLBOARD_DISTR_ADDR 0x50
-#define CELLBOARD_DISTR_VER  0x01
+#define CLI_DISTR_CONFIG_ADDRESS 0x50 // Cellboard distribution address in EEPROM
+#define CLI_DISTR_CONFIG_VERSION 0x01 // Cellboard distribution version in EEPROM
 
-// TODO: don't count manually
-#define N_COMMANDS 21
+cli_t cli_bms;
+config_t cellboard_distribution;
+bool is_dmesg_enabled = true;
 
-cli_command_func_t _cli_volts;
-cli_command_func_t _cli_volts_all;
-cli_command_func_t _cli_temps;
-cli_command_func_t _cli_temps_all;
-cli_command_func_t _cli_status;
-cli_command_func_t _cli_balance;
-cli_command_func_t _cli_soc;
-cli_command_func_t _cli_errors;
-cli_command_func_t _cli_ts;
-cli_command_func_t _cli_current;
-cli_command_func_t _cli_dmesg;
-cli_command_func_t _cli_reset;
-cli_command_func_t _cli_imd;
-cli_command_func_t _cli_can_forward;
-cli_command_func_t _cli_feedbacks;
-cli_command_func_t _cli_watch;
-cli_command_func_t _cli_cellboard_distribution;
-cli_command_func_t _cli_fans;
-cli_command_func_t _cli_pack;
-cli_command_func_t _cli_help;
-cli_command_func_t _cli_sigterm;
-cli_command_func_t _cli_taba;
-cli_command_func_t _cli_sborat;
+// CLI functions
+cli_command_func_t * cli_command[CLI_COMMAND_COUNT] = {
+    [CLI_VOLT] = _cli_volt,
+    [CLI_TEMP] = _cli_temp,
+    [CLI_STATUS] = _cli_status,
+    [CLI_BAL] = _cli_bal,
+    [CLI_SOC] = _cli_soc,
+    [CLI_ERROR] = _cli_error,
+    [CLI_TS] = _cli_ts,
+    [CLI_CURRENT] = _cli_current,
+    [CLI_DMESG] = _cli_dmesg,
+    [CLI_RESET] = _cli_reset,
+    [CLI_IMD] = _cli_imd,
+    [CLI_CAN] = _cli_can,
+    [CLI_FEEDBACK] = _cli_feedback,
+    [CLI_WATCH] = _cli_watch,
+    [CLI_DISTR] = _cli_distr,
+    [CLI_FANS] = _cli_fans,
+    [CLI_PACK] = _cli_pack,
+    [CLI_HELP] = _cli_help,
+    [CLI_SIGTERM] = _cli_sigterm,
+    [CLI_TABA] = _cli_taba,
+    [CLI_SBORAT] = _cli_sborat
+};
+char * cli_command_name[CLI_COMMAND_COUNT] = {
+    "volt",
+    "temp",
+    "status",
+    "bal",
+    "soc",
+    "error",
+    "ts",
+    "current",
+    "dmesg",
+    "reset",
+    "imd",
+    "can",
+    "feedback",
+    "watch",
+    "distr",
+    "fans",
+    "pack",
+    "help",
+    "\003",
+    "\ta",
+    "sbor@"
+};
+
+const char * cli_help_format = STYLE("NAME", BOLD) "\r\n"
+    "\t%s\r\n\n"
+    STYLE("SYNOPSIS", BOLD) "\r\n"
+    "\t%s\r\n\n"
+    STYLE("DESCRIPTION", BOLD) "\r\n"
+    "\t%s\r\n\n";
+const char * cli_help_message[CLI_COMMAND_COUNT][CLI_HELP_SECTION_COUNT] = {
+    [CLI_VOLT] = {
+        [CLI_HELP_NAME] = "volt - print voltages information",
+        [CLI_HELP_SYNOPSIS] = "",
+        [CLI_HELP_DESCRIPTION] = "",
+    },
+    [CLI_TEMP] = {
+        [CLI_HELP_NAME] = "",
+        [CLI_HELP_SYNOPSIS] = "",
+        [CLI_HELP_DESCRIPTION] = ""
+    },
+    [CLI_STATUS] = {
+        [CLI_HELP_NAME] = "",
+        [CLI_HELP_SYNOPSIS] = "",
+        [CLI_HELP_DESCRIPTION] = ""
+    },
+    [CLI_BAL] = {
+        [CLI_HELP_NAME] = "",
+        [CLI_HELP_SYNOPSIS] = "",
+        [CLI_HELP_DESCRIPTION] = ""
+    },
+    [CLI_SOC] = {
+        [CLI_HELP_NAME] = "",
+        [CLI_HELP_SYNOPSIS] = "",
+        [CLI_HELP_DESCRIPTION] = ""
+    },
+    [CLI_ERROR] = {
+        [CLI_HELP_NAME] = "",
+        [CLI_HELP_SYNOPSIS] = "",
+        [CLI_HELP_DESCRIPTION] = ""
+    },
+    [CLI_TS] = {
+        [CLI_HELP_NAME] = "",
+        [CLI_HELP_SYNOPSIS] = "",
+        [CLI_HELP_DESCRIPTION] = ""
+    },
+    [CLI_CURRENT] = {
+        [CLI_HELP_NAME] = "",
+        [CLI_HELP_SYNOPSIS] = "",
+        [CLI_HELP_DESCRIPTION] = ""
+    },
+    [CLI_DMESG] = {
+        [CLI_HELP_NAME] = "",
+        [CLI_HELP_SYNOPSIS] = "",
+        [CLI_HELP_DESCRIPTION] = ""
+    },
+    [CLI_RESET] = {
+        [CLI_HELP_NAME] = "",
+        [CLI_HELP_SYNOPSIS] = "",
+        [CLI_HELP_DESCRIPTION] = ""
+    },
+    [CLI_IMD] = {
+        [CLI_HELP_NAME] = "",
+        [CLI_HELP_SYNOPSIS] = "",
+        [CLI_HELP_DESCRIPTION] = ""
+    },
+    [CLI_CAN] = {
+        [CLI_HELP_NAME] = "",
+        [CLI_HELP_SYNOPSIS] = "",
+        [CLI_HELP_DESCRIPTION] = ""
+    },
+    [CLI_FEEDBACK] = {
+        [CLI_HELP_NAME] = "",
+        [CLI_HELP_SYNOPSIS] = "",
+        [CLI_HELP_DESCRIPTION] = ""
+    },
+    [CLI_WATCH] = {
+        [CLI_HELP_NAME] = "",
+        [CLI_HELP_SYNOPSIS] = "",
+        [CLI_HELP_DESCRIPTION] = ""
+    },
+    [CLI_DISTR] = {
+        [CLI_HELP_NAME] = "",
+        [CLI_HELP_SYNOPSIS] = "",
+        [CLI_HELP_DESCRIPTION] = ""
+    },
+    [CLI_FANS] = {
+        [CLI_HELP_NAME] = "",
+        [CLI_HELP_SYNOPSIS] = "",
+        [CLI_HELP_DESCRIPTION] = ""
+    },
+    [CLI_PACK] = {
+        [CLI_HELP_NAME] = "",
+        [CLI_HELP_SYNOPSIS] = "",
+        [CLI_HELP_DESCRIPTION] = ""
+    },
+    [CLI_HELP] = {
+        [CLI_HELP_NAME] = "",
+        [CLI_HELP_SYNOPSIS] = "",
+        [CLI_HELP_DESCRIPTION] = ""
+    },
+    [CLI_SIGTERM] = {
+        [CLI_HELP_NAME] = "",
+        [CLI_HELP_SYNOPSIS] = "",
+        [CLI_HELP_DESCRIPTION] = ""
+    },
+    [CLI_TABA] = {
+        [CLI_HELP_NAME] = "",
+        [CLI_HELP_SYNOPSIS] = "",
+        [CLI_HELP_DESCRIPTION] = ""
+    },
+    [CLI_SBORAT] = {
+        [CLI_HELP_NAME] = "",
+        [CLI_HELP_SYNOPSIS] = "",
+        [CLI_HELP_DESCRIPTION] = ""
+    }
+};
+
+/**
+ * @brief Print info about how to get help for a command
+ * 
+ * @param command The issued command or CLI_COMMAND_COUNT if not existent
+ * @param command_name The actual command typed on the CLI
+ * @param out The string that will be written to the CLI
+ */
+void _cli_print_info(CLI_COMMAND command, char * command_name, char * out) {
+    if (command == CLI_COMMAND_COUNT) {
+        sprintf(out,
+            "Command not found: %s\r\n"
+            "Type 'help' to view all the available commands\r\n\n",
+            command_name);
+    }
+    else {
+        sprintf(out,
+            "%s: invalid command usage\r\n"
+            "Type 'help %s' to view information about the command\r\n\n",
+            command_name,
+            command_name);
+    }
+}
+/**
+ * @brief Print help message of a command
+ * 
+ * @param command The CLI command to print the help message
+ * @param out The help message
+ */
+void _cli_print_help(CLI_COMMAND command, char * out) {
+    sprintf(out,
+        cli_help_format,
+        cli_help_message[command][CLI_HELP_NAME],
+        cli_help_message[command][CLI_HELP_SYNOPSIS],
+        cli_help_message[command][CLI_HELP_DESCRIPTION]);
+}
+/**
+ * @brief Print voltage information
+ * 
+ * @param argc The number of arguments
+ * @param argv The array of arguments
+ * @param out The string that will be printed to the CLI
+ */
+void _cli_volt(uint16_t argc, char ** argv, char * out) {
+    if (argc == 1) {
+        float max = CONVERT_VALUE_TO_VOLTAGE(cell_voltage_get_max());
+        float min = CONVERT_VALUE_TO_VOLTAGE(cell_voltage_get_min());
+        float sum = CONVERT_VALUE_TO_VOLTAGE(cell_voltage_get_sum());
+        float avg = CONVERT_VALUE_TO_VOLTAGE(cell_voltage_get_avg());
+
+        sprintf(
+            out,
+            "vts+........%.2f V\r\n"
+            "vts-........%.2f V\r\n"
+            "vbat........%.2f V\r\n"
+            "vshunt......%.2f V\r\n"
+            "\n"
+            "sum.........%.2f V\r\n"
+            "average.....%.2f V\r\n"
+            "max.........%.3f V\r\n"
+            "min.........%.3f V\r\n"
+            "delta.......%.3f V\r\n"
+            "\n",
+            CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_tsp()),
+            CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_tsn()),
+            CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_bat()),
+            CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_shunt()),
+            sum,
+            avg,
+            max,
+            min,
+            max - min
+        );
+    }
+    else
+        _cli_print_info(CLI_VOLT, argv[0], out);
+
+
+
+    } else if (strcmp(argv[1], "all") == 0) {
+        _cli_volts_all(argc, &argv[1], out);
+    } else {
+        sprintf(
+            out,
+            "Unknown parameter: %s\r\n"
+            "valid parameters:\r\n"
+            "- all: returns voltages for all cells\r\n",
+            argv[1]);
+    }
+}
+
+
+
+
+
+
 
 const char * bms_state_names[NUM_STATES] = {
     [STATE_INIT] = "init",
@@ -121,103 +338,34 @@ char const *const imd_state_names[IMD_STATES_N] = {
     [IMD_DEVICE_ERROR]  = "IMD_DEVICE_ERROR",
     [IMD_EARTH_FAULT]   = "IMD_EARTH_FAULT"};
 
-char *command_names[N_COMMANDS] = {"volt",       "temp",  "status", "errors", "ts",          "bal",       "soc",
-                                   "current",    "dmesg", "reset",  "imd",    "can_forward", "feedbacks", "watch",
-                                   "cell_distr", "fans",  "pack",   "?",      "\003",        "\ta",       "sbor@"};
-
-cli_command_func_t *commands[N_COMMANDS] = {
-    &_cli_volts,   &_cli_temps,       &_cli_status,    &_cli_errors,  &_cli_ts,
-    &_cli_balance, &_cli_soc,         &_cli_current,   &_cli_dmesg,   &_cli_reset,
-    &_cli_imd,     &_cli_can_forward, &_cli_feedbacks, &_cli_watch,   &_cli_cellboard_distribution,
-    &_cli_fans,    &_cli_pack,        &_cli_help,      &_cli_sigterm, &_cli_taba,
-    &_cli_sborat};
-
-cli_t cli_bms;
-bool dmesg_ena = true;
-
-config_t cellboard_distribution;
 
 
-void cli_bms_init() {
-    // Update cellboard distrbution in the EEPROM
-    uint8_t cell_distr_default[CELLBOARD_COUNT] = { 0, 1, 2, 3, 4, 5 };
-    config_init(&cellboard_distribution, CELLBOARD_DISTR_ADDR, CELLBOARD_DISTR_VER, cell_distr_default, 6);
 
-    cli_bms.uart           = &CLI_UART;
-    cli_bms.cmds.functions = commands;
-    cli_bms.cmds.names     = command_names;
-    cli_bms.cmds.count     = N_COMMANDS;
 
-    char init[94];
-    sprintf(
-        init,
-        "\r\n\n********* Fenice BMS *********\r\n"
-        " build: %s @ %s\r\n\n type ? for commands\r\n\n",
-        __DATE__,
-        __TIME__);
 
-    strcat(init, cli_ps);
 
-    cli_init(&cli_bms);
-    cli_print(&cli_bms, init, strlen(init));
+
+void cli_bms_debug(char * text) {
+    if (!dmesg_ena)
+        return;
+
+    size_t length = strlen(text);
+    char out[300] = {'\0'};
+    float tick    = (float)HAL_GetTick() / 1000;
+    // add prefix
+    sprintf(out, "[%.2f] ", tick);
+
+    strcat(out, text);
+    length += strlen(out);
+
+    // add suffix
+    sprintf(out + length, "\r\n> ");
+    length += 4;
+
+    cli_print(&cli_bms, out, length);
 }
 
-void cli_bms_debug(char *text, size_t length) {
-    if (dmesg_ena) {
-        char out[300] = {'\0'};
-        float tick    = (float)HAL_GetTick() / 1000;
-        // add prefix
-        sprintf(out, "[%.2f] ", tick);
 
-        strcat(out, text);
-        length += strlen(out);
-
-        // add suffix
-        sprintf(out + length, "\r\n> ");
-        length += 4;
-
-        cli_print(&cli_bms, out, length);
-    }
-}
-
-void _cli_volts(uint16_t argc, char **argv, char *out) {
-    if (strcmp(argv[1], "") == 0) {
-        float max = CONVERT_VALUE_TO_VOLTAGE(cell_voltage_get_max());
-        float min = CONVERT_VALUE_TO_VOLTAGE(cell_voltage_get_min());
-        float sum = CONVERT_VALUE_TO_VOLTAGE(cell_voltage_get_sum());
-        float avg = CONVERT_VALUE_TO_VOLTAGE(cell_voltage_get_avg());
-        sprintf(
-            out,
-            "vts+........%.2f V\r\n"
-            "vts-........%.2f V\r\n"
-            "vbat........%.2f V\r\n"
-            "vshunt......%.2f V\r\n"
-            "sum.........%.2f V\r\n"
-            "average.....%.2f V\r\n"
-            "max.........%.3f V\r\n"
-            "min.........%.3f V\r\n"
-            "delta.......%.3f V\r\n",
-            CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_tsp()),
-            CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_tsn()),
-            CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_bat()),
-            CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_shunt()),
-            sum,
-            avg,
-            max,
-            min,
-            max - min
-        );
-    } else if (strcmp(argv[1], "all") == 0) {
-        _cli_volts_all(argc, &argv[1], out);
-    } else {
-        sprintf(
-            out,
-            "Unknown parameter: %s\r\n"
-            "valid parameters:\r\n"
-            "- all: returns voltages for all cells\r\n",
-            argv[1]);
-    }
-}
 
 void _cli_volts_all(uint16_t argc, char **argv, char *out) {
     sprintf(out, "     MIN      MAX      AVG\r\n");
@@ -930,4 +1078,28 @@ void _cli_pack(uint16_t argc, char **argv, char *out) {
         sprintf(out, "%s set %s\r\n", argv[1], argv[2]);
     } else if (argc == 2) {
     }
+}
+
+void cli_bms_init() {
+    // Update cellboard distrbution in the EEPROM
+    uint8_t cell_distr_default[CELLBOARD_COUNT] = { 0, 1, 2, 3, 4, 5 };
+    config_init(&cellboard_distribution, CELLBOARD_DISTR_ADDR, CELLBOARD_DISTR_VER, cell_distr_default, 6);
+
+    cli_bms.uart           = &CLI_UART;
+    cli_bms.cmds.functions = commands;
+    cli_bms.cmds.names     = command_names;
+    cli_bms.cmds.count     = N_COMMANDS;
+
+    char init[94];
+    sprintf(
+        init,
+        "\r\n\n********* Fenice BMS *********\r\n"
+        " build: %s @ %s\r\n\n type ? for commands\r\n\n",
+        __DATE__,
+        __TIME__);
+
+    strcat(init, cli_ps);
+
+    cli_init(&cli_bms);
+    cli_print(&cli_bms, init, strlen(init));
 }
