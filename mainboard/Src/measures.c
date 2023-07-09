@@ -9,6 +9,8 @@
 #include "internal_voltage.h"
 #include "cell_voltage.h"
 #include "watchdog.h"
+#include "fans_buzzer.h"
+#include "bal.h"
 
 measures_flags_t flags;
 
@@ -55,6 +57,8 @@ void measures_check_flags() {
         can_car_send(PRIMARY_HV_CAN_FORWARD_FRAME_ID);
         can_car_send(PRIMARY_HV_VERSION_FRAME_ID);
         can_cellboards_check();
+        if (bal_is_balancing())
+            fans_loop();
 
         // Check if the fans are connected
         error_toggle_check(HAL_GPIO_ReadPin(FANS_DETECT_GPIO_Port, FANS_DETECT_Pin) == GPIO_PIN_RESET, ERROR_FANS_DISCONNECTED, 0);

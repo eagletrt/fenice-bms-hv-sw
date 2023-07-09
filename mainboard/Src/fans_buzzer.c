@@ -1,25 +1,43 @@
 #include "fans_buzzer.h"
 
+#include "../../fenice_config.h"
 #include "mainboard_config.h"
 #include "math.h"
 #include "tim.h"
+#include "temperature.h"
 
 #include <string.h>
 
 // TODO: Check fans connection periodically
+
+/**
+ * @brief Function that maps
+ * 
+ * @param temp 
+ */
+float _fans_curve(float temp) {
+    if (temp <= CELL_MIN_TEMPERATURE) return 0.f;
+    if (temp >= CELL_MAX_TEMPERATURE) return 1.f;
+    return MAX(0.f, (temp - 30.f) * (1.f / 30.f)); // Linear
+}
 
 void fans_init() {
     // Enable CH3N (disabled by default)
     TIM_CCxChannelCmd(HTIM_PWM.Instance, TIM_CHANNEL_3, TIM_CCxN_ENABLE);
 
     pwm_set_period(&HTIM_PWM, 1); //PWM_FANS_STANDARD_PERIOD);
-    fans_set_speed(0);
+    fans_set_speed(0.15);
     pwm_start_channel(&HTIM_PWM, PWM_FANS_CHANNEL);
 }
 void fans_set_speed(float power) {
     if (power > 1 || power < 0)
         return;
     pwm_set_duty_cicle(&HTIM_PWM, PWM_FANS_CHANNEL, power);
+}
+
+void fans_loop() {
+    float temp = CONVERT_VALUE_TO_TEMPERATURE(temperature_get_max());
+    fans_set_speed(_fans_curve(temp));
 }
 
 // credits to the master sborato PM Alex

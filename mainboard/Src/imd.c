@@ -28,7 +28,7 @@ uint8_t imd_get_period() {
 }
 
 uint8_t imd_is_fault() {
-    return !feedback_is_ok(FEEDBACK_CHECK_MUX, FEEDBACK_CHECK_MUX);
+    return !feedback_is_ok(FEEDBACK_IMD_FAULT, FEEDBACK_IMD_FAULT);
 }
 
 IMD_STATE imd_get_state() {

@@ -27,6 +27,7 @@ The finite state machine has:
 #include "cli_bms.h"
 #include "blink.h"
 #include "internal_voltage.h"
+#include "bal.h"
 
 #define AIRN_TIMEOUT_CHANNEL TIM_CHANNEL_1
 #define PRECHARGE_TIMEOUT_CHANNEL TIM_CHANNEL_2
@@ -392,6 +393,10 @@ void set_fatal_error(state_data_t *data) {
   // Set fault status
   pack_set_fault(BMS_FAULT_ON_VALUE);
   pack_set_default_off(0);
+
+  // Stop balancing if running
+  if (bal_is_balancing())
+    bal_stop();
 
   // Reset timeouts
   _reset_timeouts();
