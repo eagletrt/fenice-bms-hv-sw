@@ -20,7 +20,7 @@
 #include "cli_bms.h"
 
 // Multiplexer feedback thresholds
-#define FEEDBACK_MUX_ANALOG_THRESHOLD_H 2.2f
+#define FEEDBACK_MUX_ANALOG_THRESHOLD_H 1.9f // 2.2f
 #define FEEDBACK_MUX_ANALOG_THRESHOLD_L 0.7f // TODO: Check AIRN_STATUS and AIRP_STATUS slightly above threshold
 
 // Shutdown feedbacks threshold
@@ -38,7 +38,7 @@
 #define FEEDBACK_IMD_FAULT_HANDCART_THRESHOLD_L 0.7f // V
 #define FEEDBACK_IMD_FAULT_HANDCART_THRESHOLD_H 1.5f // V
 #define FEEDBACK_CHECK_MUX_HANDCART_THRESHOLD_L 1.3f // V
-#define FEEDBACK_CHECK_MUX_HANDCART_THRESHOLD_H 1.7f // V
+#define FEEDBACK_CHECK_MUX_HANDCART_THRESHOLD_H 1.8f // 1.7f // V
 
 #define MUX_INTERVAL_MS 0.1 // ms
 #define DMA_DATA_SIZE 5

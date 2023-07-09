@@ -332,9 +332,8 @@ state_t do_ts_on(state_data_t *data) {
     cli_bms_debug("TS on errors", 12);
     next_state = STATE_FATAL_ERROR;
   }
-  else if (_requested_ts_off() || !feedback_is_ok(FEEDBACK_TS_ON_CHECK_MASK, FEEDBACK_TS_ON_CHECK_HIGH)) {
+  else if (_requested_ts_off() || !feedback_is_ok(FEEDBACK_TS_ON_CHECK_MASK, FEEDBACK_TS_ON_CHECK_HIGH))
     next_state = STATE_IDLE;
-  }
 
   switch (next_state) {
     case NO_CHANGE:
