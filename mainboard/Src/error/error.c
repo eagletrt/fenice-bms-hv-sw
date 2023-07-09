@@ -12,6 +12,26 @@
 #include "../../fenice_config.h"
 #include "mainboard_config.h"
 
+/** @brief Timeout for each error type */
+const uint32_t error_timeout[ERROR_COUNT] = {
+    [ERROR_CELL_LOW_VOLTAGE]       = ERROR_TIMEOUT_NEVER,
+    [ERROR_CELL_UNDER_VOLTAGE]     = 450,
+    [ERROR_CELL_OVER_VOLTAGE]      = 450,
+    [ERROR_CELL_HIGH_TEMPERATURE]  = ERROR_TIMEOUT_NEVER,
+    [ERROR_CELL_OVER_TEMPERATURE]  = 750,
+    [ERROR_OVER_CURRENT]           = 450,
+    [ERROR_CAN_COMM]               = ERROR_TIMEOUT_NEVER,
+    [ERROR_VOLTAGE_MISMATCH]       = ERROR_TIMEOUT_NEVER,
+    [ERROR_CELLBOARD_COMM]         = 250,
+    [ERROR_CELLBOARD_INTERNAL]     = ERROR_TIMEOUT_NEVER,
+    [ERROR_CONNECTOR_DISCONNECTED] = 250,
+    [ERROR_FANS_DISCONNECTED]      = ERROR_TIMEOUT_NEVER,
+    [ERROR_FEEDBACK]               = ERROR_TIMEOUT_NEVER,
+    [ERROR_FEEDBACK_CIRCUITRY]     = ERROR_TIMEOUT_NEVER,
+    [ERROR_EEPROM_COMM]            = ERROR_TIMEOUT_NEVER,
+    [ERROR_EEPROM_WRITE]           = ERROR_TIMEOUT_NEVER
+};
+
 ERROR_UTILS_InstanceTypeDef error_instance_cell_low_voltage[1];
 ERROR_UTILS_InstanceTypeDef error_instance_cell_under_voltage[1];
 ERROR_UTILS_InstanceTypeDef error_instance_cell_over_voltage[1];
@@ -155,8 +175,14 @@ HAL_StatusTypeDef error_set(size_t index, size_t offset) {
 HAL_StatusTypeDef error_reset(size_t index, size_t offset) {
     return error_utils_error_reset(&error_handler, index, offset);
 }
-size_t error_count() {
-    return error_utils_get_count(&error_handler);
+size_t error_running_count() {
+    return error_utils_get_running_count(&error_handler);
+}
+size_t error_expired_count() {
+    return error_utils_get_expired_count(&error_handler);
+}
+HAL_StatusTypeDef error_reset_all_expired() {
+    return error_utils_reset_all_expired(&error_handler);
 }
 HAL_StatusTypeDef error_timer_elapsed_callback(TIM_HandleTypeDef * tim) {
     return ERROR_UTILS_TimerElapsedCallback(&error_handler, tim);

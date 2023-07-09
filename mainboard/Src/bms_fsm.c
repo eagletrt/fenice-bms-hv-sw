@@ -167,7 +167,7 @@ state_t do_idle(state_data_t *data) {
   /* Your Code Here */
 
   // Check for fatal errors
-  if (error_get_fatal() > 0)
+  if (error_expired_count() > 0)
     next_state = STATE_FATAL_ERROR;
   else if (_requested_ts_on() && feedback_is_ok(FEEDBACK_IDLE_MASK, FEEDBACK_IDLE_HIGH))
     next_state = STATE_WAIT_AIRN_CLOSE;
@@ -197,7 +197,7 @@ state_t do_fatal_error(state_data_t *data) {
   /* Your Code Here */
 
   // Check errors and feedbacks
-  if (error_get_fatal() == 0 && feedback_is_ok(FEEDBACK_FATAL_ERROR_MASK, FEEDBACK_FATAL_ERROR_HIGH))
+  if (error_expired_count() == 0 && feedback_is_ok(FEEDBACK_FATAL_ERROR_MASK, FEEDBACK_FATAL_ERROR_HIGH))
     next_state = STATE_IDLE;
   
   switch (next_state) {
@@ -224,7 +224,7 @@ state_t do_wait_airn_close(state_data_t *data) {
   /* Your Code Here */
 
   // Check fatal errors
-  if (error_get_fatal() > 0)
+  if (error_expired_count() > 0)
     next_state = STATE_FATAL_ERROR;
   else if (_requested_ts_off() || airn_timeout)
     next_state = STATE_IDLE;
@@ -257,7 +257,7 @@ state_t do_wait_ts_precharge(state_data_t *data) {
   /* Your Code Here */
 
   // Check fatal errors
-  if (error_get_fatal() > 0)
+  if (error_expired_count() > 0)
     next_state = STATE_FATAL_ERROR;
   else if (_requested_ts_off() || precharge_timeout) {
     if (precharge_timeout)
@@ -293,7 +293,7 @@ state_t do_wait_airp_close(state_data_t *data) {
   
   // cli_bms_debug("[FSM] In state wait_airp_close", 30);
   /* Your Code Here */
-  if (error_get_fatal() > 0)
+  if (error_expired_count() > 0)
     next_state = STATE_FATAL_ERROR;
   else if (_requested_ts_off() || airp_timeout) {
     if (airp_timeout)
@@ -327,7 +327,7 @@ state_t do_ts_on(state_data_t *data) {
   
   // cli_bms_debug("[FSM] In state ts_on", 20);
   /* Your Code Here */
-  if (error_get_fatal() > 0) {
+  if (error_expired_count() > 0) {
     // error_t errors[30];
     // error_dump(errors);
     cli_bms_debug("TS on errors", 12);
