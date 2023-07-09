@@ -49,7 +49,7 @@ HAL_StatusTypeDef _can_send(CAN_HandleTypeDef *hcan, uint8_t *buffer, CAN_TxHead
 
 void can_send(uint16_t topic_id) {
     CAN_TxHeaderTypeDef tx_header;
-    uint8_t buffer[CAN_MAX_PAYLOAD_LENGTH];
+    uint8_t buffer[CAN_MAX_PAYLOAD_LENGTH] = { 0 };
 
     tx_header.ExtId = 0;
     tx_header.IDE   = CAN_ID_STD;
@@ -164,15 +164,12 @@ void can_send(uint16_t topic_id) {
     else if (topic_id == BMS_VOLTAGES_FRAME_ID) {
         tx_header.StdId = BMS_VOLTAGES_FRAME_ID;
 
-        register uint8_t i;
-        for (i = 0; i < CELLBOARD_CELL_COUNT; i += 3) {
+        for (size_t i = 0; i < CELLBOARD_CELL_COUNT; i += 3) {
             bms_voltages_t raw_volts;
             bms_voltages_converted_t conv_volts;
      
             // Add cellboard index in the payload
-            conv_volts.cellboard_id = (cellboard_index == 7)
-                ? bms_voltages_cellboard_id_CELLBOARD_5
-                : cellboard_index;
+            conv_volts.cellboard_id = cellboard_index;
 
             conv_volts.start_index = i;
             conv_volts.voltage0 = CONVERT_VALUE_TO_VOLTAGE(voltages[i]);

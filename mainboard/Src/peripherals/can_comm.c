@@ -547,7 +547,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
             
             time_since_last_comm[conv_volts.cellboard_id] = HAL_GetTick();
 
-            uint8_t buffer[8];
+            uint8_t buffer[CAN_MAX_PAYLOAD_LENGTH] = { 0 };
             primary_hv_cells_voltage_t raw_fwd_volts;
             primary_hv_cells_voltage_converted_t conv_fwd_volts;
 

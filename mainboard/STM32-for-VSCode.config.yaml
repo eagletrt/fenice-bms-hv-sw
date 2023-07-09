@@ -28,6 +28,7 @@ cDefinitions:
   - bms_NETWORK_IMPLEMENTATION
   - primary_WATCHDOG_IMPLEMENTATION 
   - bms_WATCHDOG_IMPLEMENTATION 
+  - WATCHDOG_IGNORE
 
 cxxDefinitions: []
 asDefinitions: []

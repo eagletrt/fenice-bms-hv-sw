@@ -77,6 +77,7 @@ void watchdog_routine() {
     primary_watchdog_timeout(&car_watchdog, HAL_GetTick());
     bms_watchdog_timeout(&cell_watchdog, HAL_GetTick());
 
+#if !defined(WATCHDOG_IGNORE_PRIMARY) && !defined(WATCHDOG_IGNORE)
     for (size_t i = 0; i < PRIMARY_WATCHDOG_IDS_SIZE; i++) {
         // Check if the primary watchdog has timed out
         uint16_t id = watchdog_primary_ids[i];
@@ -88,16 +89,17 @@ void watchdog_routine() {
 
             car_watchdog_timed_out = true;
 
-#if !defined(WATCHDOG_IGNORE_PRIMARY) && !defined(WATCHDOG_IGNORE)
             // Set error
             // error_set(ERROR_CAN, 0, HAL_GetTick());
 
             // Send TS off request
             set_ts_request.is_new = true;
             set_ts_request.next_state = STATE_IDLE;
-#endif // WATCHDOG_IGNORE_PRIMARY && WATCHDOG_IGNORE
         }
     }
+#endif // WATCHDOG_IGNORE_PRIMARY && WATCHDOG_IGNORE
+
+#if !defined(WATCHDOG_IGNORE_BMS) && !defined(WATCHDOG_IGNORE)
     for (size_t i = 0; i < BMS_WATCHDOG_IDS_SIZE; i++) {
         // Check if the bms watchdog has timed out
         uint16_t id = watchdog_bms_ids[i];
@@ -108,14 +110,13 @@ void watchdog_routine() {
             cli_bms_debug(msg, strlen(msg));
 
             cell_watchdog_timed_out = true;
-#if !defined(WATCHDOG_IGNORE_BMS) && !defined(WATCHDOG_IGNORE)
             // Set error
             // error_set(ERROR_CAN, 1, HAL_GetTick());
 
             // Send TS off request
             set_ts_request.is_new = true;
             set_ts_request.next_state = STATE_IDLE;
-#endif // WATCHDOG_IGNORE_BMS && WATCHDOG_IGNORE
         }
     }
+#endif // WATCHDOG_IGNORE_BMS && WATCHDOG_IGNORE
 }
