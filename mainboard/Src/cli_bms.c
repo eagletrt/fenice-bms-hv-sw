@@ -386,23 +386,26 @@ void _cli_temps_all(uint16_t argc, char **argv, char *out) {
 }
 
 void _cli_status(uint16_t argc, char **argv, char *out) {
-#define n_items 5
+#define n_items 6
 
     char thresh[5] = {'\0'};
     itoa((float)bal_get_threshold() / 10, thresh, 10);
 
-    char er_count[3] = {'\0'};
-    itoa(error_count(), er_count, 10);
+    char running_errors[4] = { 0 };
+    char expired_errors[4] = { 0 };
+    itoa(error_running_count(), running_errors, 10);
+    itoa(error_running_count(), expired_errors, 10);
 
     char handcart_connected[13] = { '\0' };
     if (is_handcart_connected)
-        strncpy(handcart_connected, "connected", strlen("connected") + 1);
+        strncpy(handcart_connected, "connected", 10);
     else
-        strncpy(handcart_connected, "disconnected", strlen("disconnected") + 1);
+        strncpy(handcart_connected, "disconnected", 13);
 
     const char *values[n_items][2] = {
         {"BMS state", bms_state_names[fsm_get_state()]},
-        {"Error count", er_count},
+        {"Running errors", running_errors},
+        {"Expired errors", expired_errors},
         {"CAN forwarding", can_is_forwarding() ? "true" : "false"},
         {"Balancing state", bal_state_names[bal_is_balancing()]},
         {"Handcart status", handcart_connected}
