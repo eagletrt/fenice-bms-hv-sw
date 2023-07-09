@@ -75,15 +75,15 @@ const char * bms_state_names[NUM_STATES] = {
 
 const char *bal_state_names[2] = { "off", "discharging" };
 
-const char *error_names[ERROR_NUM_ERRORS] = {
+const char *error_names[ERROR_COUNT] = {
     [ERROR_CELL_LOW_VOLTAGE]       = "low-voltage",
     [ERROR_CELL_UNDER_VOLTAGE]     = "under-voltage",
     [ERROR_CELL_OVER_VOLTAGE]      = "over-voltage",
     [ERROR_CELL_OVER_TEMPERATURE]  = "over-temperature",
     [ERROR_CELL_HIGH_TEMPERATURE]  = "high-temperature",
     [ERROR_OVER_CURRENT]           = "over-current",
-    [ERROR_CAN]                    = "CAN",
-    [ERROR_INT_VOLTAGE_MISMATCH]   = "internal voltage mismatch",
+    [ERROR_CAN_COMM]               = "CAN communication",
+    [ERROR_VOLTAGE_MISMATCH]       = "internal voltage mismatch",
     [ERROR_CELLBOARD_COMM]         = "cellboard communication",
     [ERROR_CELLBOARD_INTERNAL]     = "cellboard internal",
     [ERROR_CONNECTOR_DISCONNECTED] = "connection error",
@@ -512,7 +512,9 @@ void _cli_soc(uint16_t argc, char **argv, char *out) {
     }
 }
 
+// TODO: Print errors to cli
 void _cli_errors(uint16_t argc, char **argv, char *out) {
+    /*
     *out           = 0;
     uint16_t count = error_count();
     error_t errors[500] = { 0 };
@@ -534,6 +536,7 @@ void _cli_errors(uint16_t argc, char **argv, char *out) {
             errors[i].offset,
             errors[i].state == STATE_WARNING ? "warning" : "fatal");
     }
+    */
 }
 
 void _cli_ts(uint16_t argc, char **argv, char *out) {

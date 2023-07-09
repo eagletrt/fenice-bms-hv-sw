@@ -6,7 +6,9 @@
  * @author	Federico Carb0ne [federico.carbone@studenti.unitn.it]
  */
 
-#include "main.h"
+#include <stdbool.h>
+
+#include "stm32f4xx_hal.h"
 #include "../../fenice_config.h"
 
 #define ADC124_BUS_CHANNEL      ADC124S_CH2

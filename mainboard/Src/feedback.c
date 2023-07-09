@@ -16,7 +16,6 @@
 #include "mainboard_config.h"
 #include "bms_fsm.h"
 #include "can_comm.h"
-#include "error_list_ref.h"
 #include "cli_bms.h"
 
 // Multiplexer feedback thresholds
@@ -172,7 +171,7 @@ bool feedback_is_ok(feedback_t mask, feedback_t value) {
             if (state == FEEDBACK_STATE_H)
                 error_reset(ERROR_FEEDBACK, i);
             else {
-                error_set(ERROR_FEEDBACK, i, HAL_GetTick());
+                error_set(ERROR_FEEDBACK, i);
                 return false;
             }
             continue;
@@ -194,7 +193,7 @@ bool feedback_is_ok(feedback_t mask, feedback_t value) {
             if (state == FEEDBACK_STATE_H)
                 error_reset(ERROR_FEEDBACK, i);
             else {
-                error_set(ERROR_FEEDBACK, i, HAL_GetTick());
+                error_set(ERROR_FEEDBACK, i);
                 return false;
             }
             continue;
@@ -220,7 +219,7 @@ bool feedback_is_ok(feedback_t mask, feedback_t value) {
             }
         }
         else {
-            error_set(ERROR_FEEDBACK_CIRCUITRY, i, HAL_GetTick());
+            error_set(ERROR_FEEDBACK_CIRCUITRY, i);
             return false;
         }
 
@@ -228,7 +227,7 @@ bool feedback_is_ok(feedback_t mask, feedback_t value) {
 
         // Check for errors
         if (state == FEEDBACK_STATE_ERROR || (fb_val && state == FEEDBACK_STATE_L) || (!fb_val && state == FEEDBACK_STATE_H)) {
-            error_set(ERROR_FEEDBACK, i, HAL_GetTick());
+            error_set(ERROR_FEEDBACK, i);
             return false;
         }
         else

@@ -74,6 +74,7 @@ includeDirectories:
   - lib/micro-libs/blink/**
   - lib/micro-libs/pwm/**
   - lib/micro-libs/timer-utils/**
+  - lib/micro-libs/error-utils/**
 
 
 # Files that should be included in the compilation.
@@ -93,6 +94,7 @@ sourceFiles:
   - lib/micro-libs/blink/**
   - lib/micro-libs/pwm/**
   - lib/micro-libs/timer-utils/**
+  - lib/micro-libs/error-utils/**
 
 
 # When no makefile is present it will show a warning pop-up.

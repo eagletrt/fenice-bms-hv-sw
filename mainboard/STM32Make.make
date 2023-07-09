@@ -68,7 +68,6 @@ Src/dma.c \
 Src/energy/energy.c \
 Src/energy/soc.c \
 Src/error/error.c \
-Src/error/error_list_ref.c \
 Src/fans_buzzer.c \
 Src/feedback.c \
 Src/gpio.c \
@@ -98,6 +97,7 @@ lib/can/lib/secondary/secondary_network.c \
 lib/can/lib/secondary/secondary_watchdog.c \
 lib/micro-libs/blink/blink.c \
 lib/micro-libs/cli/cli.c \
+lib/micro-libs/error-utils/error_utils.c \
 lib/micro-libs/llist/llist.c \
 lib/micro-libs/m95256/m95256.c \
 lib/micro-libs/priority-queue/priority_queue.c \
@@ -193,6 +193,7 @@ C_INCLUDES =  \
 -Ilib/can/lib/ \
 -Ilib/micro-libs/blink \
 -Ilib/micro-libs/cli \
+-Ilib/micro-libs/error-utils \
 -Ilib/micro-libs/llist \
 -Ilib/micro-libs/m95256 \
 -Ilib/micro-libs/priority-queue \
