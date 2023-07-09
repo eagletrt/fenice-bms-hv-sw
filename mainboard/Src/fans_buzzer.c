@@ -13,7 +13,7 @@ void fans_init() {
     TIM_CCxChannelCmd(HTIM_PWM.Instance, TIM_CHANNEL_3, TIM_CCxN_ENABLE);
 
     pwm_set_period(&HTIM_PWM, 1); //PWM_FANS_STANDARD_PERIOD);
-    fans_set_speed(0.15);
+    fans_set_speed(0);
     pwm_start_channel(&HTIM_PWM, PWM_FANS_CHANNEL);
 }
 void fans_set_speed(float power) {
