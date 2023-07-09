@@ -514,7 +514,7 @@ void _cli_soc(uint16_t argc, char **argv, char *out) {
 void _cli_errors(uint16_t argc, char **argv, char *out) {
     *out           = 0;
     uint16_t count = error_count();
-    error_t errors[100];
+    error_t errors[500] = { 0 };
     error_dump(errors);
 
     volatile uint32_t now = HAL_GetTick();

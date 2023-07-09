@@ -95,7 +95,6 @@ HAL_StatusTypeDef CAN_WAIT(CAN_HandleTypeDef *hcan, uint8_t timeout) {
     }
     return HAL_OK;
 }
-
 HAL_StatusTypeDef can_send(CAN_HandleTypeDef *hcan, uint8_t *buffer, CAN_TxHeaderTypeDef *header) {
     if(CAN_WAIT(hcan, 3) != HAL_OK) return HAL_TIMEOUT;
 
@@ -317,54 +316,6 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
 
         tx_header.DLC = primary_hv_cell_balancing_status_pack(buffer, &raw_bal_status, PRIMARY_HV_CELL_BALANCING_STATUS_BYTE_SIZE);
     }
-    /*
-    else if (id == PRIMARY_HV_CELLS_TEMP_FRAME_ID) {
-        uint8_t status = 0;
-        temperature_t * temps = temperature_get_all();
-
-        primary_hv_cells_temp_t raw_temps;
-        primary_hv_cells_temp_converted_t conv_temps;
-
-        for (uint8_t i = 0; i < PACK_TEMP_COUNT; i += 4) {
-            conv_temps.start_index = i;
-            conv_temps.temp_0 = temps[i];
-            conv_temps.temp_1 = temps[i + 1];
-            conv_temps.temp_2 = temps[i + 2];
-            conv_temps.temp_3 = temps[i + 3];
-
-            // Convert temperatures to raw
-            primary_hv_cells_temp_conversion_to_raw_struct(&raw_temps, &conv_temps);
-
-            tx_header.DLC = primary_hv_cells_temp_pack(buffer, &raw_temps, PRIMARY_HV_CELLS_TEMP_BYTE_SIZE);
-            status |= can_send(&CAR_CAN, buffer, &tx_header);
-            HAL_Delay(1);
-        }
-        
-        return status == 0 ? HAL_OK : HAL_ERROR;
-    } else if (id == PRIMARY_HV_CELLS_VOLTAGE_FRAME_ID) {
-        uint8_t status = 0;
-        voltage_t * volts = cell_voltage_get_cells();
-
-        primary_hv_cells_voltage_t raw_volts;
-        primary_hv_cells_voltage_converted_t conv_volts;
-
-        for (uint8_t i = 0; i < PACK_CELL_COUNT; i += 3) {
-            conv_volts.start_index = i;
-            conv_volts.voltage_0 = volts[i];
-            conv_volts.voltage_1 = volts[i + 1];
-            conv_volts.voltage_2 = volts[i + 2];
-
-            // Convert volatges to raw
-            primary_hv_cells_voltage_conversion_to_raw_struct(&raw_volts, &conv_volts);
-
-            tx_header.DLC = primary_hv_cells_voltage_pack(buffer, &raw_volts, PRIMARY_HV_CELLS_VOLTAGE_BYTE_SIZE);
-            status |= can_send(&CAR_CAN, buffer, &tx_header);
-            HAL_Delay(1);
-        }
-
-        return status == 0 ? HAL_OK : HAL_ERROR;
-    }
-    */ 
     else if (id == PRIMARY_HV_CAN_FORWARD_STATUS_FRAME_ID) {
         primary_hv_can_forward_status_t raw_can_forward;
         primary_hv_can_forward_status_converted_t conv_can_forward;
@@ -830,5 +781,4 @@ void CAN_change_bitrate(CAN_HandleTypeDef *hcan, CAN_Bitrate bitrate) {
 void can_cellboards_check() {
     for (size_t i = 0; i < CELLBOARD_COUNT; i++)
         error_toggle_check(HAL_GetTick() - time_since_last_comm[i] >= CELLBOARD_COMM_TIMEOUT, ERROR_CELLBOARD_COMM, i);
-    memset(&time_since_last_comm, 0, CELLBOARD_COUNT * sizeof(uint32_t));
 }
