@@ -32,7 +32,6 @@ bal_params bal_params_default = { BAL_MAX_VOLTAGE_THRESHOLD };
 config_t config;
 uint8_t is_balancing;
 bool set_balancing;
-bool is_fans_running;
 
 voltage_t bal_get_threshold() {
     return ((bal_params *)config_get(&config))->threshold;
@@ -53,11 +52,6 @@ void bal_set_is_balancing(uint8_t cellboard_id, bool is_bal) {
     // Set the bit of the cellboard who's balancing
     is_balancing &= ~(1 << cellboard_id);
     is_balancing |= (1 << cellboard_id) & is_bal;
-
-    if (!is_balancing && is_fans_running)
-        is_fans_running = false;
-    if (is_fans_running)
-        fans_set_speed(fans_curve(CONVERT_VALUE_TO_TEMPERATURE(temperature_get_max())));
 }
 bool bal_need_balancing() {
     return set_balancing;
@@ -66,20 +60,17 @@ bool bal_need_balancing() {
 void bal_init() {
     is_balancing = false;
     set_balancing = false;
-    is_fans_running = false;
     config_init(&config, CONF_ADDR, CONF_VER, &bal_params_default, sizeof(bal_params));
 }
 
 void bal_start() {
     cli_bms_debug("Starting balancing...", 21);
     set_balancing = true;
-    is_fans_running = true;
     can_bms_send(BMS_SET_BALANCING_STATUS_FRAME_ID);
     set_balancing = false;
 }
 void bal_stop() {
     set_balancing = false;
-    is_fans_running = false;
     can_bms_send(BMS_SET_BALANCING_STATUS_FRAME_ID);
     fans_set_speed(0);
 }

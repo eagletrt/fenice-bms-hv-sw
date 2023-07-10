@@ -74,8 +74,14 @@ void measures_check_flags() {
         // Check errors
         can_cellboards_check();
         // Check if fans are connected
-        // TODO: Crash when printing error to cli
-        // error_toggle_check(HAL_GPIO_ReadPin(FANS_DETECT_GPIO_Port, FANS_DETECT_Pin) == GPIO_PIN_RESET, ERROR_FANS_DISCONNECTED, 0);
+        error_toggle_check(HAL_GPIO_ReadPin(FANS_DETECT_GPIO_Port, FANS_DETECT_Pin) == GPIO_PIN_RESET, ERROR_FANS_DISCONNECTED, 0);
+    }
+    // 1 s interval
+    if (_MEASURE_CHECK_INTERVAL(MEASURE_INTERVAL_1S)) {
+        // Run fans based on temperature
+        float max_temp = CONVERT_VALUE_TO_TEMPERATURE(temperature_get_max());
+        if (max_temp >= FANS_START_TEMP)
+            fans_set_speed(fans_curve(max_temp));
     }
     // 5 s interval
     if (_MEASURE_CHECK_INTERVAL(MEASURE_INTERVAL_5S)) {
