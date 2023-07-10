@@ -256,21 +256,13 @@ void _cli_volt(uint16_t argc, char ** argv, char * out) {
             max - min
         );
     }
+    else if (argc == 1) {
+        if (strcmp(argv[1], "all") == 0) {
+            _cli_volt_all(out);
+        }
+    }
     else
         _cli_print_info(CLI_VOLT, argv[0], out);
-
-
-
-    } else if (strcmp(argv[1], "all") == 0) {
-        _cli_volts_all(argc, &argv[1], out);
-    } else {
-        sprintf(
-            out,
-            "Unknown parameter: %s\r\n"
-            "valid parameters:\r\n"
-            "- all: returns voltages for all cells\r\n",
-            argv[1]);
-    }
 }
 
 
