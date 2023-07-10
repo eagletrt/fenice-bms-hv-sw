@@ -375,6 +375,9 @@ void init_to_idle(state_data_t *data) {
   HAL_GPIO_WritePin(led.port, led.pin, GPIO_PIN_RESET);
   bms_set_led_blinker();
 
+  // Send info via CAN
+  can_car_send(PRIMARY_TS_STATUS_FRAME_ID);
+
   // Set default pack status
   pack_set_default_off(0);
   pack_set_fault(BMS_FAULT_OFF_VALUE);
@@ -389,6 +392,9 @@ void init_to_idle(state_data_t *data) {
 void set_fatal_error(state_data_t *data) {
   cli_bms_debug("[FSM] State transition set_fatal_error", 38);
   /* Your Code Here */
+
+  // Send info via CAN
+  can_car_send(PRIMARY_HV_ERRORS_FRAME_ID);
 
   // Set fault status
   pack_set_fault(BMS_FAULT_ON_VALUE);
@@ -463,7 +469,7 @@ void start_precharge(state_data_t *data) {
 
   // Set blinking led pattern
   bms_set_led_blinker();
-
+  
   // Start precharge
   pack_set_precharge(PRECHARGE_ON_VALUE);
   
@@ -525,8 +531,15 @@ state_t run_state(state_t cur_state, state_data_t *data) {
     set_ts_request.is_new = false;
   if (new_state == NO_CHANGE) new_state = cur_state;
   transition_func_t *transition = transition_table[cur_state][new_state];
-  if (transition)
+  
+  if (transition) {
+    // Send info via CAN
+    can_car_send(PRIMARY_TS_STATUS_FRAME_ID);
+    can_car_send(PRIMARY_HV_FEEDBACKS_STATUS_FRAME_ID);
+
     transition(data);
+  }
+
   return new_state;
 };
 
