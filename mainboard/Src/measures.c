@@ -70,10 +70,6 @@ void measures_check_flags() {
         // Send info via CAN
         can_car_send(PRIMARY_HV_CAN_FORWARD_FRAME_ID);
         can_car_send(PRIMARY_HV_VERSION_FRAME_ID);
-
-        // Set fans speed if balancing
-        if (bal_is_balancing())
-            fans_loop();
         
         // Check errors
         can_cellboards_check();

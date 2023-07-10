@@ -8,6 +8,7 @@
 
 void fans_init();
 void fans_set_speed(float power_percentage);
+float fans_curve(float temp);
 void fans_loop();
 
 void BUZ_sborati(TIM_HandleTypeDef *htim);

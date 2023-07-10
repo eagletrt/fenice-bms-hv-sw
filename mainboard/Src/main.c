@@ -55,6 +55,9 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+
+#define INITIAL_CHECK_DELAY_MS 1000
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -67,6 +70,7 @@
 /* USER CODE BEGIN PV */
 
 bool is_handcart_connected = false;
+uint32_t timestamp;
 
 /* USER CODE END PV */
 
@@ -151,6 +155,7 @@ int main(void)
     feedback_init();
     watchdog_init();
     
+    timestamp = HAL_GetTick();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -161,13 +166,17 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
         fsm_run();
-        
-        measures_check_flags();
-        
         cli_watch_flush_handler();
         // if (HAL_GetTick() > 1500 && !HAL_GPIO_ReadPin(BMS_FAULT_GPIO_Port, BMS_FAULT_Pin))
         //     HAL_GPIO_WritePin(BMS_FAULT_GPIO_Port, BMS_FAULT_Pin, BMS_FAULT_OFF_VALUE);
         cli_loop(&cli_bms);
+
+        
+        // Start measurement checks after an initial delay
+        if (HAL_GetTick() - timestamp >= INITIAL_CHECK_DELAY_MS)
+            measures_check_flags();
+
+        timestamp = HAL_GetTick();
     }
     return 0;
   /* USER CODE END 3 */
