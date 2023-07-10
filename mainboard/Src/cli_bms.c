@@ -12,6 +12,9 @@
 #include "cli_bms.h"
 
 #include "bms_fsm.h"
+#include "../../fenice_config.h"
+#include "cell_voltage.h"
+#include "temperature.h"
 
 
 #define CLI_DISTR_CONFIG_ADDRESS 0x50 // Cellboard distribution address in EEPROM
@@ -219,7 +222,7 @@ void _cli_print_help(CLI_COMMAND command, char * out) {
         cli_help_message[command][CLI_HELP_DESCRIPTION]);
 }
 /**
- * @brief Print voltage information
+ * @brief Print voltage information to the CLI
  * 
  * @param argc The number of arguments
  * @param argv The array of arguments
@@ -263,6 +266,106 @@ void _cli_volt(uint16_t argc, char ** argv, char * out) {
     }
     else
         _cli_print_info(CLI_VOLT, argv[0], out);
+}
+/**
+ * @brief Print minimum, maximum and average cell voltages for each cellboard to the CLI
+ * 
+ * @param out The string that will be printed to the CLI
+ */
+void _cli_volt_all(char * out) {
+    sprintf(out, "%2s%-8sMIN%-8sMAX%-8sAVG\r\n", "", "", "", "");
+    for (size_t i = 0; i < CELLBOARD_COUNT; i++) {
+        sprintf(out + strlen(out), "%2d%-8.2fV%-8.2fV-8%.2fV\r\n",
+            i,
+            CONVERT_VALUE_TO_VOLTAGE(cell_volts.min[i]),
+            CONVERT_VALUE_TO_VOLTAGE(cell_volts.max[i]),
+            CONVERT_VALUE_TO_VOLTAGE(cell_volts.avg[i]));
+    }
+    sprintf(out + strlen(out), "\n");
+}
+/**
+ * @brief Print temperature information to the CLI
+ * 
+ * @param argc The number of arguments
+ * @param argv The array of arguments
+ * @param out The string that will be printed to the CLI
+ */
+void _cli_temp(uint16_t argc, char ** argv, char * out) {
+    if (argc == 1) {
+        float min = CONVERT_VALUE_TO_TEMPERATURE(temperature_get_min());
+        float max = CONVERT_VALUE_TO_TEMPERATURE(temperature_get_max());
+        float sum = CONVERT_VALUE_TO_TEMPERATURE(temperature_get_sum());
+        float avg = CONVERT_VALUE_TO_TEMPERATURE(temperature_get_average());
+        sprintf(
+            out,
+            "sum.........%.2f °C\r\n"
+            "average.....%.2f °C\r\n"
+            "max.........%.2f °C\r\n"
+            "min.........%.2f °C\r\n"
+            "delta.......%.2f °C\r\n",
+            sum,
+            avg,
+            max,
+            min,
+            max - min);
+    }
+    else if (argc == 2) {
+        if (strcmp(argv[1], "all") == 0) {
+            _cli_temp_all(out);
+        }
+    }
+    else
+        _cli_print_info(CLI_TEMP, argv[0], out);
+}
+/**
+ * @brief Print minimum, maximum and average cell temperatures for each cellboard to the CLI
+ * 
+ * @param out The string that will be printed to the CLI
+ */
+void _cli_temp_all(char * out) {
+    sprintf(out, "%2s%-8sMIN%-8sMAX%-8sAVG\r\n", "", "", "", "");
+    for (size_t i = 0; i < CELLBOARD_COUNT; i++) {
+        sprintf(out + strlen(out), "%2d%-8.2f°C%-8.2f°C%-8.2f°C\r\n",
+            i,
+            CONVERT_VALUE_TO_TEMPERATURE(cell_temps.min[i]),
+            CONVERT_VALUE_TO_TEMPERATURE(cell_temps.max[i]),
+            CONVERT_VALUE_TO_TEMPERATURE(cell_temps.avg[i]));
+    }
+    sprintf(out + strlen(out), "\n");
+}
+void _cli_status(uint16_t argc, char ** argv, char * out) {
+    const size_t element_count = 6;
+
+    char thresh[5] = { 0 };
+    itoa((float)bal_get_threshold() / 10.f, thresh, 10);
+
+    char running_errors[4] = { 0 };
+    char expired_errors[4] = { 0 };
+    itoa(error_running_count(), running_errors, 10);
+    itoa(error_running_count(), expired_errors, 10);
+
+    char handcart_connected[13] = { 0 };
+    if (is_handcart_connected)
+        strncpy(handcart_connected, "connected", 10);
+    else
+        strncpy(handcart_connected, "disconnected", 13);
+
+    const char * values[][2] = {
+        { "BMS status", bms_state_names[fsm_get_state()] },
+        { "Balancing status", bal_state_names[bal_is_balancing()] },
+        { "Running errors", running_errors },
+        { "Expired errors", expired_errors },
+        { "CAN forwarding", can_is_forwarding() ? "true" : "false"},
+        { "Handcart status", handcart_connected }
+    };
+
+    for (size_t i = 0; i < element_count; i++) {
+        sprintf(out + strlen(out),
+            "%s%s%s\r\n",
+            values[i][0],
+            "........................" + strlen(values[i][0]),
+            values[i][1]);
+    }
 }
 
 
@@ -359,114 +462,6 @@ void cli_bms_debug(char * text) {
 
 
 
-void _cli_volts_all(uint16_t argc, char **argv, char *out) {
-    sprintf(out, "     MIN      MAX      AVG\r\n");
-    for (size_t i = 0; i < CELLBOARD_COUNT; i++) {
-        sprintf(out + strlen(out), "%d    %.2fV    %.2fV    %.2fV\r\n",
-            i + 1,
-            CONVERT_VALUE_TO_VOLTAGE(cell_volts.min[i]),
-            CONVERT_VALUE_TO_VOLTAGE(cell_volts.max[i]),
-            CONVERT_VALUE_TO_VOLTAGE(cell_volts.avg[i]));
-    }
-    sprintf(out + strlen(out), "\r\n");
-    /*
-    voltage_t * cells = cell_voltage_get_cells();
-
-    voltage_t max = cell_voltage_get_max();
-    voltage_t min = cell_voltage_get_min();
-
-    float cell_v, total_power = 0.0f, segment_sum = 0.0f;
-    for (uint8_t i = 0; i < PACK_CELL_COUNT; i++) {
-        cell_v = (float)cells[i] / 10000;
-        if (i % LTC6813_CELL_COUNT == 0) {
-            if (i != 0) {
-                sprintf(out + strlen(out), "Segment total: %.2fV", segment_sum);
-                segment_sum = 0;
-            }
-            sprintf(out + strlen(out), "\r\n%-3d", i / LTC6813_CELL_COUNT);
-        } else if (i % (LTC6813_CELL_COUNT / 3) == 0 && i > 0) {
-            sprintf(out + strlen(out), "\r\n%-3s", "");
-        }
-        segment_sum += cell_v;
-
-        bool is_cell_selected = (cells[i / CELLBOARD_CELL_COUNT] & (1 << i % CELLBOARD_CELL_COUNT));
-
-        if (!bal_is_balancing()) {
-            if (cells[i] == max)
-                sprintf(out + strlen(out), RED_BG("[%3u %-.3fV]") " ", i, cell_v);
-            else if (cells[i] == min)
-                sprintf(out + strlen(out), CYAN_BG("[%3u %-.3fV]") " ", i, cell_v);
-            else
-                sprintf(out + strlen(out), "[%3u %-.3fV] ", i, cell_v);
-        } else {
-            if (cells[i] == max) {
-                if (is_cell_selected) {
-                    total_power += cell_v * cell_v;
-                    sprintf(
-                        out + strlen(out),
-                        RED_BG_ON_YELLOW_FG("[%3u %-.3fV %.2fW]") " ",
-                        i,
-                        cell_v,
-                        DISCHARGE_DUTY_CYCLE * cell_v * cell_v / DISCHARGE_R);
-                } else
-                    sprintf(out + strlen(out), RED_BG("[%3u %-.3fV 0.00W]") " ", i, cell_v);
-            } else if (is_cell_selected) {
-                total_power += cell_v * cell_v;
-                sprintf(
-                    out + strlen(out),
-                    YELLOW_BG("[%3u %-.3fV %.2fW]") " ",
-                    i,
-                    cell_v,
-                    DISCHARGE_DUTY_CYCLE * cell_v * cell_v / DISCHARGE_R);
-            } else if (cells[i] == min)
-                sprintf(out + strlen(out), CYAN_BG("[%3u %-.3fV 0.00W]") " ", i, cell_v);
-            else
-                sprintf(out + strlen(out), "[%3u %-.3fV 0.00W] ", i, cell_v);
-        }
-    }
-    sprintf(out + strlen(out), "Segment total: %.2fV", segment_sum);
-    total_power /= DISCHARGE_R;
-
-    if (!bal_is_balancing()) {
-        cell_v           = max / 10000;
-        float max_soc    = 0.0862 * cell_v * cell_v * cell_v - 1.4260 * cell_v * cell_v + 6.0088 * cell_v - 6.551;
-        cell_v           = (min + bal_get_threshold() - 10) / 10000;
-        float target_soc = 0.0862 * cell_v * cell_v * cell_v - 1.4260 * cell_v * cell_v + 6.0088 * cell_v - 6.551;
-
-        float ETA = ((target_soc - max_soc) * CELL_CAPACITY * 4) / (max / 10000 / DISCHARGE_R);
-
-        sprintf(out + strlen(out), "\r\nETA: %.1fh\r\n", ETA / DISCHARGE_DUTY_CYCLE);
-        sprintf(out + strlen(out), "Pwr: %3.1fW\r\n", total_power * DISCHARGE_DUTY_CYCLE);
-    } else
-        sprintf(out + strlen(out), "\r\n");
-    */
-}
-
-void _cli_temps(uint16_t argc, char **argv, char *out) {
-    if (strcmp(argv[1], "") == 0) {
-        float min = CONVERT_VALUE_TO_TEMPERATURE(temperature_get_min());
-        float max = CONVERT_VALUE_TO_TEMPERATURE(temperature_get_max());
-        float avg = CONVERT_VALUE_TO_TEMPERATURE(temperature_get_average());
-        sprintf(
-            out,
-            "average.....%.2f °C\r\nmax.........%.2f "
-            "C\r\nmin.........%.2f °C\r\n"
-            "delta.......%.2f °C\r\n",
-            avg,
-            max,
-            min,
-            max - min);
-    } else if (strcmp(argv[1], "all") == 0) {
-        _cli_temps_all(argc, &argv[1], out);
-    } else {
-        sprintf(
-            out,
-            "Unknown parameter: %s\r\n"
-            "valid parameters:\r\n"
-            "- all: returns temperature for all cells\r\n",
-            argv[1]);
-    }
-}
 /*
 void _cli_temps_all(uint16_t argc, char **argv, char *out) {
     out[0]                  = '\0';
@@ -497,71 +492,7 @@ void _cli_temps_all(uint16_t argc, char **argv, char *out) {
     sprintf(out + strlen(out), "\r\n");
 }
 */
-void _cli_temps_all(uint16_t argc, char **argv, char *out) {
-    sprintf(out, "     MIN         MAX         AVG\r\n");
-    for (size_t i = 0; i < CELLBOARD_COUNT; i++) {
-        sprintf(out + strlen(out), "%d   %6.2f°C    %6.2f°C    %6.2f°C\r\n",
-            i,
-            CONVERT_VALUE_TO_TEMPERATURE(cell_temps.min[i]),
-            CONVERT_VALUE_TO_TEMPERATURE(cell_temps.max[i]),
-            CONVERT_VALUE_TO_TEMPERATURE(cell_temps.avg[i]));
-    }
-    sprintf(out + strlen(out), "\r\n");/*
-    out[0]                  = '\0';
-    temperature_t *temp_all = temperature_get_all();
 
-    for (uint8_t i = 0; i < PACK_TEMP_COUNT; i++) {
-
-        if (i % TEMP_SENSOR_COUNT == 0)
-            sprintf(out + strlen(out), "\r\n\r\n%-3d", i / TEMP_SENSOR_COUNT);
-        else if (i % (TEMP_SENSOR_COUNT / 4) == 0 && i > 0)
-            sprintf(out + strlen(out), "\r\n%-3s", "");
-
-        sprintf(out + strlen(out), "[%3u %2u °C] ", i, (uint8_t)(temp_all[i] / 2.55 - 20));
-    }
-
-    sprintf(out + strlen(out), "\r\n");
-    */
-}
-
-void _cli_status(uint16_t argc, char **argv, char *out) {
-#define n_items 6
-
-    char thresh[5] = {'\0'};
-    itoa((float)bal_get_threshold() / 10, thresh, 10);
-
-    char running_errors[4] = { 0 };
-    char expired_errors[4] = { 0 };
-    itoa(error_running_count(), running_errors, 10);
-    itoa(error_running_count(), expired_errors, 10);
-
-    char handcart_connected[13] = { '\0' };
-    if (is_handcart_connected)
-        strncpy(handcart_connected, "connected", 10);
-    else
-        strncpy(handcart_connected, "disconnected", 13);
-
-    const char *values[n_items][2] = {
-        {"BMS state", bms_state_names[fsm_get_state()]},
-        {"Running errors", running_errors},
-        {"Expired errors", expired_errors},
-        {"CAN forwarding", can_is_forwarding() ? "true" : "false"},
-        {"Balancing state", bal_state_names[bal_is_balancing()]},
-        {"Handcart status", handcart_connected}
-    };
-    //{"BMS state", (char *)fsm_bms.state_names[fsm_bms.current_state]}, {"error
-    // count", er_count}, {"balancing", bal}, {"balancing threshold", thresh}};
-
-    out[0] = '\0';
-    for (uint8_t i = 0; i < n_items; i++) {
-        sprintf(
-            out + strlen(out),
-            "%s%s%s\r\n",
-            values[i][0],
-            "........................" + strlen(values[i][0]),
-            values[i][1]);
-    }
-}
 
 // TODO: Balancing actions
 void _cli_balance(uint16_t argc, char **argv, char *out) {
