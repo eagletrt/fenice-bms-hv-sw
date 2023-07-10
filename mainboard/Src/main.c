@@ -70,7 +70,7 @@
 /* USER CODE BEGIN PV */
 
 bool is_handcart_connected = false;
-uint32_t timestamp;
+uint32_t start_time;
 
 /* USER CODE END PV */
 
@@ -155,7 +155,7 @@ int main(void)
     feedback_init();
     watchdog_init();
     
-    timestamp = HAL_GetTick();
+    start_time = HAL_GetTick();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -173,10 +173,8 @@ int main(void)
 
         
         // Start measurement checks after an initial delay
-        if (HAL_GetTick() - timestamp >= INITIAL_CHECK_DELAY_MS)
+        if (HAL_GetTick() - start_time >= INITIAL_CHECK_DELAY_MS)
             measures_check_flags();
-
-        timestamp = HAL_GetTick();
     }
     return 0;
   /* USER CODE END 3 */
