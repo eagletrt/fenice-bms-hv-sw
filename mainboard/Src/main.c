@@ -133,6 +133,8 @@ int main(void)
   MX_TIM4_Init();
   MX_TIM7_Init();
   /* USER CODE BEGIN 2 */
+
+    // TODO: Keep AMS led on for at least 2s?
     
     HAL_GPIO_WritePin(EEPROM_HOLD_GPIO_Port, EEPROM_HOLD_Pin, GPIO_PIN_SET);
     current_start_measure();

@@ -28,6 +28,8 @@ typedef enum {
     MEASURE_INTERVAL_5S    = 5000 / MEASURE_BASE_INTERVAL_MS
 } MEASURE_INTERVAL;
 
+extern bool override_fans_speed;
+
 /** @brief Initialize all measures */
 void measures_init();
 /** @brief Run checks for each measure */

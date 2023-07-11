@@ -18,10 +18,12 @@
 
 uint32_t counter = 0; // Each timer interrupt it increments by 1
 bool flags_checked = false;
+bool override_fans_speed = false;
 
 void measures_init() {
     counter = 0;
     flags_checked = false;
+    override_fans_speed = false;
 
     // Set timer
     __HAL_TIM_SET_COMPARE(&HTIM_MEASURES, TIM_CHANNEL_1, TIM_MS_TO_TICKS(&HTIM_MEASURES, MEASURE_BASE_INTERVAL_MS));
@@ -79,9 +81,11 @@ void measures_check_flags() {
     // 1 s interval
     if (_MEASURE_CHECK_INTERVAL(MEASURE_INTERVAL_1S)) {
         // Run fans based on temperature
+        if (!override_fans_speed) {
         float max_temp = CONVERT_VALUE_TO_TEMPERATURE(temperature_get_max());
         if (max_temp >= FANS_START_TEMP)
             fans_set_speed(fans_curve(max_temp));
+        }
     }
     // 5 s interval
     if (_MEASURE_CHECK_INTERVAL(MEASURE_INTERVAL_5S)) {

@@ -16,6 +16,7 @@
 #include "cli_bms.h"
 #include "fans_buzzer.h"
 #include "temperature.h"
+#include "measures.h"
 
 // TODO: Start and stop balancing per cellboard
 
@@ -64,12 +65,19 @@ void bal_init() {
 }
 
 void bal_start() {
+    // Override fans speed
+    override_fans_speed = true;
+    fans_set_speed(0.4);
+
     cli_bms_debug("Starting balancing...", 21);
     set_balancing = true;
     can_bms_send(BMS_SET_BALANCING_STATUS_FRAME_ID);
     set_balancing = false;
 }
 void bal_stop() {
+    // Set fans speed to auto
+    override_fans_speed = false;
+    
     set_balancing = false;
     can_bms_send(BMS_SET_BALANCING_STATUS_FRAME_ID);
     fans_set_speed(0);

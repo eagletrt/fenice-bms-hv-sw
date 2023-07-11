@@ -50,7 +50,7 @@ void ltc6813_adcv(SPI_HandleTypeDef *spi) {
     uint8_t cmd[4];
     uint16_t cmd_pec;
     cmd[0]  = (uint8_t)0b00000011;
-    cmd[1]  = (uint8_t)0b01110000;
+    cmd[1]  = (uint8_t)0b01100000;
     cmd_pec = ltc6813_pec15(2, cmd);
     cmd[2]  = (uint8_t)(cmd_pec >> 8);
     cmd[3]  = (uint8_t)(cmd_pec);
@@ -80,7 +80,7 @@ void ltc6813_adow(SPI_HandleTypeDef *spi, LTC6813_ADOW_PUP pup) {
     uint8_t cmd[4];
     uint16_t cmd_pec;
     cmd[0]  = (uint8_t)0b00000011;
-    cmd[1]  = (uint8_t)0b00111000 | pup;
+    cmd[1]  = (uint8_t)0b00101000 | pup;
     cmd_pec = ltc6813_pec15(2, cmd);
     cmd[2]  = (uint8_t)(cmd_pec >> 8);
     cmd[3]  = (uint8_t)(cmd_pec);
