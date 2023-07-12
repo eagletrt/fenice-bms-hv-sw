@@ -28,7 +28,6 @@ typedef enum {
     MEASURE_INTERVAL_5S    = 5000 / MEASURE_BASE_INTERVAL_MS
 } MEASURE_INTERVAL;
 
-extern bool override_fans_speed;
 
 /** @brief Initialize all measures */
 void measures_init();
@@ -37,8 +36,8 @@ void measures_check_flags();
 /**
  * @brief Timer callback function
  * 
- * @param htim The timer
+ * @param htim The timer that starts the measurement
  */
-void _measures_handle_tim_oc_irq(TIM_HandleTypeDef *htim);
+void _measures_handle_tim_oc_irq(TIM_HandleTypeDef * htim);
 
 #endif // MEASURE_H

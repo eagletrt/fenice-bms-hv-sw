@@ -1,3 +1,11 @@
+/**
+ * @file fans_buzzer.c
+ * @brief Functions to handle fans and buzzer
+ * 
+ * @date Jul 12, 2023
+ * 
+ * @author Antonio Gelain [antonio.gelain@studenti.unitn.it]
+ */
 #include "fans_buzzer.h"
 
 #include "../../fenice_config.h"
@@ -5,12 +13,15 @@
 #include "math.h"
 #include "tim.h"
 #include "temperature.h"
+#include "bal.h"
 
 #include <string.h>
 
-// TODO: Check fans connection periodically
+bool override_fans_speed = false;
 
 void fans_init() {
+    override_fans_speed = false;
+
     // Enable CH3N (disabled by default)
     TIM_CCxChannelCmd(HTIM_PWM.Instance, TIM_CHANNEL_3, TIM_CCxN_ENABLE);
 
@@ -18,15 +29,21 @@ void fans_init() {
     fans_set_speed(0);
     pwm_start_channel(&HTIM_PWM, PWM_FANS_CHANNEL);
 }
+void fans_toggle_override() {
+    override_fans_speed = !override_fans_speed;
+}
+bool fans_is_overrided() {
+    return override_fans_speed;
+}
 void fans_set_speed(float power) {
-    if (power > 1 || power < 0)
+    if (power > 1.f || power < 0.f)
         return;
     pwm_set_duty_cicle(&HTIM_PWM, PWM_FANS_CHANNEL, power);
 }
 float fans_curve(float temp) {
     if (temp <= CELL_MIN_TEMPERATURE) return 0.f;
     if (temp >= CELL_MAX_TEMPERATURE) return 1.f;
-    return MAX(0.f, (temp - 30.f) * (1.f / 30.f)); // Linear
+    return MAX(0.f, (temp - 30.f) * (1.f / 30.f));
 }
 
 

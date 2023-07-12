@@ -862,17 +862,20 @@ void _cli_cellboard_distribution(uint16_t argc, char **argv, char *out) {
 void _cli_fans(uint16_t argc, char **argv, char *out) {
     if (argc == 2) {
         if (strcmp(argv[1], "auto") == 0) {
-            override_fans_speed = false;
+            if (fans_is_overrided())
+                fans_toggle_override();
             sprintf(out, "Fans speed set to auto\r\n");
         }
         else if (strcmp(argv[1], "off") == 0) {
-            override_fans_speed = true;
+            if (!fans_is_overrided())
+                fans_toggle_override();
             fans_set_speed(0);
             sprintf(out, "Fans turned off\r\n");
         } else {
             uint8_t perc = atoi(argv[1]);
             if (perc <= 100) {
-                override_fans_speed = true;
+                if (!fans_is_overrided())
+                    fans_toggle_override();
                 fans_set_speed(perc / 100.0);
                 sprintf(out, "Fans speed set to %d\r\n", perc);
             } else {

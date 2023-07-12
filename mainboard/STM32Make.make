@@ -226,7 +226,7 @@ CXXFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 # LDFLAGS
 #######################################
 # link script
-LDSCRIPT = STM32F446RETx_FLASH.ld
+LDSCRIPT = STM32F446RETx_FLASH_shifted.ld
 
 # libraries
 LIBS = -lc -lm -lnosys 

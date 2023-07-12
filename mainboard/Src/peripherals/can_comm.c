@@ -22,6 +22,7 @@
 #include "temperature.h"
 #include "feedback.h"
 #include "watchdog.h"
+#include "fans_buzzer.h"
 
 #include <string.h>
 
@@ -110,6 +111,7 @@ HAL_StatusTypeDef can_send(CAN_HandleTypeDef *hcan, uint8_t *buffer, CAN_TxHeade
     return status;
 }
 
+// TODO: Send fans override status
 HAL_StatusTypeDef can_car_send(uint16_t id) {
     uint8_t buffer[CAN_MAX_PAYLOAD_LENGTH] = { 0 };
 
@@ -302,19 +304,6 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         primary_hv_errors_conversion_to_raw_struct(&raw_errors, &conv_errors);
 
         tx_header.DLC = primary_hv_errors_pack(buffer, &raw_errors, PRIMARY_HV_ERRORS_BYTE_SIZE);
-    } else if (id == PRIMARY_HV_CELL_BALANCING_STATUS_FRAME_ID) {
-        primary_hv_cell_balancing_status_t raw_bal_status;
-        primary_hv_cell_balancing_status_converted_t conv_bal_status;
-
-        if (bal_is_balancing())
-            conv_bal_status.balancing_status = PRIMARY_HV_CELL_BALANCING_STATUS_BALANCING_STATUS_OFF_CHOICE;
-        else
-            conv_bal_status.balancing_status = PRIMARY_HV_CELL_BALANCING_STATUS_BALANCING_STATUS_ON_CHOICE;
-
-        // Convert bal status to raw
-        primary_hv_cell_balancing_status_conversion_to_raw_struct(&raw_bal_status, &conv_bal_status);
-
-        tx_header.DLC = primary_hv_cell_balancing_status_pack(buffer, &raw_bal_status, PRIMARY_HV_CELL_BALANCING_STATUS_BYTE_SIZE);
     }
     else if (id == PRIMARY_HV_CAN_FORWARD_STATUS_FRAME_ID) {
         primary_hv_can_forward_status_t raw_can_forward;
@@ -415,7 +404,8 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         primary_hv_feedbacks_status_conversion_to_raw_struct(&raw_status, &conv_status);
 
         tx_header.DLC = primary_hv_feedbacks_status_pack(buffer, &raw_status, PRIMARY_HV_FEEDBACKS_STATUS_BYTE_SIZE);
-    } else
+    }
+    else
         return HAL_ERROR;
 
     return can_send(&CAR_CAN, buffer, &tx_header);
@@ -745,6 +735,19 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
                     can_forward = 1;
                     break;
             }
+        }
+        else if (rx_header.StdId == PRIMARY_HV_FANS_OVERRIDE_FRAME_ID) {
+            primary_hv_fans_override_t raw_fans;
+            primary_hv_fans_override_converted_t conv_fans;
+
+            primary_hv_fans_override_unpack(&raw_fans, rx_data, PRIMARY_HV_FANS_OVERRIDE_BYTE_SIZE);
+
+            primary_hv_fans_override_raw_to_conversion_struct(&conv_fans, &raw_fans);
+
+            // Set fans speed override and speed
+            if (fans_is_overrided() != conv_fans.fans_override)
+                fans_toggle_override();
+            fans_set_speed(conv_fans.fans_speed);
         }
         else {
             state_t state = fsm_get_state();

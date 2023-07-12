@@ -48,6 +48,9 @@ HAL_StatusTypeDef _can_send(CAN_HandleTypeDef *hcan, uint8_t *buffer, CAN_TxHead
 }
 
 void can_send(uint16_t topic_id) {
+    if (HAL_GetTick() < 10000)
+        return;
+
     CAN_TxHeaderTypeDef tx_header;
     uint8_t buffer[CAN_MAX_PAYLOAD_LENGTH] = { 0 };
 
