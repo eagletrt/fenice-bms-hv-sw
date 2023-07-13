@@ -1,83 +1,65 @@
 /**
- * @file    temperature.c
- * @brief   Functions to manage all cell temperatures
+ * @file temperature.c
+ * @brief Functions to manage all cell temperatures
  *
- * @date    Apr 11, 2019
- * @author  Matteo Bonora [matteo.bonora@studenti.unitn.it]
- * @author  Federico Carbone [federico.carbone@studenti.unitn.it]
+ * @date Apr 11, 2019
+ * @author Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @author Federico Carbone [federico.carbone@studenti.unitn.it]
+ * @author Antonio Gelain [antonio.gelain@studenti.unitn.it]
  */
 
 #include "pack/temperature.h"
 
 #include "bms_fsm.h"
 #include "error/error.h"
-#include "main.h"
 #include "mainboard_config.h"
 
 #include <inttypes.h>
 #include <math.h>
 #include <string.h>
 
-temperature_t temperatures[PACK_TEMP_COUNT];
+cell_temperature cell_temps;
 
 void temperature_init() {
-    memset(temperatures, 0, sizeof(temperatures));
+    memset(cell_temps.min, CONVERT_TEMPERATURE_TO_VALUE(CELL_MAX_TEMPERATURE), CELLBOARD_COUNT * sizeof(temperature_t));
+    memset(cell_temps.max, 0, CELLBOARD_COUNT * sizeof(temperature_t));
+    memset(cell_temps.avg, 0, CELLBOARD_COUNT * sizeof(float));
 }
-
 void temperature_check_errors() {
-    for (size_t i = 0; i < PACK_TEMP_COUNT; i++) {
-        error_toggle_check(temperatures[i]/2.56 - 20 > CELL_MAX_TEMPERATURE - 10, ERROR_CELL_HIGH_TEMPERATURE, i);
-        error_toggle_check(temperatures[i]/2.56 - 20 > CELL_MAX_TEMPERATURE, ERROR_CELL_OVER_TEMPERATURE, i);
-    }
-}
-
-temperature_t *temperature_get_all() {
-    return temperatures;
+    float max_temp = CONVERT_VALUE_TO_TEMPERATURE(temperature_get_max());
+    error_toggle_check(max_temp > CELL_MAX_TEMPERATURE - 10, ERROR_CELL_HIGH_TEMPERATURE, 0);
+    error_toggle_check(max_temp > CELL_MAX_TEMPERATURE, ERROR_CELL_OVER_TEMPERATURE, 0);
 }
 temperature_t temperature_get_max() {
-    temperature_t max_temp = 0;
-    for (size_t i = 0; i < PACK_TEMP_COUNT; i++) {
-        max_temp = MAX(max_temp, (float)(temperatures[i]));
-    }
-    return max_temp;
+    temperature_t max = 0;
+    for (size_t i = 0; i < CELLBOARD_COUNT; i++)
+        max = MAX(max, cell_temps.max[i]);
+    return max;
 }
-
 temperature_t temperature_get_min() {
-    temperature_t min_temp = 0;
-    for (size_t i = 0; i < PACK_TEMP_COUNT; i++) {
-        min_temp = MIN(min_temp, temperatures[i]);
-    }
-    return min_temp;
+    temperature_t min = CONVERT_TEMPERATURE_TO_VALUE(CELL_MAX_TEMPERATURE);
+    for (size_t i = 0; i < CELLBOARD_COUNT; i++)
+        min = MIN(min, cell_temps.min[i]);
+    return min;
+}
+float temperature_get_sum() {
+    return temperature_get_average() * PACK_TEMP_COUNT;
+}
+float temperature_get_average() {
+    float avg = 0;
+    for (size_t i = 0; i < CELLBOARD_COUNT; i++)
+        avg += cell_temps.avg[i];
+    return avg / CELLBOARD_COUNT;
 }
 
-temperature_t temperature_get_average() {
-    float average = 0;
-    for (size_t i = 0; i < PACK_TEMP_COUNT; i++) {
-        if(temperatures[i] == 0) continue;
-        average += temperatures[i];
-    }
-    return (temperature_t)roundf(average / PACK_TEMP_COUNT);
-}
+HAL_StatusTypeDef temperature_set_cells(size_t cellboard_id,
+    temperature_t min,
+    temperature_t max,
+    float avg) {
 
-void temperature_set_cells(
-    uint8_t index,
-    temperature_t t1,
-    temperature_t t2,
-    temperature_t t3,
-    temperature_t t4,
-    temperature_t t5,
-    temperature_t t6) {
-    temperatures[index]     = t1;
-    temperatures[index + 1] = t2;
-    temperatures[index + 2] = t3;
-    temperatures[index + 3] = t4;
-    temperatures[index + 4] = t5;
-    temperatures[index + 5] = t6;
-}
+    cell_temps.min[cellboard_id] = min;
+    cell_temps.max[cellboard_id] = max;
+    cell_temps.avg[cellboard_id] = avg;
 
-uint8_t temperature_get_cellboard_offset(uint8_t cellboard_index) {
-    uint8_t index = 0;
-    while (bms_get_cellboard_distribution()[index] != cellboard_index)
-        ++index;
-    return index * TEMP_SENSOR_COUNT;
+    return HAL_OK;
 }

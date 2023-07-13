@@ -1,8 +1,7 @@
 #include "imd.h"
 
-#include "feedback.h"
-
 #include <math.h>
+#include "feedback.h"
 
 uint32_t periodTicks = 0, dutyCycleTicks = 0;
 uint32_t icValRising = 0, icValFalling = 0;
@@ -29,7 +28,7 @@ uint8_t imd_get_period() {
 }
 
 uint8_t imd_is_fault() {
-    return feedback_check(FEEDBACK_IMD_FAULT, FEEDBACK_IMD_FAULT) == 0;
+    return !feedback_is_ok(FEEDBACK_IMD_FAULT, FEEDBACK_IMD_FAULT);
 }
 
 IMD_STATE imd_get_state() {

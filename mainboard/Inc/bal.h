@@ -1,72 +1,58 @@
 /**
- * @file		bal.h
+ * @file		bal_fsm.h
  * @brief		This file contains the balancing functions
  *
- * @date		Oct 28, 2019
+ * @date		May 09, 2021
  *
  * @author		Matteo Bonora [matteo.bonora@studenti.unitn.it]
- * @author		Simone Ruffini [simone.ruffini@studenti.unitn.it]
  */
 
-#ifndef BAL_H
-#define BAL_H
-
-#include "../lib/can/lib/bms/c/network.h"
-#include "mainboard_config.h"
-#include "pack/voltage.h"
+#ifndef BAL_FSM_H
+#define BAL_FSM_H
 
 #include <inttypes.h>
 #include <stdbool.h>
 
-#define BAL_NULL_INDEX UINT8_MAX
+#include "../../fenice_config.h"
 
 /**
- * @brief   Wrapper function around bal_compute_imbalance and bal_exclude_neighbors
+ * @brief Get balancing threshold voltage value
  * 
- * @param	volts		Array of cell voltages
- * @param	volts_count Size of `volts`
- * @param	threshold	Balancing tolerance (voltage + threshold)
- * @param	indexes		Output array of indexes to be balanced
- * @param	cells		array of cell's indexes that need to be discharged
- * @param	cells_count Size of `cells`
- * 
- * @returns amount of cells to be discharged
+ * @return voltage_t The threshold voltage
  */
-uint16_t bal_get_cells_to_discharge(
-    voltage_t volts[],
-    uint16_t volts_count,
-    voltage_t threshold,
-    bms_BalancingCells cells[],
-    uint16_t cells_count,
-    voltage_t target);
-
+voltage_t bal_get_threshold();
 /**
- * @brief	Computes the cells with voltage exceeding the given threshold + lowest cell voltage
+ * @brief Set balancing threshold voltage value
  * 
- * @param	volts		Array of cell voltages
- * @param	count		Size of `volts`
- * @param	threshold	Balancing tolerance (voltage + threshold)
- * @param	indexes		Output array of indexes to be balanced
- * @param	cells		array of cell's indexes that need to be discharged
- * 
- * @returns amount of cells to be discharged
+ * @param thresh The new threshold voltage to set
  */
-uint16_t bal_compute_imbalance(voltage_t volts[], uint16_t count, voltage_t threshold, uint16_t cells[]);
-uint16_t bal_compute_imbalance_with_target(
-    voltage_t volts[],
-    uint16_t count,
-    voltage_t threshold,
-    uint16_t cells[],
-    voltage_t target);
-
+void bal_set_threshold(uint16_t thresh);
 /**
- * @brief	Exclude adjacent cells to work around an hardware limitation on Fenice
+ * @brief Check if the cellboards are balancing or not
  * 
- * @param	indexes		output array of cell's indexes that need to be discharged
- * @param	count		amount of voltages
- * @param	cells		output array of cell's indexes that need to be discharged
- * 
- * @returns	amount of cells to be discharged
+ * @return true If any cellboards is balancing
+ * @return false If no cellboards are balancing
  */
-uint16_t bal_exclude_neighbors(uint16_t indexes[], uint16_t count, bms_BalancingCells cells[]);
+bool bal_is_balancing();
+/**
+ * @brief Set if the cellboards are balancing or not
+ * 
+ * @param is_bal True if any cellboard is balancing false
+ */
+void bal_set_is_balancing(uint8_t cellboard_id, bool is_bal);
+/**
+ * @brief Workaround for can_bms_send
+ * 
+ * @return true during bal_start
+ * @return false otherwise
+ */
+bool bal_need_balancing();
+
+/** @brief Initialize balancing */
+void bal_init();
+/** @brief Start balancing */
+void bal_start();
+/** @brief Stop balancing */
+void bal_stop();
+
 #endif

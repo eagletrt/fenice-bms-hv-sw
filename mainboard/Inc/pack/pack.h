@@ -6,7 +6,8 @@
  * @author  Matteo Bonora [matteo.bonora@studenti.unitn.it]
  */
 
-#pragma once
+#ifndef PACK_H
+#define PACK_H
 
 #include "error/error.h"
 #include "main.h"
@@ -28,9 +29,60 @@
 #define BMS_FAULT_OFF_VALUE GPIO_PIN_SET
 #define BMS_FAULT_ON_VALUE  GPIO_PIN_RESET
 
-void pack_set_ts_on(uint8_t value);
-void pack_set_airn_off(uint8_t value);
-void pack_set_airp_off(uint8_t value);
-void pack_set_precharge(uint8_t value);
-void pack_set_fault(uint8_t value);
-void pack_set_default_off();
+/**
+ * @brief Get the AIR- status
+ * 
+ * @return GPIO_PinState The AIR- status
+ */
+GPIO_PinState pack_get_airn_off();
+/**
+ * @brief Set the AIR- status
+ * 
+ * @param value The value to set the AIR- status to
+ */
+void pack_set_airn_off(GPIO_PinState value);
+/**
+ * @brief Get the AIR+ statue
+ * 
+ * @return GPIO_PinState The AIR+ status
+ */
+GPIO_PinState pack_get_airp_off();
+/**
+ * @brief Set the AIR+ status
+ * 
+ * @param value The value to set the AIR+ status to
+ */
+void pack_set_airp_off(GPIO_PinState value);
+/**
+ * @brief Get the precharge status
+ * 
+ * @return GPIO_PinState The precharge status
+ */
+GPIO_PinState pack_get_precharge();
+/**
+ * @brief Set the precharge status
+ * 
+ * @param value The value to set the precharge status to
+ */
+void pack_set_precharge(GPIO_PinState value);
+/**
+ * @brief Get the fault status
+ * 
+ * @return GPIO_PinState The fault status
+ */
+GPIO_PinState pack_get_fault();
+/**
+ * @brief Set the fault status
+ * 
+ * @param value The value to set the fault status to
+ */
+void pack_set_fault(GPIO_PinState value);
+
+/**
+ * @brief Set the pack to the default off state
+ * 
+ * @param prech_delay The delay to wait to set the precharge off
+ */
+void pack_set_default_off(uint16_t prech_delay);
+
+#endif // PACK_H

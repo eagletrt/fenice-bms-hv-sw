@@ -6,12 +6,18 @@
  * @author		Matteo Bonora [matteo.bonora@studenti.unitn.it]
  */
 
-#ifndef _CAN_COMMS_
+#ifndef CAN_COMMS_H
+#define CAN_COMMS_H
 
-#include "../Lib/can/lib/bms/c/ids.h"
-#include "../Lib/can/lib/bms/c/network.h"
+#include <inttypes.h>
 
-void can_send(uint16_t id);
+/** @brief Init CAN with filters and masks */
 void can_init_with_filter();
+/**
+ * @brief Send data with the specified ID to the mainboard via CAN
+ * 
+ * @param id The ID of the CAN message
+ */
+void can_send(uint16_t id);
 
-#endif
+#endif  // CAN_COMMS_H

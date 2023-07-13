@@ -1,42 +1,51 @@
+/**
+ * @file fans_buzzer.c
+ * @brief Functions to handle fans and buzzer
+ * 
+ * @date Jul 12, 2023
+ * 
+ * @author Antonio Gelain [antonio.gelain@studenti.unitn.it]
+ */
 #include "fans_buzzer.h"
 
+#include "../../fenice_config.h"
 #include "mainboard_config.h"
 #include "math.h"
-#include "temperature.h"
 #include "tim.h"
+#include "temperature.h"
+#include "bal.h"
 
 #include <string.h>
 
-uint8_t fans_override     = 0;
-float fans_speed          = 0;
-float fans_override_value = 0;
+bool override_fans_speed = false;
 
 void fans_init() {
-    pwm_set_period(&HTIM_PWM, PWM_FANS_STANDARD_PERIOD);
-    fans_set_speed(0.15);
+    override_fans_speed = false;
+
+    // Enable CH3N (disabled by default)
+    TIM_CCxChannelCmd(HTIM_PWM.Instance, TIM_CHANNEL_3, TIM_CCxN_ENABLE);
+
+    pwm_set_period(&HTIM_PWM, 1); //PWM_FANS_STANDARD_PERIOD);
+    fans_set_speed(0);
     pwm_start_channel(&HTIM_PWM, PWM_FANS_CHANNEL);
 }
-void fans_set_speed(float power) {
-    if (power > 1 || power < 0)
-        return;
-    fans_speed = 1 - power;
-    pwm_set_duty_cicle(&HTIM_PWM, PWM_FANS_CHANNEL, 1 - power);
+void fans_toggle_override() {
+    override_fans_speed = !override_fans_speed;
 }
-void fans_set_speed_from_temp(float temp) {
-    uint8_t thr_l = fans_speed > 0.05 ? 43 : 45;
-    if (temp < thr_l)
-        return fans_set_speed(0);
-    if (temp < 49)
-        return fans_set_speed(0.75 / 12 * (temp - 43) + 0.15);  //map temps between 43-55 to duty cycle
-    fans_set_speed(1);
+bool fans_is_overrided() {
+    return override_fans_speed;
+}
+void fans_set_speed(float power) {
+    if (power > 1.f || power < 0.f)
+        return;
+    pwm_set_duty_cicle(&HTIM_PWM, PWM_FANS_CHANNEL, power);
+}
+float fans_curve(float temp) {
+    if (temp <= CELL_MIN_TEMPERATURE) return 0.f;
+    if (temp >= CELL_MAX_TEMPERATURE) return 1.f;
+    return MAX(0.f, (temp - 30.f) * (1.f / 30.f));
 }
 
-void fans_loop(float temperature) {
-    if (fans_override)
-        fans_set_speed(fans_override_value);
-    else
-        fans_set_speed_from_temp(temperature_get_max() / 2.56f - 20);
-}
 
 // credits to the master sborato PM Alex
 ////////////////////////////////////////////////////////////////////////////////
@@ -220,7 +229,7 @@ void _play_note(NoteTypeDef note, TIM_HandleTypeDef *htim) {
 }
 
 void BUZ_sborati(TIM_HandleTypeDef *htim) {
-    NoteTypeDef *n = gandalf;
+    NoteTypeDef *n = fra_martino;
 
     while (n->note != End)
         _play_note(*n++, htim);

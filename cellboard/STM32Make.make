@@ -22,7 +22,7 @@ TARGET = cellboard
 # debug build?
 DEBUG = 1
 # optimization
-OPT = -O3
+OPT = -Og
 
 
 #######################################
@@ -36,12 +36,18 @@ BUILD_DIR = build
 ######################################
 # C sources
 C_SOURCES =  \
+Core/Lib/can/lib/bms/bms_network.c \
+Core/Lib/can/lib/bms/bms_watchdog.c \
+Core/Lib/can/lib/primary/primary_network.c \
+Core/Lib/can/lib/primary/primary_watchdog.c \
+Core/Lib/can/lib/secondary/secondary_network.c \
+Core/Lib/can/lib/secondary/secondary_watchdog.c \
 Core/Lib/micro-libs/blink/blink.c \
 Core/Lib/micro-libs/fsm/fsm.c \
 Core/Lib/micro-libs/m95256/m95256.c \
 Core/Lib/micro-libs/timer-utils/timer_utils.c \
+Core/Src/bal.c \
 Core/Src/bal_fsm.c \
-Core/Src/bootloader.c \
 Core/Src/can.c \
 Core/Src/can_comms.c \
 Core/Src/error.c \
@@ -101,7 +107,7 @@ PREFIX = arm-none-eabi-
 POSTFIX = "
 # The gcc compiler bin path can be either defined in make command via GCC_PATH variable (> make GCC_PATH=xxx)
 # either it can be added to the PATH environment variable.
-GCC_PATH="/usr/bin
+GCC_PATH="/home/tonidotpy/.config/Code - OSS/User/globalStorage/bmd.stm32-for-vscode/@xpack-dev-tools/arm-none-eabi-gcc/12.2.1-1.2.1/.content/bin
 ifdef GCC_PATH
 CXX = $(GCC_PATH)/$(PREFIX)g++$(POSTFIX)
 CC = $(GCC_PATH)/$(PREFIX)gcc$(POSTFIX)
@@ -140,7 +146,8 @@ AS_DEFS =
 # C defines
 C_DEFS =  \
 -DSTM32L432xx \
--DUSE_HAL_DRIVER
+-DUSE_HAL_DRIVER \
+-Dbms_NETWORK_IMPLEMENTATION
 
 
 # CXX defines
@@ -154,9 +161,9 @@ AS_INCLUDES = \
 
 # C includes
 C_INCLUDES =  \
--I../CommonInc \
 -ICore/Inc \
 -ICore/Inc/peripherals \
+-ICore/Lib/can/lib/ \
 -ICore/Lib/micro-libs/blink \
 -ICore/Lib/micro-libs/fsm \
 -ICore/Lib/micro-libs/m95256 \
@@ -193,7 +200,7 @@ CXXFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 # LDFLAGS
 #######################################
 # link script
-LDSCRIPT = STM32L432KBUx_FLASH.ld
+LDSCRIPT = STM32L432KBUx_FLASH_shifted.ld
 
 # libraries
 LIBS = -lc -lm -lnosys 
@@ -219,8 +226,14 @@ vpath %.cpp $(sort $(dir $(CPP_SOURCES)))
 # list of C objects
 OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(C_SOURCES:.c=.o)))
 vpath %.c $(sort $(dir $(C_SOURCES)))
+
 # list of ASM program objects
-OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(ASM_SOURCES:.s=.o)))
+# list of ASM program objects
+UPPER_CASE_ASM_SOURCES = $(filter %.S,$(ASM_SOURCES))
+LOWER_CASE_ASM_SOURCES = $(filter %.s,$(ASM_SOURCES))
+
+OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(UPPER_CASE_ASM_SOURCES:.S=.o)))
+OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(LOWER_CASE_ASM_SOURCES:.s=.o)))
 vpath %.s $(sort $(dir $(ASM_SOURCES)))
 
 $(BUILD_DIR)/%.o: %.cpp STM32Make.make | $(BUILD_DIR) 
@@ -233,6 +246,9 @@ $(BUILD_DIR)/%.o: %.c STM32Make.make | $(BUILD_DIR)
 	$(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
 
 $(BUILD_DIR)/%.o: %.s STM32Make.make | $(BUILD_DIR)
+	$(AS) -c $(CFLAGS) $< -o $@
+
+$(BUILD_DIR)/%.o: %.S STM32Make.make | $(BUILD_DIR)
 	$(AS) -c $(CFLAGS) $< -o $@
 
 $(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) STM32Make.make
@@ -252,13 +268,13 @@ $(BUILD_DIR):
 # flash
 #######################################
 flash: $(BUILD_DIR)/$(TARGET).elf
-	"/usr/bin/openocd" -f ./openocd.cfg -c "program $(BUILD_DIR)/$(TARGET).elf verify reset exit"
+	"/home/tonidotpy/.config/Code - OSS/User/globalStorage/bmd.stm32-for-vscode/@xpack-dev-tools/openocd/0.12.0-1.1/.content/bin/openocd" -f ./openocd.cfg -c "program $(BUILD_DIR)/$(TARGET).elf verify reset exit"
 
 #######################################
 # erase
 #######################################
 erase: $(BUILD_DIR)/$(TARGET).elf
-	"/usr/bin/openocd" -f ./openocd.cfg -c "init; reset halt; stm32l4x mass_erase 0; exit"
+	"/home/tonidotpy/.config/Code - OSS/User/globalStorage/bmd.stm32-for-vscode/@xpack-dev-tools/openocd/0.12.0-1.1/.content/bin/openocd" -f ./openocd.cfg -c "init; reset halt; stm32l4x mass_erase 0; exit"
 
 #######################################
 # clean up
@@ -271,14 +287,6 @@ clean:
 #######################################
 
 
-
-
-#######################################
-# can_srec
-#######################################
-can_srec: $(BUILD_DIR)/$(TARGET).bin
-	bin2srec -a $$(grep 'FLASH (rx)      : ORIGIN =' $(LDSCRIPT) | awk '{print $$6}' | sed 's/.$$//') -i $(BUILD_DIR)/$(TARGET).bin -o $(BUILD_DIR)/$(TARGET).srec
-      
 	
 #######################################
 # dependencies

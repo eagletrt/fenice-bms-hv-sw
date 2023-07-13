@@ -10,20 +10,25 @@ target: fenice-bms
 # Can be C or C++
 language: C
 
-optimization: O3
+optimization: Og
 
 # MCU settings
 targetMCU: stm32f4x
 cpu: -mcpu=cortex-m4
 fpu: -mfpu=fpv4-sp-d16
 floatAbi: -mfloat-abi=hard
+#ldscript: STM32F446RETx_FLASH.ld # linker script
 ldscript: STM32F446RETx_FLASH_shifted.ld # linker script
 
 # Compiler definitions. The -D prefix for the compiler will be automatically added.
 cDefinitions: 
   - USE_HAL_DRIVER
   - STM32F446xx
-#  - DEBUG
+  - primary_NETWORK_IMPLEMENTATION
+  - bms_NETWORK_IMPLEMENTATION
+  - primary_WATCHDOG_IMPLEMENTATION 
+  - bms_WATCHDOG_IMPLEMENTATION 
+  - WATCHDOG_IGNORE
 
 cxxDefinitions: []
 asDefinitions: []
@@ -61,17 +66,14 @@ excludes:
 # If a CubeMX makefile is present it will automatically include the include directories from that makefile.
 includeDirectories: 
   - Inc/**
-  - lib/can/lib/**
+  - lib/can/lib/
   - lib/micro-libs/llist/**
   - lib/micro-libs/priority-queue/**
-  - lib/micro-libs/fsm/**
   - lib/micro-libs/cli/**
   - lib/micro-libs/m95256/**
-  - lib/micro-libs/eeprom-config/**
   - lib/micro-libs/blink/**
   - lib/micro-libs/pwm/**
   - lib/micro-libs/timer-utils/**
-  - ../CommonInc
 
 
 # Files that should be included in the compilation.
@@ -81,21 +83,17 @@ includeDirectories:
 # these should be escaped with a: \ or the name should be in double quotes e.g. "HARDWARE_DRIVER*.c"
 sourceFiles:  
   - Src/**
-  - lib/can/lib/**
+  - lib/can/lib/bms/*.c
+  - lib/can/lib/primary/*.c
+  - lib/can/lib/secondary/*.c
   - lib/micro-libs/llist/**
   - lib/micro-libs/priority-queue/**
-  - lib/micro-libs/fsm/**
   - lib/micro-libs/cli/**
   - lib/micro-libs/m95256/**
-  - lib/micro-libs/eeprom-config/**
   - lib/micro-libs/blink/**
   - lib/micro-libs/pwm/**
   - lib/micro-libs/timer-utils/**
 
-customMakefileRules:
- - command: can_srec
-   rule: "bin2srec -a $$(grep 'FLASH (rx)      : ORIGIN =' $(LDSCRIPT) | awk '{print $$6}' | sed 's/.$$//') -i $(BUILD_DIR)/$(TARGET).bin -o $(BUILD_DIR)/$(TARGET).srec"
-   dependsOn: $(BUILD_DIR)/$(TARGET).bin  # can be left out
 
 # When no makefile is present it will show a warning pop-up.
 # However when compilation without the CubeMX Makefile is desired, this can be turned of.

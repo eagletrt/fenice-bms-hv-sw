@@ -11,29 +11,37 @@
 
 #include "feedback.h"
 
-void pack_set_ts_on(uint8_t value) {
-    HAL_GPIO_WritePin(TS_ON_GPIO_Port, TS_ON_Pin, value);
+GPIO_PinState pack_get_airn_off() {
+    return HAL_GPIO_ReadPin(AIRN_OFF_GPIO_Port, AIRN_OFF_Pin);
 }
-
-void pack_set_airn_off(uint8_t value) {
+void pack_set_airn_off(GPIO_PinState value) {
     HAL_GPIO_WritePin(AIRN_OFF_GPIO_Port, AIRN_OFF_Pin, value);
 }
 
-void pack_set_precharge(uint8_t value) {
+GPIO_PinState pack_get_precharge() {
+    return HAL_GPIO_ReadPin(PRECHARGE_GPIO_Port, PRECHARGE_Pin);
+}
+void pack_set_precharge(GPIO_PinState value) {
     HAL_GPIO_WritePin(PRECHARGE_GPIO_Port, PRECHARGE_Pin, value);
 }
 
-void pack_set_airp_off(uint8_t value) {
+GPIO_PinState pack_get_airp_off() {
+    return HAL_GPIO_ReadPin(AIRP_OFF_GPIO_Port, AIRP_OFF_Pin);
+}
+void pack_set_airp_off(GPIO_PinState value) {
     HAL_GPIO_WritePin(AIRP_OFF_GPIO_Port, AIRP_OFF_Pin, value);
 }
 
-void pack_set_fault(uint8_t value) {
+GPIO_PinState pack_get_fault() {
+    return HAL_GPIO_ReadPin(BMS_FAULT_GPIO_Port, BMS_FAULT_Pin);
+}
+void pack_set_fault(GPIO_PinState value) {
     HAL_GPIO_WritePin(BMS_FAULT_GPIO_Port, BMS_FAULT_Pin, value);
 }
 
-void pack_set_default_off() {
-    pack_set_airp_off(AIRP_OFF_VALUE);
+void pack_set_default_off(uint16_t prech_delay) {
     pack_set_airn_off(AIRN_OFF_VALUE);
+    pack_set_airp_off(AIRP_OFF_VALUE);
+    if(prech_delay) HAL_Delay(prech_delay);
     pack_set_precharge(PRECHARGE_OFF_VALUE);
-    pack_set_ts_on(TS_ON_VALUE);
 }

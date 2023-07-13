@@ -14,34 +14,28 @@
 #include "tim.h"
 
 #include <stdlib.h>
-#ifndef max
-#define max(a, b) ((a) > (b) ? (a) : (b))
-#endif
-#ifndef min
-#define min(a, b) ((a) < (b) ? (a) : (b))
-#endif
 /**
  * Reaction times by the rules:
  * 	- 500ms for voltages and current
  * 	- 1s for temperatures
  */
 const uint32_t error_timeouts[ERROR_NUM_ERRORS] = {
-    [ERROR_CELL_LOW_VOLTAGE]      = SOFT,
-    [ERROR_CELL_UNDER_VOLTAGE]    = 300,
-    [ERROR_CELL_OVER_VOLTAGE]     = 300,
-    [ERROR_CELL_HIGH_TEMPERATURE] = SOFT,
-    [ERROR_CELL_OVER_TEMPERATURE] = 750,
-    [ERROR_OVER_CURRENT]          = 300,
-    [ERROR_CAN]                   = SOFT,
-    [ERROR_INT_VOLTAGE_MISMATCH]  = 250,
-    [ERROR_CELLBOARD_COMM]        = 250,
-    [ERROR_CELLBOARD_INTERNAL]    = 250,
-    [ERROR_FEEDBACK]              = SOFT,
-    [ERROR_FEEDBACK_CIRCUITRY]    = SOFT,
-    [ERROR_EEPROM_COMM]           = SOFT,
-    [ERROR_EEPROM_WRITE]          = SOFT,
-    [ERROR_CONNECTOR_DETACH]      = 10
-    };
+    [ERROR_CELL_LOW_VOLTAGE]       = SOFT,
+    [ERROR_CELL_UNDER_VOLTAGE]     = 450,
+    [ERROR_CELL_OVER_VOLTAGE]      = 450,
+    [ERROR_CELL_HIGH_TEMPERATURE]  = SOFT,
+    [ERROR_CELL_OVER_TEMPERATURE]  = 750,
+    [ERROR_OVER_CURRENT]           = 450,
+    [ERROR_CAN]                    = SOFT,
+    [ERROR_INT_VOLTAGE_MISMATCH]   = SOFT,
+    [ERROR_CELLBOARD_COMM]         = 250,
+    [ERROR_CELLBOARD_INTERNAL]     = SOFT,
+    [ERROR_CONNECTOR_DISCONNECTED] = 250,
+    [ERROR_FANS_DISCONNECTED]      = SOFT,
+    [ERROR_FEEDBACK]               = SOFT,
+    [ERROR_FEEDBACK_CIRCUITRY]     = SOFT,
+    [ERROR_EEPROM_COMM]            = SOFT,
+    [ERROR_EEPROM_WRITE]           = SOFT};
 
 llist er_list = NULL;
 
@@ -223,7 +217,6 @@ void error_dump(error_t errors[]) {
 }
 
 void _error_handle_tim_oc_irq() {
-    fsm_transition(bms.fsm, BMS_FAULT);
     error_set_fatal(error_get_top());
     HAL_TIM_OC_Stop_IT(&HTIM_ERR, TIM_CHANNEL_1);
 }

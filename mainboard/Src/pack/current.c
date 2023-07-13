@@ -13,12 +13,6 @@
 #include "error.h"
 #include "main.h"
 #include "mainboard_config.h"
-#include "adc124s021.h"
-#include "spi.h"
-#include "cli_bms.h"
-#include "bms_fsm.h"
-
-#include <stdio.h>
 #include <math.h>
 
 #define MEASURE_SAMPLE_SIZE 128
@@ -29,7 +23,6 @@ uint16_t adc_300[MEASURE_SAMPLE_SIZE] = {0};
 current_t current[CURRENT_SENSOR_NUM] = {0.f};
 
 float V0L = 0, V0H = 0;  //voltage offset (Vout(0A))
-float shunt_offset;
 
 current_t _current_convert_low(float volt) {
     return (499.f / 300.f / 40e-3f) * (volt - V0L);
@@ -40,7 +33,7 @@ current_t _current_convert_high(float volt) {
 }
 
 current_t _current_convert_shunt(float volt) {
-    return (volt - shunt_offset) / (1e-4f * 500);
+    return (volt - 0.468205124) / (1e-4f * 75);
 }
 
 void current_start_measure() {
@@ -58,10 +51,8 @@ uint32_t current_read(float shunt_adc_val) {
     }
 
     // Convert Hall-low (50A)
-    float volt        = avg_50 * (3.3f / 4095 / MEASURE_SAMPLE_SIZE);
+    volatile float volt        = avg_50 * (3.3f / 4095 / MEASURE_SAMPLE_SIZE);
     current[CURRENT_SENSOR_50] = _current_convert_low(volt);
-
-    error_toggle_check(volt < 0.3, ERROR_CONNECTOR_DETACH, 2);
 
     // Convert Hall-high (300A)
     volt                        = avg_300 * (3.3f / 4095 / MEASURE_SAMPLE_SIZE);
@@ -85,19 +76,12 @@ void current_zero() {
     }
     V0L = avg_50 * (3.3f / 4095 / MEASURE_SAMPLE_SIZE);
     V0H = avg_300 * (3.3f / 4095 / MEASURE_SAMPLE_SIZE);
-
-    if(V0L < 0.3){
-        error_set(ERROR_CONNECTOR_DETACH, 2, HAL_GetTick());
-        cli_bms_debug("sensor detached");
-    }
-
-    shunt_offset = adc124S021_read_channel(&SPI_ADC124S, ADC124_SHUNT_CHANNEL);
 }
 
 current_t current_get_current() {
-    if (fabs(current[CURRENT_SENSOR_SHUNT]) < 4 && fabs(current[CURRENT_SENSOR_50]) < 5)
+    if (current[CURRENT_SENSOR_SHUNT] < 4 && current[CURRENT_SENSOR_50] < 4)
         return current[CURRENT_SENSOR_SHUNT];
-    if (fabs(current[CURRENT_SENSOR_50]) < 34 && fabs(current[CURRENT_SENSOR_300]) < 35)
+    if (current[CURRENT_SENSOR_50] < 34 && current[CURRENT_SENSOR_300] < 35)
         return current[CURRENT_SENSOR_50];
     return current[CURRENT_SENSOR_300];
 }

@@ -22,7 +22,7 @@ TARGET = fenice-bms
 # debug build?
 DEBUG = 1
 # optimization
-OPT = -O3
+OPT = -Og
 
 
 #######################################
@@ -59,10 +59,11 @@ Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_adc.c \
 Src/adc.c \
 Src/bal.c \
-Src/bal_fsm.c \
 Src/bms_fsm.c \
+Src/bootloader.c \
 Src/can.c \
 Src/cli_bms.c \
+Src/config.c \
 Src/dma.c \
 Src/energy/energy.c \
 Src/energy/soc.c \
@@ -73,23 +74,30 @@ Src/feedback.c \
 Src/gpio.c \
 Src/imd.c \
 Src/main.c \
+Src/measures.c \
+Src/pack/cell_voltage.c \
 Src/pack/current.c \
+Src/pack/internal_voltage.c \
 Src/pack/pack.c \
 Src/pack/temperature.c \
-Src/pack/voltage.c \
 Src/peripherals/adc124s021.c \
 Src/peripherals/can_comm.c \
+Src/peripherals/max22530.c \
 Src/spi.c \
 Src/stm32f4xx_hal_msp.c \
 Src/stm32f4xx_it.c \
 Src/system_stm32f4xx.c \
 Src/tim.c \
-Src/timebase.c \
 Src/usart.c \
+Src/watchdog.c \
+lib/can/lib/bms/bms_network.c \
+lib/can/lib/bms/bms_watchdog.c \
+lib/can/lib/primary/primary_network.c \
+lib/can/lib/primary/primary_watchdog.c \
+lib/can/lib/secondary/secondary_network.c \
+lib/can/lib/secondary/secondary_watchdog.c \
 lib/micro-libs/blink/blink.c \
 lib/micro-libs/cli/cli.c \
-lib/micro-libs/eeprom-config/eeprom-config.c \
-lib/micro-libs/fsm/fsm.c \
 lib/micro-libs/llist/llist.c \
 lib/micro-libs/m95256/m95256.c \
 lib/micro-libs/priority-queue/priority_queue.c \
@@ -114,7 +122,7 @@ PREFIX = arm-none-eabi-
 POSTFIX = "
 # The gcc compiler bin path can be either defined in make command via GCC_PATH variable (> make GCC_PATH=xxx)
 # either it can be added to the PATH environment variable.
-GCC_PATH="/usr/bin
+GCC_PATH="/home/tonidotpy/.config/Code - OSS/User/globalStorage/bmd.stm32-for-vscode/@xpack-dev-tools/arm-none-eabi-gcc/12.2.1-1.2.1/.content/bin
 ifdef GCC_PATH
 CXX = $(GCC_PATH)/$(PREFIX)g++$(POSTFIX)
 CC = $(GCC_PATH)/$(PREFIX)gcc$(POSTFIX)
@@ -153,7 +161,12 @@ AS_DEFS =
 # C defines
 C_DEFS =  \
 -DSTM32F446xx \
--DUSE_HAL_DRIVER
+-DUSE_HAL_DRIVER \
+-DWATCHDOG_IGNORE \
+-Dbms_NETWORK_IMPLEMENTATION \
+-Dbms_WATCHDOG_IMPLEMENTATION \
+-Dprimary_NETWORK_IMPLEMENTATION \
+-Dprimary_WATCHDOG_IMPLEMENTATION
 
 
 # CXX defines
@@ -167,7 +180,6 @@ AS_INCLUDES = \
 
 # C includes
 C_INCLUDES =  \
--I../CommonInc \
 -IDrivers/CMSIS/Device/ST/STM32F4xx/Include \
 -IDrivers/CMSIS/Include \
 -IDrivers/STM32F4xx_HAL_Driver/Inc \
@@ -177,13 +189,10 @@ C_INCLUDES =  \
 -IInc/error \
 -IInc/pack \
 -IInc/peripherals \
--Ilib/can/lib/bms/c \
--Ilib/can/lib/primary/c \
--Ilib/can/lib/secondary/c \
+-Ilib \
+-Ilib/can/lib/ \
 -Ilib/micro-libs/blink \
 -Ilib/micro-libs/cli \
--Ilib/micro-libs/eeprom-config \
--Ilib/micro-libs/fsm \
 -Ilib/micro-libs/llist \
 -Ilib/micro-libs/m95256 \
 -Ilib/micro-libs/priority-queue \
@@ -243,8 +252,14 @@ vpath %.cpp $(sort $(dir $(CPP_SOURCES)))
 # list of C objects
 OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(C_SOURCES:.c=.o)))
 vpath %.c $(sort $(dir $(C_SOURCES)))
+
 # list of ASM program objects
-OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(ASM_SOURCES:.s=.o)))
+# list of ASM program objects
+UPPER_CASE_ASM_SOURCES = $(filter %.S,$(ASM_SOURCES))
+LOWER_CASE_ASM_SOURCES = $(filter %.s,$(ASM_SOURCES))
+
+OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(UPPER_CASE_ASM_SOURCES:.S=.o)))
+OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(LOWER_CASE_ASM_SOURCES:.s=.o)))
 vpath %.s $(sort $(dir $(ASM_SOURCES)))
 
 $(BUILD_DIR)/%.o: %.cpp STM32Make.make | $(BUILD_DIR) 
@@ -257,6 +272,9 @@ $(BUILD_DIR)/%.o: %.c STM32Make.make | $(BUILD_DIR)
 	$(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
 
 $(BUILD_DIR)/%.o: %.s STM32Make.make | $(BUILD_DIR)
+	$(AS) -c $(CFLAGS) $< -o $@
+
+$(BUILD_DIR)/%.o: %.S STM32Make.make | $(BUILD_DIR)
 	$(AS) -c $(CFLAGS) $< -o $@
 
 $(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) STM32Make.make
@@ -276,13 +294,13 @@ $(BUILD_DIR):
 # flash
 #######################################
 flash: $(BUILD_DIR)/$(TARGET).elf
-	"/usr/bin/openocd" -f ./openocd.cfg -c "program $(BUILD_DIR)/$(TARGET).elf verify reset exit"
+	"/home/tonidotpy/.config/Code - OSS/User/globalStorage/bmd.stm32-for-vscode/@xpack-dev-tools/openocd/0.12.0-1.1/.content/bin/openocd" -f ./openocd.cfg -c "program $(BUILD_DIR)/$(TARGET).elf verify reset exit"
 
 #######################################
 # erase
 #######################################
 erase: $(BUILD_DIR)/$(TARGET).elf
-	"/usr/bin/openocd" -f ./openocd.cfg -c "init; reset halt; stm32f4x mass_erase 0; exit"
+	"/home/tonidotpy/.config/Code - OSS/User/globalStorage/bmd.stm32-for-vscode/@xpack-dev-tools/openocd/0.12.0-1.1/.content/bin/openocd" -f ./openocd.cfg -c "init; reset halt; stm32f4x mass_erase 0; exit"
 
 #######################################
 # clean up
@@ -295,14 +313,6 @@ clean:
 #######################################
 
 
-
-
-#######################################
-# can_srec
-#######################################
-can_srec: $(BUILD_DIR)/$(TARGET).bin
-	bin2srec -a $$(grep 'FLASH (rx)      : ORIGIN =' $(LDSCRIPT) | awk '{print $$6}' | sed 's/.$$//') -i $(BUILD_DIR)/$(TARGET).bin -o $(BUILD_DIR)/$(TARGET).srec
-      
 	
 #######################################
 # dependencies

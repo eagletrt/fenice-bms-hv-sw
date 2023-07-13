@@ -6,12 +6,16 @@
  * @author		Matteo Bonora [matteo.bonora@studenti.unitn.it]
  */
 
-#pragma once
+#ifndef TEMP_H
+#define TEMP_H
 
 #include "cellboard_config.h"
 #include "peripherals/adctemp.h"
 
 #include <inttypes.h>
+
+#define CONVERT_VALUE_TO_TEMPERATURE(x) ((float)(x) / 2.56 - 20)
+#define CONVERT_TEMPERATURE_TO_VALUE(x) (((x) + 20) * 2.56)
 
 extern temperature_t temperatures[CELLBOARD_TEMP_SENSOR_COUNT];
 
@@ -44,13 +48,4 @@ temperature_t temp_get_average();
 temperature_t temp_get_max();
 temperature_t temp_get_min();
 
-/**
- * @brief Serializes temperature into a CAN-friendly format
- * @details Temperatures are stored as floats locally. Floats are big and inefficient for CAN-bus.
- * This function maps temperatures in the range of 0.0 - 63.8 C to an 8-bit (0-255) integer value.
- * The resolution of the serialized data is 0.25C
- * 
- * @param temp Input temperature to serialize
- * @return uint8_t Serialized output
- */
-uint8_t temp_serialize(float temp);
+#endif // TEMP_H

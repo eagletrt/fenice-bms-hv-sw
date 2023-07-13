@@ -9,13 +9,13 @@
 
 #pragma once
 
-#include "eeprom-config.h"
+#include "config.h"
 #include "pack/current.h"
 
 /**
  * @brief Initializes the SoC management subsystem by loading energy info from EEPROM
  */
-void soc_init(float lower_cell_voltage);
+void soc_init();
 
 /**
  * @brief Process a new current sample.
@@ -43,5 +43,11 @@ float soc_get_soc();
  */
 float soc_get_energy_total();
 
-float soc_volt_to_capacity(float volt);
-float soc_volt_to_energy(float volt);
+/**
+ * @brief Returns the energy since last charge
+ * 
+ * @return float current value in Wh
+ */
+float soc_get_energy_last_charge();
+
+void soc_save_to_eeprom();

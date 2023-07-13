@@ -10,19 +10,21 @@ target: cellboard
 # Can be C or C++
 language: C
 
-optimization: O3
+optimization: Og
 
 # MCU settings
 targetMCU: stm32l4x
 cpu: -mcpu=cortex-m4
 fpu: -mfpu=fpv4-sp-d16
 floatAbi: -mfloat-abi=hard
-ldscript: STM32L432KBUx_FLASH.ld # linker script
+ldscript: STM32L432KBUx_FLASH_shifted.ld # linker script
+#ldscript: STM32L432KBUx_FLASH.ld # linker script
 
 # Compiler definitions. The -D prefix for the compiler will be automatically added.
 cDefinitions: 
   - USE_HAL_DRIVER
   - STM32L432xx
+  - bms_NETWORK_IMPLEMENTATION
 
 cxxDefinitions: []
 asDefinitions: []
@@ -73,8 +75,7 @@ includeDirectories:
   - Core/Lib/micro-libs/fsm/**
   - Core/Lib/micro-libs/blink/**
   - Core/Lib/micro-libs/timer-utils/**
-  - Core/Lib/can-cicd/lib/**
-  - ../CommonInc
+  - Core/Lib/can/lib/
 
 
 # Files that should be included in the compilation.
@@ -89,12 +90,9 @@ sourceFiles:
   - Core/Lib/micro-libs/fsm/**
   - Core/Lib/micro-libs/blink/**
   - Core/Lib/micro-libs/timer-utils/**
-  - Core/Lib/can-cicd/lib/**
-
-customMakefileRules:
- - command: can_srec
-   rule: "bin2srec -a $$(grep 'FLASH (rx)      : ORIGIN =' $(LDSCRIPT) | awk '{print $$6}' | sed 's/.$$//') -i $(BUILD_DIR)/$(TARGET).bin -o $(BUILD_DIR)/$(TARGET).srec"
-   dependsOn: $(BUILD_DIR)/$(TARGET).bin  # can be left out
+  - Core/Lib/can/lib/bms/*.c
+  - Core/Lib/can/lib/primary/*.c
+  - Core/Lib/can/lib/secondary/*.c
 
 
 # When no makefile is present it will show a warning pop-up.

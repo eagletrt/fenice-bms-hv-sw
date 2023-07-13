@@ -10,7 +10,6 @@
 #include "peripherals/ltc6813_utils.h"
 
 #include "main.h"
-#include "../Lib/can/lib/bms/c/network.h"
 
 #include <math.h>
 
@@ -75,22 +74,25 @@ size_t ltc6813_read_voltages(SPI_HandleTypeDef *hspi, voltage_t *volts) {
                 count++;
             }
         }
+        else
+            ERROR_SET(ERROR_LTC_COMM);
     }
     return count;
 }
 
-void ltc6813_build_dcc(bms_BalancingCells cells, uint8_t cfgar[8], uint8_t cfgbr[8]) {
-    for (uint8_t i = 0; i < LTC6813_CELL_COUNT; ++i) {
-        if (CANLIB_BITTEST(cells, i)) {
-            if (i < 8) {
+void ltc6813_build_dcc(uint32_t cells, uint8_t cfgar[8], uint8_t cfgbr[8]) {
+    for (size_t i = 0; i < LTC6813_CELL_COUNT; ++i) {
+        uint8_t is_cell_selected = (cells & (1 << i)) != 0;
+
+        if (is_cell_selected) {
+            if (i < 8)
                 cfgar[4] |= dcc[i];
-            } else if (i >= 8 && i < 12) {
+            else if (i >= 8 && i < 12)
                 cfgar[5] |= dcc[i];
-            } else if (i >= 12 && i < 16) {
+            else if (i >= 12 && i < 16)
                 cfgbr[0] |= dcc[i];
-            } else if (i >= 16 && i < 18) {
+            else if (i >= 16 && i < 18)
                 cfgbr[1] |= dcc[i];
-            }
         }
     }
 
@@ -103,7 +105,7 @@ void ltc6813_build_dcc(bms_BalancingCells cells, uint8_t cfgar[8], uint8_t cfgbr
     cfgbr[7] = (uint8_t)(pec);
 }
 
-void ltc6813_set_balancing(SPI_HandleTypeDef *hspi, bms_BalancingCells cells, int dcto) {
+void ltc6813_set_balancing(SPI_HandleTypeDef *hspi, uint32_t cells, int dcto) {
     uint8_t cfgar[8] = {0};
     uint8_t cfgbr[8] = {0};
 
