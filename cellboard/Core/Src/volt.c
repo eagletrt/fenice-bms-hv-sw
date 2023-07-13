@@ -11,10 +11,19 @@
 #include "spi.h"
 
 
-voltage_t voltages[CELLBOARD_CELL_COUNT] = {0};
+voltage_t voltages[CELLBOARD_CELL_COUNT] = { 0 };
 
-voltage_t voltages_pup[CELLBOARD_CELL_COUNT] = {0};
-voltage_t voltages_pud[CELLBOARD_CELL_COUNT] = {0};
+voltage_t voltages_pup[CELLBOARD_CELL_COUNT] = { 0 };
+voltage_t voltages_pud[CELLBOARD_CELL_COUNT] = { 0 };
+
+void volt_init() {
+    // Set initial voltage to an in range value
+    for (size_t i = 0; i < CELLBOARD_CELL_COUNT; i++) {
+        voltages[i] = 33000;
+        voltages_pud[i] = 33000;
+        voltages_pup[i] = 33000;
+    }
+}
 
 void volt_start_measure() {
     ltc6813_adcv(&LTC6813_SPI);

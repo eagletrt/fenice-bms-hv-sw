@@ -52,7 +52,7 @@ void measures_check_flags() {
         soc_sample_energy(HAL_GetTick());
 
         // Check errors
-        cell_voltage_check_errors();
+        // cell_voltage_check_errors();
         current_check_errors();
     }
     // 100 ms interval
@@ -71,8 +71,8 @@ void measures_check_flags() {
         can_car_send(PRIMARY_HV_CAN_FORWARD_FRAME_ID);
         can_car_send(PRIMARY_HV_VERSION_FRAME_ID);
         
-        // Check errors
-        can_cellboards_check();
+        // Check cellboards connection errors
+        // can_cellboards_check();
         // Check if fans are connected
         error_toggle_check(HAL_GPIO_ReadPin(FANS_DETECT_GPIO_Port, FANS_DETECT_Pin) == GPIO_PIN_RESET, ERROR_FANS_DISCONNECTED, 0);
     }

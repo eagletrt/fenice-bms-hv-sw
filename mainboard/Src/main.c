@@ -134,8 +134,10 @@ int main(void)
   MX_TIM7_Init();
   /* USER CODE BEGIN 2 */
 
+    start_time = HAL_GetTick();
     pack_set_fault(BMS_FAULT_ON_VALUE);
-    HAL_Delay(1000);
+    while (HAL_GetTick() - start_time < 1000)
+        ;
     pack_set_fault(BMS_FAULT_OFF_VALUE);
     
     HAL_GPIO_WritePin(EEPROM_HOLD_GPIO_Port, EEPROM_HOLD_Pin, GPIO_PIN_SET);

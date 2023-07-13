@@ -120,6 +120,7 @@ int main(void)
     if (cellboard_index == 7)
         cellboard_index = 5;
 
+    volt_init();
     temp_init();
 
     //set temperature limits ( 0 - 60 )
