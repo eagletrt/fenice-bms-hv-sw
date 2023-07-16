@@ -14,9 +14,11 @@
 #include "fans_buzzer.h"
 #include "bal.h"
 
+#define MEASURE_CHECK_DELAY 10000
 #define _MEASURE_CHECK_INTERVAL(interval) (((counter) % (interval)) == 0)
 
 uint32_t counter = 0; // Each timer interrupt it increments by 1
+uint32_t timestamp = 0;
 bool flags_checked = false;
 
 void measures_init() {
@@ -27,6 +29,8 @@ void measures_init() {
     __HAL_TIM_SET_COMPARE(&HTIM_MEASURES, TIM_CHANNEL_1, TIM_MS_TO_TICKS(&HTIM_MEASURES, MEASURE_BASE_INTERVAL_MS));
     __HAL_TIM_CLEAR_IT(&HTIM_MEASURES, TIM_IT_CC1);
     HAL_TIM_OC_Start_IT(&HTIM_MEASURES, TIM_CHANNEL_1);
+
+    timestamp = HAL_GetTick();
 }
 
 void measures_check_flags() {
@@ -52,7 +56,8 @@ void measures_check_flags() {
         soc_sample_energy(HAL_GetTick());
 
         // Check errors
-        // cell_voltage_check_errors();
+        if (HAL_GetTick() - timestamp >= MEASURE_CHECK_DELAY)
+            cell_voltage_check_errors();
         current_check_errors();
     }
     // 100 ms interval
@@ -72,7 +77,9 @@ void measures_check_flags() {
         can_car_send(PRIMARY_HV_VERSION_FRAME_ID);
         
         // Check cellboards connection errors
-        // can_cellboards_check();
+
+        if (HAL_GetTick() - timestamp >= MEASURE_CHECK_DELAY)
+            can_cellboards_check();
         // Check if fans are connected
         error_toggle_check(HAL_GPIO_ReadPin(FANS_DETECT_GPIO_Port, FANS_DETECT_Pin) == GPIO_PIN_RESET, ERROR_FANS_DISCONNECTED, 0);
     }

@@ -783,5 +783,7 @@ void CAN_change_bitrate(CAN_HandleTypeDef *hcan, CAN_Bitrate bitrate) {
 
 void can_cellboards_check() {
     for (size_t i = 0; i < CELLBOARD_COUNT; i++)
-        error_toggle_check(HAL_GetTick() - time_since_last_comm[i] >= CELLBOARD_COMM_TIMEOUT, ERROR_CELLBOARD_COMM, i);
+        if (time_since_last_comm[i] > 0) {
+            error_toggle_check(HAL_GetTick() - time_since_last_comm[i] >= CELLBOARD_COMM_TIMEOUT, ERROR_CELLBOARD_COMM, i);
+        }
 }
