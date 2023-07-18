@@ -185,6 +185,23 @@ const char * cli_help_message[CLI_COMMAND_COUNT][CLI_HELP_SECTION_COUNT] = {
         [CLI_HELP_DESCRIPTION] = ""
     }
 };
+const char * bms_state_name[NUM_STATES] = {
+    [STATE_INIT] = "init",
+    [STATE_IDLE] = "idle",
+    [STATE_WAIT_AIRN_CLOSE] = "airn_close",
+    [STATE_WAIT_TS_PRECHARGE] = "precharge",
+    [STATE_WAIT_AIRP_CLOSE] = "airn_close",
+    [STATE_TS_ON] = "ts_on",
+    [STATE_FATAL_ERROR] = "fault"
+};
+const char * bal_state_name[2] = {
+    "off",
+    "discharging"
+};
+const char * fans_state_name[2] = {
+    "off",
+    "running"
+};
 
 /**
  * @brief Print info about how to get help for a command
@@ -333,38 +350,155 @@ void _cli_temp_all(char * out) {
     }
     sprintf(out + strlen(out), "\n");
 }
+/**
+ * @brief Check the status of the BMS HV
+ * 
+ * @param argc The number of arguments
+ * @param argv The array of arguments
+ * @param out The string that will be printed to the CLI
+ */
 void _cli_status(uint16_t argc, char ** argv, char * out) {
-    const size_t element_count = 6;
+    if (argc == 1) {
+        const size_t element_count = 6;
 
-    char thresh[5] = { 0 };
-    itoa((float)bal_get_threshold() / 10.f, thresh, 10);
+        char thresh[5] = { 0 };
+        itoa((float)bal_get_threshold() / 10.f, thresh, 10);
 
-    char running_errors[4] = { 0 };
-    char expired_errors[4] = { 0 };
-    itoa(error_running_count(), running_errors, 10);
-    itoa(error_running_count(), expired_errors, 10);
+        char running_errors[4] = { 0 };
+        char expired_errors[4] = { 0 };
+        itoa(error_running_count(), running_errors, 10);
+        itoa(error_running_count(), expired_errors, 10);
 
-    char handcart_connected[13] = { 0 };
-    if (is_handcart_connected)
-        strncpy(handcart_connected, "connected", 10);
+        char handcart_connected[13] = { 0 };
+        if (is_handcart_connected)
+            strncpy(handcart_connected, "connected", 10);
+        else
+            strncpy(handcart_connected, "disconnected", 13);
+
+        const char * values[][2] = {
+            { "BMS status", bms_state_name[fsm_get_state()] },
+            { "Balancing status", bal_state_name[bal_is_balancing()] },
+            { "Running errors", running_errors },
+            { "Expired errors", expired_errors },
+            { "CAN forwarding", can_is_forwarding() ? "true" : "false"},
+            { "Handcart status", handcart_connected }
+        };
+
+        for (size_t i = 0; i < element_count; i++) {
+            sprintf(out + strlen(out),
+                "%s%s%s\r\n",
+                values[i][0],
+                "........................" + strlen(values[i][0]),
+                values[i][1]);
+        }
+    }
     else
-        strncpy(handcart_connected, "disconnected", 13);
+        _cli_print_info(CLI_STATUS, argv[0], out);
+}
+/**
+ * @brief Balancing actions
+ * 
+ * @param argc The number of arguments
+ * @param argv The array of arguments
+ * @param out The string that will be printed to the CLI
+ */
+void _cli_bal(uint16_t argc, char ** argv, char * out) {
+    if (argc == 1) {
+        sprintf(out,
+            "Status: %s\r\n"
+            "Threshold: %d\r\n",
+            // "Fans status: %s\r\n"
+            // "Fans speed: %.2f\r\n",
+            bal_state_name[bal_is_balancing()],
+            bal_get_threshold()
+            // fans_is_running(),
+            // fans_set_speed());
+        );
+    }
+    else if (argc == 2) {
+        if (strcmp(argv[1], "on")) {
+            sprintf(out, "Balancing enabled...\r\n");
+            bal_start();
+        }
+        else if (strcmp(argv[1], "off")) {
+            sprintf(out, "Balancing disabled...\r\n");
+            bal_stop();
+        }
+        else if (strcmp(argv[1], "thr")) {
+            sprintf(out, "")
+        }
+    }
 
-    const char * values[][2] = {
-        { "BMS status", bms_state_names[fsm_get_state()] },
-        { "Balancing status", bal_state_names[bal_is_balancing()] },
-        { "Running errors", running_errors },
-        { "Expired errors", expired_errors },
-        { "CAN forwarding", can_is_forwarding() ? "true" : "false"},
-        { "Handcart status", handcart_connected }
-    };
+    
+    if (strcmp(argv[1], "on") == 0) {
+        // if (argc > 2)
+        //     bal.target = atoi(argv[2]);
+        bal_start();
+        sprintf(out, "enabling balancing\r\n");
+    } else if (strcmp(argv[1], "off") == 0) {
+        bal_stop();
+        sprintf(out, "disabling balancing\r\n");
+    } else if (strcmp(argv[1], "thr") == 0) {
+        if (argv[2] != NULL) {
+            voltage_t thresh = atoff(argv[2]) * 10;
+            if (thresh <= BAL_MAX_VOLTAGE_THRESHOLD) {
+                bal_set_threshold(thresh);
+            }
+        }
+        sprintf(out, "balancing threshold is %.2f mV\r\n", bal_get_threshold() / 10.0);
+    } else if (strcmp(argv[1], "test") == 0) {
+        /*
+        CAN_TxHeaderTypeDef tx_header;
+        uint8_t buffer[CAN_MAX_PAYLOAD_LENGTH];
+        uint8_t board;
+        uint32_t cells = 0;
 
-    for (size_t i = 0; i < element_count; i++) {
-        sprintf(out + strlen(out),
-            "%s%s%s\r\n",
-            values[i][0],
-            "........................" + strlen(values[i][0]),
-            values[i][1]);
+        tx_header.ExtId = 0;
+        tx_header.IDE   = CAN_ID_STD;
+        tx_header.RTR   = CAN_RTR_DATA;
+        tx_header.StdId = BMS_SET_BALANCING_STATUS_FRAME_ID;
+
+        board = atoi(argv[2]);
+
+        if (argc < 4) {
+            sprintf(out, "wrong number of parameters\r\n");
+            return;
+        }
+
+        sprintf(out, "testing cells [");
+
+        uint8_t c;
+        for (uint8_t i = 3; i < argc; ++i) {
+            c = atoi(argv[i]);
+            cells |= 1 << c;
+            sprintf(out + strlen(out), "%u,", c);
+        }
+
+
+        tx_header.DLC = bms_balancing_pack(buffer, &raw, BMS_BALANCING_BYTE_SIZE);
+        can_send(&BMS_CAN, buffer, &tx_header);
+
+        sprintf(out + strlen(out) - 1, "]\r\non board %d\r\n", board);
+        */
+    } else if (argc < 2) {
+        sprintf(
+            out,
+            "Invalid number of parameters.\r\n\n"
+            "valid parameters:\r\n"
+            "- on\r\n"
+            "- off\r\n"
+            "- thr <millivolts>\r\n"
+            "- test <board> <cell0 cell1 ... cellN>\r\n");
+    } else {
+        sprintf(
+            out,
+            "Unknown parameter: %s\r\n\n"
+            "valid parameters:\r\n"
+            "- on\r\n"
+            "- off\r\n"
+            "- thr <millivolts>\r\n"
+            "- test <board> <cell0 cell1 ... cellN>\r\n",
+            argv[0]);
     }
 }
 
@@ -374,17 +508,8 @@ void _cli_status(uint16_t argc, char ** argv, char * out) {
 
 
 
-const char * bms_state_names[NUM_STATES] = {
-    [STATE_INIT] = "init",
-    [STATE_IDLE] = "idle",
-    [STATE_WAIT_AIRN_CLOSE] = "airn_close",
-    [STATE_WAIT_TS_PRECHARGE] = "precharge",
-    [STATE_WAIT_AIRP_CLOSE] = "airn_close",
-    [STATE_TS_ON] = "ts_on",
-    [STATE_FATAL_ERROR] = "fault"
-};
 
-const char *bal_state_names[2] = { "off", "discharging" };
+
 
 const char *error_names[ERROR_COUNT] = {
     [ERROR_CELL_LOW_VOLTAGE]       = "low-voltage",
@@ -494,81 +619,6 @@ void _cli_temps_all(uint16_t argc, char **argv, char *out) {
 */
 
 
-// TODO: Balancing actions
-void _cli_balance(uint16_t argc, char **argv, char *out) {
-    strcpy(out, "Work in progress...\n\0");
-    
-    if (strcmp(argv[1], "on") == 0) {
-        // if (argc > 2)
-        //     bal.target = atoi(argv[2]);
-        bal_start();
-        sprintf(out, "enabling balancing\r\n");
-    } else if (strcmp(argv[1], "off") == 0) {
-        bal_stop();
-        sprintf(out, "disabling balancing\r\n");
-    } else if (strcmp(argv[1], "thr") == 0) {
-        if (argv[2] != NULL) {
-            voltage_t thresh = atoff(argv[2]) * 10;
-            if (thresh <= BAL_MAX_VOLTAGE_THRESHOLD) {
-                bal_set_threshold(thresh);
-            }
-        }
-        sprintf(out, "balancing threshold is %.2f mV\r\n", bal_get_threshold() / 10.0);
-    } else if (strcmp(argv[1], "test") == 0) {
-        /*
-        CAN_TxHeaderTypeDef tx_header;
-        uint8_t buffer[CAN_MAX_PAYLOAD_LENGTH];
-        uint8_t board;
-        uint32_t cells = 0;
-
-        tx_header.ExtId = 0;
-        tx_header.IDE   = CAN_ID_STD;
-        tx_header.RTR   = CAN_RTR_DATA;
-        tx_header.StdId = BMS_SET_BALANCING_STATUS_FRAME_ID;
-
-        board = atoi(argv[2]);
-
-        if (argc < 4) {
-            sprintf(out, "wrong number of parameters\r\n");
-            return;
-        }
-
-        sprintf(out, "testing cells [");
-
-        uint8_t c;
-        for (uint8_t i = 3; i < argc; ++i) {
-            c = atoi(argv[i]);
-            cells |= 1 << c;
-            sprintf(out + strlen(out), "%u,", c);
-        }
-
-
-        tx_header.DLC = bms_balancing_pack(buffer, &raw, BMS_BALANCING_BYTE_SIZE);
-        can_send(&BMS_CAN, buffer, &tx_header);
-
-        sprintf(out + strlen(out) - 1, "]\r\non board %d\r\n", board);
-        */
-    } else if (argc < 2) {
-        sprintf(
-            out,
-            "Invalid number of parameters.\r\n\n"
-            "valid parameters:\r\n"
-            "- on\r\n"
-            "- off\r\n"
-            "- thr <millivolts>\r\n"
-            "- test <board> <cell0 cell1 ... cellN>\r\n");
-    } else {
-        sprintf(
-            out,
-            "Unknown parameter: %s\r\n\n"
-            "valid parameters:\r\n"
-            "- on\r\n"
-            "- off\r\n"
-            "- thr <millivolts>\r\n"
-            "- test <board> <cell0 cell1 ... cellN>\r\n",
-            argv[0]);
-    }
-}
 void _cli_soc(uint16_t argc, char **argv, char *out) {
     if (strcmp(argv[1], "reset") == 0) {
         soc_reset_soc();
