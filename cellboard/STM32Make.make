@@ -43,7 +43,6 @@ Core/Lib/can/lib/primary/primary_watchdog.c \
 Core/Lib/can/lib/secondary/secondary_network.c \
 Core/Lib/can/lib/secondary/secondary_watchdog.c \
 Core/Lib/micro-libs/blink/blink.c \
-Core/Lib/micro-libs/fsm/fsm.c \
 Core/Lib/micro-libs/m95256/m95256.c \
 Core/Lib/micro-libs/timer-utils/timer_utils.c \
 Core/Src/bal.c \
@@ -165,7 +164,6 @@ C_INCLUDES =  \
 -ICore/Inc/peripherals \
 -ICore/Lib/can/lib/ \
 -ICore/Lib/micro-libs/blink \
--ICore/Lib/micro-libs/fsm \
 -ICore/Lib/micro-libs/m95256 \
 -ICore/Lib/micro-libs/timer-utils \
 -IDrivers/CMSIS/Device/ST/STM32L4xx/Include \

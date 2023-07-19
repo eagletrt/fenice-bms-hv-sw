@@ -59,11 +59,10 @@
  */
 
 #define TIM_MEASUREMENTS htim2
-#define TIM_COOLDOWN     htim15
-#define TIM_DISCHARGE    htim16
+#define TIM_BAL htim15
 
-#define TIM_COOLDOWN_START_CHANNEL TIM_CHANNEL_1
-#define TIM_COOLDOWN_STOP_CHANNEL TIM_CHANNEL_2
+#define TIM_BAL_DISCHARGE_TIMEOUT_CHANNEL TIM_CHANNEL_1
+#define TIM_BAL_COOLDOWN_TIMEOUT_CHANNEL TIM_CHANNEL_2
 
 typedef float temperature_t;
 typedef int16_t current_t;

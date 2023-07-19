@@ -109,7 +109,6 @@ int main(void)
   MX_SPI3_Init();
   MX_USART1_UART_Init();
   MX_TIM2_Init();
-  MX_TIM16_Init();
   MX_TIM15_Init();
   /* USER CODE BEGIN 2 */
 
@@ -125,8 +124,6 @@ int main(void)
 
     //set temperature limits ( 0 - 60 )
     temp_set_limits(1.0, CELL_MAX_TEMPERATURE);
-
-    bal_fsm_init();
 
     can_init_with_filter();
 
@@ -177,7 +174,7 @@ int main(void)
         }
 #endif
 
-        fsm_run(bal.fsm);
+        fsm_run();
 
     /* USER CODE END WHILE */
 
@@ -240,16 +237,7 @@ void SystemClock_Config(void)
 
 /* USER CODE BEGIN 4 */
 
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
-    /*
-   When DISCHARGE_TIMER elapses bal_timers_handler is called,
-   when the function completes its work the DISCHARGE_TIMER is stopped
-  */
-    if (htim->Instance == TIM_DISCHARGE.Instance
-        || htim->Instance == TIM_COOLDOWN.Instance) {
-        bal_timers_handler(htim, bal.fsm);
-    }
-}
+
 
 /* USER CODE END 4 */
 

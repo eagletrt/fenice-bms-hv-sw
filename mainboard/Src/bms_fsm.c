@@ -41,16 +41,16 @@ The finite state machine has:
 
 // GLOBALS
 // State human-readable names
-const char *state_names[] = {"init", "idle", "fatal_error", "wait_airn_close", "wait_ts_precharge", "wait_airp_close", "ts_on"};
+const char * state_names[] = {"init", "idle", "fatal_error", "wait_airn_close", "wait_ts_precharge", "wait_airp_close", "ts_on"};
 char debug_msg[100] = { 0 };
 
-state_t fsm_state = STATE_INIT;
+bms_state_t fsm_state = STATE_INIT;
 blink_t led;
 bool airn_timeout = false;
 bool precharge_timeout = false;
 bool airp_timeout = false;
 
-fsm_transition_request set_ts_request = {
+bms_fsm_transition_request set_ts_request = {
     .is_new = false,
     .next_state = STATE_IDLE
 };
@@ -139,10 +139,9 @@ bool _requested_ts_off() {
 
 // Function to be executed in state init
 // valid return states: STATE_IDLE
-state_t do_init(state_data_t *data) {
-  state_t next_state = STATE_IDLE;
+bms_state_t do_init(state_data_t *data) {
+  bms_state_t next_state = STATE_IDLE;
   
-  // cli_bms_debug("[FSM] In state init", 19);
   /* Your Code Here */
   
   switch (next_state) {
@@ -160,10 +159,9 @@ state_t do_init(state_data_t *data) {
 
 // Function to be executed in state idle
 // valid return states: NO_CHANGE, STATE_IDLE, STATE_FATAL_ERROR, STATE_WAIT_AIRN_CLOSE
-state_t do_idle(state_data_t *data) {
-  state_t next_state = NO_CHANGE;
+bms_state_t do_idle(state_data_t *data) {
+  bms_state_t next_state = NO_CHANGE;
   
-  // cli_bms_debug("[FSM] In state idle", 19);
   /* Your Code Here */
 
   // Check for fatal errors
@@ -190,10 +188,9 @@ state_t do_idle(state_data_t *data) {
 
 // Function to be executed in state fatal_error
 // valid return states: NO_CHANGE, STATE_IDLE, STATE_FATAL_ERROR
-state_t do_fatal_error(state_data_t *data) {
-  state_t next_state = NO_CHANGE;
+bms_state_t do_fatal_error(state_data_t *data) {
+  bms_state_t next_state = NO_CHANGE;
   
-  // cli_bms_debug("[FSM] In state fatal_error", 26);
   /* Your Code Here */
 
   // Check errors and feedbacks
@@ -217,10 +214,9 @@ state_t do_fatal_error(state_data_t *data) {
 
 // Function to be executed in state wait_airn_close
 // valid return states: NO_CHANGE, STATE_IDLE, STATE_FATAL_ERROR, STATE_WAIT_AIRN_CLOSE, STATE_WAIT_TS_PRECHARGE
-state_t do_wait_airn_close(state_data_t *data) {
-  state_t next_state = NO_CHANGE;
+bms_state_t do_wait_airn_close(state_data_t *data) {
+  bms_state_t next_state = NO_CHANGE;
   
-  // cli_bms_debug("[FSM] In state wait_airn_close", 30);
   /* Your Code Here */
 
   // Check fatal errors
@@ -250,10 +246,9 @@ state_t do_wait_airn_close(state_data_t *data) {
 
 // Function to be executed in state wait_ts_precharge
 // valid return states: NO_CHANGE, STATE_IDLE, STATE_FATAL_ERROR, STATE_WAIT_TS_PRECHARGE, STATE_WAIT_AIRP_CLOSE
-state_t do_wait_ts_precharge(state_data_t *data) {
-  state_t next_state = NO_CHANGE;
+bms_state_t do_wait_ts_precharge(state_data_t *data) {
+  bms_state_t next_state = NO_CHANGE;
   
-  // cli_bms_debug("[FSM] In state wait_ts_precharge", 32);
   /* Your Code Here */
 
   // Check fatal errors
@@ -288,8 +283,8 @@ state_t do_wait_ts_precharge(state_data_t *data) {
 
 // Function to be executed in state wait_airp_close
 // valid return states: NO_CHANGE, STATE_IDLE, STATE_FATAL_ERROR, STATE_WAIT_AIRP_CLOSE, STATE_TS_ON
-state_t do_wait_airp_close(state_data_t *data) {
-  state_t next_state = NO_CHANGE;
+bms_state_t do_wait_airp_close(state_data_t *data) {
+  bms_state_t next_state = NO_CHANGE;
   
   // cli_bms_debug("[FSM] In state wait_airp_close", 30);
   /* Your Code Here */
@@ -322,8 +317,8 @@ state_t do_wait_airp_close(state_data_t *data) {
 
 // Function to be executed in state ts_on
 // valid return states: NO_CHANGE, STATE_IDLE, STATE_FATAL_ERROR, STATE_TS_ON
-state_t do_ts_on(state_data_t *data) {
-  state_t next_state = NO_CHANGE;
+bms_state_t do_ts_on(state_data_t *data) {
+  bms_state_t next_state = NO_CHANGE;
   
   // cli_bms_debug("[FSM] In state ts_on", 20);
   /* Your Code Here */
@@ -524,9 +519,9 @@ void set_ts_on(state_data_t *data) {
  *                              |___/           
  */
 
-state_t run_state(state_t cur_state, state_data_t *data) {
+bms_state_t run_state(bms_state_t cur_state, state_data_t *data) {
   bool received_request = set_ts_request.is_new;
-  state_t new_state = state_table[cur_state](data);
+  bms_state_t new_state = state_table[cur_state](data);
   if (received_request)
     set_ts_request.is_new = false;
   if (new_state == NO_CHANGE) new_state = cur_state;
@@ -553,7 +548,7 @@ void fsm_run() {
     // Run the FSM and updates
     fsm_state = run_state(fsm_state, NULL);
 }
-state_t fsm_get_state() {
+bms_state_t fsm_get_state() {
     return fsm_state;
 }
 void bms_set_led_blinker() {
@@ -585,7 +580,7 @@ void bms_blink_led() {
 #ifdef TEST_MAIN
 #include <unistd.h>
 int main() {
-  state_t cur_state = STATE_INIT;
+  bms_state_t cur_state = STATE_INIT;
   openlog("SM", LOG_PID | LOG_PERROR, LOG_USER);
   syslog(LOG_INFO, "Starting SM");
   do {
