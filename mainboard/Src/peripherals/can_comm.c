@@ -716,7 +716,7 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 
             is_handcart_connected = handcart_status.connected;
         } else if (rx_header.StdId == PRIMARY_HV_CAN_FORWARD_FRAME_ID) {
-            state_t fsm_state = fsm_get_state();
+            bms_state_t fsm_state = fsm_get_state();
             if (fsm_state != STATE_INIT && fsm_state != STATE_IDLE && fsm_state != STATE_FATAL_ERROR) {
                 can_forward = 0;
                 return;
@@ -750,7 +750,7 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
             fans_set_speed(conv_fans.fans_speed);
         }
         else {
-            state_t state = fsm_get_state();
+            bms_state_t state = fsm_get_state();
             if (rx_header.StdId == PRIMARY_BMS_HV_JMP_TO_BLT_FRAME_ID && (state == STATE_INIT || state == STATE_IDLE || state == STATE_FATAL_ERROR) && !bal_is_balancing())
                 HAL_NVIC_SystemReset();
         }

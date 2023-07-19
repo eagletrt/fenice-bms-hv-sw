@@ -29,62 +29,62 @@ typedef void state_data_t;
 
 // List of states
 typedef enum {
-  STATE_INIT = 0,  
-  STATE_IDLE,  
-  STATE_FATAL_ERROR,  
-  STATE_WAIT_AIRN_CLOSE,  
-  STATE_WAIT_TS_PRECHARGE,  
-  STATE_WAIT_AIRP_CLOSE,  
-  STATE_TS_ON,  
+  STATE_INIT = 0,
+  STATE_IDLE,
+  STATE_FATAL_ERROR,
+  STATE_WAIT_AIRN_CLOSE,
+  STATE_WAIT_TS_PRECHARGE,
+  STATE_WAIT_AIRP_CLOSE,
+  STATE_TS_ON,
   NUM_STATES,
   NO_CHANGE
-} state_t;
+} bms_state_t;
 
 typedef struct {
     // TODO: Add request sender
     // uint32_t timestamp;
     bool is_new;
-    state_t next_state;
-} fsm_transition_request;
+    bms_state_t next_state;
+} bms_fsm_transition_request;
 
-extern fsm_transition_request set_ts_request;
+extern bms_fsm_transition_request set_ts_request;
 
 // State human-readable names
 extern const char *state_names[];
 
 // State function and state transition prototypes
-typedef state_t state_func_t(state_data_t *data);
+typedef bms_state_t state_func_t(state_data_t *data);
 typedef void transition_func_t(state_data_t *data);
 
 // State functions
 
 // Function to be executed in state init
 // valid return states: STATE_IDLE
-state_t do_init(state_data_t *data);
+bms_state_t do_init(state_data_t *data);
 
 // Function to be executed in state idle
 // valid return states: NO_CHANGE, STATE_IDLE, STATE_FATAL_ERROR, STATE_WAIT_AIRN_CLOSE
-state_t do_idle(state_data_t *data);
+bms_state_t do_idle(state_data_t *data);
 
 // Function to be executed in state fatal_error
 // valid return states: NO_CHANGE, STATE_IDLE, STATE_FATAL_ERROR
-state_t do_fatal_error(state_data_t *data);
+bms_state_t do_fatal_error(state_data_t *data);
 
 // Function to be executed in state wait_airn_close
 // valid return states: NO_CHANGE, STATE_IDLE, STATE_FATAL_ERROR, STATE_WAIT_AIRN_CLOSE, STATE_WAIT_TS_PRECHARGE
-state_t do_wait_airn_close(state_data_t *data);
+bms_state_t do_wait_airn_close(state_data_t *data);
 
 // Function to be executed in state wait_ts_precharge
 // valid return states: NO_CHANGE, STATE_IDLE, STATE_FATAL_ERROR, STATE_WAIT_TS_PRECHARGE, STATE_WAIT_AIRP_CLOSE
-state_t do_wait_ts_precharge(state_data_t *data);
+bms_state_t do_wait_ts_precharge(state_data_t *data);
 
 // Function to be executed in state wait_airp_close
 // valid return states: NO_CHANGE, STATE_IDLE, STATE_FATAL_ERROR, STATE_WAIT_AIRP_CLOSE, STATE_TS_ON
-state_t do_wait_airp_close(state_data_t *data);
+bms_state_t do_wait_airp_close(state_data_t *data);
 
 // Function to be executed in state ts_on
 // valid return states: NO_CHANGE, STATE_IDLE, STATE_IDLE, STATE_FATAL_ERROR, STATE_TS_ON
-state_t do_ts_on(state_data_t *data);
+bms_state_t do_ts_on(state_data_t *data);
 
 
 // List of state functions
@@ -105,16 +105,16 @@ void set_ts_on(state_data_t *data);
 extern transition_func_t *const transition_table[NUM_STATES][NUM_STATES];
 
 // state manager
-state_t run_state(state_t cur_state, state_data_t *data);
+bms_state_t run_state(bms_state_t cur_state, state_data_t *data);
 
-/** @brief Run the fsm */
+/** @brief Run the FSM */
 void fsm_run();
 /**
  * @brief Get the state of the FSM
  * 
- * @return state_t The current state of the FSM
+ * @return bms_state_t The current state of the FSM
  */
-state_t fsm_get_state();
+bms_state_t fsm_get_state();
 /** @brief Set the led blinker pattern */
 void bms_set_led_blinker();
 /** @brief Run the led blinking pattern */

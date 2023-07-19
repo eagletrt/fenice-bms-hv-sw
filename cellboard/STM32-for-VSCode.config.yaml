@@ -72,7 +72,6 @@ includeDirectories:
   - Inc/**
   - Core/Inc/**
   - Core/Lib/micro-libs/m95256/**
-  - Core/Lib/micro-libs/fsm/**
   - Core/Lib/micro-libs/blink/**
   - Core/Lib/micro-libs/timer-utils/**
   - Core/Lib/can/lib/
@@ -87,7 +86,6 @@ sourceFiles:
   - Src/**
   - Core/Src/**
   - Core/Lib/micro-libs/m95256/**
-  - Core/Lib/micro-libs/fsm/**
   - Core/Lib/micro-libs/blink/**
   - Core/Lib/micro-libs/timer-utils/**
   - Core/Lib/can/lib/bms/*.c

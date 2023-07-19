@@ -1,12 +1,14 @@
 /**
- * @file		Volv.h
- * @brief		Voltage measurement functions
+ * @file volt.h
+ * @brief Voltage measurement functions
  *
- * @date		Jul 17, 2021
- * @author		Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @date Jul 17, 2021
+ * @author Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @author Antonio Gelain [antonio.gelain@studenti.unitn.it]
  */
 
-#pragma once
+#ifndef VOLT_H
+#define VOLT_H
 
 #include "cellboard_config.h"
 #include "peripherals/ltc6813_utils.h"
@@ -16,7 +18,12 @@
 
 extern voltage_t voltages[CELLBOARD_CELL_COUNT];
 
+/** @brief Initialize voltage measurement */
+void volt_init();
+
+/** @brief Start voltage measure */
 void volt_start_measure();
+/** @brief Read voltages */
 void volt_read();
 
 void volt_start_open_wire_check(uint8_t status);
@@ -40,3 +47,5 @@ uint16_t volt_get_min_index();
  * @return voltage_t * The pointer to the array of voltages
  */
 voltage_t * volt_get_volts();
+
+#endif

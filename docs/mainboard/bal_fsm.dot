@@ -1,38 +1,20 @@
-digraph " bal_fsm" {
+digraph "bal_fsm" {
     
     init
-    idle
-    fatal_error
-    wait_airn_close
-    wait_ts_precharge
-    wait_airp_close
-    ts_on
+    off
+    discharge
+    cooldown
 
-    init -> idle [label="init_to_idle"]
+    init -> off [label="init_to_off"]
 
-    idle -> idle
-    idle -> fatal_error [label="set_fatal_error"]
-    idle -> wait_airn_close [label="close_airn"]
+    off -> off
+    off -> discharge [label="start_discharge"]
 
-    wait_airn_close -> wait_airn_close
-    wait_airn_close -> fatal_error [label="set_fatal_error"]
-    wait_airn_close -> idle [label="set_ts_off"]
-    wait_airn_close -> wait_ts_precharge [label="start_precharge"]
+    discharge -> discharge
+    discharge -> off [label="stop_balancing"]
+    discharge -> cooldown [label="start_cooldown"]
 
-    wait_ts_precharge -> wait_ts_precharge
-    wait_ts_precharge -> fatal_error [label="set_fatal_error"]
-    wait_ts_precharge -> idle [label="set_ts_off"]
-    wait_ts_precharge -> wait_airp_close [label="close_airp"]
-
-    wait_airp_close -> wait_airp_close
-    wait_airp_close -> fatal_error [label="set_fatal_error"]
-    wait_airp_close -> idle [label="set_ts_off"]
-    wait_airp_close -> ts_on [label="set_ts_on"]
-
-    ts_on -> ts_on
-    ts_on -> fatal_error [label="set_fatal_error"]
-    ts_on -> idle [label="set_ts_off"]
-
-    fatal_error -> fatal_error
-    fatal_error -> idle [label="fatal_error_to_idle"]
+    cooldown -> cooldown
+    cooldown -> off [label="stop_balancing"]
+    cooldown -> discharge [label="cooldown_to_discharge"]
 }
