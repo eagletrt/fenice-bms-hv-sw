@@ -78,9 +78,7 @@ void can_send(uint16_t topic_id) {
         }
 
         // Add cellboard index in the payload
-        conv_state.cellboard_id = (cellboard_index == 7)
-            ? bms_board_status_cellboard_id_CELLBOARD_5
-            : cellboard_index;
+        conv_state.cellboard_id = cellboard_index;
 
         conv_state.errors_can_comm = ERROR_GET(ERROR_CAN);
         conv_state.errors_ltc_comm = ERROR_GET(ERROR_LTC_COMM);
