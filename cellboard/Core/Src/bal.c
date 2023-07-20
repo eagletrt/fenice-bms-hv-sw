@@ -30,10 +30,10 @@ uint8_t _max_index(uint16_t data[], size_t count) {
 /**
  * @returns	The index of the minimum value of data
  */
-uint16_t _min_index(voltage_t data[], size_t count) {
-    uint16_t min_value_index = 0;
-    for (uint16_t i = 0; i < count; i++) {
-        if (data[i] < data[min_value_index] && data[i] > 0)
+size_t _min_index(voltage_t data[], size_t count) {
+    size_t min_value_index = 0;
+    for (size_t i = 0; i < count; i++) {
+        if (data[i] < data[min_value_index] && data[i] >= 0)
             min_value_index = i;
     }
 
@@ -96,7 +96,7 @@ uint16_t _bal_hateville(uint16_t D[], uint16_t count, uint32_t solution) {
 
 /* @section Public functions */
 
-uint16_t bal_get_cells_to_discharge(
+size_t bal_get_cells_to_discharge(
     voltage_t volts[CELLBOARD_CELL_COUNT],
     uint32_t * cells,
     voltage_t target,
@@ -105,21 +105,19 @@ uint16_t bal_get_cells_to_discharge(
     if (volts == NULL || cells == NULL)
         return 0;
 
-    uint16_t len = 0;
-    uint16_t min_volt;
+    size_t len = 0;
 
     if (target == 0)
-        min_volt = volts[_min_index(volts, CELLBOARD_CELL_COUNT)];
-    else
-        min_volt = target;
+        target = volts[_min_index(volts, CELLBOARD_CELL_COUNT)];
 
     *cells = 0;
-    for (uint16_t i = 0; i < CELLBOARD_CELL_COUNT; i++) {
-        if (MAX(0, (int32_t)MAX(volts[i], CELL_MIN_VOLTAGE) - (min_volt + threshold))) {
-            *cells |= 1 << i;
+    for (size_t i = 0; i < CELLBOARD_CELL_COUNT; i++) {
+        if (MAX(0, (int32_t)MAX(volts[i], CELL_MIN_VOLTAGE) - (target + threshold))) {
+            *cells |= (1 << i);
             ++len;
         }
     }
+
     return len;
 
     /*
@@ -155,9 +153,9 @@ uint16_t bal_compute_imbalance_with_target(
 
 uint16_t bal_compute_imbalance(voltage_t volts[], uint16_t count, voltage_t threshold, uint16_t cells[]) {
     uint16_t indexes   = 0;
-    uint16_t min_index = _min_index(volts, count);
+    size_t min_index = _min_index(volts, count);
 
-    for (uint16_t i = 0; i < count; i++) {
+    for (size_t i = 0; i < count; i++) {
         cells[i] = MAX(0, volts[i] - (volts[min_index] + threshold));
         if (cells[i] > 0) {
             indexes++;

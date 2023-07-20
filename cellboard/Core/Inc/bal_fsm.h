@@ -117,11 +117,17 @@ bal_state_t fsm_get_state();
  */
 bool bal_is_cells_empty();
 /**
- * @brief Balancing timer callback function
+ * @brief Balancing timer output compare callback function
  * 
  * @param htim The timer handler instance
  */
 void bal_oc_timer_handler(TIM_HandleTypeDef * htim);
+/**
+ * @brief Balancing timer interrupt callback function
+ * 
+ * @param htim The timer handler instance
+ */
+void bal_timers_handler(TIM_HandleTypeDef * htim);
 
 
 #endif  // BAL_FSM_H

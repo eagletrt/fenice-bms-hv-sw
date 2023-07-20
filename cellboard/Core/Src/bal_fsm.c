@@ -36,7 +36,7 @@ bal_fsm_params bal_params = {
     .is_s_pin_high = false,
     .discharge_cells = 0,
     .cycle_length = DCTO_30S,
-    .target = 0,
+    .target = CELL_MAX_VOLTAGE,
     .threshold = BAL_MAX_VOLTAGE_THRESHOLD
 };
 bal_fsm_transition_request set_bal_request = {
@@ -44,7 +44,7 @@ bal_fsm_transition_request set_bal_request = {
     .next_state = STATE_OFF
 };
 
-uint32_t discharge_time = 0; // ms
+bool discharge_timeout = false;
 bool cooldown_timeout = false;
 
 // List of state functions
@@ -82,15 +82,6 @@ bool _requested_bal_on() {
 bool _requested_bal_off() {
     return set_bal_request.is_new && set_bal_request.next_state == STATE_OFF;
 }
-/**
- * @brief Check if the discharge timer is elapsed
- * 
- * @return true If the discharge timer has timed out
- * @return false Otherwise
- */
-bool _discharge_timeout() {
-    return discharge_time >= BAL_CYCLE_LENGTH;
-}
 
 bool bal_is_cells_empty() {
     return bal_params.discharge_cells == 0;
@@ -120,8 +111,8 @@ bal_state_t do_init(state_data_t *data) {
     case STATE_OFF:
       break;
     default:
-      sprintf(debug_msg, "[FSM] Cannot pass from init to %s, remaining in this state", state_names[next_state]);
-      HAL_UART_Transmit(&CLI_UART, debug_msg, strlen(debug_msg), 100);
+      sprintf(debug_msg, "[FSM] Cannot pass from init to %s, remaining in this state\r\n", state_names[next_state]);
+      HAL_UART_Transmit(&CLI_UART, (uint8_t *)debug_msg, strlen(debug_msg), 100);
       next_state = NO_CHANGE;
   }
   
@@ -145,8 +136,8 @@ bal_state_t do_off(state_data_t *data) {
     case STATE_DISCHARGE:
       break;
     default:
-      sprintf(debug_msg, "[FSM] Cannot pass from init to %s, remaining in this state", state_names[next_state]);
-      HAL_UART_Transmit(&CLI_UART, debug_msg, strlen(debug_msg), 100);
+      sprintf(debug_msg, "[FSM] Cannot pass from init to %s, remaining in this state\r\n", state_names[next_state]);
+      HAL_UART_Transmit(&CLI_UART, (uint8_t *)debug_msg, strlen(debug_msg), 100);
       next_state = NO_CHANGE;
   }
   
@@ -170,7 +161,7 @@ bal_state_t do_discharge(state_data_t *data) {
 
   if (_requested_bal_off() || bal_is_cells_empty())
     next_state = STATE_OFF;
-  else if (_discharge_timeout())
+  else if (discharge_timeout)
     next_state = STATE_COOLDOWN;
   
   switch (next_state) {
@@ -180,8 +171,8 @@ bal_state_t do_discharge(state_data_t *data) {
     case STATE_COOLDOWN:
       break;
     default:
-      sprintf(debug_msg, "[FSM] Cannot pass from init to %s, remaining in this state", state_names[next_state]);
-      HAL_UART_Transmit(&CLI_UART, debug_msg, strlen(debug_msg), 100);
+      sprintf(debug_msg, "[FSM] Cannot pass from init to %s, remaining in this state\r\n", state_names[next_state]);
+      HAL_UART_Transmit(&CLI_UART, (uint8_t *)debug_msg, strlen(debug_msg), 100);
       next_state = NO_CHANGE;
   }
   
@@ -205,21 +196,18 @@ bal_state_t do_cooldown(state_data_t *data) {
 
   if (_requested_bal_off() || bal_is_cells_empty())
     next_state = STATE_OFF;
-  else if (cooldown_timeout) {
-    if (bal_is_cells_empty())
-      next_state = STATE_OFF;
-    else
-      next_state = STATE_DISCHARGE;
-  }
+  else if (cooldown_timeout)
+    next_state = STATE_DISCHARGE;
   
   switch (next_state) {
     case NO_CHANGE:
     case STATE_OFF:
+    case STATE_DISCHARGE:
     case STATE_COOLDOWN:
       break;
     default:
-      sprintf(debug_msg, "[FSM] Cannot pass from init to %s, remaining in this state", state_names[next_state]);
-      HAL_UART_Transmit(&CLI_UART, debug_msg, strlen(debug_msg), 100);
+      sprintf(debug_msg, "[FSM] Cannot pass from init to %s, remaining in this state\r\n", state_names[next_state]);
+      HAL_UART_Transmit(&CLI_UART, (uint8_t *)debug_msg, strlen(debug_msg), 100);
       next_state = NO_CHANGE;
   }
   
@@ -243,71 +231,84 @@ bal_state_t do_cooldown(state_data_t *data) {
 // This function is called in 1 transition:
 // 1. from init to off
 void init_to_off(state_data_t * data) {
-  HAL_UART_Transmit(&CLI_UART, "[FSM] State transition init_to_off", 34, 100);
+  HAL_UART_Transmit(&CLI_UART, (uint8_t *)"[FSM] State transition init_to_off\r\n", 36, 100);
   /* Your Code Here */
 
-  // Set autoreload of balancing timer
-  __HAL_TIM_SET_AUTORELOAD(&TIM_BAL, TIM_MS_TO_TICKS(&TIM_BAL, BAL_CYCLE_LENGTH + BAL_COOLDOWN_DELAY));
-  // Set cooldown delay
-  __HAL_TIM_SetCompare(&TIM_BAL, TIM_BAL_COOLDOWN_TIMEOUT_CHANNEL, TIM_MS_TO_TICKS(&TIM_BAL, BAL_COOLDOWN_DELAY));
+  // Set timers autoreload
+  __HAL_TIM_SET_AUTORELOAD(&TIM_DISCHARGE, TIM_MS_TO_TICKS(&TIM_COOLDOWN, BAL_CYCLE_LENGTH));
+  __HAL_TIM_SET_AUTORELOAD(&TIM_COOLDOWN, TIM_MS_TO_TICKS(&TIM_COOLDOWN, BAL_COOLDOWN_DELAY));
 
   // Reset balancing (just in case)
+  bal_params.discharge_cells = 0;
   ltc6813_set_balancing(&LTC6813_SPI, bal_params.discharge_cells, DCTO_DISABLED);
 }
 
 // This function is called in 1 transition:
 // 1. from off to discharge
 void start_discharge(state_data_t * data) {
-  HAL_UART_Transmit(&CLI_UART, "[FSM] State transition start_discharge", 38, 100);
+  HAL_UART_Transmit(&CLI_UART, (uint8_t *)"[FSM] State transition start_discharge\r\n", 40, 100);
   /* Your Code Here */
 
-  // Start the balancing timer
-  __HAL_TIM_SetCounter(&TIM_BAL, 0U);
-  __HAL_TIM_SetCompare(&TIM_BAL, TIM_BAL_DISCHARGE_TIMEOUT_CHANNEL, TIM_MS_TO_TICKS(&TIM_BAL, BAL_TIME_ON));
-  __HAL_TIM_CLEAR_IT(&TIM_BAL, TIM_IT_UPDATE);
-  HAL_TIM_OC_Start_IT(&TIM_BAL, TIM_BAL_DISCHARGE_TIMEOUT_CHANNEL);
+  // Reset the discharge timer
+  __HAL_TIM_SetCounter(&TIM_DISCHARGE, 0U);
+  __HAL_TIM_SetCompare(&TIM_DISCHARGE, TIM_CHANNEL_1, TIM_MS_TO_TICKS(&TIM_DISCHARGE, BAL_TIME_ON));
+  __HAL_TIM_CLEAR_IT(&TIM_DISCHARGE, TIM_IT_UPDATE);
+
+  // Start discharge timer
+  HAL_TIM_Base_Start_IT(&TIM_DISCHARGE);
+  HAL_TIM_OC_Start_IT(&TIM_DISCHARGE, TIM_CHANNEL_1);
   
   // Start balancing
   bal_params.is_s_pin_high = true;
   ltc6813_set_balancing(&LTC6813_SPI, bal_params.discharge_cells, bal_params.cycle_length);
 
-  // Reset discharge time
-  discharge_time = 0;
+  discharge_timeout = false;
 }
 
 // This function is called in 2 transitions:
 // 1. from discharge to off
 // 2. from cooldown to off
 void stop_balancing(state_data_t * data) {
-  HAL_UART_Transmit(&CLI_UART, "[FSM] State transition stop_balancing", 37, 100);
+  HAL_UART_Transmit(&CLI_UART, (uint8_t *)"[FSM] State transition stop_balancing\r\n", 39, 100);
   /* Your Code Here */
 
-  // Stop balancing timer
-  HAL_TIM_OC_Stop_IT(&TIM_BAL, TIM_BAL_DISCHARGE_TIMEOUT_CHANNEL);
-  HAL_TIM_OC_Stop_IT(&TIM_BAL, TIM_BAL_COOLDOWN_TIMEOUT_CHANNEL);
-  __HAL_TIM_CLEAR_IT(&TIM_BAL, TIM_IT_UPDATE);
+  // Stop discharge timer
+  HAL_TIM_Base_Stop_IT(&TIM_DISCHARGE);
+  HAL_TIM_OC_Stop_IT(&TIM_DISCHARGE, TIM_CHANNEL_1);
+  __HAL_TIM_CLEAR_IT(&TIM_DISCHARGE, TIM_IT_UPDATE);
+  __HAL_TIM_CLEAR_FLAG(&TIM_DISCHARGE, TIM_IT_CC1);  
+
+  // Stop cooldown timer
+  HAL_TIM_Base_Stop_IT(&TIM_COOLDOWN);
+  __HAL_TIM_CLEAR_IT(&TIM_COOLDOWN, TIM_IT_UPDATE);
 
   // Reset balancing
+  bal_params.is_s_pin_high = false;
   bal_params.discharge_cells = 0;
   ltc6813_set_balancing(&LTC6813_SPI, bal_params.discharge_cells, DCTO_DISABLED);
 
   // Reset timeouts
-  discharge_time = 0;
+  discharge_timeout = false;
   cooldown_timeout = false;
 }
 
 // This function is called in 1 transition:
 // 1. from discharge to cooldown
 void start_cooldown(state_data_t *data) {
-  HAL_UART_Transmit(&CLI_UART, "[FSM] State transition start_cooldown", 37, 100);
+  HAL_UART_Transmit(&CLI_UART, (uint8_t *)"[FSM] State transition start_cooldown\r\n", 39, 100);
   /* Your Code Here */
 
-  // Stop discharge timer channel and start cooldown timer channel
-  HAL_TIM_OC_Stop_IT(&TIM_BAL, TIM_BAL_DISCHARGE_TIMEOUT_CHANNEL);
-  HAL_TIM_OC_Start_IT(&TIM_BAL, TIM_BAL_COOLDOWN_TIMEOUT_CHANNEL);
-  __HAL_TIM_CLEAR_IT(&TIM_BAL, TIM_IT_UPDATE);
+  // Stop discharge timer
+  HAL_TIM_Base_Stop_IT(&TIM_DISCHARGE);
+  HAL_TIM_OC_Stop_IT(&TIM_DISCHARGE, TIM_CHANNEL_1);
+  __HAL_TIM_CLEAR_IT(&TIM_DISCHARGE, TIM_IT_UPDATE);
+  __HAL_TIM_CLEAR_FLAG(&TIM_DISCHARGE, TIM_IT_CC1);
+
+  // Start cooldown timer
+  HAL_TIM_Base_Start_IT(&TIM_COOLDOWN);
 
   // Reset balancing
+  bal_params.is_s_pin_high = false;
   bal_params.discharge_cells = 0;
   ltc6813_set_balancing(&LTC6813_SPI, bal_params.discharge_cells, DCTO_DISABLED);
 
@@ -318,20 +319,28 @@ void start_cooldown(state_data_t *data) {
 // This function is called in 1 transition:
 // 1. from cooldown to discharge
 void cooldown_to_discharge(state_data_t *data) {
-  HAL_UART_Transmit(&CLI_UART, "[FSM] State transition cooldown_to_discharge", 44, 100);
+  HAL_UART_Transmit(&CLI_UART, (uint8_t *)"[FSM] State transition cooldown_to_discharge\r\n", 46, 100);
   /* Your Code Here */
 
-  // Stop cooldown timer channel and start discharge timer channel
-  HAL_TIM_OC_Start_IT(&TIM_BAL, TIM_BAL_DISCHARGE_TIMEOUT_CHANNEL);
-  HAL_TIM_OC_Start_IT(&TIM_BAL, TIM_BAL_COOLDOWN_TIMEOUT_CHANNEL);
-  __HAL_TIM_CLEAR_IT(&TIM_BAL, TIM_IT_UPDATE);
+  // Stop cooldown timer
+  HAL_TIM_Base_Stop_IT(&TIM_COOLDOWN);
+  __HAL_TIM_CLEAR_IT(&TIM_COOLDOWN, TIM_IT_UPDATE);
+
+  // Reset the discharge timer
+  __HAL_TIM_SetCounter(&TIM_DISCHARGE, 0U);
+  __HAL_TIM_SetCompare(&TIM_DISCHARGE, TIM_CHANNEL_1, TIM_MS_TO_TICKS(&TIM_DISCHARGE, BAL_TIME_ON));
+  __HAL_TIM_CLEAR_IT(&TIM_DISCHARGE, TIM_IT_UPDATE);
+
+  // Start discharge timer
+  HAL_TIM_Base_Start_IT(&TIM_DISCHARGE);
+  HAL_TIM_OC_Start_IT(&TIM_DISCHARGE, TIM_CHANNEL_1);
 
   // Restart balancing
   bal_params.is_s_pin_high = true;
   ltc6813_set_balancing(&LTC6813_SPI, bal_params.discharge_cells, bal_params.cycle_length);
 
   // Reset discharge time
-  discharge_time = 0;
+  discharge_timeout = false;
 }
 
 
@@ -376,22 +385,23 @@ bal_state_t fsm_get_state() {
 
 void bal_oc_timer_handler(TIM_HandleTypeDef * htim) {
     if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1) {
-        uint32_t cmp = __HAL_TIM_GetCompare(htim, TIM_BAL_DISCHARGE_TIMEOUT_CHANNEL);
-
-        // Toggle between discharge and 
+        uint32_t cmp = __HAL_TIM_GetCompare(htim, TIM_CHANNEL_1);
+        
         if (bal_params.is_s_pin_high) {
             ltc6813_set_balancing(&LTC6813_SPI, 0, DCTO_DISABLED);
-            __HAL_TIM_SetCompare(htim, TIM_BAL_DISCHARGE_TIMEOUT_CHANNEL, cmp + TIM_MS_TO_TICKS(htim, BAL_TIME_OFF));
-            discharge_time += BAL_TIME_ON;
-        } else {
+            __HAL_TIM_SET_COMPARE(&TIM_DISCHARGE, TIM_CHANNEL_1, cmp + TIM_MS_TO_TICKS(htim, BAL_TIME_OFF));
+        }
+        else {
             ltc6813_set_balancing(&LTC6813_SPI, bal_params.discharge_cells, bal_params.cycle_length);
-            __HAL_TIM_SetCompare(htim, TIM_BAL_DISCHARGE_TIMEOUT_CHANNEL, cmp + TIM_MS_TO_TICKS(htim, BAL_TIME_ON));
-            discharge_time += BAL_TIME_OFF;
+            __HAL_TIM_SET_COMPARE(&TIM_DISCHARGE, TIM_CHANNEL_1, cmp + TIM_MS_TO_TICKS(htim, BAL_TIME_OFF));
         }
         bal_params.is_s_pin_high = !bal_params.is_s_pin_high;
     }
-    else if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_2) {
-        // Cooldown has timed out
+}
+// TODO: Handle discharge timeouts greater than 30s
+void bal_timers_handler(TIM_HandleTypeDef * htim) {
+    if (htim->Instance == TIM_DISCHARGE.Instance)
+        discharge_timeout = true;
+    else if (htim->Instance == TIM_COOLDOWN.Instance)
         cooldown_timeout = true;
-    }
 }

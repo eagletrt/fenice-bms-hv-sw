@@ -67,11 +67,13 @@ void can_send(uint16_t topic_id) {
         switch (fsm_get_state()) {
             case STATE_INIT:
             case STATE_OFF:
+            case STATE_COOLDOWN:
                 conv_state.balancing_status = BMS_BOARD_STATUS_BALANCING_STATUS_OFF_CHOICE;
                 break;
             case STATE_DISCHARGE:
-            case STATE_COOLDOWN:
                 conv_state.balancing_status = BMS_BOARD_STATUS_BALANCING_STATUS_DISCHARGE_CHOICE;
+                break;
+            default:
                 break;
         }
 
