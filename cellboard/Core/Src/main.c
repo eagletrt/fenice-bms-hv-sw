@@ -110,6 +110,7 @@ int main(void)
   MX_USART1_UART_Init();
   MX_TIM2_Init();
   MX_TIM15_Init();
+  MX_TIM16_Init();
   /* USER CODE BEGIN 2 */
 
     cellboard_index = HAL_GPIO_ReadPin(ADDRESS_2_GPIO_Port, ADDRESS_2_Pin) |

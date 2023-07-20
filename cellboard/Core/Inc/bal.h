@@ -30,7 +30,7 @@
  * 
  * @returns amount of cells to be discharged
  */
-uint16_t bal_get_cells_to_discharge(
+size_t bal_get_cells_to_discharge(
     voltage_t volts[CELLBOARD_CELL_COUNT],
     uint32_t * cells,
     voltage_t target,
