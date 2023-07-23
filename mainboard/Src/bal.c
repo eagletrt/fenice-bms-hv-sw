@@ -38,7 +38,7 @@ voltage_t bal_get_threshold() {
     return ((bal_params *)config_get(&config))->threshold;
 }
 void bal_set_threshold(uint16_t thresh) {
-    thresh = MAX(thresh, BAL_MAX_VOLTAGE_THRESHOLD);
+    thresh = MIN(thresh, BAL_MAX_VOLTAGE_THRESHOLD);
 
     bal_params params = *(bal_params *)config_get(&config);
     params.threshold  = thresh;
