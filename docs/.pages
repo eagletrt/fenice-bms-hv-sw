@@ -1,5 +1,6 @@
 title: High-Voltage BMS
 nav:
     - index.md
-    - mainboard
     - bootloader
+    - mainboard
+    - cellboard
