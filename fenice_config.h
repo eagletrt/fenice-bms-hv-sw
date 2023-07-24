@@ -184,9 +184,9 @@ static const uint8_t TEMP_SENSOR_ADDRESS_CODING[TEMP_SENSORS_PER_STRIP] = {000, 
 
 // @section Pre-charge
 
-#define AIRN_CHECK_TIMEOUT 4000
+#define AIRN_CHECK_TIMEOUT 1000
 #define PRECHARGE_TIMEOUT  10000
-#define AIRP_CHECK_TIMEOUT 4000
+#define AIRP_CHECK_TIMEOUT 1000
 #define CELLBOARD_COMM_TIMEOUT 500
 
 /** @brief Multiplexer feedbacks */
