@@ -1,21 +1,31 @@
+/**
+ * @file mainboard_config.c
+ * @brief Functions to ensure that all the measurements and error checks
+ * happens periodically for a given interval
+ *
+ * @date Nov 13, 2021
+ * @author Federico Carbone [federico.carbone@studenti.unitn.it]
+ * @author Antonio Gelain [antonio.gelain@studenti.unitn.it]
+ */
 #include "measures.h"
 
+#include <stdint.h>
 #include <stdbool.h>
 
-#include "bms_fsm.h"
+#include "tim.h"
+#include "mainboard_config.h"
+#include "primary/primary_network.h"
 #include "can_comm.h"
-#include "pwm.h"
+#include "pack/internal_voltage.h"
+#include "pack/cell_voltage.h"
+#include "pack/temperature.h"
+#include "pack/current.h"
 #include "soc.h"
-#include "spi.h"
-#include "temperature.h"
-#include "internal_voltage.h"
-#include "cell_voltage.h"
 #include "watchdog.h"
 #include "fans_buzzer.h"
-#include "bal.h"
 
-#define MEASURE_CHECK_DELAY 10000
-#define _MEASURE_CHECK_INTERVAL(interval) (((counter) % (interval)) == 0)
+#define MEASURE_CHECK_DELAY 10000 // ms
+#define _MEASURE_CHECK_INTERVAL(interval) (((counter) % (interval)) == 0) // Check if a given interval is passed
 
 uint32_t counter = 0; // Each timer interrupt it increments by 1
 uint32_t timestamp = 0;
