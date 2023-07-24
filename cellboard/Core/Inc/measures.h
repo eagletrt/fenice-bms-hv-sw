@@ -1,30 +1,24 @@
 /**
- * @file mainboard_config.h
+ * @file measurements.h
  * @brief Functions to ensure that all the measurements and error checks
  * happens periodically for a given interval
- *
- * @date Nov 13, 2021
- * @author Federico Carbone [federico.carbone@studenti.unitn.it]
+ * 
+ * @date Jul 24, 2023
  * @author Antonio Gelain [antonio.gelain@studenti.unitn.it]
  */
 
-#ifndef MEASURE_H
-#define MEASURE_H
+#ifndef MEASURES_H
+#define MEASURES_H
 
-#include "stm32f4xx_hal.h"
+#include "stm32l4xx_hal.h"
 
 #define MEASURE_BASE_INTERVAL_MS 5 // Interval of the timer in ms
 
 // Measure interval based on the base timer interval
 typedef enum {
     MEASURE_INTERVAL_10MS  = 10 / MEASURE_BASE_INTERVAL_MS,
-    MEASURE_INTERVAL_50MS  = 50 / MEASURE_BASE_INTERVAL_MS,
-    MEASURE_INTERVAL_100MS = 100 / MEASURE_BASE_INTERVAL_MS,
-    MEASURE_INTERVAL_500MS = 500 / MEASURE_BASE_INTERVAL_MS,
-    MEASURE_INTERVAL_1S    = 1000 / MEASURE_BASE_INTERVAL_MS,
-    MEASURE_INTERVAL_5S    = 5000 / MEASURE_BASE_INTERVAL_MS
+    MEASURE_INTERVAL_200MS = 200 / MEASURE_BASE_INTERVAL_MS
 } MEASURE_INTERVAL;
-
 
 /** @brief Initialize all measures */
 void measures_init();
@@ -37,4 +31,4 @@ void measures_check_flags();
  */
 void _measures_handle_tim_oc_irq(TIM_HandleTypeDef * htim);
 
-#endif // MEASURE_H
+#endif // MEASURES_H

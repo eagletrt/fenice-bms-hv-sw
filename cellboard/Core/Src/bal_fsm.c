@@ -235,8 +235,8 @@ void init_to_off(state_data_t * data) {
   /* Your Code Here */
 
   // Set timers autoreload
-  __HAL_TIM_SET_AUTORELOAD(&TIM_DISCHARGE, TIM_MS_TO_TICKS(&TIM_COOLDOWN, BAL_CYCLE_LENGTH));
-  __HAL_TIM_SET_AUTORELOAD(&TIM_COOLDOWN, TIM_MS_TO_TICKS(&TIM_COOLDOWN, BAL_COOLDOWN_DELAY));
+  __HAL_TIM_SET_AUTORELOAD(&HTIM_DISCHARGE, TIM_MS_TO_TICKS(&HTIM_COOLDOWN, BAL_CYCLE_LENGTH));
+  __HAL_TIM_SET_AUTORELOAD(&HTIM_COOLDOWN, TIM_MS_TO_TICKS(&HTIM_COOLDOWN, BAL_COOLDOWN_DELAY));
 
   // Reset balancing (just in case)
   bal_params.discharge_cells = 0;
@@ -250,13 +250,13 @@ void start_discharge(state_data_t * data) {
   /* Your Code Here */
 
   // Reset the discharge timer
-  __HAL_TIM_SetCounter(&TIM_DISCHARGE, 0U);
-  __HAL_TIM_SetCompare(&TIM_DISCHARGE, TIM_CHANNEL_1, TIM_MS_TO_TICKS(&TIM_DISCHARGE, BAL_TIME_ON));
-  __HAL_TIM_CLEAR_IT(&TIM_DISCHARGE, TIM_IT_UPDATE);
+  __HAL_TIM_SetCounter(&HTIM_DISCHARGE, 0U);
+  __HAL_TIM_SetCompare(&HTIM_DISCHARGE, TIM_CHANNEL_1, TIM_MS_TO_TICKS(&HTIM_DISCHARGE, BAL_TIME_ON));
+  __HAL_TIM_CLEAR_IT(&HTIM_DISCHARGE, TIM_IT_UPDATE);
 
   // Start discharge timer
-  HAL_TIM_Base_Start_IT(&TIM_DISCHARGE);
-  HAL_TIM_OC_Start_IT(&TIM_DISCHARGE, TIM_CHANNEL_1);
+  HAL_TIM_Base_Start_IT(&HTIM_DISCHARGE);
+  HAL_TIM_OC_Start_IT(&HTIM_DISCHARGE, TIM_CHANNEL_1);
   
   // Start balancing
   bal_params.is_s_pin_high = true;
@@ -273,14 +273,14 @@ void stop_balancing(state_data_t * data) {
   /* Your Code Here */
 
   // Stop discharge timer
-  HAL_TIM_Base_Stop_IT(&TIM_DISCHARGE);
-  HAL_TIM_OC_Stop_IT(&TIM_DISCHARGE, TIM_CHANNEL_1);
-  __HAL_TIM_CLEAR_IT(&TIM_DISCHARGE, TIM_IT_UPDATE);
-  __HAL_TIM_CLEAR_FLAG(&TIM_DISCHARGE, TIM_IT_CC1);  
+  HAL_TIM_Base_Stop_IT(&HTIM_DISCHARGE);
+  HAL_TIM_OC_Stop_IT(&HTIM_DISCHARGE, TIM_CHANNEL_1);
+  __HAL_TIM_CLEAR_IT(&HTIM_DISCHARGE, TIM_IT_UPDATE);
+  __HAL_TIM_CLEAR_FLAG(&HTIM_DISCHARGE, TIM_IT_CC1);  
 
   // Stop cooldown timer
-  HAL_TIM_Base_Stop_IT(&TIM_COOLDOWN);
-  __HAL_TIM_CLEAR_IT(&TIM_COOLDOWN, TIM_IT_UPDATE);
+  HAL_TIM_Base_Stop_IT(&HTIM_COOLDOWN);
+  __HAL_TIM_CLEAR_IT(&HTIM_COOLDOWN, TIM_IT_UPDATE);
 
   // Reset balancing
   bal_params.is_s_pin_high = false;
@@ -299,13 +299,13 @@ void start_cooldown(state_data_t *data) {
   /* Your Code Here */
 
   // Stop discharge timer
-  HAL_TIM_Base_Stop_IT(&TIM_DISCHARGE);
-  HAL_TIM_OC_Stop_IT(&TIM_DISCHARGE, TIM_CHANNEL_1);
-  __HAL_TIM_CLEAR_IT(&TIM_DISCHARGE, TIM_IT_UPDATE);
-  __HAL_TIM_CLEAR_FLAG(&TIM_DISCHARGE, TIM_IT_CC1);
+  HAL_TIM_Base_Stop_IT(&HTIM_DISCHARGE);
+  HAL_TIM_OC_Stop_IT(&HTIM_DISCHARGE, TIM_CHANNEL_1);
+  __HAL_TIM_CLEAR_IT(&HTIM_DISCHARGE, TIM_IT_UPDATE);
+  __HAL_TIM_CLEAR_FLAG(&HTIM_DISCHARGE, TIM_IT_CC1);
 
   // Start cooldown timer
-  HAL_TIM_Base_Start_IT(&TIM_COOLDOWN);
+  HAL_TIM_Base_Start_IT(&HTIM_COOLDOWN);
 
   // Reset balancing
   bal_params.is_s_pin_high = false;
@@ -323,17 +323,17 @@ void cooldown_to_discharge(state_data_t *data) {
   /* Your Code Here */
 
   // Stop cooldown timer
-  HAL_TIM_Base_Stop_IT(&TIM_COOLDOWN);
-  __HAL_TIM_CLEAR_IT(&TIM_COOLDOWN, TIM_IT_UPDATE);
+  HAL_TIM_Base_Stop_IT(&HTIM_COOLDOWN);
+  __HAL_TIM_CLEAR_IT(&HTIM_COOLDOWN, TIM_IT_UPDATE);
 
   // Reset the discharge timer
-  __HAL_TIM_SetCounter(&TIM_DISCHARGE, 0U);
-  __HAL_TIM_SetCompare(&TIM_DISCHARGE, TIM_CHANNEL_1, TIM_MS_TO_TICKS(&TIM_DISCHARGE, BAL_TIME_ON));
-  __HAL_TIM_CLEAR_IT(&TIM_DISCHARGE, TIM_IT_UPDATE);
+  __HAL_TIM_SetCounter(&HTIM_DISCHARGE, 0U);
+  __HAL_TIM_SetCompare(&HTIM_DISCHARGE, TIM_CHANNEL_1, TIM_MS_TO_TICKS(&HTIM_DISCHARGE, BAL_TIME_ON));
+  __HAL_TIM_CLEAR_IT(&HTIM_DISCHARGE, TIM_IT_UPDATE);
 
   // Start discharge timer
-  HAL_TIM_Base_Start_IT(&TIM_DISCHARGE);
-  HAL_TIM_OC_Start_IT(&TIM_DISCHARGE, TIM_CHANNEL_1);
+  HAL_TIM_Base_Start_IT(&HTIM_DISCHARGE);
+  HAL_TIM_OC_Start_IT(&HTIM_DISCHARGE, TIM_CHANNEL_1);
 
   // Restart balancing
   bal_params.is_s_pin_high = true;
@@ -389,19 +389,19 @@ void bal_oc_timer_handler(TIM_HandleTypeDef * htim) {
         
         if (bal_params.is_s_pin_high) {
             ltc6813_set_balancing(&LTC6813_SPI, 0, DCTO_DISABLED);
-            __HAL_TIM_SET_COMPARE(&TIM_DISCHARGE, TIM_CHANNEL_1, cmp + TIM_MS_TO_TICKS(htim, BAL_TIME_OFF));
+            __HAL_TIM_SET_COMPARE(&HTIM_DISCHARGE, TIM_CHANNEL_1, cmp + TIM_MS_TO_TICKS(htim, BAL_TIME_OFF));
         }
         else {
             ltc6813_set_balancing(&LTC6813_SPI, bal_params.discharge_cells, bal_params.cycle_length);
-            __HAL_TIM_SET_COMPARE(&TIM_DISCHARGE, TIM_CHANNEL_1, cmp + TIM_MS_TO_TICKS(htim, BAL_TIME_OFF));
+            __HAL_TIM_SET_COMPARE(&HTIM_DISCHARGE, TIM_CHANNEL_1, cmp + TIM_MS_TO_TICKS(htim, BAL_TIME_OFF));
         }
         bal_params.is_s_pin_high = !bal_params.is_s_pin_high;
     }
 }
 // TODO: Handle discharge timeouts greater than 30s
 void bal_timers_handler(TIM_HandleTypeDef * htim) {
-    if (htim->Instance == TIM_DISCHARGE.Instance)
+    if (htim->Instance == HTIM_DISCHARGE.Instance)
         discharge_timeout = true;
-    else if (htim->Instance == TIM_COOLDOWN.Instance)
+    else if (htim->Instance == HTIM_COOLDOWN.Instance)
         cooldown_timeout = true;
 }

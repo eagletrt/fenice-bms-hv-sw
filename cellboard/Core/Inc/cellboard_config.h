@@ -58,9 +58,9 @@
  * Timers interval (ms)
  */
 
-#define TIM_MEASUREMENTS htim2
-#define TIM_DISCHARGE htim15
-#define TIM_COOLDOWN htim16
+#define HTIM_MEASURES htim2
+#define HTIM_DISCHARGE htim15
+#define HTIM_COOLDOWN htim16
 
 typedef float temperature_t;
 typedef int16_t current_t;
