@@ -428,6 +428,12 @@ HAL_StatusTypeDef can_bms_send(uint16_t id) {
         uint16_t target = MAX(CELL_MIN_VOLTAGE, cell_voltage_get_min());
         uint16_t threshold = MIN(BAL_MAX_VOLTAGE_THRESHOLD, bal_get_threshold());
 
+        char msg[30] = { 0 };
+        sprintf(msg, "Target: %hu", target);
+        cli_bms_debug(msg, strlen(msg));
+        sprintf(msg, "Threshold: %hu", threshold);
+        cli_bms_debug(msg, strlen(msg));
+
         for (size_t i = 0; i < CELLBOARD_COUNT; ++i) {
             bms_set_balancing_status_t raw_bal = { 0 };
             bms_set_balancing_status_converted_t conv_bal = { 0 };

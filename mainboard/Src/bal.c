@@ -66,9 +66,9 @@ void bal_init() {
 
 void bal_start() {
     // Override fans speed
-    if (!fans_is_overrided())
-        fans_toggle_override();
-    fans_set_speed(0.6f);
+    // if (!fans_is_overrided())
+    //     fans_toggle_override();
+    // fans_set_speed(0.6f);
 
     cli_bms_debug("Starting balancing...", 21);
     set_balancing = true;
@@ -76,11 +76,11 @@ void bal_start() {
     set_balancing = false;
 }
 void bal_stop() {
-    // Set fans speed to auto
-    if (fans_is_overrided())
-        fans_toggle_override();
-    
     set_balancing = false;
     can_bms_send(BMS_SET_BALANCING_STATUS_FRAME_ID);
-    fans_set_speed(0);
+
+    // Set fans speed to auto
+    // if (fans_is_overrided())
+    //     fans_toggle_override();
+    // fans_set_speed(0);
 }

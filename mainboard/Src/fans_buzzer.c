@@ -43,7 +43,10 @@ void fans_set_speed(float power) {
 float fans_curve(float temp) {
     if (temp <= CELL_MIN_TEMPERATURE) return 0.f;
     if (temp >= CELL_MAX_TEMPERATURE) return 1.f;
-    return MAX(0.f, (temp - 30.f) * (1.f / 30.f));
+
+    if (temp < 30.f) return 0.f;
+    if (temp > 45.f) return 1.f;
+    return 1.5f * (temp - 30.f) / 25.f + 0.1f;
 }
 
 
