@@ -433,6 +433,7 @@ void fatal_error_to_idle(state_data_t *data) {
 
   // Reset fault status
   pack_set_fault(BMS_FAULT_OFF_VALUE);
+  current_zero();
 }
 
 // This function is called in 3 transitions:
@@ -502,6 +503,9 @@ void set_ts_on(state_data_t *data) {
 
   // Set blinking led pattern
   bms_set_led_blinker();
+
+  // Reset current offset
+  current_zero();
 }
 
 

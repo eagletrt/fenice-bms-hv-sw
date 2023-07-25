@@ -1,27 +1,28 @@
 /**
- * @file    current.c
- * @brief   Functions that handle current measurement
+ * @file current.c
+ * @brief Functions that handle current measurement
  *
- * @date    Sep 24, 2021
+ * @date Sep 24, 2021
  *
- * @author  Matteo Bonora [matteo.bonora@studenti.unitn.it]
- * @author  Federico Carbone [federico.carbone@studenti.unitn.it]
+ * @author Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @author Federico Carbone [federico.carbone@studenti.unitn.it]
+ * @author Antonio Gelain [antonio.gelain@studenti.unitn.it]
  */
 #include "pack/current.h"
 
-#include "adc.h"
-#include "error.h"
-#include "main.h"
-#include "mainboard_config.h"
-
 #include <math.h>
+#include <inttypes.h>
+#include <stdint.h>
+
+#include "stm32f4xx_hal.h"
+#include "mainboard_config.h"
 
 #define MEASURE_SAMPLE_SIZE 128
 
-uint16_t adc_50[MEASURE_SAMPLE_SIZE]  = {0};
-uint16_t adc_300[MEASURE_SAMPLE_SIZE] = {0};
+uint16_t adc_50[MEASURE_SAMPLE_SIZE]  = { 0 };
+uint16_t adc_300[MEASURE_SAMPLE_SIZE] = { 0 };
 
-current_t current[CURRENT_SENSOR_NUM] = {0.f};
+current_t current[CURRENT_SENSOR_NUM] = { 0.f };
 
 float V0L = 0, V0H = 0;  //voltage offset (Vout(0A))
 
@@ -52,11 +53,11 @@ uint32_t current_read(float shunt_adc_val) {
     }
 
     // Convert Hall-low (50A)
-    volatile float volt        = avg_50 * (3.3f / 4095 / MEASURE_SAMPLE_SIZE);
+    volatile float volt = avg_50 * (3.3f / 4095 / MEASURE_SAMPLE_SIZE);
     current[CURRENT_SENSOR_50] = _current_convert_low(volt);
 
     // Convert Hall-high (300A)
-    volt                        = avg_300 * (3.3f / 4095 / MEASURE_SAMPLE_SIZE);
+    volt = avg_300 * (3.3f / 4095 / MEASURE_SAMPLE_SIZE);
     current[CURRENT_SENSOR_300] = _current_convert_high(volt);
 
     // Convert Shunt
@@ -80,20 +81,24 @@ void current_zero() {
 }
 
 current_t current_get_current() {
-    if (current[CURRENT_SENSOR_SHUNT] < 4 && current[CURRENT_SENSOR_50] < 4)
+    current_t shunt = fabs(current[CURRENT_SENSOR_SHUNT]);
+    current_t hall_50 = fabs(current[CURRENT_SENSOR_50]);
+    current_t hall_300 = fabs(current[CURRENT_SENSOR_300]);
+
+    // Return current read from the correct
+    if (shunt < 4 && hall_50 < 4)
         return current[CURRENT_SENSOR_SHUNT];
-    if (current[CURRENT_SENSOR_50] < 34 && current[CURRENT_SENSOR_300] < 35)
+    if (hall_50 < 34 && hall_300 < 34)
         return current[CURRENT_SENSOR_50];
     return current[CURRENT_SENSOR_300];
 }
-current_t *current_get_current_sensors() {
+current_t * current_get_current_sensors() {
     return current;
 }
 
 current_t current_get_current_from_sensor(uint8_t sensor) {
-    if (sensor >= CURRENT_SENSOR_NUM) {
-        return -1;
-    }
+    if (sensor >= CURRENT_SENSOR_NUM)
+        return 0;
     return current[sensor];
 }
 

@@ -23,6 +23,7 @@
 #include "feedback.h"
 #include "watchdog.h"
 #include "fans_buzzer.h"
+#include "soc.h"
 
 #include <string.h>
 
@@ -139,6 +140,8 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
 
         conv_curr.current = current_get_current();
         conv_curr.power = conv_curr.current * CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_tsp());
+        conv_curr.energy = 0;
+        conv_curr.soc = 0;
 
         primary_hv_current_conversion_to_raw_struct(&raw_curr, &conv_curr);
 
