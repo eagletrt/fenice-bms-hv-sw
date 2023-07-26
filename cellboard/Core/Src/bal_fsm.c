@@ -159,10 +159,10 @@ bal_state_t do_discharge(state_data_t *data) {
     bal_params.threshold
   );
 
-  if (discharge_timeout)
-    next_state = STATE_COOLDOWN;
-  else if (_requested_bal_off() || bal_is_cells_empty())
+  if (_requested_bal_off() || bal_is_cells_empty())
     next_state = STATE_OFF;
+  else if (discharge_timeout)
+    next_state = STATE_COOLDOWN;
   
   switch (next_state) {
     case NO_CHANGE:
@@ -194,7 +194,7 @@ bal_state_t do_cooldown(state_data_t *data) {
     bal_params.threshold
   );
 
-  if (_requested_bal_off())
+  if (_requested_bal_off() || bal_is_cells_empty())
     next_state = STATE_OFF;
   else if (cooldown_timeout)
     next_state = STATE_DISCHARGE;
@@ -309,8 +309,7 @@ void start_cooldown(state_data_t *data) {
 
   // Reset balancing
   bal_params.is_s_pin_high = false;
-  bal_params.discharge_cells = 0;
-  ltc6813_set_balancing(&LTC6813_SPI, bal_params.discharge_cells, DCTO_DISABLED);
+  ltc6813_set_balancing(&LTC6813_SPI, 0, DCTO_DISABLED);
 
   // Reset cooldown timeout
   cooldown_timeout = false;
