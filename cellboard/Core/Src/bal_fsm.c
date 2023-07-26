@@ -159,10 +159,10 @@ bal_state_t do_discharge(state_data_t *data) {
     bal_params.threshold
   );
 
-  if (_requested_bal_off() || bal_is_cells_empty())
-    next_state = STATE_OFF;
-  else if (discharge_timeout)
+  if (discharge_timeout)
     next_state = STATE_COOLDOWN;
+  else if (_requested_bal_off() || bal_is_cells_empty())
+    next_state = STATE_OFF;
   
   switch (next_state) {
     case NO_CHANGE:
@@ -194,7 +194,7 @@ bal_state_t do_cooldown(state_data_t *data) {
     bal_params.threshold
   );
 
-  if (_requested_bal_off() || bal_is_cells_empty())
+  if (_requested_bal_off())
     next_state = STATE_OFF;
   else if (cooldown_timeout)
     next_state = STATE_DISCHARGE;
