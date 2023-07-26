@@ -54,7 +54,7 @@ Core/Src/gpio.c \
 Core/Src/i2c.c \
 Core/Src/index_blink.c \
 Core/Src/main.c \
-Core/Src/measures.c \
+Core/Src/measurements.c \
 Core/Src/peripherals/adctemp.c \
 Core/Src/peripherals/ltc6813.c \
 Core/Src/peripherals/ltc6813_utils.c \

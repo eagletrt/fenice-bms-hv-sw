@@ -24,7 +24,7 @@
 
 #include "bal_fsm.h"
 #include "cellboard_config.h"
-#include "measures.h"
+#include "measurements.h"
 
 /* USER CODE END 0 */
 
@@ -51,7 +51,7 @@ void MX_TIM2_Init(void)
   htim2.Init.Prescaler = 7999;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim2.Init.Period = 4294967295;
-  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV4;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
   {
@@ -77,6 +77,14 @@ void MX_TIM2_Init(void)
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
   if (HAL_TIM_OC_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_OC_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_OC_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
   {
     Error_Handler();
   }
@@ -288,7 +296,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef * htim) {
 
 void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef * htim) {
     if (htim->Instance == HTIM_MEASURES.Instance)
-        _measures_handle_tim_oc_irq(htim);
+        measurements_oc_handler(htim);
     else if (htim->Instance == HTIM_DISCHARGE.Instance)
         bal_oc_timer_handler(htim);
 }

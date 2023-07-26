@@ -32,7 +32,7 @@
 #include "can_comms.h"
 #include "index_blink.h"
 #include "ltc6813_utils.h"
-#include "measures.h"
+#include "measurements.h"
 #include "temp.h"
 #include "volt.h"
 
@@ -128,7 +128,7 @@ int main(void)
 
     can_init_with_filter();
 
-    measures_init();
+    measurements_init(&HTIM_MEASURES);
 
     index_blink_init(LED_GPIO_Port, LED_Pin, true);
     // HAL_TIM_Base_Start_IT(&DISCHARGE_TIMER);
@@ -139,7 +139,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
     while (1) {
         index_blink_run();
-        measures_check_flags();
+        measurements_flags_check();
 #ifdef UART_LOGGING
         if (HAL_GetTick() - temp_timer >= 500) {
             temp_timer = HAL_GetTick();
