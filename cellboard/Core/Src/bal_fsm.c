@@ -393,7 +393,7 @@ void bal_oc_timer_handler(TIM_HandleTypeDef * htim) {
         }
         else {
             ltc6813_set_balancing(&LTC6813_SPI, bal_params.discharge_cells, bal_params.cycle_length);
-            __HAL_TIM_SET_COMPARE(&HTIM_DISCHARGE, TIM_CHANNEL_1, cmp + TIM_MS_TO_TICKS(htim, BAL_TIME_OFF));
+            __HAL_TIM_SET_COMPARE(&HTIM_DISCHARGE, TIM_CHANNEL_1, cmp + TIM_MS_TO_TICKS(htim, BAL_TIME_ON));
         }
         bal_params.is_s_pin_high = !bal_params.is_s_pin_high;
     }
