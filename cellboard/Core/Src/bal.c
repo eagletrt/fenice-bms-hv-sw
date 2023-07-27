@@ -112,7 +112,8 @@ size_t bal_get_cells_to_discharge(
 
     *cells = 0;
     for (size_t i = 0; i < CELLBOARD_CELL_COUNT; i++) {
-        if (MAX(0, (int32_t)MAX(volts[i], CELL_MIN_VOLTAGE) - (target + threshold))) {
+        int32_t volt = (int32_t)volts[i] - (int32_t)(target + threshold);
+        if (volt > 0) {
             *cells |= (1 << i);
             ++len;
         }
