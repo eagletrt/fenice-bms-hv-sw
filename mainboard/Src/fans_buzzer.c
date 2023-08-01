@@ -29,11 +29,11 @@ void fans_init() {
     fans_set_speed(0);
     pwm_start_channel(&HTIM_PWM, PWM_FANS_CHANNEL);
 }
-void fans_toggle_override() {
-    override_fans_speed = !override_fans_speed;
-}
 bool fans_is_overrided() {
     return override_fans_speed;
+}
+void fans_set_override(bool override) {
+    override_fans_speed = override;
 }
 float fans_get_speed() {
     // Get CCR register value

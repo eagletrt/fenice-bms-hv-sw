@@ -764,9 +764,8 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 
             primary_hv_fans_override_raw_to_conversion_struct(&conv_fans, &raw_fans);
 
-            // Set fans speed override and speed
-            if (fans_is_overrided() != conv_fans.fans_override)
-                fans_toggle_override();
+            // Set fans override and speed
+            fans_set_override(conv_fans.fans_override);
             fans_set_speed(conv_fans.fans_speed);
         }
         else {

@@ -99,8 +99,7 @@ void measures_check_flags() {
         // Run fans based on temperature
         if (!fans_is_overrided()) {
             float max_temp = CONVERT_VALUE_TO_TEMPERATURE(temperature_get_max());
-            if (max_temp >= FANS_START_TEMP)
-                fans_set_speed(fans_curve(max_temp));
+            fans_set_speed(fans_curve(max_temp));
         }
     }
     // 5 s interval
