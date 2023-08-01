@@ -35,6 +35,15 @@ void fans_toggle_override() {
 bool fans_is_overrided() {
     return override_fans_speed;
 }
+float fans_get_speed() {
+    // Get CCR register value
+    uint32_t cmp = __HAL_TIM_GetCompare(&HTIM_PWM, PWM_FANS_CHANNEL);
+    // Get autoreload value
+    uint32_t arr = __HAL_TIM_GetAutoreload(&HTIM_PWM);
+
+    // Calculate fans speed
+    return (float)cmp / (float)arr;
+}
 void fans_set_speed(float power) {
     if (power > 1.f || power < 0.f)
         return;

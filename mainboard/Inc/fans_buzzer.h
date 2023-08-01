@@ -31,6 +31,12 @@ void fans_toggle_override();
  */
 bool fans_is_overrided();
 /**
+ * @brief Get the speed percentage of the fans
+ * 
+ * @return float The fans speed (%) between 0 and 1
+ */
+float fans_get_speed();
+/**
  * @brief Set fans speed using PWM
  * @attention The percentage can be between 0 (off) and 1
  * any value out of range will be clamped to the nearest value in the range

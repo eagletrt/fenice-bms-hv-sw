@@ -85,6 +85,7 @@ void measures_check_flags() {
         // Send info via CAN
         can_car_send(PRIMARY_HV_CAN_FORWARD_FRAME_ID);
         can_car_send(PRIMARY_HV_VERSION_FRAME_ID);
+        can_car_send(PRIMARY_HV_FANS_OVERRIDE_STATUS_FRAME_ID);
         
         // Check cellboards connection errors
 

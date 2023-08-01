@@ -408,6 +408,17 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
 
         tx_header.DLC = primary_hv_feedbacks_status_pack(buffer, &raw_status, PRIMARY_HV_FEEDBACKS_STATUS_BYTE_SIZE);
     }
+    else if (id == PRIMARY_HV_FANS_OVERRIDE_STATUS_FRAME_ID) {
+        primary_hv_fans_override_status_t raw_fans;
+        primary_hv_fans_override_status_converted_t conv_fans;
+
+        conv_fans.fans_override = fans_is_overrided();
+        conv_fans.fans_speed = fans_get_speed();
+
+        primary_hv_fans_override_status_conversion_to_raw_struct(&raw_fans, &conv_fans);
+
+        tx_header.DLC = primary_hv_fans_override_status_pack(buffer, &raw_fans, PRIMARY_HV_FANS_OVERRIDE_STATUS_BYTE_SIZE);
+    }
     else
         return HAL_ERROR;
 
