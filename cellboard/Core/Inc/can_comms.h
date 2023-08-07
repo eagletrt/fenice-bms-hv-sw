@@ -1,9 +1,10 @@
 /**
- * @file		can_comms.h
- * @brief		CAN communication stuff
+ * @file can_comms.h
+ * @brief CAN communication stuff
  *
- * @date		Jul 16, 2021
- * @author		Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @date Jul 16, 2021
+ * @author Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @author Antonio Gelain [antonio.gelain@studenti.unitn.it]
  */
 
 #ifndef CAN_COMMS_H

@@ -1,9 +1,10 @@
 /**
- * @file	can_comm.h
- * @brief	CAN bus serialization middleware
+ * @file can_comm.h
+ * @brief CAN bus serialization middleware
  *
- * @date	Mar 1, 2021
- * @author	Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @date Mar 1, 2021
+ * @author Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @author Antonio Gelain [antonio.gelain@studenti.unitn.it]
  */
 
 #ifndef CAN_COMM_H
