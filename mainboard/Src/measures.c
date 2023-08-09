@@ -42,6 +42,7 @@ void measures_check_flags() {
     // 10 ms interval
     if (_MEASURE_CHECK_INTERVAL(MEASURE_INTERVAL_10MS)) {
         can_car_send(PRIMARY_TS_STATUS_FRAME_ID);
+        can_car_send(PRIMARY_HV_TEMP_FRAME_ID);
     }
     // 50 ms interval
     if (_MEASURE_CHECK_INTERVAL(MEASURE_INTERVAL_50MS)) {
@@ -63,7 +64,6 @@ void measures_check_flags() {
     // 100 ms interval
     if (_MEASURE_CHECK_INTERVAL(MEASURE_INTERVAL_100MS)) {
         // Send info via CANS
-        can_car_send(PRIMARY_HV_TEMP_FRAME_ID);
         can_car_send(PRIMARY_HV_FEEDBACKS_STATUS_FRAME_ID);
         can_car_send(PRIMARY_HV_CELL_BALANCING_STATUS_FRAME_ID);
 
@@ -94,7 +94,7 @@ void measures_check_flags() {
     }
     // 5 s interval
     if (_MEASURE_CHECK_INTERVAL(MEASURE_INTERVAL_5S)) {
-        watchdog_routine();
+        // watchdog_routine();
         soc_save_to_eeprom();
     }
 }

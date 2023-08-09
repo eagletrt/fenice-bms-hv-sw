@@ -182,7 +182,7 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         primary_hv_temp_t raw_temp;
         primary_hv_temp_converted_t conv_temp;
         
-        conv_temp.average_temp = CONVERT_VALUE_TO_TEMPERATURE(temperature_get_average());
+        conv_temp.average_temp = (feedback_get_volt(FEEDBACK_SD_END_POS)) * (3.3f / 4095); // CONVERT_VALUE_TO_TEMPERATURE(temperature_get_average());
         conv_temp.min_temp = CONVERT_VALUE_TO_TEMPERATURE(temperature_get_min());
         conv_temp.max_temp = CONVERT_VALUE_TO_TEMPERATURE(temperature_get_max());
 

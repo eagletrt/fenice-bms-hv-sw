@@ -59,7 +59,7 @@
 
 #define FEEDBACK_UPDATE_THRESHOLD_MS (MUX_INTERVAL_MS * (FEEDBACK_MUX_N + 2))
 
-#define FEEDBACK_QUEUE_SIZE 5
+#define FEEDBACK_QUEUE_SIZE 7
 
 struct {
     uint16_t voltages[FEEDBACK_N][FEEDBACK_QUEUE_SIZE];
@@ -69,6 +69,10 @@ struct {
 
 uint8_t fb_index;
 static uint16_t dma_data[DMA_DATA_SIZE] = { 0 };
+
+uint16_t feedback_get_volt(size_t index) {
+    return feedbacks.voltages[index][feedbacks.index[index]];
+}
 
 /** @brief Set the multiplexer index */
 void _feedback_set_mux_index(uint8_t index) {
@@ -243,7 +247,7 @@ feedback_feed_t feedback_get_state(size_t index) {
     size_t queue_index = feedbacks.index[index];
     size_t low = 0, high = 0, error = 0;
 
-    feedback_feed_t feed;
+    feedback_feed_t feed = { 0 };
     // Set voltage
     feed.voltage = (index < FEEDBACK_MUX_N) ?
         FEEDBACK_CONVERT_ADC_MUX_TO_VOLTAGE(feedbacks.voltages[index][queue_index]) :
@@ -359,8 +363,15 @@ feedback_feed_t feedback_get_state(size_t index) {
     return feed;
 }
 void feedback_get_all_states(feedback_feed_t out_value[FEEDBACK_N]) {
+    HAL_TIM_Base_Stop_IT(&HTIM_MUX);
+    HAL_ADC_Stop_DMA(&ADC_MUX);
+    __HAL_TIM_CLEAR_IT(&HTIM_MUX, TIM_IT_CC1);
+
     for (size_t i = 0; i < FEEDBACK_N; i++)
         out_value[i] = feedback_get_state(i);
+
+    HAL_TIM_Base_Start_IT(&HTIM_MUX);
+    HAL_ADC_Start_DMA(&ADC_MUX, (uint32_t *)dma_data, DMA_DATA_SIZE);
 }
 
 // bool _is_adc_value_low(uint8_t index) {

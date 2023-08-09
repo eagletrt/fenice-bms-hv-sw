@@ -175,8 +175,6 @@
 #define FEEDBACK_TS_ON_CHECK_LOW \
     ( \
         FEEDBACK_TS_OVER_60V_STATUS | \
-        FEEDBACK_AIRN_STATUS | \
-        FEEDBACK_AIRP_STATUS | \
         FEEDBACK_TSP_OVER_60V_STATUS | \
         FEEDBACK_SD_BMS | \
         FEEDBACK_SD_IMD \
@@ -207,6 +205,7 @@ void _feedback_handle_tim_elapsed_irq();
 /** @brief Feedback ADC callback handler */
 void _feedback_handle_adc_cnv_cmpl_irq();
 
+uint16_t feedback_get_volt(size_t index);
 
 /** @brief Initialize the feedbacks */
 void feedback_init();
