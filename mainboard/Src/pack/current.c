@@ -11,8 +11,7 @@
 #include "pack/current.h"
 
 #include <math.h>
-#include <inttypes.h>
-#include <stdint.h>
+#include <stdbool.h>
 
 #include "stm32f4xx_hal.h"
 #include "mainboard_config.h"
@@ -103,5 +102,13 @@ current_t current_get_current_from_sensor(uint8_t sensor) {
 }
 
 void current_check_errors() {
-    error_toggle_check(current[CURRENT_SENSOR_300] > PACK_MAX_CURRENT, ERROR_OVER_CURRENT, 0);
+    current_t hall_50 = fabs(current[CURRENT_SENSOR_50]);
+    current_t hall_300 = fabs(current[CURRENT_SENSOR_300]);
+
+    error_toggle_check(hall_300 > PACK_MAX_CURRENT, ERROR_OVER_CURRENT, 0);
+    
+    // Hall effect sensor disconnected
+    bool is_sensor_disconnected = hall_50 < CURRENT_SENSOR_DISCONNECTED_THRESHOLD &&
+        hall_300 < CURRENT_SENSOR_DISCONNECTED_THRESHOLD;
+    error_toggle_check(is_sensor_disconnected, ERROR_CONNECTOR_DISCONNECTED, 1);
 }

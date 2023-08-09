@@ -15,6 +15,8 @@
 #include <stdint.h>
 #include <inttypes.h>
 
+#define CURRENT_SENSOR_DISCONNECTED_THRESHOLD 0.25 // Current values below this threshold are consider as the sensor is disconnected
+
 enum CURRENT_SENSORS {
     CURRENT_SENSOR_50 = 0,
     CURRENT_SENSOR_300,
