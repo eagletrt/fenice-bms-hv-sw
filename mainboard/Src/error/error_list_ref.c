@@ -32,23 +32,23 @@
     node_t* error_list_ref_<insert the relative data name in data.c>;
 */
 
-llist_node error_list_ref_under_voltages[1]     = {NULL};
-llist_node error_list_ref_over_voltages[1]     = {NULL};
-llist_node error_list_ref_low_voltages[1] = {NULL};
-llist_node error_list_ref_temperatures[1]      = {NULL};
-llist_node error_list_ref_high_temperatures[1] = {NULL};
-llist_node error_list_ref_current[1]                = {NULL};
-llist_node error_list_ref_cellboards[LTC6813_COUNT] = {NULL};
-llist_node error_list_ref_can[1]                    = {NULL};
-llist_node error_list_ref_int_voltage_mismatch[1]            = {NULL};
-llist_node error_list_ref_cellboard_comm[LTC6813_COUNT]      = {NULL};
-llist_node error_list_ref_cellboard_internal[LTC6813_COUNT]  = {NULL};
-llist_node error_list_ref_connector_disconnected[1] = {NULL};
-llist_node error_list_ref_fans_disconnected[1] = {NULL};
-llist_node error_list_ref_feedback[FEEDBACK_N]               = {NULL};
-llist_node error_list_ref_feedback_circuitry[FEEDBACK_N]     = {NULL};
-llist_node error_list_ref_eeprom_comm[1]                     = {NULL};
-llist_node error_list_ref_eeprom_write[1]                    = {NULL};
+llist_node error_list_ref_under_voltages[1]                 = { NULL };
+llist_node error_list_ref_over_voltages[1]                  = { NULL };
+llist_node error_list_ref_low_voltages[1]                   = { NULL };
+llist_node error_list_ref_temperatures[1]                   = { NULL };
+llist_node error_list_ref_high_temperatures[1]              = { NULL };
+llist_node error_list_ref_current[1]                        = { NULL };
+llist_node error_list_ref_cellboards[LTC6813_COUNT]         = { NULL };
+llist_node error_list_ref_can[1]                            = { NULL };
+llist_node error_list_ref_int_voltage_mismatch[1]           = { NULL };
+llist_node error_list_ref_cellboard_comm[LTC6813_COUNT]     = { NULL };
+llist_node error_list_ref_cellboard_internal[LTC6813_COUNT] = { NULL };
+llist_node error_list_ref_connector_disconnected[2]         = { NULL };
+llist_node error_list_ref_fans_disconnected[1]              = { NULL };
+llist_node error_list_ref_feedback[FEEDBACK_N]              = { NULL };
+llist_node error_list_ref_feedback_circuitry[FEEDBACK_N]    = { NULL };
+llist_node error_list_ref_eeprom_comm[1]                    = { NULL };
+llist_node error_list_ref_eeprom_write[1]                   = { NULL };
 
 llist_node *const error_list_ref_array[ERROR_NUM_ERRORS] = {
     [ERROR_CELL_LOW_VOLTAGE]      = error_list_ref_low_voltages,

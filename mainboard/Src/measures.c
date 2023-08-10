@@ -79,6 +79,8 @@ void measures_check_flags() {
 
         // Check errors
         temperature_check_errors();
+        // Check if fans are connected
+        error_toggle_check(HAL_GPIO_ReadPin(FANS_DETECT_GPIO_Port, FANS_DETECT_Pin) == GPIO_PIN_RESET, ERROR_FANS_DISCONNECTED, 0);
     }
     // 500 ms interval
     if (_MEASURE_CHECK_INTERVAL(MEASURE_INTERVAL_500MS)) {
@@ -88,11 +90,8 @@ void measures_check_flags() {
         can_car_send(PRIMARY_HV_FANS_OVERRIDE_STATUS_FRAME_ID);
         
         // Check cellboards connection errors
-
         if (HAL_GetTick() - timestamp >= MEASURE_CHECK_DELAY)
             can_cellboards_check();
-        // Check if fans are connected
-        error_toggle_check(HAL_GPIO_ReadPin(FANS_DETECT_GPIO_Port, FANS_DETECT_Pin) == GPIO_PIN_RESET, ERROR_FANS_DISCONNECTED, 0);
     }
     // 1 s interval
     if (_MEASURE_CHECK_INTERVAL(MEASURE_INTERVAL_1S)) {
