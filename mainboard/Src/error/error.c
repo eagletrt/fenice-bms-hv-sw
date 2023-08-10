@@ -36,7 +36,8 @@ const uint32_t error_timeouts[ERROR_NUM_ERRORS] = {
     [ERROR_FEEDBACK]               = SOFT,
     [ERROR_FEEDBACK_CIRCUITRY]     = SOFT,
     [ERROR_EEPROM_COMM]            = SOFT,
-    [ERROR_EEPROM_WRITE]           = SOFT};
+    [ERROR_EEPROM_WRITE]           = SOFT
+};
 
 llist er_list = NULL;
 

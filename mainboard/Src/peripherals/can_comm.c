@@ -25,6 +25,7 @@
 #include "fans_buzzer.h"
 
 #include <string.h>
+#include <math.h>
 
 CAN_TxHeaderTypeDef tx_header;
 
@@ -124,8 +125,8 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         primary_hv_voltage_t raw_volts = { 0 };
         primary_hv_voltage_converted_t conv_volts = { 0 };
 
-        conv_volts.bus_voltage  = CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_tsp());
-        conv_volts.pack_voltage = CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_bat());
+        conv_volts.bus_voltage  = fabs(current_get_volt_300()) * 100.f; // CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_tsp());
+        conv_volts.pack_voltage = fabs(current_get_volt_50()) * 100.f; // CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_bat());
         conv_volts.max_cell_voltage = CONVERT_VALUE_TO_VOLTAGE(cell_voltage_get_max());
         conv_volts.min_cell_voltage = CONVERT_VALUE_TO_VOLTAGE(cell_voltage_get_min());
 

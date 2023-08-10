@@ -18,19 +18,29 @@
 
 #define MEASURE_SAMPLE_SIZE 128
 
+<<<<<<< Updated upstream
 uint16_t adc_50[MEASURE_SAMPLE_SIZE]  = {0};
 uint16_t adc_300[MEASURE_SAMPLE_SIZE] = {0};
+=======
+#define CURRENT_SENSITIVITY_LOW 40e-3f // V / A
+#define CURRENT_SENSITIVITY_HIGH 6.67e-3f // V / A
+
+#define CURRENT_DIVIDER_RATIO_INVERSE (330.f + 169.f) / 330.f
+
+uint16_t adc_50[MEASURE_SAMPLE_SIZE]  = { 0 };
+uint16_t adc_300[MEASURE_SAMPLE_SIZE] = { 0 };
+>>>>>>> Stashed changes
 
 current_t current[CURRENT_SENSOR_NUM] = {0.f};
 
 float V0L = 0, V0H = 0;  //voltage offset (Vout(0A))
 
 current_t _current_convert_low(float volt) {
-    return (499.f / 300.f / 40e-3f) * (volt - V0L);
+    return (CURRENT_DIVIDER_RATIO_INVERSE / CURRENT_SENSITIVITY_LOW) * (volt - V0L);
 }
 
 current_t _current_convert_high(float volt) {
-    return (499.f / 300.f / 6.67e-3f) * (volt - V0H);
+    return (CURRENT_DIVIDER_RATIO_INVERSE / CURRENT_SENSITIVITY_HIGH) * (volt - V0H);
 }
 
 current_t _current_convert_shunt(float volt) {
@@ -42,32 +52,51 @@ void current_start_measure() {
     HAL_ADC_Start_DMA(&ADC_HALL300, (uint32_t *)adc_300, MEASURE_SAMPLE_SIZE);
 }
 
+float volt_50 = 0;
+float volt_300 = 0;
 uint32_t current_read(float shunt_adc_val) {
     uint32_t time    = HAL_GetTick();
-    uint32_t avg_50  = 0;
-    uint32_t avg_300 = 0;
+    uint64_t avg_50  = 0;
+    uint64_t avg_300 = 0;
     for (size_t i = 0; i < MEASURE_SAMPLE_SIZE; i++) {
         avg_50 += adc_50[i];
         avg_300 += adc_300[i];
     }
 
     // Convert Hall-low (50A)
+<<<<<<< Updated upstream
     volatile float volt        = avg_50 * (3.3f / 4095 / MEASURE_SAMPLE_SIZE);
     current[CURRENT_SENSOR_50] = _current_convert_low(volt);
 
     // Convert Hall-high (300A)
     volt                        = avg_300 * (3.3f / 4095 / MEASURE_SAMPLE_SIZE);
+=======
+    float volt = avg_50 * (3.3f / 4095 / MEASURE_SAMPLE_SIZE);
+    volt_50 = volt;
+    current[CURRENT_SENSOR_50] = _current_convert_low(volt);
+
+    // Convert Hall-high (300A)
+    volt = avg_300 * (3.3f / 4095 / MEASURE_SAMPLE_SIZE);
+    volt_300 = volt;
+>>>>>>> Stashed changes
     current[CURRENT_SENSOR_300] = _current_convert_high(volt);
 
     // Convert Shunt
     current[CURRENT_SENSOR_SHUNT] = _current_convert_shunt(shunt_adc_val);
 
     // Check for over-current
-    error_toggle_check(current_get_current() > PACK_MAX_CURRENT, ERROR_OVER_CURRENT, 0);
+    // error_toggle_check(fabs(current_get_current()) > PACK_MAX_CURRENT, ERROR_OVER_CURRENT, 0);
+    // if (volt_300 < CURRENT_SENSOR_DISCONNECTED_THRESHOLD)
+        error_set(ERROR_FANS_DISCONNECTED, 0, HAL_GetTick());
 
     return time;
 }
-
+float current_get_volt_300() {
+    return volt_300;
+}
+float current_get_volt_50() {
+    return volt_50;
+}
 void current_zero() {
     uint32_t avg_50  = 0;
     uint32_t avg_300 = 0;
@@ -98,5 +127,18 @@ current_t current_get_current_from_sensor(uint8_t sensor) {
 }
 
 void current_check_errors() {
+<<<<<<< Updated upstream
     error_toggle_check(current[CURRENT_SENSOR_300] > PACK_MAX_CURRENT, ERROR_OVER_CURRENT, 0);
+=======
+    current_t hall_50 = fabs(current[CURRENT_SENSOR_50]);
+    current_t hall_300 = fabs(current[CURRENT_SENSOR_300]);
+
+    // error_toggle_check(hall_300 > PACK_MAX_CURRENT, ERROR_OVER_CURRENT, 0);
+    
+    // Hall effect sensor disconnected
+    // bool is_sensor_disconnected = hall_50 < CURRENT_SENSOR_DISCONNECTED_THRESHOLD &&
+    //     hall_300 < CURRENT_SENSOR_DISCONNECTED_THRESHOLD;
+    // if (volt_300 < CURRENT_SENSOR_DISCONNECTED_THRESHOLD)
+        error_set(ERROR_FANS_DISCONNECTED, 0, HAL_GetTick());
+>>>>>>> Stashed changes
 }
