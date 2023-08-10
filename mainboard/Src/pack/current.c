@@ -18,10 +18,6 @@
 
 #define MEASURE_SAMPLE_SIZE 128
 
-<<<<<<< Updated upstream
-uint16_t adc_50[MEASURE_SAMPLE_SIZE]  = {0};
-uint16_t adc_300[MEASURE_SAMPLE_SIZE] = {0};
-=======
 #define CURRENT_SENSITIVITY_LOW 40e-3f // V / A
 #define CURRENT_SENSITIVITY_HIGH 6.67e-3f // V / A
 
@@ -29,7 +25,6 @@ uint16_t adc_300[MEASURE_SAMPLE_SIZE] = {0};
 
 uint16_t adc_50[MEASURE_SAMPLE_SIZE]  = { 0 };
 uint16_t adc_300[MEASURE_SAMPLE_SIZE] = { 0 };
->>>>>>> Stashed changes
 
 current_t current[CURRENT_SENSOR_NUM] = {0.f};
 
@@ -64,13 +59,6 @@ uint32_t current_read(float shunt_adc_val) {
     }
 
     // Convert Hall-low (50A)
-<<<<<<< Updated upstream
-    volatile float volt        = avg_50 * (3.3f / 4095 / MEASURE_SAMPLE_SIZE);
-    current[CURRENT_SENSOR_50] = _current_convert_low(volt);
-
-    // Convert Hall-high (300A)
-    volt                        = avg_300 * (3.3f / 4095 / MEASURE_SAMPLE_SIZE);
-=======
     float volt = avg_50 * (3.3f / 4095 / MEASURE_SAMPLE_SIZE);
     volt_50 = volt;
     current[CURRENT_SENSOR_50] = _current_convert_low(volt);
@@ -78,7 +66,6 @@ uint32_t current_read(float shunt_adc_val) {
     // Convert Hall-high (300A)
     volt = avg_300 * (3.3f / 4095 / MEASURE_SAMPLE_SIZE);
     volt_300 = volt;
->>>>>>> Stashed changes
     current[CURRENT_SENSOR_300] = _current_convert_high(volt);
 
     // Convert Shunt
@@ -127,9 +114,6 @@ current_t current_get_current_from_sensor(uint8_t sensor) {
 }
 
 void current_check_errors() {
-<<<<<<< Updated upstream
-    error_toggle_check(current[CURRENT_SENSOR_300] > PACK_MAX_CURRENT, ERROR_OVER_CURRENT, 0);
-=======
     current_t hall_50 = fabs(current[CURRENT_SENSOR_50]);
     current_t hall_300 = fabs(current[CURRENT_SENSOR_300]);
 
@@ -140,5 +124,4 @@ void current_check_errors() {
     //     hall_300 < CURRENT_SENSOR_DISCONNECTED_THRESHOLD;
     // if (volt_300 < CURRENT_SENSOR_DISCONNECTED_THRESHOLD)
         error_set(ERROR_FANS_DISCONNECTED, 0, HAL_GetTick());
->>>>>>> Stashed changes
 }

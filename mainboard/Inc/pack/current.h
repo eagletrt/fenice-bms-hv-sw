@@ -11,9 +11,6 @@
 
 #include "../../fenice_config.h"
 
-<<<<<<< Updated upstream
-enum CURRENT_SENSORS { CURRENT_SENSOR_50 = 0, CURRENT_SENSOR_300, CURRENT_SENSOR_SHUNT, CURRENT_SENSOR_NUM };
-=======
 #include <stdint.h>
 #include <inttypes.h>
 
@@ -25,7 +22,6 @@ enum CURRENT_SENSORS {
     CURRENT_SENSOR_SHUNT,
     CURRENT_SENSOR_NUM
 };
->>>>>>> Stashed changes
 
 typedef float current_t;
 
