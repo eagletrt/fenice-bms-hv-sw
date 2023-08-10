@@ -74,7 +74,7 @@ uint32_t current_read(float shunt_adc_val) {
     // Check for over-current
     error_toggle_check(fabs(current_get_current()) > PACK_MAX_CURRENT, ERROR_OVER_CURRENT, 0);
     if (volt_300 < CURRENT_SENSOR_DISCONNECTED_THRESHOLD)
-        error_set(ERROR_FANS_DISCONNECTED, 1, HAL_GetTick());
+        error_set(ERROR_CONNECTOR_DISCONNECTED, 1, HAL_GetTick());
 
     return time;
 }
@@ -123,5 +123,5 @@ void current_check_errors() {
     // bool is_sensor_disconnected = hall_50 < CURRENT_SENSOR_DISCONNECTED_THRESHOLD &&
     //     hall_300 < CURRENT_SENSOR_DISCONNECTED_THRESHOLD;
     if (volt_300 < CURRENT_SENSOR_DISCONNECTED_THRESHOLD)
-        error_set(ERROR_FANS_DISCONNECTED, 1, HAL_GetTick());
+        error_set(ERROR_CONNECTOR_DISCONNECTED, 1, HAL_GetTick());
 }
