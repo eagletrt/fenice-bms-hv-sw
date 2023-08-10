@@ -13,6 +13,7 @@
 
 #include <math.h>
 #include <float.h>
+#include <stdbool.h>
 
 #define TEMP_INIT_TIMEOUT 100
 
@@ -27,7 +28,36 @@ static const uint8_t adc_addresses[6] = {
     ADCTEMP_CELL_3_ADR,
     ADCTEMP_CELL_4_ADR,
     ADCTEMP_CELL_5_ADR,
-    ADCTEMP_CELL_6_ADR};
+    ADCTEMP_CELL_6_ADR
+};
+
+/**
+ * @brief Check if a certain temperature sensor value has to be included
+ * 
+ * @param idx The index of the sensor
+ * @return true If the value can be included
+ * @return false Otherwise
+ */
+bool _temp_include_cell(size_t idx) {
+    switch (cellboard_index)
+    {
+        case 0:
+            return true;
+        case 1:
+            return idx != 0 && idx != 4 && idx != 6 && idx != 13;
+        case 2:
+            return idx != 29;
+        case 3:
+            return idx != 5 && idx != 25 && idx != 26;
+        case 4:
+            return idx != 1 && idx != 3 && idx != 13;
+        case 5:
+            return idx != 7 && idx != 9 && idx != 29;
+
+        default:
+            return false;
+    }
+}
 
 void temp_init() {
     //initialize all ADCs
@@ -66,10 +96,8 @@ void temp_measure(uint8_t adc_index) {
             ERROR_UNSET(ERROR_TEMP_COMM_0 + adc_index);
 
             max = MAX(temperatures[temp_index], max);
-            // Skip temperature below cell minimum temperature
-            // FIXME: Broken temperature readings
-            // if (temperatures[temp_index] >= CELL_MIN_TEMPERATURE + FLT_EPSILON)
-            if (temperatures[temp_index] >= -5.f)
+            // Skip broken temperature readings
+            if (_temp_include_cell(temp_index))
                 min = MIN(temperatures[temp_index], min);
         }
     }
@@ -85,9 +113,8 @@ void temp_measure_all() {
     double sum = 0;
     size_t tot = 0;
     for (uint16_t i = 0; i < CELLBOARD_TEMP_SENSOR_COUNT; i++) {
-        // FIXME: Broken temperature readings
-        // if (temperatures[i] >= CELL_MIN_TEMPERATURE + FLT_EPSILON) {
-        if (temperatures[i] >= -5.f) {
+        // Skip broken temperature readings
+        if (_temp_include_cell(i)) {
             sum += temperatures[i];
             tot++;
         }
