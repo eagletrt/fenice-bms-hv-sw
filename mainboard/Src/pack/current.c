@@ -72,9 +72,9 @@ uint32_t current_read(float shunt_adc_val) {
     current[CURRENT_SENSOR_SHUNT] = _current_convert_shunt(shunt_adc_val);
 
     // Check for over-current
-    // error_toggle_check(fabs(current_get_current()) > PACK_MAX_CURRENT, ERROR_OVER_CURRENT, 0);
-    // if (volt_300 < CURRENT_SENSOR_DISCONNECTED_THRESHOLD)
-        error_set(ERROR_FANS_DISCONNECTED, 0, HAL_GetTick());
+    error_toggle_check(fabs(current_get_current()) > PACK_MAX_CURRENT, ERROR_OVER_CURRENT, 0);
+    if (volt_300 < CURRENT_SENSOR_DISCONNECTED_THRESHOLD)
+        error_set(ERROR_FANS_DISCONNECTED, 1, HAL_GetTick());
 
     return time;
 }
@@ -117,11 +117,11 @@ void current_check_errors() {
     current_t hall_50 = fabs(current[CURRENT_SENSOR_50]);
     current_t hall_300 = fabs(current[CURRENT_SENSOR_300]);
 
-    // error_toggle_check(hall_300 > PACK_MAX_CURRENT, ERROR_OVER_CURRENT, 0);
+    error_toggle_check(hall_300 > PACK_MAX_CURRENT, ERROR_OVER_CURRENT, 0);
     
     // Hall effect sensor disconnected
     // bool is_sensor_disconnected = hall_50 < CURRENT_SENSOR_DISCONNECTED_THRESHOLD &&
     //     hall_300 < CURRENT_SENSOR_DISCONNECTED_THRESHOLD;
-    // if (volt_300 < CURRENT_SENSOR_DISCONNECTED_THRESHOLD)
-        error_set(ERROR_FANS_DISCONNECTED, 0, HAL_GetTick());
+    if (volt_300 < CURRENT_SENSOR_DISCONNECTED_THRESHOLD)
+        error_set(ERROR_FANS_DISCONNECTED, 1, HAL_GetTick());
 }
