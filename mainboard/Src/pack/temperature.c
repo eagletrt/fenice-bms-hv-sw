@@ -27,13 +27,16 @@ void temperature_init() {
 }
 void temperature_check_errors() {
     float max_temp = CONVERT_VALUE_TO_TEMPERATURE(temperature_get_max());
-    float min_temp = CONVERT_VALUE_TO_TEMPERATURE(temperature_get_min());
 
     error_toggle_check(max_temp > CELL_MAX_TEMPERATURE - 10, ERROR_CELL_HIGH_TEMPERATURE, 0);
     error_toggle_check(max_temp > CELL_MAX_TEMPERATURE, ERROR_CELL_OVER_TEMPERATURE, 0);
 
     // Temperature sensors disconnected
+#if !defined(TEMP_GROUP_ERROR_ENABLE)
+    float min_temp = CONVERT_VALUE_TO_TEMPERATURE(temperature_get_min());
+    
     error_toggle_check(min_temp <= CELL_MIN_TEMPERATURE + 0.01, ERROR_CONNECTOR_DISCONNECTED, 2);
+#endif // TEMP_GROUP_ERROR_ENABLE
 }
 temperature_t temperature_get_max() {
     temperature_t max = 0;
