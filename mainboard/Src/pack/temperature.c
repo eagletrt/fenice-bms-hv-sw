@@ -33,7 +33,7 @@ void temperature_check_errors() {
     error_toggle_check(max_temp > CELL_MAX_TEMPERATURE, ERROR_CELL_OVER_TEMPERATURE, 0);
 
     // Temperature sensors disconnected
-    error_toggle_check(min_temp <= CELL_MIN_TEMPERATURE, ERROR_CONNECTOR_DISCONNECTED, 0);
+    error_toggle_check(min_temp <= CELL_MIN_TEMPERATURE + 0.01, ERROR_CONNECTOR_DISCONNECTED, 2);
 }
 temperature_t temperature_get_max() {
     temperature_t max = 0;

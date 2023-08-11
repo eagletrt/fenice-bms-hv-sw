@@ -675,7 +675,6 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
             // Reset the watchdog timer
             watchdog_reset(rx_header.StdId);
             
-            uint8_t index = 0;
             bms_board_status_t raw_status = { 0 };
             bms_board_status_converted_t conv_status = { 0 };
 
@@ -700,7 +699,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
                 conv_status.errors_temp_comm_3 |
                 conv_status.errors_temp_comm_4 |
                 conv_status.errors_temp_comm_5;
-            error_toggle_check(error_status != 0, ERROR_CELLBOARD_INTERNAL, index);
+            error_toggle_check(error_status != 0, ERROR_CELLBOARD_INTERNAL, conv_status.cellboard_id);
 
             // Forward data
             CAN_TxHeaderTypeDef tx_header = {
