@@ -32,7 +32,7 @@ void temperature_check_errors() {
     error_toggle_check(max_temp > CELL_MAX_TEMPERATURE, ERROR_CELL_OVER_TEMPERATURE, 0);
 
     // Temperature sensors disconnected
-#if !defined(TEMP_GROUP_ERROR_ENABLE)
+#if !defined(TEMP_GROUP_ERROR_ENABLE) && defined(TEMP_ERROR_ENABLE)
     float min_temp = CONVERT_VALUE_TO_TEMPERATURE(temperature_get_min());
     
     error_toggle_check(min_temp <= CELL_MIN_TEMPERATURE + 0.01, ERROR_CONNECTOR_DISCONNECTED, 2);

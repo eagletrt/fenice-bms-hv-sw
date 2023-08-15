@@ -628,7 +628,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
             time_since_last_comm[conv_temps.cellboard_id] = HAL_GetTick();
 
             // TODO: Test
-#ifdef TEMP_GROUP_ERROR_ENABLE
+#if defined(TEMP_GROUP_ERROR_ENABLE) && defined(TEMP_ERROR_ENABLE)
             // Add error bit to the temp group
             size_t index = conv_temps.start_index / 4;
             size_t bit = index / 2 * 3;

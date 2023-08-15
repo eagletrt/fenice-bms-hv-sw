@@ -29,6 +29,7 @@ cDefinitions:
   - primary_WATCHDOG_IMPLEMENTATION 
   - bms_WATCHDOG_IMPLEMENTATION 
   - WATCHDOG_IGNORE
+  - TEMP_ERROR_ENABLE
 
 cxxDefinitions: []
 asDefinitions: []
