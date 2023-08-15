@@ -44,7 +44,7 @@ bool _temp_include_cell(size_t idx) {
         case 0:
             return true;
         case 1:
-            return idx != 0 && idx != 4 && idx != 6 && idx != 13;
+            return idx != 0 && idx != 4 && idx != 6 && idx != 8 && idx != 13;
         case 2:
             return idx != 29;
         case 3:
