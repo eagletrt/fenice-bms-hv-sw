@@ -30,6 +30,7 @@ cDefinitions:
   - bms_WATCHDOG_IMPLEMENTATION 
   - WATCHDOG_IGNORE
   - TEMP_ERROR_ENABLE
+  - TEMP_GROUP_ERROR_ENABLE
 
 cxxDefinitions: []
 asDefinitions: []

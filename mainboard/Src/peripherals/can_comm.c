@@ -631,9 +631,8 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
 #if defined(TEMP_GROUP_ERROR_ENABLE) && defined(TEMP_ERROR_ENABLE)
             // Add error bit to the temp group
             size_t index = conv_temps.start_index / 4;
-            size_t bit = index / 2 * 3;
-            if (index % 2) {
-                ++bit;
+            size_t bit = (index < 2) ? index : (index + ((index - 2) / 3 + 1));
+            if (index % 3 == 1) {
                 if (conv_temps.temp0 <= CELL_MIN_TEMPERATURE + 0.01f &&
                     conv_temps.temp1 <= CELL_MIN_TEMPERATURE + 0.01f)
                     temp_errors[conv_temps.cellboard_id] |= 1 << bit;
@@ -658,11 +657,10 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
             }
             // Toggle temperatures connectors error
             size_t temp_id = 0;
-            size_t board_id = 0;
             bool is_error_set = false;
-            for (; board_id < CELLBOARD_COUNT && !is_error_set; board_id++) {
-                for (; temp_id < TEMP_STRIPS_PER_BUS; temp_id++) {
-                    if ((temp_errors[board_id] & (1 << bit)) && (temp_errors[conv_temps.cellboard_id] & (1 << (bit + 1)))) {
+            for (size_t board_id; board_id < CELLBOARD_COUNT && !is_error_set; board_id++) {
+                for (size_t temp_bit; temp_bit < TEMP_STRIPS_PER_BUS * 2; temp_bit += 2) {
+                    if ((temp_errors[board_id] & (1 << temp_bit)) && (temp_errors[board_id] & (1 << (temp_bit + 1)))) {
                         error_set(ERROR_CONNECTOR_DISCONNECTED, 2, HAL_GetTick());
                         is_error_set = true;
                         break;
