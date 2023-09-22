@@ -198,7 +198,7 @@ uint16_t ltc6813_pec15(uint8_t len, uint8_t data[]) {
     remainder = 16;  // PEC seed
     for (int i = 0; i < len; i++) {
         // calculate PEC table address
-        address   = ((remainder >> 7) ^ data[i]) & 0xff;
+        address = ((remainder >> 7) ^ data[i]) & 0xff;
         remainder = (remainder << 8) ^ crcTable[address];
     }
     // The CRC15 has a 0 in the LSB so the final value must be multiplied by 2
