@@ -25,6 +25,8 @@
 #define INTERNAL_VOLTAGE_PRECHARGE_THRESHOLD 0.90f
 #define INTERNAL_VOLTAGE_PRECHARGE_HANDCART_THRESHOLD 0.88f // See rules
 
+#define INTERNAL_VOLTAGE_MAX_DELTA 25.f // Maximum delta between measured and calculated battery voltage
+
 /** @brief Initializes the adc and internal voltages */
 void internal_voltage_init();
 
