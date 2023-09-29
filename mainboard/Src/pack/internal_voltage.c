@@ -54,7 +54,7 @@ HAL_StatusTypeDef internal_voltage_measure() {
     internal_voltages.bat   = volts[MAX22530_VBATT_CHANNEL - 1];
 
     // Check if difference between readings from the ADC and cellboards is greater than 10V
-    error_toggle_check(fabsf(CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltages.bat) - CONVERT_VALUE_TO_VOLTAGE(cell_voltage_get_sum())) > 10000, ERROR_INT_VOLTAGE_MISMATCH, 0);
+    error_toggle_check(fabsf(CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltages.bat) - CONVERT_VALUE_TO_VOLTAGE(cell_voltage_get_sum())) > 10.f, ERROR_INT_VOLTAGE_MISMATCH, 0);
     return HAL_OK;
 }
 
@@ -78,6 +78,7 @@ bool internal_voltage_is_precharge_complete() {
         target = CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltages.bat) * INTERNAL_VOLTAGE_PRECHARGE_HANDCART_THRESHOLD;
     else
         target = CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltages.bat) * INTERNAL_VOLTAGE_PRECHARGE_THRESHOLD;
+        // target = CONVERT_VALUE_TO_VOLTAGE(cell_voltage_get_sum()) * INTERNAL_VOLTAGE_PRECHARGE_THRESHOLD;
     
     return tsp >= target;
 }
