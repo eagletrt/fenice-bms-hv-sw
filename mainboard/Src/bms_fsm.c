@@ -43,6 +43,7 @@ The finite state machine has:
 // State human-readable names
 const char * state_names[] = {"init", "idle", "fatal_error", "wait_airn_close", "wait_ts_precharge", "wait_airp_close", "ts_on"};
 char debug_msg[100] = { 0 };
+const char * mainboard_error_inst = "MAINBOARD";
 
 bms_state_t fsm_state = STATE_INIT;
 blink_t led;
@@ -547,7 +548,7 @@ void fsm_run() {
     bms_blink_led();
 
     // Set or reset connection error
-    ERROR_TOGGLE_CHECK(HAL_GPIO_ReadPin(CONNS_DETECTION_GPIO_Port, CONNS_DETECTION_Pin) == GPIO_PIN_RESET, ERROR_CONNECTOR_DISCONNECTED, 0);
+    ERROR_TOGGLE_CHECK_STR(HAL_GPIO_ReadPin(CONNS_DETECTION_GPIO_Port, CONNS_DETECTION_Pin) == GPIO_PIN_RESET, ERROR_CONNECTOR_DISCONNECTED, mainboard_error_inst);
 
     // Run the FSM and updates
     fsm_state = run_state(fsm_state, NULL);

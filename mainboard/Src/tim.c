@@ -848,7 +848,7 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* tim_baseHandle)
 /* USER CODE BEGIN 1 */
 void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim) {
     if (htim->Instance == HTIM_ERR.Instance) {
-        error_timer_elapsed_callback(htim);
+        error_expire_errors();
     } else if (htim->Instance == HTIM_BMS.Instance) {
         _bms_handle_tim_oc_irq(htim);
     } else if (htim->Instance == HTIM_MEASURES.Instance) {

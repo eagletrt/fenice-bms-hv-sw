@@ -169,9 +169,9 @@ bool feedback_is_ok(feedback_t mask, feedback_t value) {
 
             // TODO: Check for low state
             if (state == FEEDBACK_STATE_H)
-                error_reset(ERROR_FEEDBACK, i);
+                ERROR_RESET_INT(ERROR_FEEDBACK, i);
             else {
-                error_set(ERROR_FEEDBACK, i);
+                ERROR_SET_INT(ERROR_FEEDBACK, i);
                 return false;
             }
             continue;
@@ -191,9 +191,9 @@ bool feedback_is_ok(feedback_t mask, feedback_t value) {
 
             // TODO: Check for low state
             if (state == FEEDBACK_STATE_H)
-                error_reset(ERROR_FEEDBACK, i);
+                ERROR_RESET_INT(ERROR_FEEDBACK, i);
             else {
-                error_set(ERROR_FEEDBACK, i);
+                ERROR_SET_INT(ERROR_FEEDBACK, i);
                 return false;
             }
             continue;
@@ -219,7 +219,7 @@ bool feedback_is_ok(feedback_t mask, feedback_t value) {
             }
         }
         else {
-            error_set(ERROR_FEEDBACK_CIRCUITRY, i);
+            ERROR_SET_INT(ERROR_FEEDBACK_CIRCUITRY, i);
             return false;
         }
 
@@ -227,12 +227,12 @@ bool feedback_is_ok(feedback_t mask, feedback_t value) {
 
         // Check for errors
         if (state == FEEDBACK_STATE_ERROR || (fb_val && state == FEEDBACK_STATE_L) || (!fb_val && state == FEEDBACK_STATE_H)) {
-            error_set(ERROR_FEEDBACK, i);
+            ERROR_SET_INT(ERROR_FEEDBACK, i);
             return false;
         }
         else
-            error_reset(ERROR_FEEDBACK, i);
-        error_reset(ERROR_FEEDBACK_CIRCUITRY, i);
+            ERROR_RESET_INT(ERROR_FEEDBACK, i);
+        ERROR_RESET_INT(ERROR_FEEDBACK_CIRCUITRY, i);
     }
 
     return true;

@@ -17,6 +17,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+static const char * mainboard_error_inst = "MAINBOARD";
+
 static m95256_t eeprom = NULL;
 
 bool config_init(config_t *config, uint16_t address, uint32_t version, void *default_data, size_t size) {
@@ -45,7 +47,7 @@ bool config_read(config_t *config) {
 
     if (m95256_ReadBuffer(eeprom, buffer, config->address, config->size + CONFIG_VERSION_SIZE) ==
         EEPROM_STATUS_COMPLETE) {
-        error_reset(ERROR_EEPROM_COMM, 0);
+        ERROR_RESET_STR(ERROR_EEPROM_COMM, mainboard_error_inst);
 
         // Check if EEPROM's version matches config's
         if (*((CONFIG_VERSION_TYPE *)buffer) == config->version) {
@@ -56,7 +58,7 @@ bool config_read(config_t *config) {
         }
     }
     else
-        error_set(ERROR_EEPROM_COMM, 0);
+        ERROR_SET_STR(ERROR_EEPROM_COMM, mainboard_error_inst);
     return false;
 }
 
@@ -68,24 +70,24 @@ bool config_write(config_t *config) {
 
         if (m95256_WriteBuffer(eeprom, buffer, config->address, config->size + CONFIG_VERSION_SIZE) ==
             EEPROM_STATUS_COMPLETE) {
-            error_reset(ERROR_EEPROM_COMM, 0);
+            ERROR_RESET_STR(ERROR_EEPROM_COMM, mainboard_error_inst);
 
             // Read just-written data and compare for errors
             uint8_t testbuf[EEPROM_BUFFER_SIZE] = {0};
             if (m95256_ReadBuffer(eeprom, testbuf, config->address, config->size + CONFIG_VERSION_SIZE) ==
                 EEPROM_STATUS_COMPLETE) {
                 if (memcmp(buffer, testbuf, CONFIG_VERSION_SIZE) == 0) {
-                    error_reset(ERROR_EEPROM_WRITE, 0);
+                    ERROR_RESET_STR(ERROR_EEPROM_WRITE, mainboard_error_inst);
                     config->dirty = false;
                     return true;
                 }
 
-                error_set(ERROR_EEPROM_WRITE, 0);
+                ERROR_SET_STR(ERROR_EEPROM_WRITE, mainboard_error_inst);
                 return false;
             }
 
         } else {
-            error_set(ERROR_EEPROM_COMM, 0);
+            ERROR_SET_STR(ERROR_EEPROM_COMM, mainboard_error_inst);
             return false;
         }
     }

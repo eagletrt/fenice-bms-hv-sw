@@ -8,6 +8,7 @@
 [submodule "cellboard/Core/Lib/micro-libs"]
 	path = cellboard/Core/Lib/micro-libs
 	url = git@github.com:eagletrt/micro-libs
+    branch = error-utils
 [submodule "mainboard/lib/can"]
 	path = mainboard/lib/can
 	url = git@github.com:eagletrt/can.git

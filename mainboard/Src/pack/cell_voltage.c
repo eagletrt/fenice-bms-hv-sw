@@ -18,6 +18,8 @@
 #include "main.h"
 #include "bms_fsm.h"
 
+static const char * cell_volts_error_inst = "PACK";
+
 cell_voltage cell_volts;
 
 void cell_voltage_init() {
@@ -62,7 +64,8 @@ float cell_voltage_get_avg() {
 void cell_voltage_check_errors() {
     voltage_t min = cell_voltage_get_min();
     voltage_t max = cell_voltage_get_max();
-    ERROR_TOGGLE_CHECK(max > CELL_MAX_VOLTAGE, ERROR_CELL_OVER_VOLTAGE, 0);
-    ERROR_TOGGLE_CHECK(min < CELL_MIN_VOLTAGE, ERROR_CELL_UNDER_VOLTAGE, 0);
-    ERROR_TOGGLE_CHECK(min < CELL_WARN_VOLTAGE, ERROR_CELL_LOW_VOLTAGE, 0);
+
+    ERROR_TOGGLE_CHECK_STR(max > CELL_MAX_VOLTAGE, ERROR_CELL_OVER_VOLTAGE, cell_volts_error_inst);
+    ERROR_TOGGLE_CHECK_STR(min < CELL_MIN_VOLTAGE, ERROR_CELL_UNDER_VOLTAGE, cell_volts_error_inst);
+    ERROR_TOGGLE_CHECK_STR(min < CELL_WARN_VOLTAGE, ERROR_CELL_LOW_VOLTAGE, cell_volts_error_inst);
 }

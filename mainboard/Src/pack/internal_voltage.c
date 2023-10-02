@@ -16,6 +16,8 @@
 #include "main.h"
 #include "cell_voltage.h"
 
+static const char * cell_volts_error_inst = "PACK";
+
 /** @brief Internal voltages of the mainboard */
 struct internal_voltage {
     uint16_t tsp;   // TS+ voltage
@@ -54,7 +56,7 @@ HAL_StatusTypeDef internal_voltage_measure() {
     internal_voltages.bat   = volts[MAX22530_VBATT_CHANNEL - 1];
 
     // Check if difference between readings from the ADC and cellboards is greater than 10V
-    ERROR_TOGGLE_CHECK(fabsf(CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltages.bat) - CONVERT_VALUE_TO_VOLTAGE(cell_voltage_get_sum())) > 10000, ERROR_VOLTAGE_MISMATCH, 0);
+    ERROR_TOGGLE_CHECK_STR(fabsf(CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltages.bat) - CONVERT_VALUE_TO_VOLTAGE(cell_voltage_get_sum())) > 10, ERROR_VOLTAGE_MISMATCH, cell_volts_error_inst);
     return HAL_OK;
 }
 

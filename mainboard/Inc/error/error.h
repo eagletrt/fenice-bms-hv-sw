@@ -1,6 +1,6 @@
 /**
  * @file error.h
- * @brief Error handling unctions and structures
+ * @brief Error handling functions and structures
  * 
  * @date Jul 08, 2023
  * @author Antonio Gelain [antonio.gelain@studenti.unitn.it]
@@ -11,15 +11,33 @@
 
 #include <inttypes.h>
 #include "stm32f4xx_hal.h"
+#include "micro-libs/error-utils/error_utils.h"
+
 
 #define ERROR_TIMEOUT_INSTANT 0
 #define ERROR_TIMEOUT_NEVER UINT32_MAX
 
-#define ERROR_TOGGLE_CHECK(condition, index, offset) \
-    if ((condition)) \
-        error_set((index), (offset)); \
-    else \
-        error_reset((index), (offset));
+#define ERROR_SET_INT(error, instance) ERROR_UTILS_SET_INT(&error_handler, error, instance)
+#define ERROR_SET_STR(error, instance) ERROR_UTILS_SET_STR(&error_handler, error, instance)
+
+#define ERROR_RESET_INT(error, instance) ERROR_UTILS_RESET_INT(&error_handler, error, instance)
+#define ERROR_RESET_STR(error, instance) ERROR_UTILS_RESET_STR(&error_handler, error, instance)
+
+#define ERROR_TOGGLE_CHECK_INT(condition, error, instance) \
+    do {                                                   \
+        if (condition)                                     \
+            ERROR_SET_INT(error, instance);                \
+        else                                               \
+            ERROR_RESET_INT(error, instance);              \
+    } while(0)
+#define ERROR_TOGGLE_CHECK_STR(condition, error, instance) \
+    do {                                                   \
+        if (condition)                                     \
+            ERROR_SET_STR(error, instance);                \
+        else                                               \
+            ERROR_RESET_STR(error, instance);              \
+    } while(0)
+
 
 /** @brief Error types */
 typedef enum {
@@ -48,58 +66,36 @@ typedef enum {
     ERROR_COUNT
 } __attribute__((__packed__)) ErrorId;
 
-/**
- * @brief Errors timeout
- * @details Each timeout correspond to its error type (see the ErrorId structure)
- */
-extern const uint32_t error_timeout[ERROR_COUNT];
 
+extern ErrorUtilsHandler error_handler;
+
+
+/** @brief Initialize the error handler */
+void error_init();
 /**
- * @brief Initialize the error handler
- * 
- * @return HAL_StatusTypeDef The result of the operation
+ * @brief Get the timeout of an error in ms
+ *
+ * @param error The error type
+ * @return uint32_t The timeout of the error
  */
-HAL_StatusTypeDef error_init();
-/**
- * @brief Set an error given an index and an offset
- * 
- * @param index The type of the error
- * @param offset The instance of the error type
- * @return HAL_StatusTypeDef The result of the operation
- */
-HAL_StatusTypeDef error_set(size_t index, size_t offset);
-/**
- * @brief Reset an error given an index and an offset
- * 
- * @param index The type of the error
- * @param offset The instance of the error type
- * @return HAL_StatusTypeDef The result of the operation
- */
-HAL_StatusTypeDef error_reset(size_t index, size_t offset);
+uint32_t error_get_timeout_ms(uint32_t);
+
+/** @brief Expire the first error */
+void error_expire_errors();
+
 /**
  * @brief Get the number of currently running errors
  * 
  * @return size_t The number of running errors
  */
 size_t error_running_count();
+
 /**
  * @brief Get the number of currently expired errors
  * 
  * @return size_t The number of expired errors
  */
 size_t error_expired_count();
-/**
- * @brief Reset all currently expired errors
- * 
- * @return HAL_StatusTypeDef The result of the operation
- */
-HAL_StatusTypeDef error_reset_all_expired();
-/**
- * @brief Callback function that should be called when the timer elapses
- * 
- * @param tim The timer that has elapsed
- * @return HAL_StatusTypeDef The reult of the operation
- */
-HAL_StatusTypeDef error_timer_elapsed_callback(TIM_HandleTypeDef * tim);
+
 
 #endif // ERROR_H
