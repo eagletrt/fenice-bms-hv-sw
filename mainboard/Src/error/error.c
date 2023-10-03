@@ -13,6 +13,13 @@
 
 #define ERROR_BUFFER_SIZE 397U
 
+// String instances names
+const char * error_mainboard_instance = "MAINBOARD";
+const char * error_pack_instance = "PACK";
+const char * error_current_instance = "CURRENT";
+const char * error_bms_can_instance = "BMS_CAN";
+const char * error_car_can_instance = "CAR_CAN";
+
 /** @brief Error handler instance */
 ErrorUtilsHandler error_handler;
 

@@ -18,8 +18,6 @@
 #include <math.h>
 #include <string.h>
 
-static const char * temperature_error_inst = "PACK";
-
 cell_temperature cell_temps;
 
 void temperature_init() {
@@ -29,8 +27,8 @@ void temperature_init() {
 }
 void temperature_check_errors() {
     float max_temp = CONVERT_VALUE_TO_TEMPERATURE(temperature_get_max());
-    ERROR_TOGGLE_CHECK_STR(max_temp > CELL_MAX_TEMPERATURE - 10, ERROR_CELL_HIGH_TEMPERATURE, temperature_error_inst);
-    ERROR_TOGGLE_CHECK_STR(max_temp > CELL_MAX_TEMPERATURE, ERROR_CELL_OVER_TEMPERATURE, temperature_error_inst);
+    ERROR_TOGGLE_CHECK_STR(max_temp > CELL_MAX_TEMPERATURE - 10, ERROR_CELL_HIGH_TEMPERATURE, error_pack_instance);
+    ERROR_TOGGLE_CHECK_STR(max_temp > CELL_MAX_TEMPERATURE, ERROR_CELL_OVER_TEMPERATURE, error_pack_instance);
 }
 temperature_t temperature_get_max() {
     temperature_t max = 0;

@@ -19,8 +19,6 @@
 
 #define MEASURE_SAMPLE_SIZE 128
 
-static const char * current_error_inst = "PACK";
-
 uint16_t adc_50[MEASURE_SAMPLE_SIZE]  = { 0 };
 uint16_t adc_300[MEASURE_SAMPLE_SIZE] = { 0 };
 
@@ -66,7 +64,7 @@ uint32_t current_read(float shunt_adc_val) {
     current[CURRENT_SENSOR_SHUNT] = _current_convert_shunt(shunt_adc_val);
 
     // Check for over-current
-    ERROR_TOGGLE_CHECK_STR(current_get_current() > PACK_MAX_CURRENT, ERROR_OVER_CURRENT, current_error_inst);
+    ERROR_TOGGLE_CHECK_STR(current_get_current() > PACK_MAX_CURRENT, ERROR_OVER_CURRENT, error_current_instance);
 
     return time;
 }
@@ -105,5 +103,5 @@ current_t current_get_current_from_sensor(uint8_t sensor) {
 }
 
 void current_check_errors() {
-    ERROR_TOGGLE_CHECK_STR(current[CURRENT_SENSOR_300] > PACK_MAX_CURRENT, ERROR_OVER_CURRENT, current_error_inst);
+    ERROR_TOGGLE_CHECK_STR(current[CURRENT_SENSOR_300] > PACK_MAX_CURRENT, ERROR_OVER_CURRENT, error_mainboard_instance);
 }

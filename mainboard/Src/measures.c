@@ -27,8 +27,6 @@
 #define MEASURE_CHECK_DELAY 10000 // ms
 #define _MEASURE_CHECK_INTERVAL(interval) (((counter) % (interval)) == 0) // Check if a given interval is passed
 
-static const char * mainboard_error_inst = "MAINBOARD";
-
 uint32_t counter = 0; // Each timer interrupt it increments by 1
 uint32_t timestamp = 0;
 bool flags_checked = false;
@@ -93,7 +91,7 @@ void measures_check_flags() {
         if (HAL_GetTick() - timestamp >= MEASURE_CHECK_DELAY)
             can_cellboards_check();
         // Check if fans are connected
-        ERROR_TOGGLE_CHECK_STR(HAL_GPIO_ReadPin(FANS_DETECT_GPIO_Port, FANS_DETECT_Pin) == GPIO_PIN_RESET, ERROR_FANS_DISCONNECTED, mainboard_error_inst);
+        ERROR_TOGGLE_CHECK_STR(HAL_GPIO_ReadPin(FANS_DETECT_GPIO_Port, FANS_DETECT_Pin) == GPIO_PIN_RESET, ERROR_FANS_DISCONNECTED, error_mainboard_instance);
     }
     // 1 s interval
     if (_MEASURE_CHECK_INTERVAL(MEASURE_INTERVAL_1S)) {

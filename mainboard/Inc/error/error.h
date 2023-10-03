@@ -67,7 +67,15 @@ typedef enum {
 } __attribute__((__packed__)) ErrorId;
 
 
+// Do not use this structure directly
 extern ErrorUtilsHandler error_handler;
+
+// String instances names
+extern const char * error_mainboard_instance;
+extern const char * error_pack_instance;
+extern const char * error_current_instance;
+extern const char * error_bms_can_instance;
+extern const char * error_car_can_instance;
 
 
 /** @brief Initialize the error handler */

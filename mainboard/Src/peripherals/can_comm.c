@@ -27,8 +27,6 @@
 
 #include <string.h>
 
-static const char * bms_can_error_inst = "BMS_CAN";
-static const char * car_can_error_inst = "CAR_CAN";
 
 CAN_TxHeaderTypeDef tx_header;
 
@@ -407,12 +405,12 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         tx_header.DLC = primary_hv_feedbacks_status_pack(buffer, &raw_status, PRIMARY_HV_FEEDBACKS_STATUS_BYTE_SIZE);
     }
     else {
-        ERROR_SET_STR(ERROR_CAN_COMM, car_can_error_inst);
+        ERROR_SET_STR(ERROR_CAN_COMM, error_car_can_instance);
         return HAL_ERROR;
     }
 
     HAL_StatusTypeDef status = can_send(&CAR_CAN, buffer, &tx_header);
-    ERROR_TOGGLE_CHECK_STR(status != HAL_OK, ERROR_CAN_COMM, car_can_error_inst);
+    ERROR_TOGGLE_CHECK_STR(status != HAL_OK, ERROR_CAN_COMM, error_car_can_instance);
     return status;
 }
 
@@ -449,7 +447,7 @@ HAL_StatusTypeDef can_bms_send(uint16_t id) {
             tx_header.DLC = bms_set_balancing_status_pack(buffer, &raw_bal, BMS_SET_BALANCING_STATUS_BYTE_SIZE);
             status |= can_send(&BMS_CAN, buffer, &tx_header);
         }
-        ERROR_TOGGLE_CHECK_STR(status != 0, ERROR_CAN_COMM, bms_can_error_inst);
+        ERROR_TOGGLE_CHECK_STR(status != 0, ERROR_CAN_COMM, error_bms_can_instance);
         return status == 0 ? HAL_OK : HAL_ERROR;
     } else if (id == BMS_JMP_TO_BLT_FRAME_ID) {
         bms_jmp_to_blt_t raw_jmp;
@@ -464,11 +462,11 @@ HAL_StatusTypeDef can_bms_send(uint16_t id) {
 
         tx_header.DLC = bms_jmp_to_blt_pack(buffer, &raw_jmp, BMS_JMP_TO_BLT_BYTE_SIZE);  //TODO: set board_index
         HAL_StatusTypeDef status = can_send(&BMS_CAN, buffer, &tx_header);
-        ERROR_TOGGLE_CHECK_STR(status != HAL_OK, ERROR_CAN_COMM, bms_can_error_inst);
+        ERROR_TOGGLE_CHECK_STR(status != HAL_OK, ERROR_CAN_COMM, error_bms_can_instance);
         return status;
     }
 
-    ERROR_SET_STR(ERROR_CAN_COMM, car_can_error_inst);
+    ERROR_SET_STR(ERROR_CAN_COMM, error_bms_can_instance);
     return HAL_ERROR;
 }
 
@@ -477,7 +475,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
     CAN_RxHeaderTypeDef rx_header;
 
     if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rx_header, rx_data) != HAL_OK) {
-        ERROR_SET_STR(ERROR_CAN_COMM, bms_can_error_inst);
+        ERROR_SET_STR(ERROR_CAN_COMM, error_bms_can_instance);
         cli_bms_debug("CAN: Error receiving message", 29);
         return;
     }
@@ -492,7 +490,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
             return;
         }
 
-        ERROR_RESET_STR(ERROR_CAN_COMM, bms_can_error_inst);
+        ERROR_RESET_STR(ERROR_CAN_COMM, error_bms_can_instance);
         HAL_StatusTypeDef status = HAL_OK;
 
         if (rx_header.StdId == BMS_VOLTAGES_FRAME_ID) {
@@ -662,13 +660,13 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
 
             status = can_send(&CAR_CAN, buffer, &tx_header);
         } else {
-            ERROR_SET_STR(ERROR_CAN_COMM, bms_can_error_inst);
+            ERROR_SET_STR(ERROR_CAN_COMM, error_bms_can_instance);
             // char buffer[50] = {0};
             // sprintf(buffer, "%lx#%lx%lx\r\n", rx_header.StdId, *(uint32_t*)rx_data, *(((uint32_t*)rx_data)+1));
             // HAL_UART_Transmit(&CLI_UART, (uint8_t*)buffer, strlen(buffer), 100);
         }
 
-        ERROR_TOGGLE_CHECK_STR(status != HAL_OK, ERROR_CAN_COMM, bms_can_error_inst);
+        ERROR_TOGGLE_CHECK_STR(status != HAL_OK, ERROR_CAN_COMM, error_bms_can_instance);
     }
 }
 
@@ -676,7 +674,7 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
     uint8_t rx_data[8] = {'\0'};
     CAN_RxHeaderTypeDef rx_header;
     if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO1, &rx_header, rx_data) != HAL_OK) {
-        ERROR_SET_STR(ERROR_CAN_COMM, car_can_error_inst);
+        ERROR_SET_STR(ERROR_CAN_COMM, error_car_can_instance);
         cli_bms_debug("CAN: Error receiving message", 29);
         return;
     }
@@ -691,7 +689,7 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
             return;
         }
 
-        ERROR_RESET_STR(ERROR_CAN_COMM, car_can_error_inst);
+        ERROR_RESET_STR(ERROR_CAN_COMM, error_car_can_instance);
 
         if (rx_header.StdId == PRIMARY_CAR_STATUS_FRAME_ID) {
             // Reset the watchdog timer
