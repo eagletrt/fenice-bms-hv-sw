@@ -29,11 +29,20 @@ void fans_init() {
     fans_set_speed(0);
     pwm_start_channel(&HTIM_PWM, PWM_FANS_CHANNEL);
 }
-void fans_toggle_override() {
-    override_fans_speed = !override_fans_speed;
-}
 bool fans_is_overrided() {
     return override_fans_speed;
+}
+void fans_set_override(bool override) {
+    override_fans_speed = override;
+}
+float fans_get_speed() {
+    // Get CCR register value
+    uint32_t cmp = __HAL_TIM_GetCompare(&HTIM_PWM, PWM_FANS_CHANNEL);
+    // Get autoreload value
+    uint32_t arr = __HAL_TIM_GetAutoreload(&HTIM_PWM);
+
+    // Calculate fans speed
+    return (float)cmp / (float)arr;
 }
 void fans_set_speed(float power) {
     if (power > 1.f || power < 0.f)

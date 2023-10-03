@@ -15,8 +15,8 @@
 #include "stm32f4xx_hal.h"
 #include "../../fenice_config.h"
 
-#define CONVERT_VOLTAGE_TO_VALUE(x) ((x) * 10000)
-#define CONVERT_VALUE_TO_VOLTAGE(x) ((float)(x) / 10000)
+#define CONVERT_VOLTAGE_TO_VALUE(x) ((x) * 10000.f)
+#define CONVERT_VALUE_TO_VOLTAGE(x) ((float)(x) / 10000.f)
 
 /** @brief Maximum, minimum and average of the cells of the pack */
 typedef struct {

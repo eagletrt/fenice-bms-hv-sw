@@ -85,9 +85,9 @@ void measures_check_flags() {
         // Send info via CAN
         can_car_send(PRIMARY_HV_CAN_FORWARD_FRAME_ID);
         can_car_send(PRIMARY_HV_VERSION_FRAME_ID);
+        can_car_send(PRIMARY_HV_FANS_OVERRIDE_STATUS_FRAME_ID);
         
         // Check cellboards connection errors
-
         if (HAL_GetTick() - timestamp >= MEASURE_CHECK_DELAY)
             can_cellboards_check();
         // Check if fans are connected
@@ -98,8 +98,7 @@ void measures_check_flags() {
         // Run fans based on temperature
         if (!fans_is_overrided()) {
             float max_temp = CONVERT_VALUE_TO_TEMPERATURE(temperature_get_max());
-            if (max_temp >= FANS_START_TEMP)
-                fans_set_speed(fans_curve(max_temp));
+            fans_set_speed(fans_curve(max_temp));
         }
     }
     // 5 s interval

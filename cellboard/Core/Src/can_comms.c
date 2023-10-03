@@ -1,9 +1,10 @@
 /**
- * @file		can_comms.c
- * @brief		CAN communication stuff
+ * @file can_comms.c
+ * @brief CAN communication stuff
  *
- * @date		Jul 16, 2021
- * @author		Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @date Jul 16, 2021
+ * @author Matteo Bonora [matteo.bonora@studenti.unitn.it]
+ * @author Antonio Gelain [antonio.gelain@studenti.unitn.it]
  */
 
 #include "can_comms.h"
@@ -22,9 +23,17 @@
 #include <string.h>
 
 #define RETRANSMISSION_MAX_ATTEMPTS 1
-uint8_t retransmission_attempts[3] = {0};
+uint8_t retransmission_attempts[3] = { 0 };
 
-HAL_StatusTypeDef CAN_WAIT(CAN_HandleTypeDef *hcan, uint8_t timeout) {
+/**
+ * @brief Wait until the CAN has at least one free mailbox
+ * 
+ * @param hcan The CAN handler structure
+ * @param timeout The maximum time to wait (in ms)
+ * @return HAL_StatusTypeDef HAL_OK if there are free mailboxes
+ * HAL_TIMEOUT otherwise
+ */
+HAL_StatusTypeDef _can_wait(CAN_HandleTypeDef * hcan, uint32_t timeout) {
     uint32_t tick = HAL_GetTick();
     while (HAL_CAN_GetTxMailboxesFreeLevel(hcan) == 0) {
         if (HAL_GetTick() - tick > timeout)
@@ -34,51 +43,75 @@ HAL_StatusTypeDef CAN_WAIT(CAN_HandleTypeDef *hcan, uint8_t timeout) {
 }
 
 HAL_StatusTypeDef _can_send(CAN_HandleTypeDef *hcan, uint8_t *buffer, CAN_TxHeaderTypeDef *header) {
-    if(CAN_WAIT(hcan, 3) != HAL_OK) {
+    // Wait for free mailboxes
+    if(_can_wait(hcan, 3) != HAL_OK)
         return HAL_TIMEOUT;
-    }
 
+    // Add message to a free mailbox
     HAL_StatusTypeDef status = HAL_CAN_AddTxMessage(hcan, header, buffer, NULL);
-    if (status == HAL_OK) {
-        ERROR_UNSET(ERROR_CAN);
-    } else {
-        ERROR_SET(ERROR_CAN);
-    }
+    ERROR_TOGGLE_CHECK(status != HAL_OK, ERROR_CAN);
+
     return status;
 }
 
-void can_send(uint16_t topic_id) {
-    if (HAL_GetTick() < 10000)
-        return;
+void can_init_with_filter() {
+    /* HAL considers IdLow and IdHigh not as just the ID of the can message but
+        as the combination of: 
+        STDID + RTR + IDE + 4 most significant bits of EXTID
+    */
+    // Add all balancing ids to the filter
+    CAN_FilterTypeDef filter = {
+        .FilterActivation = CAN_FILTER_ENABLE,
+        .FilterBank = 0,
+        .FilterFIFOAssignment = CAN_FILTER_FIFO0,
+        .FilterIdHigh = BMS_TOPIC_FILTER_BALANCING << 5,
+        .FilterIdLow = BMS_TOPIC_FILTER_BALANCING << 5,
+        .FilterMaskIdHigh = BMS_TOPIC_MASK_BALANCING << 5,
+        .FilterMaskIdLow = BMS_TOPIC_MASK_BALANCING << 5,
+        .FilterMode = CAN_FILTERMODE_IDMASK,
+        .FilterScale = CAN_FILTERSCALE_16BIT,
+        .SlaveStartFilterBank = 27
+    };
+    HAL_CAN_ConfigFilter(&BMS_CAN, &filter);
 
-    CAN_TxHeaderTypeDef tx_header;
+    // Add jump to bootloader message id to the filters
+    filter.FilterBank = 1;
+    filter.FilterIdLow = BMS_JMP_TO_BLT_FRAME_ID << 5;
+    filter.FilterIdHigh = BMS_JMP_TO_BLT_FRAME_ID << 5;
+    filter.FilterMaskIdHigh = BMS_TOPIC_MASK_FIXED_IDS << 5;
+    filter.FilterMaskIdLow = BMS_TOPIC_MASK_FIXED_IDS << 5;
+    HAL_CAN_ConfigFilter(&BMS_CAN, &filter);
+
+    // Start CAN
+    HAL_CAN_ActivateNotification(&BMS_CAN, CAN_IT_RX_FIFO0_MSG_PENDING | CAN_IT_TX_MAILBOX_EMPTY | CAN_IT_LAST_ERROR_CODE | CAN_IT_ERROR);
+    HAL_CAN_Start(&BMS_CAN);
+}
+void can_send(uint16_t id) {
+    // TODO: Check
+    // if (HAL_GetTick() < 10000)
+    //     return;
+
+    CAN_TxHeaderTypeDef tx_header = {
+        .DLC = 0,
+        .ExtId = 0,
+        .IDE = CAN_ID_STD,
+        .RTR = CAN_RTR_DATA,
+        .StdId = id,
+        .TransmitGlobalTime = DISABLE
+    };
     uint8_t buffer[CAN_MAX_PAYLOAD_LENGTH] = { 0 };
 
-    tx_header.ExtId = 0;
-    tx_header.IDE   = CAN_ID_STD;
-    tx_header.RTR   = CAN_RTR_DATA;
+    if (id == BMS_BOARD_STATUS_FRAME_ID) {
+        bms_board_status_t raw_state = { 0 };
+        bms_board_status_converted_t conv_state = { 0 };
 
-    if (topic_id == BMS_BOARD_STATUS_FRAME_ID /*bms_topic_filter_STATUS*/) {
-        bms_board_status_t raw_state;
-        bms_board_status_converted_t conv_state;
-        
+        conv_state.cellboard_id = cellboard_index;
         conv_state.balancing_status = BMS_BOARD_STATUS_BALANCING_STATUS_OFF_CHOICE;
 
-        switch (fsm_get_state()) {
-            case STATE_INIT:
-            case STATE_OFF:
-            case STATE_COOLDOWN:
-                conv_state.balancing_status = BMS_BOARD_STATUS_BALANCING_STATUS_OFF_CHOICE;
-                break;
-            case STATE_DISCHARGE:
-                conv_state.balancing_status = BMS_BOARD_STATUS_BALANCING_STATUS_DISCHARGE_CHOICE;
-                break;
-            default:
-                break;
-        }
-
-        // Add cellboard index in the payload
-        conv_state.cellboard_id = cellboard_index;
+        if (fsm_get_state() == STATE_DISCHARGE)
+            conv_state.balancing_status = BMS_BOARD_STATUS_BALANCING_STATUS_DISCHARGE_CHOICE;
+        else
+            conv_state.balancing_status = BMS_BOARD_STATUS_BALANCING_STATUS_OFF_CHOICE;
 
         conv_state.errors_can_comm = ERROR_GET(ERROR_CAN);
         conv_state.errors_ltc_comm = ERROR_GET(ERROR_LTC_COMM);
@@ -90,45 +123,38 @@ void can_send(uint16_t topic_id) {
         conv_state.errors_temp_comm_4 = ERROR_GET(ERROR_TEMP_COMM_4);
         conv_state.errors_temp_comm_5 = ERROR_GET(ERROR_TEMP_COMM_5);
 
-        conv_state.balancing_cells_cell0  = bal_params.discharge_cells & 1;
-        conv_state.balancing_cells_cell1  = bal_params.discharge_cells & (1 << 1);
-        conv_state.balancing_cells_cell2  = bal_params.discharge_cells & (1 << 2);
-        conv_state.balancing_cells_cell3  = bal_params.discharge_cells & (1 << 3);
-        conv_state.balancing_cells_cell4  = bal_params.discharge_cells & (1 << 4);
-        conv_state.balancing_cells_cell5  = bal_params.discharge_cells & (1 << 5);
-        conv_state.balancing_cells_cell6  = bal_params.discharge_cells & (1 << 6);
-        conv_state.balancing_cells_cell7  = bal_params.discharge_cells & (1 << 7);
-        conv_state.balancing_cells_cell8  = bal_params.discharge_cells & (1 << 8);
-        conv_state.balancing_cells_cell9  = bal_params.discharge_cells & (1 << 9);
-        conv_state.balancing_cells_cell10 = bal_params.discharge_cells & (1 << 10);
-        conv_state.balancing_cells_cell11 = bal_params.discharge_cells & (1 << 11);
-        conv_state.balancing_cells_cell12 = bal_params.discharge_cells & (1 << 12);
-        conv_state.balancing_cells_cell13 = bal_params.discharge_cells & (1 << 13);
-        conv_state.balancing_cells_cell14 = bal_params.discharge_cells & (1 << 14);
-        conv_state.balancing_cells_cell15 = bal_params.discharge_cells & (1 << 15);
-        conv_state.balancing_cells_cell16 = bal_params.discharge_cells & (1 << 16);
-        conv_state.balancing_cells_cell17 = bal_params.discharge_cells & (1 << 17);
+        conv_state.balancing_cells_cell0  = (bal_params.discharge_cells & 1) != 0;
+        conv_state.balancing_cells_cell1  = (bal_params.discharge_cells & (1 << 1)) != 0;
+        conv_state.balancing_cells_cell2  = (bal_params.discharge_cells & (1 << 2)) != 0;
+        conv_state.balancing_cells_cell3  = (bal_params.discharge_cells & (1 << 3)) != 0;
+        conv_state.balancing_cells_cell4  = (bal_params.discharge_cells & (1 << 4)) != 0;
+        conv_state.balancing_cells_cell5  = (bal_params.discharge_cells & (1 << 5)) != 0;
+        conv_state.balancing_cells_cell6  = (bal_params.discharge_cells & (1 << 6)) != 0;
+        conv_state.balancing_cells_cell7  = (bal_params.discharge_cells & (1 << 7)) != 0;
+        conv_state.balancing_cells_cell8  = (bal_params.discharge_cells & (1 << 8)) != 0;
+        conv_state.balancing_cells_cell9  = (bal_params.discharge_cells & (1 << 9)) != 0;
+        conv_state.balancing_cells_cell10 = (bal_params.discharge_cells & (1 << 10)) != 0;
+        conv_state.balancing_cells_cell11 = (bal_params.discharge_cells & (1 << 11)) != 0;
+        conv_state.balancing_cells_cell12 = (bal_params.discharge_cells & (1 << 12)) != 0;
+        conv_state.balancing_cells_cell13 = (bal_params.discharge_cells & (1 << 13)) != 0;
+        conv_state.balancing_cells_cell14 = (bal_params.discharge_cells & (1 << 14)) != 0;
+        conv_state.balancing_cells_cell15 = (bal_params.discharge_cells & (1 << 15)) != 0;
+        conv_state.balancing_cells_cell16 = (bal_params.discharge_cells & (1 << 16)) != 0;
+        conv_state.balancing_cells_cell17 = (bal_params.discharge_cells & (1 << 17)) != 0;
 
         bms_board_status_conversion_to_raw_struct(&raw_state, &conv_state);
 
-        tx_header.StdId = BMS_BOARD_STATUS_FRAME_ID;
-        tx_header.DLC = bms_board_status_pack(buffer, &raw_state, BMS_BOARD_STATUS_BYTE_SIZE);
+        int data_len = bms_board_status_pack(buffer, &raw_state, BMS_BOARD_STATUS_BYTE_SIZE);
+        if (data_len < 0)
+            return;
+        tx_header.DLC = data_len;
+    }
+    else if (id == BMS_TEMPERATURES_FRAME_ID) {
+        for (size_t i = 0; i < CELLBOARD_TEMP_SENSOR_COUNT; i += 4) {
+            bms_temperatures_t raw_temps = { 0 };
+            bms_temperatures_converted_t conv_temps = { 0 };
 
-        _can_send(&BMS_CAN, buffer, &tx_header);
-        return;
-    } else if (topic_id == BMS_TEMPERATURES_FRAME_ID) {
-        tx_header.StdId = BMS_TEMPERATURES_FRAME_ID;
-
-        register uint8_t i;
-        for (i = 0; i < CELLBOARD_TEMP_SENSOR_COUNT; i += 4) {
-            bms_temperatures_t raw_temps;
-            bms_temperatures_converted_t conv_temps;
-
-            // Add cellboard index in the payload
-            conv_temps.cellboard_id = (cellboard_index == 7)
-                ? bms_temperatures_cellboard_id_CELLBOARD_5
-                : cellboard_index;
-
+            conv_temps.cellboard_id = cellboard_index;
             conv_temps.start_index = i,
             conv_temps.temp0 = temperatures[i];
             conv_temps.temp1 = temperatures[i + 1];
@@ -137,17 +163,18 @@ void can_send(uint16_t topic_id) {
 
             bms_temperatures_conversion_to_raw_struct(&raw_temps, &conv_temps);
             
-            tx_header.DLC = bms_temperatures_pack(buffer, &raw_temps, BMS_TEMPERATURES_BYTE_SIZE);
-            _can_send(&BMS_CAN, buffer, &tx_header);
-            HAL_Delay(1);
+            int data_len = bms_temperatures_pack(buffer, &raw_temps, BMS_TEMPERATURES_BYTE_SIZE);
+            if (data_len >= 0) {
+                tx_header.DLC = data_len;
+                _can_send(&BMS_CAN, buffer, &tx_header);
+                HAL_Delay(1);
+            }
         }
         return;
     }
-    else if (topic_id == BMS_TEMPERATURES_INFO_FRAME_ID) {
-        tx_header.StdId = BMS_TEMPERATURES_INFO_FRAME_ID;
-
-        bms_temperatures_info_t raw_temps;
-        bms_temperatures_info_converted_t conv_temps;
+    else if (id == BMS_TEMPERATURES_INFO_FRAME_ID) {
+        bms_temperatures_info_t raw_temps = { 0 };
+        bms_temperatures_info_converted_t conv_temps = { 0 };
 
         conv_temps.cellboard_id = cellboard_index;
         conv_temps.min_temp = temp_get_min();
@@ -156,126 +183,98 @@ void can_send(uint16_t topic_id) {
 
         bms_temperatures_info_conversion_to_raw_struct(&raw_temps, &conv_temps);
         
-        tx_header.DLC = bms_temperatures_info_pack(buffer, &raw_temps, BMS_TEMPERATURES_INFO_BYTE_SIZE);
-        _can_send(&BMS_CAN, buffer, &tx_header);
+        int data_len = bms_temperatures_info_pack(buffer, &raw_temps, BMS_TEMPERATURES_INFO_BYTE_SIZE);
+        if (data_len < 0)
+            return;
+        tx_header.DLC = data_len;
     } 
-    else if (topic_id == BMS_VOLTAGES_FRAME_ID) {
-        tx_header.StdId = BMS_VOLTAGES_FRAME_ID;
-
+    else if (id == BMS_VOLTAGES_FRAME_ID) {
         for (size_t i = 0; i < CELLBOARD_CELL_COUNT; i += 3) {
-            bms_voltages_t raw_volts;
-            bms_voltages_converted_t conv_volts;
+            bms_voltages_t raw_volts = { 0 };
+            bms_voltages_converted_t conv_volts = { 0 };
      
-            // Add cellboard index in the payload
             conv_volts.cellboard_id = cellboard_index;
-
             conv_volts.start_index = i;
             conv_volts.voltage0 = CONVERT_VALUE_TO_VOLTAGE(voltages[i]);
             conv_volts.voltage1 = CONVERT_VALUE_TO_VOLTAGE(voltages[i + 1]);
             conv_volts.voltage2 = CONVERT_VALUE_TO_VOLTAGE(voltages[i + 2]);
 
-            // Convert voltage to raw
             bms_voltages_conversion_to_raw_struct(&raw_volts, &conv_volts);
 
-            tx_header.DLC = bms_voltages_pack(buffer, &raw_volts, BMS_VOLTAGES_BYTE_SIZE);
-            _can_send(&BMS_CAN, buffer, &tx_header);
-            HAL_Delay(1);
+            int data_len = bms_voltages_pack(buffer, &raw_volts, BMS_VOLTAGES_BYTE_SIZE);
+            if (data_len >= 0) {
+                tx_header.DLC = data_len;
+                _can_send(&BMS_CAN, buffer, &tx_header);
+                HAL_Delay(1);
+            }
         }
         return;
     }
-    else if (topic_id == BMS_VOLTAGES_INFO_FRAME_ID) {
-        tx_header.StdId = BMS_VOLTAGES_INFO_FRAME_ID;
-
-        bms_voltages_info_t raw_volts;
-        bms_voltages_info_converted_t conv_volts;
+    else if (id == BMS_VOLTAGES_INFO_FRAME_ID) {
+        bms_voltages_info_t raw_volts = { 0 };
+        bms_voltages_info_converted_t conv_volts = { 0 };
      
-        // Add cellboard index in the payload
         conv_volts.cellboard_id = cellboard_index;
         conv_volts.min_voltage = CONVERT_VALUE_TO_VOLTAGE(volt_get_min());
         conv_volts.max_voltage = CONVERT_VALUE_TO_VOLTAGE(volt_get_max());
         conv_volts.avg_voltage = CONVERT_VALUE_TO_VOLTAGE(volt_get_avg());
 
-        // Convert voltage to raw
         bms_voltages_info_conversion_to_raw_struct(&raw_volts, &conv_volts);
 
-        tx_header.DLC = bms_voltages_info_pack(buffer, &raw_volts, BMS_VOLTAGES_INFO_BYTE_SIZE);
-        _can_send(&BMS_CAN, buffer, &tx_header);
+        int data_len = bms_voltages_info_pack(buffer, &raw_volts, BMS_VOLTAGES_INFO_BYTE_SIZE);
+        if (data_len < 0)
+            return;
+        tx_header.DLC = data_len;
     }
+    else
+        return;
+    
+    _can_send(&BMS_CAN, buffer, &tx_header);
 }
 
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
-    uint8_t rx_data[8] = { '\0' };
-    CAN_RxHeaderTypeDef rx_header;
+    CAN_RxHeaderTypeDef rx_header = { 0 };
+    uint8_t rx_data[CAN_MAX_PAYLOAD_LENGTH] = { 0 };
+
+    // Check for communication errors
     if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rx_header, rx_data) != HAL_OK) {
         ERROR_SET(ERROR_CAN);
         return;
     }
-    ERROR_UNSET(ERROR_CAN);
 
-    if (rx_header.StdId == BMS_SET_BALANCING_STATUS_FRAME_ID) {
-        bms_set_balancing_status_t raw_bal;
-        bms_set_balancing_status_converted_t conv_bal;
-        bms_set_balancing_status_unpack(&raw_bal, rx_data, BMS_SET_BALANCING_STATUS_BYTE_SIZE);
+    if (hcan->Instance == BMS_CAN.Instance) {
+        // Reset can errors
+        ERROR_UNSET(ERROR_CAN);
 
-        bms_set_balancing_status_raw_to_conversion_struct(&conv_bal, &raw_bal);
+        if (rx_header.StdId == BMS_SET_BALANCING_STATUS_FRAME_ID) {
+            bms_set_balancing_status_t raw_bal = { 0 };
+            bms_set_balancing_status_converted_t conv_bal = { 0 };
 
-        // Set balancing parameters
-        bal_params.target = conv_bal.target;
-        bal_params.threshold = conv_bal.threshold;
-        
-        switch(conv_bal.balancing_status) {
-            case bms_set_balancing_status_balancing_status_OFF:
-                set_bal_request.is_new = true;
-                set_bal_request.next_state = STATE_OFF;
-                break;
-            case bms_set_balancing_status_balancing_status_DISCHARGE:
-                set_bal_request.is_new = true;
-                set_bal_request.next_state = STATE_DISCHARGE;
-                break;
+            if (bms_set_balancing_status_unpack(&raw_bal, rx_data, BMS_SET_BALANCING_STATUS_BYTE_SIZE) < 0) {
+                ERROR_SET(ERROR_CAN);
+                return;
+            }
+            bms_set_balancing_status_raw_to_conversion_struct(&conv_bal, &raw_bal);
+
+            // Set balancing parameters
+            bal_params.target = conv_bal.target;
+            bal_params.threshold = conv_bal.threshold;
+            
+            // Request for balancing status change
+            switch(conv_bal.balancing_status) {
+                case bms_set_balancing_status_balancing_status_OFF:
+                    set_bal_request.is_new = true;
+                    set_bal_request.next_state = STATE_OFF;
+                    break;
+                case bms_set_balancing_status_balancing_status_DISCHARGE:
+                    set_bal_request.is_new = true;
+                    set_bal_request.next_state = STATE_DISCHARGE;
+                    break;
+            }
+        } else if (rx_header.StdId == BMS_JMP_TO_BLT_FRAME_ID && fsm_get_state() == STATE_OFF) {
+            HAL_NVIC_SystemReset();
         }
-    } else if (rx_header.StdId == BMS_JMP_TO_BLT_FRAME_ID && fsm_get_state() == STATE_OFF) {
-        HAL_NVIC_SystemReset();
     }
-}
-
-void can_init_with_filter() {
-    CAN_FilterTypeDef filter;
-    filter.FilterMode       = CAN_FILTERMODE_IDMASK;
-    filter.FilterIdLow      = BMS_TOPIC_FILTER_BALANCING << 5;  // Take all ids from 0
-    filter.FilterIdHigh     = BMS_TOPIC_FILTER_BALANCING << 5;  // to 2^11 - 1
-    filter.FilterMaskIdHigh = BMS_TOPIC_MASK_BALANCING << 5;    // Don't care on can id bits
-    filter.FilterMaskIdLow  = BMS_TOPIC_MASK_BALANCING << 5;    // Don't care on can id bits
-    /* HAL considers IdLow and IdHigh not as just the ID of the can message but
-        as the combination of: 
-        STDID + RTR + IDE + 4 most significant bits of EXTID
-    */
-    filter.FilterFIFOAssignment = CAN_FILTER_FIFO0;
-    filter.FilterBank           = 0;
-    filter.FilterScale          = CAN_FILTERSCALE_16BIT;
-    filter.FilterActivation     = ENABLE;
-
-    HAL_CAN_ConfigFilter(&BMS_CAN, &filter);
-
-
-    filter.FilterMode       = CAN_FILTERMODE_IDMASK;
-    filter.FilterIdLow      = BMS_JMP_TO_BLT_FRAME_ID << 5;  // Take all ids from 0
-    filter.FilterIdHigh     = BMS_JMP_TO_BLT_FRAME_ID << 5;  // to 2^11 - 1
-    filter.FilterMaskIdHigh = BMS_TOPIC_MASK_FIXED_IDS << 5;    // Don't care on can id bits
-    filter.FilterMaskIdLow  = BMS_TOPIC_MASK_FIXED_IDS << 5;    // Don't care on can id bits
-    /* HAL considers IdLow and IdHigh not as just the ID of the can message but
-        as the combination of: 
-        STDID + RTR + IDE + 4 most significant bits of EXTID
-    */
-    filter.FilterFIFOAssignment = CAN_FILTER_FIFO0;
-    filter.FilterBank           = 1;
-    filter.FilterScale          = CAN_FILTERSCALE_16BIT;
-    filter.FilterActivation     = ENABLE;
-
-    HAL_CAN_ConfigFilter(&BMS_CAN, &filter);
-
-    HAL_CAN_ActivateNotification(
-        &BMS_CAN, CAN_IT_RX_FIFO0_MSG_PENDING | CAN_IT_TX_MAILBOX_EMPTY | CAN_IT_LAST_ERROR_CODE | CAN_IT_ERROR);
-    HAL_CAN_Start(&BMS_CAN);
 }
 
 void CAN_TxCallback(CAN_HandleTypeDef *hcan, uint32_t mailbox) {

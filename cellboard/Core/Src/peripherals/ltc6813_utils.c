@@ -13,10 +13,14 @@
 
 #include <math.h>
 
+#define LTC6813_PEC_ERROR_MAX_COUNT 5
+
+size_t pec_error_count = 0;
+
 size_t ltc6813_read_voltages(SPI_HandleTypeDef *hspi, voltage_t *volts) {
     uint8_t cmd[4];
     uint16_t cmd_pec;
-    uint8_t data[8];  //[8 * CELLBOARD_COUNT];
+    uint8_t data[8] = { 0 };
 
     cmd[0] = 0;  // Broadcast
 
@@ -56,8 +60,8 @@ size_t ltc6813_read_voltages(SPI_HandleTypeDef *hspi, voltage_t *volts) {
         data[6]          = (uint8_t)(emu_pec >> 8);
         data[7]          = (uint8_t)emu_pec;
 #endif
-
-        if (ltc6813_pec15(6, data) == (uint16_t)(data[6] * 256 + data[7])) {
+        if (ltc6813_pec15(6, data) == (((uint16_t)data[6] << 8) | (uint16_t)data[7])) {
+            pec_error_count = 0;
             ERROR_UNSET(ERROR_LTC_COMM);
 
             // For every cell in the register
@@ -67,15 +71,19 @@ size_t ltc6813_read_voltages(SPI_HandleTypeDef *hspi, voltage_t *volts) {
 
                 if(ltc6813_convert_voltage(data + (sizeof(voltage_t) * cell)) == 0xFFFF) continue;
 
-                volts[index] =
-                    ltc6813_convert_voltage(data + (sizeof(voltage_t) * cell));  //&data[sizeof(voltage_t) * cell]);
+                volts[index] = ltc6813_convert_voltage(data + (sizeof(voltage_t) * cell));  //&data[sizeof(voltage_t) * cell]);
                 //ltc6813_check_voltage(volts[index], index);
 
                 count++;
             }
         }
-        else
-            ERROR_SET(ERROR_LTC_COMM);
+        else {
+            ++pec_error_count;
+            if (pec_error_count >= LTC6813_PEC_ERROR_MAX_COUNT) {
+                pec_error_count = 0;
+                ERROR_SET(ERROR_LTC_COMM);
+            }
+        }
     }
     return count;
 }

@@ -152,14 +152,14 @@ bal_state_t do_discharge(state_data_t *data) {
   
   /* Your Code Here */
   // Get cells to discharge
-  bal_get_cells_to_discharge(
+  size_t count = bal_get_cells_to_discharge(
     volt_get_volts(),
-    &bal_params.discharge_cells,
+    NULL,
     bal_params.target,
     bal_params.threshold
   );
 
-  if (_requested_bal_off() || bal_is_cells_empty())
+  if (_requested_bal_off() || count == 0)
     next_state = STATE_OFF;
   else if (discharge_timeout)
     next_state = STATE_COOLDOWN;
@@ -187,14 +187,14 @@ bal_state_t do_cooldown(state_data_t *data) {
   
   /* Your Code Here */
   // Get cells to discharge
-  bal_get_cells_to_discharge(
+  size_t count = bal_get_cells_to_discharge(
     volt_get_volts(),
-    &bal_params.discharge_cells,
+    NULL,
     bal_params.target,
     bal_params.threshold
   );
 
-  if (_requested_bal_off() || bal_is_cells_empty())
+  if (_requested_bal_off() || count == 0)
     next_state = STATE_OFF;
   else if (cooldown_timeout)
     next_state = STATE_DISCHARGE;
@@ -235,7 +235,7 @@ void init_to_off(state_data_t * data) {
   /* Your Code Here */
 
   // Set timers autoreload
-  __HAL_TIM_SET_AUTORELOAD(&HTIM_DISCHARGE, TIM_MS_TO_TICKS(&HTIM_COOLDOWN, BAL_CYCLE_LENGTH));
+  __HAL_TIM_SET_AUTORELOAD(&HTIM_DISCHARGE, TIM_MS_TO_TICKS(&HTIM_DISCHARGE, BAL_CYCLE_LENGTH));
   __HAL_TIM_SET_AUTORELOAD(&HTIM_COOLDOWN, TIM_MS_TO_TICKS(&HTIM_COOLDOWN, BAL_COOLDOWN_DELAY));
 
   // Reset balancing (just in case)
@@ -258,6 +258,14 @@ void start_discharge(state_data_t * data) {
   HAL_TIM_Base_Start_IT(&HTIM_DISCHARGE);
   HAL_TIM_OC_Start_IT(&HTIM_DISCHARGE, TIM_CHANNEL_1);
   
+  // Calculate cells to discharge
+  bal_get_cells_to_discharge(
+    volt_get_volts(),
+    &bal_params.discharge_cells,
+    bal_params.target,
+    bal_params.threshold
+  );
+
   // Start balancing
   bal_params.is_s_pin_high = true;
   ltc6813_set_balancing(&LTC6813_SPI, bal_params.discharge_cells, bal_params.cycle_length);
@@ -309,8 +317,7 @@ void start_cooldown(state_data_t *data) {
 
   // Reset balancing
   bal_params.is_s_pin_high = false;
-  bal_params.discharge_cells = 0;
-  ltc6813_set_balancing(&LTC6813_SPI, bal_params.discharge_cells, DCTO_DISABLED);
+  ltc6813_set_balancing(&LTC6813_SPI, 0, DCTO_DISABLED);
 
   // Reset cooldown timeout
   cooldown_timeout = false;
@@ -334,6 +341,14 @@ void cooldown_to_discharge(state_data_t *data) {
   // Start discharge timer
   HAL_TIM_Base_Start_IT(&HTIM_DISCHARGE);
   HAL_TIM_OC_Start_IT(&HTIM_DISCHARGE, TIM_CHANNEL_1);
+
+  // Calculate cells to discharge
+  bal_get_cells_to_discharge(
+    volt_get_volts(),
+    &bal_params.discharge_cells,
+    bal_params.target,
+    bal_params.threshold
+  );
 
   // Restart balancing
   bal_params.is_s_pin_high = true;
@@ -393,7 +408,7 @@ void bal_oc_timer_handler(TIM_HandleTypeDef * htim) {
         }
         else {
             ltc6813_set_balancing(&LTC6813_SPI, bal_params.discharge_cells, bal_params.cycle_length);
-            __HAL_TIM_SET_COMPARE(&HTIM_DISCHARGE, TIM_CHANNEL_1, cmp + TIM_MS_TO_TICKS(htim, BAL_TIME_OFF));
+            __HAL_TIM_SET_COMPARE(&HTIM_DISCHARGE, TIM_CHANNEL_1, cmp + TIM_MS_TO_TICKS(htim, BAL_TIME_ON));
         }
         bal_params.is_s_pin_high = !bal_params.is_s_pin_high;
     }

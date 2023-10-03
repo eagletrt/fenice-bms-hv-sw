@@ -242,7 +242,7 @@ feedback_feed_t feedback_get_state(size_t index) {
     size_t queue_index = feedbacks.index[index];
     size_t low = 0, high = 0, error = 0;
 
-    feedback_feed_t feed;
+    feedback_feed_t feed = { 0 };
     // Set voltage
     feed.voltage = (index < FEEDBACK_MUX_N) ?
         FEEDBACK_CONVERT_ADC_MUX_TO_VOLTAGE(feedbacks.voltages[index][queue_index]) :

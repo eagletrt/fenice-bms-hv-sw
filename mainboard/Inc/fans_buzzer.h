@@ -21,8 +21,6 @@
 
 /** @brief Initialize fans */
 void fans_init();
-/** @brief Toggle fans speed override */
-void fans_toggle_override();
 /**
  * @brief Check if fans speed is overrided
  * 
@@ -30,6 +28,19 @@ void fans_toggle_override();
  * @return false Otherwise
  */
 bool fans_is_overrided();
+/**
+ * @brief Set fans override
+ * 
+ * @param override True if the fans are overrided
+ * False otherwise
+ */
+void fans_set_override(bool override);
+/**
+ * @brief Get the speed percentage of the fans
+ * 
+ * @return float The fans speed (%) between 0 and 1
+ */
+float fans_get_speed();
 /**
  * @brief Set fans speed using PWM
  * @attention The percentage can be between 0 (off) and 1
