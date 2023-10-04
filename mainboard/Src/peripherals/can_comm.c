@@ -504,8 +504,8 @@ HAL_StatusTypeDef can_bms_send(uint16_t id) {
                     ++errors;
             }
         }
-        ERROR_TOGGLE_CHECK_STR(status != 0, ERROR_CAN_COMM, error_bms_can_instance);
-        return status == 0 ? HAL_OK : HAL_ERROR;
+        ERROR_TOGGLE_CHECK_STR(errors != 0, ERROR_CAN_COMM, error_bms_can_instance);
+        return errors == 0 ? HAL_OK : HAL_ERROR;
     } else if (id == BMS_JMP_TO_BLT_FRAME_ID) {
         bms_jmp_to_blt_t raw_jmp = { 0 };
         bms_jmp_to_blt_converted_t conv_jmp = { 0 };
@@ -559,21 +559,17 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
             can_send(&CAR_CAN, rx_data, &tx_header);
             return;
         }
-        else if (rx_header.StdId == BMS_VOLTAGES_FRAME_ID) {
-            bms_voltages_t raw_volts = { 0 };
-            bms_voltages_converted_t conv_volts = { 0 };
 
-        ERROR_RESET_STR(ERROR_CAN_COMM, error_bms_can_instance);
         HAL_StatusTypeDef status = HAL_ERROR;
 
         if (rx_header.StdId == BMS_VOLTAGES_FRAME_ID) {
-            bms_voltages_t raw_volts;
-            bms_voltages_converted_t conv_volts;
+            bms_voltages_t raw_volts = { 0 };
+            bms_voltages_converted_t conv_volts = { 0 };
+
             if (bms_voltages_unpack(&raw_volts, rx_data, BMS_VOLTAGES_BYTE_SIZE) < 0) {
                 ERROR_SET_STR(ERROR_CAN_COMM, error_car_can_instance);
                 return;
             }
-
             bms_voltages_raw_to_conversion_struct(&conv_volts, &raw_volts);
             
             // Reset time since last communication
@@ -668,10 +664,9 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
                     temp_errors[conv_temps.cellboard_id] &= ~(1 << bit);
             }
             // Toggle temperatures connectors error
-            size_t temp_id = 0;
             bool is_error_set = false;
-            for (size_t board_id; board_id < CELLBOARD_COUNT && !is_error_set; board_id++) {
-                for (size_t temp_bit; temp_bit < TEMP_STRIPS_PER_BUS * 2; temp_bit += 2) {
+            for (size_t board_id = 0; board_id < CELLBOARD_COUNT && !is_error_set; board_id++) {
+                for (size_t temp_bit = 0; temp_bit < TEMP_STRIPS_PER_BUS * 2; temp_bit += 2) {
                     if ((temp_errors[board_id] & (1 << temp_bit)) && (temp_errors[board_id] & (1 << (temp_bit + 1)))) {
                         ERROR_SET_STR(ERROR_CONNECTOR_DISCONNECTED, error_pack_instance);
                         is_error_set = true;
@@ -920,7 +915,7 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
             primary_hv_can_forward_converted_t conv_can_forward = { 0 };
 
             if (primary_hv_can_forward_unpack(&raw_can_forward, rx_data, PRIMARY_HV_CAN_FORWARD_BYTE_SIZE) < 0) {
-                ERROR_SET(ERROR_CAN_COMM, error_car_can_instance);
+                ERROR_SET_STR(ERROR_CAN_COMM, error_car_can_instance);
                 return;
             }
             primary_hv_can_forward_raw_to_conversion_struct(&conv_can_forward, &raw_can_forward);
