@@ -134,6 +134,7 @@ int main(void)
   MX_TIM7_Init();
   /* USER CODE BEGIN 2 */
 
+    // Keep AMS led on for at least 1s
     start_time = HAL_GetTick();
     pack_set_fault(BMS_FAULT_ON_VALUE);
     while (HAL_GetTick() - start_time < 1000)
@@ -141,11 +142,11 @@ int main(void)
     pack_set_fault(BMS_FAULT_OFF_VALUE);
     
     HAL_GPIO_WritePin(EEPROM_HOLD_GPIO_Port, EEPROM_HOLD_Pin, GPIO_PIN_SET);
+
+    error_init();
     current_start_measure();
 
     cli_bms_init();
-
-    error_init();
     fans_init();
 
     internal_voltage_init();
