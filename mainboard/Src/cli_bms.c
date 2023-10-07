@@ -394,7 +394,7 @@ void _cli_status(uint16_t argc, char **argv, char *out) {
     char running_errors[4] = { 0 };
     char expired_errors[4] = { 0 };
     itoa(error_running_count(), running_errors, 10);
-    itoa(error_running_count(), expired_errors, 10);
+    itoa(error_expired_count(), expired_errors, 10);
 
     char handcart_connected[13] = { '\0' };
     if (is_handcart_connected)
@@ -517,6 +517,47 @@ void _cli_soc(uint16_t argc, char **argv, char *out) {
 
 // TODO: Print errors to cli
 void _cli_errors(uint16_t argc, char **argv, char *out) {
+    // TODO: Remove, for debug purpose only
+    uint32_t now = HAL_GetTick();
+    ErrorUtilsRunningInstance * errors[397U] = { 0 };
+    sprintf(out, "Running %u\r\nExpired %u\r\n", error_running_count(), error_expired_count());
+    size_t error_count = error_dump(errors);
+    for (size_t i = 0; i < error_count; ++i) {
+        if (errors[i]->string_instance) {
+            sprintf(
+                out + strlen(out),
+                "\r\n"
+                "Type.......%lu\r\n"
+                "Instance...%s\r\n"
+                "Timestamp..T+%lu (%lums ago)\r\n"
+                "Running....%s\r\n"
+                "Expired....%s\r\n",
+                errors[i]->error,
+                errors[i]->instance.s,
+                errors[i]->timestamp,
+                now - errors[i]->timestamp,
+                errors[i]->is_running ? "true" : "false",
+                errors[i]->is_expired ? "true" : "false"
+            );
+        }
+        else {
+            sprintf(
+                out + strlen(out),
+                "\r\n"
+                "Type.......%lu\r\n"
+                "Instance...%lu\r\n"
+                "Timestamp..T+%lu (%lums ago)\r\n"
+                "Running....%s\r\n"
+                "Expired....%s\r\n",
+                errors[i]->error,
+                errors[i]->instance.i,
+                errors[i]->timestamp,
+                now - errors[i]->timestamp,
+                errors[i]->is_running ? "true" : "false",
+                errors[i]->is_expired ? "true" : "false"
+            );
+        }
+    }
     /*
     *out           = 0;
     uint16_t count = error_count();

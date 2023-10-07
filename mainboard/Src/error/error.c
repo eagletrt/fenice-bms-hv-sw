@@ -10,6 +10,7 @@
 
 #include "../../fenice_config.h"
 #include "mainboard_config.h"
+#include "cmsis_compiler.h"
 
 #define ERROR_BUFFER_SIZE 397U
 
@@ -19,6 +20,9 @@ const char * error_pack_instance = "PACK";
 const char * error_current_instance = "CURRENT";
 const char * error_bms_can_instance = "BMS_CAN";
 const char * error_car_can_instance = "CAR_CAN";
+
+// Timer priority mask register
+uint32_t rPriMask = 0;
 
 /** @brief Error handler instance */
 ErrorUtilsHandler error_handler;
@@ -58,6 +62,12 @@ const uint32_t error_timeout[ERROR_COUNT] = {
 uint32_t _error_get_timestamp_ms(void) {
     return HAL_GetTick();
 }
+/** @brief Stop the timer capture compare register and clear interrupts */
+void _error_expire_stop() {
+        // Stop and reset error timer
+    HAL_TIM_OC_Stop_IT(&HTIM_ERR, TIM_CHANNEL_1);
+    __HAL_TIM_CLEAR_FLAG(&HTIM_ERR, TIM_IT_CC1);
+}
 /**
  * @brief Update the timer capture compare register with a new values
  * @details Used by the error-utils library
@@ -69,16 +79,24 @@ void _error_expire_update(uint32_t timestamp, uint32_t timeout) {
     if (timeout == ERROR_TIMEOUT_NEVER)
         return;
 
-    HAL_TIM_OC_Stop_IT(&HTIM_ERR, TIM_CHANNEL_1);
+    _error_expire_stop();
 
+    // Set timer capture compare register
     int32_t delta = (int32_t)(timestamp + timeout) - (int32_t)HAL_GetTick();
     uint16_t cnt = __HAL_TIM_GET_COUNTER(&HTIM_ERR);
     __HAL_TIM_SET_COMPARE(&HTIM_ERR, TIM_CHANNEL_1, cnt + TIM_MS_TO_TICKS(&HTIM_ERR, delta));
-    __HAL_TIM_CLEAR_FLAG(&HTIM_ERR, TIM_IT_CC1);
     
     HAL_TIM_OC_Start_IT(&HTIM_ERR, TIM_CHANNEL_1);
 }
-
+/** @brief Enter a critical section */
+void _error_cs_enter(void) {
+    rPriMask = __get_PRIMASK();
+    __set_PRIMASK(1);
+}
+/** @brief Exit from a critical section */
+void _error_cs_exit(void) {
+    __set_PRIMASK(rPriMask);
+}
 
 void error_init() {
     error_utils_init(
@@ -88,7 +106,10 @@ void error_init() {
         ERROR_BUFFER_SIZE,
         _error_get_timestamp_ms,
         error_get_timeout_ms,
-        _error_expire_update
+        _error_expire_update,
+        _error_expire_stop,
+        _error_cs_enter,
+        _error_cs_exit
     );
 }
 
@@ -98,8 +119,7 @@ uint32_t error_get_timeout_ms(uint32_t error) {
 
 void error_expire_errors() {
     // Stop and reset error timer
-    HAL_TIM_OC_Stop_IT(&HTIM_ERR, TIM_CHANNEL_1);
-    __HAL_TIM_CLEAR_FLAG(&HTIM_ERR, TIM_IT_CC1);
+    _error_expire_stop();
 
     error_utils_expire_errors(&error_handler);
 }
@@ -110,4 +130,14 @@ size_t error_running_count() {
 
 size_t error_expired_count() {
     return error_utils_expired_count(&error_handler);
+}
+
+// TODO: Remove, for debug purposes only
+size_t error_dump(ErrorUtilsRunningInstance * errs[ERROR_BUFFER_SIZE]) {
+    size_t tail = 0;
+    for (size_t i = 0; i < ERROR_BUFFER_SIZE; ++i) {
+        if (errors[i].error != UINT32_MAX)
+            errs[tail++] = errors + i;
+    }
+    return tail;
 }

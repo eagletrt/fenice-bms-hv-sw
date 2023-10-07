@@ -25,17 +25,21 @@
 
 #define ERROR_TOGGLE_CHECK_INT(condition, error, instance) \
     do {                                                   \
-        if (condition)                                     \
+        if (condition) {                                   \
             ERROR_SET_INT(error, instance);                \
-        else                                               \
+        }                                                  \
+        else {                                             \
             ERROR_RESET_INT(error, instance);              \
+        }                                                  \
     } while(0)
 #define ERROR_TOGGLE_CHECK_STR(condition, error, instance) \
     do {                                                   \
-        if (condition)                                     \
+        if (condition) {                                   \
             ERROR_SET_STR(error, instance);                \
-        else                                               \
+        }                                                  \
+        else {                                             \
             ERROR_RESET_STR(error, instance);              \
+        }                                                  \
     } while(0)
 
 
@@ -105,6 +109,9 @@ size_t error_running_count();
  * @return size_t The number of expired errors
  */
 size_t error_expired_count();
+
+// TODO: Remove, for debug purpose only
+size_t error_dump(ErrorUtilsRunningInstance * errs[397U]);
 
 
 #endif // ERROR_H
