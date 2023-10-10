@@ -131,13 +131,3 @@ size_t error_running_count() {
 size_t error_expired_count() {
     return error_utils_expired_count(&error_handler);
 }
-
-// TODO: Remove, for debug purposes only
-size_t error_dump(ErrorUtilsRunningInstance * errs[ERROR_BUFFER_SIZE]) {
-    size_t tail = 0;
-    for (size_t i = 0; i < ERROR_BUFFER_SIZE; ++i) {
-        if (errors[i].error != UINT32_MAX)
-            errs[tail++] = errors + i;
-    }
-    return tail;
-}

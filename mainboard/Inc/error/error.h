@@ -110,8 +110,5 @@ size_t error_running_count();
  */
 size_t error_expired_count();
 
-// TODO: Remove, for debug purpose only
-size_t error_dump(ErrorUtilsRunningInstance * errs[397U]);
-
 
 #endif // ERROR_H

@@ -517,7 +517,7 @@ void _cli_soc(uint16_t argc, char **argv, char *out) {
 
 // TODO: Print errors to cli
 void _cli_errors(uint16_t argc, char **argv, char *out) {
-    // TODO: Remove, for debug purpose only
+    /*
     uint32_t now = HAL_GetTick();
     ErrorUtilsRunningInstance * errors[397U] = { 0 };
     sprintf(out, "Running %u\r\nExpired %u\r\n", error_running_count(), error_expired_count());
@@ -558,6 +558,7 @@ void _cli_errors(uint16_t argc, char **argv, char *out) {
             );
         }
     }
+    */
     /*
     *out           = 0;
     uint16_t count = error_count();

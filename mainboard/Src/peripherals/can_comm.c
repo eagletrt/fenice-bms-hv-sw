@@ -455,7 +455,7 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         tx_header.DLC = data_len;
     }
     else {
-        ERROR_SET_STR(ERROR_CAN_COMM, error_car_can_instance);
+        // Ignore wrong IDs
         return HAL_ERROR;
     }
 
@@ -479,34 +479,25 @@ HAL_StatusTypeDef can_bms_send(uint16_t id) {
     uint8_t buffer[CAN_MAX_PAYLOAD_LENGTH] = { 0 };
     
     if (id == BMS_SET_BALANCING_STATUS_FRAME_ID) {
-        size_t errors = 0;
-
         bool bal_status = bal_need_balancing();
         uint16_t target = MAX(CELL_MIN_VOLTAGE, cell_voltage_get_min());
         uint16_t threshold = MIN(BAL_MAX_VOLTAGE_THRESHOLD, bal_get_threshold());
 
-        for (size_t i = 0; i < CELLBOARD_COUNT; ++i) {
-            bms_set_balancing_status_t raw_bal = { 0 };
-            bms_set_balancing_status_converted_t conv_bal = { 0 };
+        bms_set_balancing_status_t raw_bal = { 0 };
+        bms_set_balancing_status_converted_t conv_bal = { 0 };
             
-            conv_bal.balancing_status = bal_status;
-            conv_bal.target = target;
-            conv_bal.threshold = threshold;
+        conv_bal.balancing_status = bal_status;
+        conv_bal.target = target;
+        conv_bal.threshold = threshold;
 
-            bms_set_balancing_status_conversion_to_raw_struct(&raw_bal, &conv_bal);
+        bms_set_balancing_status_conversion_to_raw_struct(&raw_bal, &conv_bal);
 
-            int data_len = bms_set_balancing_status_pack(buffer, &raw_bal, BMS_SET_BALANCING_STATUS_BYTE_SIZE);
-            if (data_len < 0)
-                ++errors;
-            else {
-                tx_header.DLC = data_len;
-                if (can_send(&BMS_CAN, buffer, &tx_header) != HAL_OK)
-                    ++errors;
-            }
-        }
-        ERROR_TOGGLE_CHECK_STR(errors != 0, ERROR_CAN_COMM, error_bms_can_instance);
-        return errors == 0 ? HAL_OK : HAL_ERROR;
-    } else if (id == BMS_JMP_TO_BLT_FRAME_ID) {
+        int data_len = bms_set_balancing_status_pack(buffer, &raw_bal, BMS_SET_BALANCING_STATUS_BYTE_SIZE);
+        if (data_len < 0)
+            return HAL_ERROR;
+        tx_header.DLC = data_len;
+    }
+    else if (id == BMS_JMP_TO_BLT_FRAME_ID) {
         bms_jmp_to_blt_t raw_jmp = { 0 };
         bms_jmp_to_blt_converted_t conv_jmp = { 0 };
 
@@ -521,70 +512,57 @@ HAL_StatusTypeDef can_bms_send(uint16_t id) {
         if (data_len < 0)
             return HAL_ERROR;
         tx_header.DLC = data_len;
-
-        HAL_StatusTypeDef status = can_send(&BMS_CAN, buffer, &tx_header);
-        ERROR_TOGGLE_CHECK_STR(status != HAL_OK, ERROR_CAN_COMM, error_bms_can_instance);
-        return status;
     }
 
-    ERROR_SET_STR(ERROR_CAN_COMM, error_bms_can_instance);
-    return HAL_ERROR;
+    HAL_StatusTypeDef status = can_send(&BMS_CAN, buffer, &tx_header);
+    ERROR_TOGGLE_CHECK_STR(status != HAL_OK, ERROR_CAN_COMM, error_bms_can_instance);
+    return status;
 }
 
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
-    CAN_RxHeaderTypeDef rx_header = { 0 };
-    uint8_t rx_data[CAN_MAX_PAYLOAD_LENGTH] = { 0 };
-
-    // Check for communication errors
-    if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rx_header, rx_data) != HAL_OK) {
-        ERROR_SET_STR(ERROR_CAN_COMM, error_bms_can_instance);
-        cli_bms_debug("CAN: Error receiving message", 29);
-        return;
-    }
-
     if (hcan->Instance == BMS_CAN.Instance) {
-        // Reset can errors
-        ERROR_RESET_STR(ERROR_CAN_COMM, error_bms_can_instance);
+        CAN_RxHeaderTypeDef rx_header = { 0 };
+        uint8_t rx_data[CAN_MAX_PAYLOAD_LENGTH] = { 0 };
 
-        // Forward data to the cellboards
-        if (can_forward && (rx_header.StdId >= BMS_FLASH_CELLBOARD_0_TX_FRAME_ID && rx_header.StdId <= BMS_FLASH_CELLBOARD_5_RX_FRAME_ID)) {
-            CAN_TxHeaderTypeDef tx_header = {
-                .DLC = rx_header.DLC,
-                .ExtId = 0,
-                .IDE = CAN_ID_STD,
-                .RTR = CAN_RTR_DATA,
-                .StdId = rx_header.StdId,
-                .TransmitGlobalTime = DISABLE
-            };
-            can_send(&CAR_CAN, rx_data, &tx_header);
+        // Check for communication errors
+        if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rx_header, rx_data) != HAL_OK) {
+            ERROR_SET_STR(ERROR_CAN_COMM, error_bms_can_instance);
+            cli_bms_debug("CAN: Error receiving message", 29);
             return;
         }
+        
+        // Reset can error
+        ERROR_RESET_STR(ERROR_CAN_COMM, error_bms_can_instance);
 
-        HAL_StatusTypeDef status = HAL_ERROR;
+        CAN_TxHeaderTypeDef tx_header = {
+            .DLC = rx_header.DLC,
+            .ExtId = 0,
+            .IDE = CAN_ID_STD,
+            .RTR = CAN_RTR_DATA,
+            .StdId = rx_header.StdId,
+            .TransmitGlobalTime = DISABLE
+        };
+        uint8_t buffer[CAN_MAX_PAYLOAD_LENGTH] = { 0 };
+
+        // Forward data from the cellboards
+        if (can_forward && (rx_header.StdId >= BMS_FLASH_CELLBOARD_0_TX_FRAME_ID && rx_header.StdId <= BMS_FLASH_CELLBOARD_5_RX_FRAME_ID)) {
+            if (can_send(&CAR_CAN, rx_data, &tx_header) != HAL_OK)
+                ERROR_SET_STR(ERROR_CAN_COMM, error_car_can_instance);
+            return;
+        }
 
         if (rx_header.StdId == BMS_VOLTAGES_FRAME_ID) {
             bms_voltages_t raw_volts = { 0 };
             bms_voltages_converted_t conv_volts = { 0 };
 
-            if (bms_voltages_unpack(&raw_volts, rx_data, BMS_VOLTAGES_BYTE_SIZE) < 0) {
-                ERROR_SET_STR(ERROR_CAN_COMM, error_car_can_instance);
+            if (bms_voltages_unpack(&raw_volts, rx_data, BMS_VOLTAGES_BYTE_SIZE) < 0)
                 return;
-            }
             bms_voltages_raw_to_conversion_struct(&conv_volts, &raw_volts);
             
             // Reset time since last communication
             time_since_last_comm[conv_volts.cellboard_id] = HAL_GetTick();
-
+            
             // Forward data
-            CAN_TxHeaderTypeDef tx_header = {
-                .DLC = 0,
-                .ExtId = 0,
-                .IDE = CAN_ID_STD,
-                .RTR = CAN_RTR_DATA,
-                .StdId = PRIMARY_HV_CELLS_VOLTAGE_FRAME_ID,
-                .TransmitGlobalTime = DISABLE
-            };
-            uint8_t buffer[CAN_MAX_PAYLOAD_LENGTH] = { 0 };
             primary_hv_cells_voltage_t raw_fwd_volts = { 0 };
             primary_hv_cells_voltage_converted_t conv_fwd_volts = { 0 };
 
@@ -599,18 +577,18 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
             int data_len = primary_hv_cells_voltage_pack(buffer, &raw_fwd_volts, PRIMARY_HV_CELLS_VOLTAGE_BYTE_SIZE);
             if (data_len < 0)
                 return;
+            tx_header.StdId = PRIMARY_HV_CELLS_VOLTAGE_FRAME_ID;
             tx_header.DLC = data_len;
 
-            status = can_send(&CAR_CAN, buffer, &tx_header);
+            if (can_send(&CAR_CAN, buffer, &tx_header) != HAL_OK)
+                ERROR_SET_STR(ERROR_CAN_COMM, error_car_can_instance);
         }
         else if (rx_header.StdId == BMS_VOLTAGES_INFO_FRAME_ID) {
             bms_voltages_info_t raw_volts = { 0 };
             bms_voltages_info_converted_t conv_volts = { 0 };
 
-            if (bms_voltages_info_unpack(&raw_volts, rx_data, BMS_VOLTAGES_INFO_BYTE_SIZE) < 0) {
-                ERROR_SET_STR(ERROR_CAN_COMM, error_bms_can_instance);
+            if (bms_voltages_info_unpack(&raw_volts, rx_data, BMS_VOLTAGES_INFO_BYTE_SIZE) < 0)
                 return;
-            }
             bms_voltages_info_raw_to_conversion_struct(&conv_volts, &raw_volts);
 
             // Reset time since last communication
@@ -626,10 +604,8 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
             bms_temperatures_t raw_temps = { 0 };
             bms_temperatures_converted_t conv_temps = { 0 };
             
-            if (bms_temperatures_unpack(&raw_temps, rx_data, BMS_TEMPERATURES_BYTE_SIZE) < 0) {
-                ERROR_SET_STR(ERROR_CAN_COMM, error_bms_can_instance);
+            if (bms_temperatures_unpack(&raw_temps, rx_data, BMS_TEMPERATURES_BYTE_SIZE) < 0)
                 return;
-            }
             bms_temperatures_raw_to_conversion_struct(&conv_temps, &raw_temps);
 
             // Reset time since last communication
@@ -678,18 +654,6 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
                 ERROR_RESET_STR(ERROR_CONNECTOR_DISCONNECTED, error_pack_instance);
 #endif // TEMP_GROUP_ERROR_ENABLE
 
-
-
-            // Forward data
-            CAN_TxHeaderTypeDef tx_header = {
-                .DLC = 0,
-                .ExtId = 0,
-                .IDE = CAN_ID_STD,
-                .RTR = CAN_RTR_DATA,
-                .StdId = PRIMARY_HV_CELLS_TEMP_FRAME_ID,
-                .TransmitGlobalTime = DISABLE
-            };
-            uint8_t buffer[8] = { 0 };
             primary_hv_cells_temp_t raw_fwd_temps = { 0 };
             primary_hv_cells_temp_converted_t conv_fwd_temps = { 0 };
 
@@ -705,18 +669,18 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
             int data_len = primary_hv_cells_temp_pack(buffer, &raw_fwd_temps, PRIMARY_HV_CELLS_TEMP_BYTE_SIZE);
             if (data_len < 0)
                 return;
+            tx_header.StdId = PRIMARY_HV_CELLS_TEMP_FRAME_ID;
             tx_header.DLC = data_len;
 
-            status = can_send(&CAR_CAN, buffer, &tx_header);
+            if (can_send(&CAR_CAN, buffer, &tx_header) != HAL_OK)
+                ERROR_SET_STR(ERROR_CAN_COMM, error_car_can_instance);
         }
         else if (rx_header.StdId == BMS_TEMPERATURES_INFO_FRAME_ID) {
             bms_temperatures_info_t raw_temps = { 0 };
             bms_temperatures_info_converted_t conv_temps = { 0 };
 
-            if (bms_temperatures_info_unpack(&raw_temps, rx_data, BMS_TEMPERATURES_INFO_BYTE_SIZE) < 0) {
-                ERROR_SET_STR(ERROR_CAN_COMM, error_bms_can_instance);
+            if (bms_temperatures_info_unpack(&raw_temps, rx_data, BMS_TEMPERATURES_INFO_BYTE_SIZE) < 0)
                 return;
-            }
             bms_temperatures_info_raw_to_conversion_struct(&conv_temps, &raw_temps);
 
             // Reset time since last communication
@@ -735,10 +699,8 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
             bms_board_status_t raw_status = { 0 };
             bms_board_status_converted_t conv_status = { 0 };
 
-            if (bms_board_status_unpack(&raw_status, rx_data, BMS_BOARD_STATUS_BYTE_SIZE) < 0) {
-                ERROR_SET_STR(ERROR_CAN_COMM, error_bms_can_instance);
+            if (bms_board_status_unpack(&raw_status, rx_data, BMS_BOARD_STATUS_BYTE_SIZE) < 0)
                 return;
-            }
             bms_board_status_raw_to_conversion_struct(&conv_status, &raw_status);
             
             // Reset time since last communication
@@ -759,16 +721,6 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
             ERROR_TOGGLE_CHECK_INT(error_status != 0, ERROR_CELLBOARD_INTERNAL, conv_status.cellboard_id);
 
             // Forward data
-            CAN_TxHeaderTypeDef tx_header = {
-                .DLC = 0,
-                .ExtId = 0,
-                .IDE = CAN_ID_STD,
-                .RTR = CAN_RTR_DATA,
-                .StdId = PRIMARY_HV_CELL_BALANCING_STATUS_FRAME_ID,
-                .TransmitGlobalTime = DISABLE
-            };
-
-            uint8_t buffer[8] = { 0 };
             primary_hv_cell_balancing_status_t raw_fwd_status = { 0 };
             primary_hv_cell_balancing_status_converted_t conv_fwd_status = { 0 };
 
@@ -809,41 +761,45 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
             int data_len = primary_hv_cell_balancing_status_pack(buffer, &raw_fwd_status, PRIMARY_HV_CELL_BALANCING_STATUS_BYTE_SIZE);
             if (data_len < 0)
                 return;
+            tx_header.StdId = PRIMARY_HV_CELL_BALANCING_STATUS_FRAME_ID;
             tx_header.DLC = data_len;
 
-            status = can_send(&CAR_CAN, buffer, &tx_header);
+            if (can_send(&CAR_CAN, buffer, &tx_header) != HAL_OK)
+                ERROR_SET_STR(ERROR_CAN_COMM, error_car_can_instance);
         }
-
-        ERROR_TOGGLE_CHECK_STR(status != HAL_OK, ERROR_CAN_COMM, error_bms_can_instance);
     }
 }
 void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
-    CAN_RxHeaderTypeDef rx_header = { 0 };
-    uint8_t rx_data[CAN_MAX_PAYLOAD_LENGTH] = { 0 };
-
-    // Check for communication errors
-    if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO1, &rx_header, rx_data) != HAL_OK) {
-        ERROR_SET_STR(ERROR_CAN_COMM, error_car_can_instance);
-        cli_bms_debug("CAN: Error receiving message", 29);
-        return;
-    }
-
     if (hcan->Instance == CAR_CAN.Instance) {
-        ERROR_RESET_STR(ERROR_CAN_COMM, error_car_can_instance);
+        CAN_RxHeaderTypeDef rx_header = { 0 };
+        uint8_t rx_data[CAN_MAX_PAYLOAD_LENGTH] = { 0 };
 
-        if (can_forward && (rx_header.StdId >= BMS_FLASH_CELLBOARD_0_TX_FRAME_ID && rx_header.StdId <= BMS_FLASH_CELLBOARD_5_RX_FRAME_ID)) {
-            CAN_TxHeaderTypeDef tx_header = {
-                .DLC = rx_header.DLC,
-                .ExtId = 0,
-                .IDE = CAN_ID_STD,
-                .RTR = CAN_RTR_DATA,
-                .StdId = rx_header.StdId,
-                .TransmitGlobalTime = DISABLE
-            };
-            can_send(&BMS_CAN, rx_data, &tx_header);
+        // Check for communication errors
+        if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO1, &rx_header, rx_data) != HAL_OK) {
+            ERROR_SET_STR(ERROR_CAN_COMM, error_car_can_instance);
+            cli_bms_debug("CAN: Error receiving message", 29);
             return;
         }
-        else if (rx_header.StdId == PRIMARY_CAR_STATUS_FRAME_ID) {
+
+        // Reset CAN communication error
+        ERROR_RESET_STR(ERROR_CAN_COMM, error_car_can_instance);
+
+        CAN_TxHeaderTypeDef tx_header = {
+            .DLC = rx_header.DLC,
+            .ExtId = 0,
+            .IDE = CAN_ID_STD,
+            .RTR = CAN_RTR_DATA,
+            .StdId = rx_header.StdId,
+            .TransmitGlobalTime = DISABLE
+        };
+
+        if (can_forward && (rx_header.StdId >= BMS_FLASH_CELLBOARD_0_TX_FRAME_ID && rx_header.StdId <= BMS_FLASH_CELLBOARD_5_RX_FRAME_ID)) {
+            if (can_send(&BMS_CAN, rx_data, &tx_header) != HAL_OK)
+                ERROR_SET_STR(ERROR_CAN_COMM, error_bms_can_instance);
+            return;
+        }
+        
+        if (rx_header.StdId == PRIMARY_CAR_STATUS_FRAME_ID) {
             // Reset the watchdog timer
             watchdog_reset(rx_header.StdId);
         }
@@ -851,10 +807,8 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
             primary_set_ts_status_das_t raw_ts_status = { 0 };
             primary_set_ts_status_das_converted_t conv_ts_status = { 0 };
 
-            if (primary_set_ts_status_das_unpack(&raw_ts_status, rx_data, PRIMARY_SET_TS_STATUS_DAS_BYTE_SIZE) < 0) {
-                ERROR_SET_STR(ERROR_CAN_COMM, error_car_can_instance);
+            if (primary_set_ts_status_das_unpack(&raw_ts_status, rx_data, PRIMARY_SET_TS_STATUS_DAS_BYTE_SIZE) < 0)
                 return;
-            }
             primary_set_ts_status_das_raw_to_conversion_struct(&conv_ts_status, &raw_ts_status);
 
             // Request for TS status change
@@ -873,10 +827,8 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
             primary_set_cell_balancing_status_t raw_bal_status = { 0 };
             primary_set_cell_balancing_status_converted_t conv_bal_status = { 0 };
 
-            if (primary_set_cell_balancing_status_unpack(&raw_bal_status, rx_data, PRIMARY_SET_CELL_BALANCING_STATUS_BYTE_SIZE) < 0) {
-                ERROR_SET_STR(ERROR_CAN_COMM, error_car_can_instance);
+            if (primary_set_cell_balancing_status_unpack(&raw_bal_status, rx_data, PRIMARY_SET_CELL_BALANCING_STATUS_BYTE_SIZE) < 0)
                 return;
-            }
             primary_set_cell_balancing_status_raw_to_conversion_struct(&conv_bal_status, &raw_bal_status);
             
             // Request for balancing start or stop
@@ -893,10 +845,8 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
             primary_handcart_status_t raw_handcart_status = { 0 };
             primary_handcart_status_converted_t conv_handcart_status = { 0 };
 
-            if (primary_handcart_status_unpack(&raw_handcart_status, rx_data, PRIMARY_HANDCART_STATUS_BYTE_SIZE) < 0) {
-                ERROR_SET_STR(ERROR_CAN_COMM, error_car_can_instance);
+            if (primary_handcart_status_unpack(&raw_handcart_status, rx_data, PRIMARY_HANDCART_STATUS_BYTE_SIZE) < 0)
                 return;
-            }
             primary_handcart_status_raw_to_conversion_struct(&conv_handcart_status, &raw_handcart_status);
 
             // Reset watchdog
@@ -914,10 +864,8 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
             primary_hv_can_forward_t raw_can_forward = { 0 };
             primary_hv_can_forward_converted_t conv_can_forward = { 0 };
 
-            if (primary_hv_can_forward_unpack(&raw_can_forward, rx_data, PRIMARY_HV_CAN_FORWARD_BYTE_SIZE) < 0) {
-                ERROR_SET_STR(ERROR_CAN_COMM, error_car_can_instance);
+            if (primary_hv_can_forward_unpack(&raw_can_forward, rx_data, PRIMARY_HV_CAN_FORWARD_BYTE_SIZE) < 0)
                 return;
-            }
             primary_hv_can_forward_raw_to_conversion_struct(&conv_can_forward, &raw_can_forward);
 
             // Set can forward status
@@ -935,10 +883,8 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
             primary_hv_fans_override_t raw_fans = { 0 };
             primary_hv_fans_override_converted_t conv_fans = { 0 };
 
-            if (primary_hv_fans_override_unpack(&raw_fans, rx_data, PRIMARY_HV_FANS_OVERRIDE_BYTE_SIZE) < 0) {
-                ERROR_SET_STR(ERROR_CAN_COMM, error_car_can_instance);
+            if (primary_hv_fans_override_unpack(&raw_fans, rx_data, PRIMARY_HV_FANS_OVERRIDE_BYTE_SIZE) < 0)
                 return;
-            }
             primary_hv_fans_override_raw_to_conversion_struct(&conv_fans, &raw_fans);
 
             // Set fans override and speed
