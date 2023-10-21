@@ -254,9 +254,7 @@ bms_state_t do_wait_ts_precharge(state_data_t *data) {
   // Check fatal errors
   if (error_get_fatal() > 0)
     next_state = STATE_FATAL_ERROR;
-  else if (_requested_ts_off() || precharge_timeout) {
-    if (precharge_timeout)
-        cli_bms_debug("Precharge timeout", 17);
+  else if (_requested_ts_off()) {
     if (_requested_ts_off())
         cli_bms_debug("Requested TS off", 16);
     next_state = STATE_IDLE;
