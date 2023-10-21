@@ -63,11 +63,13 @@
 struct {
     uint16_t voltages[FEEDBACK_N][FEEDBACK_QUEUE_SIZE];
     uint8_t index[FEEDBACK_N];
+    uint32_t feedback_status;
     bool has_converted;
 } feedbacks;
 
 uint8_t fb_index;
 static uint16_t dma_data[DMA_DATA_SIZE] = { 0 };
+
 
 /** @brief Set the multiplexer index */
 void _feedback_set_mux_index(uint8_t index) {
@@ -127,6 +129,7 @@ void feedback_init() {
         memset(feedbacks.voltages[i], 0, FEEDBACK_QUEUE_SIZE * sizeof(uint16_t));
         feedbacks.index[i] = 0;
     }
+    feedbacks.feedback_status = 0;
     feedbacks.has_converted = true;
 }
 
@@ -166,12 +169,15 @@ bool feedback_is_ok(feedback_t mask, feedback_t value) {
             }
 
             FEEDBACK_STATE state = _feedback_get_majority(low, high, error);
-
+        
             // TODO: Check for low state
-            if (state == FEEDBACK_STATE_H)
+            if (state == FEEDBACK_STATE_H) {
                 ERROR_RESET_INT(ERROR_FEEDBACK, i);
+                feedbacks.feedback_status |= 1 << i;
+            }
             else {
                 ERROR_SET_INT(ERROR_FEEDBACK, i);
+                feedbacks.feedback_status &= ~(1 << i);
                 return false;
             }
             continue;
@@ -190,10 +196,13 @@ bool feedback_is_ok(feedback_t mask, feedback_t value) {
             FEEDBACK_STATE state = _feedback_get_majority(low, high, error);
 
             // TODO: Check for low state
-            if (state == FEEDBACK_STATE_H)
+            if (state == FEEDBACK_STATE_H) {
                 ERROR_RESET_INT(ERROR_FEEDBACK, i);
+                feedbacks.feedback_status |= 1 << i;
+            }
             else {
                 ERROR_SET_INT(ERROR_FEEDBACK, i);
+                feedbacks.feedback_status &= ~(1 << i);
                 return false;
             }
             continue;
@@ -224,6 +233,11 @@ bool feedback_is_ok(feedback_t mask, feedback_t value) {
         }
 
         FEEDBACK_STATE state = _feedback_get_majority(low, high, error);
+        // Save feedbacks status
+        if (state == FEEDBACK_STATE_H)
+            feedbacks.feedback_status |= 1 << i;
+        else
+            feedbacks.feedback_status &= ~(1 << i);
 
         // Check for errors
         if (state == FEEDBACK_STATE_ERROR || (fb_val && state == FEEDBACK_STATE_L) || (!fb_val && state == FEEDBACK_STATE_H)) {
@@ -360,6 +374,9 @@ feedback_feed_t feedback_get_state(size_t index) {
 void feedback_get_all_states(feedback_feed_t out_value[FEEDBACK_N]) {
     for (size_t i = 0; i < FEEDBACK_N; i++)
         out_value[i] = feedback_get_state(i);
+}
+uint32_t feedback_get_last_check_state() {
+    return feedbacks.feedback_status;
 }
 
 // bool _is_adc_value_low(uint8_t index) {

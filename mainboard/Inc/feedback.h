@@ -18,6 +18,32 @@
 #include <../../fenice_config.h>
 #include "bms_fsm.h"
 
+// Multiplexer feedbacks
+#define FEEDBACK_NULL                     0
+#define FEEDBACK_IMPLAUSIBILITY_DETECTED  ((feedback_t)1 << FEEDBACK_IMPLAUSIBILITY_DETECTED_POS)
+#define FEEDBACK_IMD_COCKPIT              ((feedback_t)1 << FEEDBACK_IMD_COCKPIT_POS)
+#define FEEDBACK_TSAL_GREEN_FAULT_LATCHED ((feedback_t)1 << FEEDBACK_TSAL_GREEN_FAULT_LATCHED_POS)
+#define FEEDBACK_BMS_COCKPIT              ((feedback_t)1 << FEEDBACK_BMS_COCKPIT_POS)
+#define FEEDBACK_EXT_LATCHED              ((feedback_t)1 << FEEDBACK_EXT_LATCHED_POS)
+#define FEEDBACK_TSAL_GREEN               ((feedback_t)1 << FEEDBACK_TSAL_GREEN_POS)
+#define FEEDBACK_TS_OVER_60V_STATUS       ((feedback_t)1 << FEEDBACK_TS_OVER_60V_STATUS_POS)
+#define FEEDBACK_AIRN_STATUS              ((feedback_t)1 << FEEDBACK_AIRN_STATUS_POS)
+#define FEEDBACK_AIRP_STATUS              ((feedback_t)1 << FEEDBACK_AIRP_STATUS_POS)
+#define FEEDBACK_AIRP_GATE                ((feedback_t)1 << FEEDBACK_AIRP_GATE_POS)
+#define FEEDBACK_AIRN_GATE                ((feedback_t)1 << FEEDBACK_AIRN_GATE_POS)
+#define FEEDBACK_PRECHARGE_STATUS         ((feedback_t)1 << FEEDBACK_PRECHARGE_STATUS_POS)
+#define FEEDBACK_TSP_OVER_60V_STATUS      ((feedback_t)1 << FEEDBACK_TSP_OVER_60V_STATUS_POS)
+#define FEEDBACK_IMD_FAULT                ((feedback_t)1 << FEEDBACK_IMD_FAULT_POS)
+#define FEEDBACK_CHECK_MUX                ((feedback_t)1 << FEEDBACK_CHECK_MUX_POS)
+#define FEEDBACK_SD_END                   ((feedback_t)1 << FEEDBACK_SD_END_POS)
+#define FEEDBACK_ALL                      (feedback_t)(((feedback_t)1 << (FEEDBACK_N)) - 1)
+
+// Shutdown feedbacks
+#define FEEDBACK_SD_OUT ((feedback_t)1 << FEEDBACK_SD_OUT_POS)
+#define FEEDBACK_SD_IN  ((feedback_t)1 << FEEDBACK_SD_IN_POS)
+#define FEEDBACK_SD_BMS ((feedback_t)1 << FEEDBACK_SD_BMS_POS)
+#define FEEDBACK_SD_IMD ((feedback_t)1 << FEEDBACK_SD_IMD_POS)
+
 /**
  * @brief Feedbacks that should be logical high for each state of the FSM
 */
@@ -200,6 +226,37 @@ typedef struct {
     float voltage;
 } feedback_feed_t;
 
+/** @brief Multiplexer feedbacks */
+typedef enum {
+    FEEDBACK_IMPLAUSIBILITY_DETECTED_POS = 0, // That's impossible!!!
+    FEEDBACK_IMD_COCKPIT_POS,                 // HV and LV are isolated
+    FEEDBACK_TSAL_GREEN_FAULT_LATCHED_POS,
+    FEEDBACK_BMS_COCKPIT_POS,
+    FEEDBACK_EXT_LATCHED_POS,
+    FEEDBACK_TSAL_GREEN_POS,
+    FEEDBACK_TS_OVER_60V_STATUS_POS,
+    FEEDBACK_AIRN_STATUS_POS,
+    FEEDBACK_AIRP_STATUS_POS,
+    FEEDBACK_AIRP_GATE_POS,
+    FEEDBACK_AIRN_GATE_POS,
+    FEEDBACK_PRECHARGE_STATUS_POS,
+    FEEDBACK_TSP_OVER_60V_STATUS_POS,
+    FEEDBACK_IMD_FAULT_POS,
+    FEEDBACK_CHECK_MUX_POS,
+    FEEDBACK_SD_END_POS,
+
+    FEEDBACK_MUX_N
+} MUX_FEEDBACK;
+
+/** @brief Shutdown feedbacks */
+typedef enum {
+    FEEDBACK_SD_OUT_POS = FEEDBACK_MUX_N,
+    FEEDBACK_SD_IN_POS,
+    FEEDBACK_SD_BMS_POS,
+    FEEDBACK_SD_IMD_POS,
+
+    FEEDBACK_N
+} SD_FEEDBACK;
 
 
 /** @brief Feedback timer callback handler */
@@ -232,5 +289,12 @@ feedback_feed_t feedback_get_state(size_t index);
  * @param out_value An array where the resulting status are stored
  */
 void feedback_get_all_states(feedback_feed_t out_value[FEEDBACK_N]);
+/**
+ * @brief Get the feedback status of the last call of the feedback_is_ok function
+ * @details The returned value is a bitset where the feedback is set to 1 if it's high, 0 otherwise
+ * 
+ * @return uint32_t The bitset feeedbacks
+ */
+uint32_t feedback_get_last_check_state();
 
 #endif // FEEDBACK_H
