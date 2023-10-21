@@ -42,6 +42,14 @@
         }                                                  \
     } while(0)
 
+#define ERROR_IS_RUNNING_INT(error, instance) ERROR_UTILS_IS_RUNNING_INT(&error_handler, error, instance)
+#define ERROR_IS_RUNNING_STR(error, instance) ERROR_UTILS_IS_RUNNING_STR(&error_handler, error, instance)
+
+#define ERROR_IS_EXPIRED_INT(error, instance) ERROR_UTILS_IS_EXPIRED_INT(&error_handler, error, instance)
+#define ERROR_IS_EXPIRED_STR(error, instance) ERROR_UTILS_IS_EXPIRED_STR(&error_handler, error, instance)
+
+
+
 
 /** @brief Error types */
 typedef enum {

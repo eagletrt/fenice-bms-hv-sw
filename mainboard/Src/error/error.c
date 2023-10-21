@@ -117,6 +117,7 @@ uint32_t error_get_timeout_ms(uint32_t error) {
     return error_timeout[error];
 }
 
+
 void error_expire_errors() {
     // Stop and reset error timer
     _error_expire_stop();

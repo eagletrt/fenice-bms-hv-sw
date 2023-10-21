@@ -214,114 +214,55 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         primary_hv_errors_t raw_errors = { 0 };
         primary_hv_errors_converted_t conv_errors  = { 0 };
 
-        // TODO: Send errors via CAN
-        /*
-        error_t errors[100];
-        error_dump(errors);
+        // Set errors
+        conv_errors.errors_can = ERROR_IS_EXPIRED_STR(ERROR_CAN_COMM, error_car_can_instance) ||
+            ERROR_IS_EXPIRED_STR(ERROR_CAN_COMM, error_bms_can_instance);
+        conv_errors.errors_cell_high_temperature  = ERROR_IS_EXPIRED_STR(ERROR_CELL_HIGH_TEMPERATURE, error_pack_instance);
+        conv_errors.errors_cell_low_voltage       = ERROR_IS_EXPIRED_STR(ERROR_CELL_LOW_VOLTAGE, error_pack_instance);
+        conv_errors.errors_cell_over_temperature  = ERROR_IS_EXPIRED_STR(ERROR_CELL_OVER_TEMPERATURE, error_pack_instance);
+        conv_errors.errors_cell_over_voltage      = ERROR_IS_EXPIRED_STR(ERROR_CELL_OVER_VOLTAGE, error_pack_instance);
+        conv_errors.errors_cell_under_voltage     = ERROR_IS_EXPIRED_STR(ERROR_CELL_UNDER_VOLTAGE, error_pack_instance);
+        conv_errors.errors_cellboard_comm         = 0;
+        conv_errors.errors_cellboard_internal     = 0;
+        conv_errors.errors_connector_disconnected = ERROR_IS_EXPIRED_STR(ERROR_CONNECTOR_DISCONNECTED, error_mainboard_instance);
+        conv_errors.errors_eeprom_comm            = ERROR_IS_EXPIRED_STR(ERROR_EEPROM_COMM, error_mainboard_instance);
+        conv_errors.errors_eeprom_write           = ERROR_IS_EXPIRED_STR(ERROR_EEPROM_WRITE, error_mainboard_instance);
+        conv_errors.errors_fans_disconnected      = ERROR_IS_EXPIRED_STR(ERROR_FANS_DISCONNECTED, error_mainboard_instance);
+        conv_errors.errors_feedback               = 0;
+        conv_errors.errors_feedback_circuitry     = 0;
+        conv_errors.errors_int_voltage_mismatch   = ERROR_IS_EXPIRED_STR(ERROR_VOLTAGE_MISMATCH, error_mainboard_instance);
+        conv_errors.errors_over_current           = ERROR_IS_EXPIRED_STR(ERROR_OVER_CURRENT, error_mainboard_instance);
+        
+        conv_errors.warnings_can = ERROR_IS_RUNNING_STR(ERROR_CAN_COMM, error_car_can_instance) ||
+            ERROR_IS_RUNNING_STR(ERROR_CAN_COMM, error_bms_can_instance);
+        conv_errors.warnings_cell_high_temperature  = ERROR_IS_RUNNING_STR(ERROR_CELL_HIGH_TEMPERATURE, error_pack_instance);
+        conv_errors.warnings_cell_low_voltage       = ERROR_IS_RUNNING_STR(ERROR_CELL_LOW_VOLTAGE, error_pack_instance);
+        conv_errors.warnings_cell_over_temperature  = ERROR_IS_RUNNING_STR(ERROR_CELL_OVER_TEMPERATURE, error_pack_instance);
+        conv_errors.warnings_cell_over_voltage      = ERROR_IS_RUNNING_STR(ERROR_CELL_OVER_VOLTAGE, error_pack_instance);
+        conv_errors.warnings_cell_under_voltage     = ERROR_IS_RUNNING_STR(ERROR_CELL_UNDER_VOLTAGE, error_pack_instance);
+        conv_errors.warnings_cellboard_comm         = 0;
+        conv_errors.warnings_cellboard_internal     = 0;
+        conv_errors.warnings_connector_disconnected = ERROR_IS_RUNNING_STR(ERROR_CONNECTOR_DISCONNECTED, error_mainboard_instance);
+        conv_errors.warnings_eeprom_comm            = ERROR_IS_RUNNING_STR(ERROR_EEPROM_COMM, error_mainboard_instance);
+        conv_errors.warnings_eeprom_write           = ERROR_IS_RUNNING_STR(ERROR_EEPROM_WRITE, error_mainboard_instance);
+        conv_errors.warnings_fans_disconnected      = ERROR_IS_RUNNING_STR(ERROR_FANS_DISCONNECTED, error_mainboard_instance);
+        conv_errors.warnings_feedback               = 0;
+        conv_errors.warnings_feedback_circuitry     = 0;
+        conv_errors.warnings_int_voltage_mismatch   = ERROR_IS_RUNNING_STR(ERROR_VOLTAGE_MISMATCH, error_mainboard_instance);
+        conv_errors.warnings_over_current           = ERROR_IS_RUNNING_STR(ERROR_OVER_CURRENT, error_mainboard_instance);
+        
+        for (size_t i = 0; i < CELLBOARD_COUNT; ++i) {
+            conv_errors.errors_cellboard_comm |= ERROR_IS_EXPIRED_INT(ERROR_CELLBOARD_COMM, i);
+            conv_errors.errors_cellboard_internal |= ERROR_IS_EXPIRED_INT(ERROR_CELLBOARD_INTERNAL, i);
 
-        for(size_t i = 0; i < error_count(); ++i) {
-            switch(errors[i].id) {
-                case ERROR_CELL_LOW_VOLTAGE:
-                    if (errors[i].state == STATE_WARNING)
-                        conv_errors.warnings_cell_low_voltage = 1;
-                    else
-                        conv_errors.errors_cell_low_voltage = 1;
-                    break;
-                case ERROR_CELL_UNDER_VOLTAGE:
-                    if (errors[i].state == STATE_WARNING)
-                        conv_errors.warnings_cell_under_voltage = 1;
-                    else
-                        conv_errors.errors_cell_under_voltage = 1;
-                    break;
-                case ERROR_CELL_OVER_VOLTAGE:
-                    if (errors[i].state == STATE_WARNING)
-                        conv_errors.warnings_cell_over_voltage = 1;
-                    else
-                        conv_errors.errors_cell_over_voltage = 1;
-                    break;
-                case ERROR_CELL_OVER_TEMPERATURE:
-                    if (errors[i].state == STATE_WARNING)
-                        conv_errors.warnings_cell_over_temperature = 1;
-                    else
-                        conv_errors.errors_cell_over_temperature = 1;
-                    break;
-                case ERROR_CELL_HIGH_TEMPERATURE:
-                    if (errors[i].state == STATE_WARNING)
-                        conv_errors.warnings_cell_high_temperature = 1;
-                    else
-                        conv_errors.errors_cell_high_temperature = 1;
-                    break;
-                case ERROR_OVER_CURRENT:
-                    if (errors[i].state == STATE_WARNING)
-                        conv_errors.warnings_over_current = 1;
-                    else
-                        conv_errors.errors_over_current = 1;
-                    break;
-                case ERROR_CAN_COMM:
-                    if (errors[i].state == STATE_WARNING)
-                        conv_errors.warnings_can = 1;
-                    else
-                        conv_errors.errors_can = 1;
-                    break;
-                case ERROR_VOLTAGE_MISMATCH:
-                    if (errors[i].state == STATE_WARNING)
-                        conv_errors.warnings_int_voltage_mismatch = 1;
-                    else
-                        conv_errors.errors_int_voltage_mismatch = 1;
-                    break;
-                case ERROR_CELLBOARD_COMM:
-                    if (errors[i].state == STATE_WARNING)
-                        conv_errors.warnings_cellboard_comm = 1;
-                    else
-                        conv_errors.errors_cellboard_comm = 1;
-                    break;
-                case ERROR_CELLBOARD_INTERNAL:
-                    if (errors[i].state == STATE_WARNING)
-                        conv_errors.warnings_cellboard_internal = 1;
-                    else
-                        conv_errors.errors_cellboard_internal = 1;
-                    break;
-                case ERROR_CONNECTOR_DISCONNECTED:
-                    if (errors[i].state == STATE_WARNING)
-                        conv_errors.warnings_connector_disconnected = 1;
-                    else
-                        conv_errors.errors_connector_disconnected = 1;
-                    break;
-                case ERROR_FANS_DISCONNECTED:
-                    if (errors[i].state == STATE_WARNING)
-                        conv_errors.warnings_fans_disconnected = 1;
-                    else
-                        conv_errors.errors_fans_disconnected = 1;
-                    break;
-                case ERROR_FEEDBACK:
-                    if (errors[i].state == STATE_WARNING)
-                        conv_errors.warnings_feedback = 1;
-                    else
-                        conv_errors.errors_feedback = 1;
-                    break;
-                case ERROR_FEEDBACK_CIRCUITRY:
-                    if (errors[i].state == STATE_WARNING)
-                        conv_errors.warnings_feedback_circuitry = 1;
-                    else
-                        conv_errors.errors_feedback_circuitry = 1;
-                    break;
-                case ERROR_EEPROM_COMM:
-                    if (errors[i].state == STATE_WARNING)
-                        conv_errors.warnings_eeprom_comm = 1;
-                    else
-                        conv_errors.errors_eeprom_comm = 1;
-                    break;
-                case ERROR_EEPROM_WRITE:
-                    if (errors[i].state == STATE_WARNING)
-                        conv_errors.warnings_eeprom_write = 1;
-                    else
-                        conv_errors.errors_eeprom_write = 1;
-                    break;
-                default:
-                    break;
-            }
+            conv_errors.warnings_cellboard_comm |= ERROR_IS_RUNNING_INT(ERROR_CELLBOARD_COMM, i);
+            conv_errors.errors_cellboard_internal |= ERROR_IS_RUNNING_INT(ERROR_CELLBOARD_INTERNAL, i);
         }
-        */
+        for (size_t i = 0; i < FEEDBACK_N; ++i) {
+            conv_errors.errors_feedback |= ERROR_IS_EXPIRED_INT(ERROR_FEEDBACK, i);
+
+            conv_errors.warnings_feedback |= ERROR_IS_RUNNING_INT(ERROR_FEEDBACK, i);
+        }
 
         primary_hv_errors_conversion_to_raw_struct(&raw_errors, &conv_errors);
 
