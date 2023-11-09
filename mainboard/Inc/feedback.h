@@ -188,9 +188,9 @@ typedef uint32_t feedback_t;
 
 /** @brief State of the feedbacks */
 typedef enum {
-    FEEDBACK_STATE_L,
-    FEEDBACK_STATE_H,
-    FEEDBACK_STATE_ERROR
+    FEEDBACK_STATE_L = 0,
+    FEEDBACK_STATE_ERROR = 1,
+    FEEDBACK_STATE_H = 2
 } FEEDBACK_STATE;
 
 /** @brief Information about feedbacks */
@@ -219,6 +219,13 @@ void feedback_init();
  * @return false Otherwise
  */
 bool feedback_is_ok(feedback_t mask, feedback_t value);
+/**
+ * @brief Get a single feedback voltage
+ * 
+ * @param index The index of the feedbacks
+ * @return float The feedback voltage
+ */
+float feedback_get_voltage(size_t index);
 /**
  * @brief Get the status of a single feedback
  * 

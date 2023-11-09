@@ -226,6 +226,21 @@ void can_send(uint16_t id) {
             return;
         tx_header.DLC = data_len;
     }
+    else if (id == BMS_CELLBOARD_VERSION_FRAME_ID) {
+        bms_cellboard_version_t raw_version = { 0 };
+        bms_cellboard_version_converted_t conv_version = { 0 };
+
+        conv_version.canlib_build_time = CANLIB_BUILD_TIME;
+        conv_version.cellboard_id = cellboard_index;
+        conv_version.component_build_hash = 1;
+
+        bms_cellboard_version_conversion_to_raw_struct(&raw_version, &conv_version);
+
+        int data_len = bms_cellboard_version_pack(buffer, &raw_version, BMS_CELLBOARD_VERSION_BYTE_SIZE);
+        if (data_len < 0)
+            return;
+        tx_header.DLC = data_len;
+    }
     else
         return;
     

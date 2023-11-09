@@ -25,6 +25,7 @@
 #include "watchdog.h"
 #include "fans_buzzer.h"
 #include "soc.h"
+#include "imd.h"
 
 #include <string.h>
 
@@ -345,23 +346,23 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
             return HAL_ERROR;
         tx_header.DLC = data_len;
     }
-    else if (id == PRIMARY_HV_VERSION_FRAME_ID) {
-        primary_hv_version_t raw_version = { 0 };
-        primary_hv_version_converted_t conv_version = { 0 };
+    else if (id == PRIMARY_MAINBOARD_VERSION_FRAME_ID) {
+        primary_mainboard_version_t raw_version = { 0 };
+        primary_mainboard_version_converted_t conv_version = { 0 };
 
         conv_version.canlib_build_time = CANLIB_BUILD_TIME;
-        conv_version.component_version = 1;
+        conv_version.component_build_time = 1;
 
-        primary_hv_version_conversion_to_raw_struct(&raw_version, &conv_version);
+        primary_mainboard_version_conversion_to_raw_struct(&raw_version, &conv_version);
 
-        int data_len = primary_hv_version_pack(buffer, &raw_version, PRIMARY_HV_VERSION_BYTE_SIZE);
+        int data_len = primary_mainboard_version_pack(buffer, &raw_version, PRIMARY_MAINBOARD_VERSION_BYTE_SIZE);
         if (data_len < 0)
             return HAL_ERROR;
         tx_header.DLC = data_len;
     }
-    else if (id == PRIMARY_HV_FEEDBACKS_STATUS_FRAME_ID) {
-        primary_hv_feedbacks_status_t raw_status = { 0 };
-        primary_hv_feedbacks_status_converted_t conv_status = { 0 };
+    else if (id == PRIMARY_HV_FEEDBACK_STATUS_FRAME_ID) {
+        primary_hv_feedback_status_t raw_status = { 0 };
+        primary_hv_feedback_status_converted_t conv_status = { 0 };
 
         // Get feedbacks status
         feedback_feed_t fbs[FEEDBACK_N] = { 0 };
@@ -371,71 +372,71 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         for (size_t i = 0; i < FEEDBACK_N; i++) {
             switch(i) {
                 case FEEDBACK_IMPLAUSIBILITY_DETECTED_POS:
-                    conv_status.feedbacks_status_feedback_implausibility_detected = fbs[i].real_state == FEEDBACK_STATE_H;
+                    conv_status.feedback_implausibility_detected = fbs[i].real_state;
                     break;
                 case FEEDBACK_IMD_COCKPIT_POS:
-                    conv_status.feedbacks_status_feedback_imd_cockpit = fbs[i].real_state == FEEDBACK_STATE_H;
+                    conv_status.feedback_imd_cockpit = fbs[i].real_state;
                     break;
                 case FEEDBACK_TSAL_GREEN_FAULT_LATCHED_POS:
-                    conv_status.feedbacks_status_feedback_tsal_green_fault_latched = fbs[i].real_state == FEEDBACK_STATE_H;
+                    conv_status.feedback_tsal_green_fault_latched = fbs[i].real_state;
                     break;
                 case FEEDBACK_BMS_COCKPIT_POS:
-                    conv_status.feedbacks_status_feedback_bms_cockpit = fbs[i].real_state == FEEDBACK_STATE_H;
+                    conv_status.feedback_bms_cockpit = fbs[i].real_state;
                     break;
                 case FEEDBACK_EXT_LATCHED_POS:
-                    conv_status.feedbacks_status_feedback_ext_latched = fbs[i].real_state == FEEDBACK_STATE_H;
+                    conv_status.feedback_ext_latched = fbs[i].real_state;
                     break;
                 case FEEDBACK_TSAL_GREEN_POS:
-                    conv_status.feedbacks_status_feedback_tsal_green = fbs[i].real_state == FEEDBACK_STATE_H;
+                    conv_status.feedback_tsal_green = fbs[i].real_state;
                     break;
                 case FEEDBACK_TS_OVER_60V_STATUS_POS:
-                    conv_status.feedbacks_status_feedback_ts_over_60v_status = fbs[i].real_state == FEEDBACK_STATE_H;
+                    conv_status.feedback_ts_over_60v_status = fbs[i].real_state;
                     break;
                 case FEEDBACK_AIRN_STATUS_POS:
-                    conv_status.feedbacks_status_feedback_airn_status = fbs[i].real_state == FEEDBACK_STATE_H;
+                    conv_status.feedback_airn_status = fbs[i].real_state;
                     break;
                 case FEEDBACK_AIRP_STATUS_POS:
-                    conv_status.feedbacks_status_feedback_airp_status = fbs[i].real_state == FEEDBACK_STATE_H;
+                    conv_status.feedback_airp_status = fbs[i].real_state;
                     break;
                 case FEEDBACK_AIRP_GATE_POS:
-                    conv_status.feedbacks_status_feedback_airp_gate = fbs[i].real_state == FEEDBACK_STATE_H;
+                    conv_status.feedback_airp_gate = fbs[i].real_state;
                     break;
                 case FEEDBACK_AIRN_GATE_POS:
-                    conv_status.feedbacks_status_feedback_airn_gate = fbs[i].real_state == FEEDBACK_STATE_H;
+                    conv_status.feedback_airn_gate = fbs[i].real_state;
                     break;
                 case FEEDBACK_PRECHARGE_STATUS_POS:
-                    conv_status.feedbacks_status_feedback_precharge_status = fbs[i].real_state == FEEDBACK_STATE_H;
+                    conv_status.feedback_precharge_status = fbs[i].real_state;
                     break;
                 case FEEDBACK_TSP_OVER_60V_STATUS_POS:
-                    conv_status.feedbacks_status_feedback_tsp_over_60v_status = fbs[i].real_state == FEEDBACK_STATE_H;
+                    conv_status.feedback_tsp_over_60v_status = fbs[i].real_state;
                     break;
                 case FEEDBACK_IMD_FAULT_POS:
-                    conv_status.feedbacks_status_feedback_imd_fault = fbs[i].real_state == FEEDBACK_STATE_H;
+                    conv_status.feedback_imd_fault = fbs[i].real_state;
                     break;
                 case FEEDBACK_CHECK_MUX_POS:
-                    conv_status.feedbacks_status_feedback_check_mux = fbs[i].real_state == FEEDBACK_STATE_H;
+                    conv_status.feedback_check_mux = fbs[i].real_state;
                     break;
                 case FEEDBACK_SD_END_POS:
-                    conv_status.feedbacks_status_feedback_sd_end = fbs[i].real_state == FEEDBACK_STATE_H;
+                    conv_status.feedback_sd_end = fbs[i].real_state;
                     break;
                 case FEEDBACK_SD_OUT_POS:
-                    conv_status.feedbacks_status_feedback_sd_out = fbs[i].real_state == FEEDBACK_STATE_H;
+                    conv_status.feedback_sd_out = fbs[i].real_state;
                     break;
                 case FEEDBACK_SD_IN_POS:
-                    conv_status.feedbacks_status_feedback_sd_in = fbs[i].real_state == FEEDBACK_STATE_H;
+                    conv_status.feedback_sd_in = fbs[i].real_state;
                     break;
                 case FEEDBACK_SD_BMS_POS:
-                    conv_status.feedbacks_status_feedback_sd_bms = fbs[i].real_state == FEEDBACK_STATE_H;
+                    conv_status.feedback_sd_bms = fbs[i].real_state;
                     break;
                 case FEEDBACK_SD_IMD_POS:
-                    conv_status.feedbacks_status_feedback_sd_imd = fbs[i].real_state == FEEDBACK_STATE_H;
+                    conv_status.feedback_sd_imd = fbs[i].real_state;
                     break;
             }
         }
 
-        primary_hv_feedbacks_status_conversion_to_raw_struct(&raw_status, &conv_status);
+        primary_hv_feedback_status_conversion_to_raw_struct(&raw_status, &conv_status);
 
-        int data_len = primary_hv_feedbacks_status_pack(buffer, &raw_status, PRIMARY_HV_FEEDBACKS_STATUS_BYTE_SIZE);
+        int data_len = primary_hv_feedback_status_pack(buffer, &raw_status, PRIMARY_HV_FEEDBACK_STATUS_BYTE_SIZE);
         if (data_len < 0)
             return HAL_ERROR;
         tx_header.DLC = data_len;
@@ -450,6 +451,80 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         primary_hv_fans_override_status_conversion_to_raw_struct(&raw_fans, &conv_fans);
 
         int data_len = primary_hv_fans_override_status_pack(buffer, &raw_fans, PRIMARY_HV_FANS_OVERRIDE_STATUS_BYTE_SIZE);
+        if (data_len < 0)
+            return HAL_ERROR;
+        tx_header.DLC = data_len;
+    }
+    else if (id == PRIMARY_HV_IMD_STATUS_FRAME_ID) {
+        primary_hv_imd_status_t raw_imd = { 0 };
+        primary_hv_imd_status_converted_t conv_imd = { 0 };
+        
+        conv_imd.imd_details = imd_get_details();
+        conv_imd.imd_duty_cycle = imd_get_duty_cycle_percentage();
+        conv_imd.imd_fault = imd_is_fault();
+        conv_imd.imd_freq = imd_get_freq();
+        conv_imd.imd_period = imd_get_period();
+        conv_imd.imd_status = imd_get_state();
+
+        primary_hv_imd_status_conversion_to_raw_struct(&raw_imd, &conv_imd);
+
+        int data_len = primary_hv_imd_status_pack(buffer, &raw_imd, PRIMARY_HV_IMD_STATUS_BYTE_SIZE);
+        if (data_len < 0)
+            return HAL_ERROR;
+        tx_header.DLC = data_len;
+    }
+    else if (id == PRIMARY_HV_FEEDBACK_TS_VOLTAGE_FRAME_ID) {
+        primary_hv_feedback_ts_voltage_t raw_ts_feedbacks = { 0 };
+        primary_hv_feedback_ts_voltage_converted_t conv_ts_feedbacks = { 0 };
+
+        conv_ts_feedbacks.feedback_airn_gate = feedback_get_voltage(FEEDBACK_AIRN_GATE_POS);
+        conv_ts_feedbacks.feedback_airp_gate = feedback_get_voltage(FEEDBACK_AIRP_GATE_POS);
+        conv_ts_feedbacks.feedback_airn_status = feedback_get_voltage(FEEDBACK_AIRN_STATUS_POS);
+        conv_ts_feedbacks.feedback_airp_status = feedback_get_voltage(FEEDBACK_AIRN_STATUS_POS);
+        conv_ts_feedbacks.feedback_precharge_status = feedback_get_voltage(FEEDBACK_PRECHARGE_STATUS_POS);
+        conv_ts_feedbacks.feedback_ts_over_60v_status = feedback_get_voltage(FEEDBACK_TS_OVER_60V_STATUS_POS);
+        conv_ts_feedbacks.feedback_tsp_over_60v_status = feedback_get_voltage(FEEDBACK_TSP_OVER_60V_STATUS_POS);
+
+        primary_hv_feedback_ts_voltage_conversion_to_raw_struct(&raw_ts_feedbacks, &conv_ts_feedbacks);
+        
+        int data_len = primary_hv_feedback_ts_voltage_pack(buffer, &raw_ts_feedbacks, PRIMARY_HV_FEEDBACK_TS_VOLTAGE_BYTE_SIZE);
+        if (data_len < 0)
+            return HAL_ERROR;
+        tx_header.DLC = data_len;
+    }
+    else if (id == PRIMARY_HV_FEEDBACK_SD_VOLTAGE_FRAME_ID) {
+        primary_hv_feedback_sd_voltage_t raw_sd_feedbacks = { 0 };
+        primary_hv_feedback_sd_voltage_converted_t conv_sd_feedbacks = { 0 };
+
+        conv_sd_feedbacks.feedback_sd_bms = feedback_get_voltage(FEEDBACK_SD_BMS_POS);
+        conv_sd_feedbacks.feedback_sd_end = feedback_get_voltage(FEEDBACK_SD_END_POS);
+        conv_sd_feedbacks.feedback_sd_imd = feedback_get_voltage(FEEDBACK_SD_IMD_POS);
+        conv_sd_feedbacks.feedback_sd_in = feedback_get_voltage(FEEDBACK_SD_IN_POS);
+        conv_sd_feedbacks.feedback_sd_out = feedback_get_voltage(FEEDBACK_SD_OUT_POS);
+
+        primary_hv_feedback_sd_voltage_conversion_to_raw_struct(&raw_sd_feedbacks, &conv_sd_feedbacks);
+        
+        int data_len = primary_hv_feedback_sd_voltage_pack(buffer, &raw_sd_feedbacks, PRIMARY_HV_FEEDBACK_SD_VOLTAGE_BYTE_SIZE);
+        if (data_len < 0)
+            return HAL_ERROR;
+        tx_header.DLC = data_len;
+    }
+    else if (id == PRIMARY_HV_FEEDBACK_MISC_VOLTAGE_FRAME_ID) {
+        primary_hv_feedback_misc_voltage_t raw_misc_feedbacks = { 0 };
+        primary_hv_feedback_misc_voltage_converted_t conv_misc_feedbacks = { 0 };
+
+        conv_misc_feedbacks.feedback_implausibility_detected = feedback_get_voltage(FEEDBACK_IMPLAUSIBILITY_DETECTED_POS);
+        conv_misc_feedbacks.feedback_bms_cockpit = feedback_get_voltage(FEEDBACK_BMS_COCKPIT_POS);
+        conv_misc_feedbacks.feedback_imd_cockpit = feedback_get_voltage(FEEDBACK_IMD_COCKPIT_POS);
+        conv_misc_feedbacks.feedback_tsal_green_fault_latched = feedback_get_voltage(FEEDBACK_TSAL_GREEN_FAULT_LATCHED_POS);
+        conv_misc_feedbacks.feedback_ext_latched = feedback_get_voltage(FEEDBACK_EXT_LATCHED_POS);
+        conv_misc_feedbacks.feedback_tsal_green = feedback_get_voltage(FEEDBACK_TSAL_GREEN_POS);
+        conv_misc_feedbacks.imd_fault = feedback_get_voltage(FEEDBACK_IMD_FAULT_POS);
+        conv_misc_feedbacks.feedback_check_mux = feedback_get_voltage(FEEDBACK_CHECK_MUX_POS);
+
+        primary_hv_feedback_misc_voltage_conversion_to_raw_struct(&raw_misc_feedbacks, &conv_misc_feedbacks);
+        
+        int data_len = primary_hv_feedback_misc_voltage_pack(buffer, &raw_misc_feedbacks, PRIMARY_HV_FEEDBACK_MISC_VOLTAGE_BYTE_SIZE);
         if (data_len < 0)
             return HAL_ERROR;
         tx_header.DLC = data_len;
@@ -656,10 +731,9 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
                     temp_errors[conv_temps.cellboard_id] &= ~(1 << bit);
             }
             // Toggle temperatures connectors error
-            size_t temp_id = 0;
             bool is_error_set = false;
-            for (size_t board_id; board_id < CELLBOARD_COUNT && !is_error_set; board_id++) {
-                for (size_t temp_bit; temp_bit < TEMP_STRIPS_PER_BUS * 2; temp_bit += 2) {
+            for (size_t board_id = 0; board_id < CELLBOARD_COUNT && !is_error_set; board_id++) {
+                for (size_t temp_bit = 0; temp_bit < TEMP_STRIPS_PER_BUS * 2; temp_bit += 2) {
                     if ((temp_errors[board_id] & (1 << temp_bit)) && (temp_errors[board_id] & (1 << (temp_bit + 1)))) {
                         error_set(ERROR_CONNECTOR_DISCONNECTED, 2, HAL_GetTick());
                         is_error_set = true;
@@ -799,6 +873,46 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
             primary_hv_cell_balancing_status_conversion_to_raw_struct(&raw_fwd_status, &conv_fwd_status);
 
             int data_len = primary_hv_cell_balancing_status_pack(buffer, &raw_fwd_status, PRIMARY_HV_CELL_BALANCING_STATUS_BYTE_SIZE);
+            if (data_len < 0)
+                return;
+            tx_header.DLC = data_len;
+
+            can_send(&CAR_CAN, buffer, &tx_header);
+        }
+        else if (rx_header.StdId == BMS_CELLBOARD_VERSION_FRAME_ID) {
+            bms_cellboard_version_t raw_version = { 0 };
+            bms_cellboard_version_converted_t conv_version = { 0 };
+
+            if (bms_cellboard_version_unpack(&raw_version, rx_data, BMS_CELLBOARD_VERSION_BYTE_SIZE) < 0) {
+                error_set(ERROR_CAN, 1, HAL_GetTick());
+                return;
+            }
+            bms_cellboard_version_raw_to_conversion_struct(&conv_version, &raw_version);
+            
+            // Reset time since last communication
+            time_since_last_comm[conv_version.cellboard_id] = HAL_GetTick();
+
+
+            // Forward data
+            CAN_TxHeaderTypeDef tx_header = {
+                .DLC = 0,
+                .ExtId = 0,
+                .IDE = CAN_ID_STD,
+                .RTR = CAN_RTR_DATA,
+                .StdId = PRIMARY_CELLBOARD_VERSION_FRAME_ID,
+                .TransmitGlobalTime = DISABLE
+            };
+            uint8_t buffer[8] = { 0 };
+            primary_cellboard_version_t raw_fwd_version = { 0 };
+            primary_cellboard_version_converted_t conv_fwd_version = { 0 };
+
+            conv_fwd_version.canlib_build_time = conv_version.canlib_build_time;
+            conv_fwd_version.cellboard_id = conv_version.cellboard_id;
+            conv_fwd_version.component_build_time = conv_version.component_build_hash;
+            
+            primary_cellboard_version_conversion_to_raw_struct(&raw_fwd_version, &conv_fwd_version);
+
+            int data_len = primary_cellboard_version_pack(buffer, &raw_fwd_version, PRIMARY_CELLBOARD_VERSION_BYTE_SIZE);
             if (data_len < 0)
                 return;
             tx_header.DLC = data_len;

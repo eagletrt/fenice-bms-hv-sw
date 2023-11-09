@@ -533,7 +533,7 @@ bms_state_t run_state(bms_state_t cur_state, state_data_t *data) {
   
   if (transition) {
     // Send info via CAN
-    can_car_send(PRIMARY_HV_FEEDBACKS_STATUS_FRAME_ID);
+    can_car_send(PRIMARY_HV_FEEDBACK_STATUS_FRAME_ID);
     can_car_send(PRIMARY_TS_STATUS_FRAME_ID);
 
     transition(data);

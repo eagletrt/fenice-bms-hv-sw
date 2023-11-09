@@ -59,6 +59,7 @@ void measures_check_flags() {
         can_car_send(PRIMARY_HV_CURRENT_FRAME_ID);
         can_car_send(PRIMARY_HV_VOLTAGE_FRAME_ID);
         can_car_send(PRIMARY_HV_ERRORS_FRAME_ID);
+        can_car_send(PRIMARY_HV_FEEDBACK_STATUS_FRAME_ID);
 
         // Measure SOC
         if (internal_voltage_measure() == HAL_OK)
@@ -74,8 +75,11 @@ void measures_check_flags() {
     if (_MEASURE_CHECK_INTERVAL(MEASURE_INTERVAL_100MS)) {
         // Send info via CANS
         can_car_send(PRIMARY_HV_TEMP_FRAME_ID);
-        can_car_send(PRIMARY_HV_FEEDBACKS_STATUS_FRAME_ID);
+        can_car_send(PRIMARY_HV_IMD_STATUS_FRAME_ID);
         can_car_send(PRIMARY_HV_CELL_BALANCING_STATUS_FRAME_ID);
+        can_car_send(PRIMARY_HV_FEEDBACK_TS_VOLTAGE_FRAME_ID);
+        can_car_send(PRIMARY_HV_FEEDBACK_SD_VOLTAGE_FRAME_ID);
+        can_car_send(PRIMARY_HV_FEEDBACK_MISC_VOLTAGE_FRAME_ID);
 
         // Check errors
         temperature_check_errors();
@@ -86,7 +90,7 @@ void measures_check_flags() {
     if (_MEASURE_CHECK_INTERVAL(MEASURE_INTERVAL_500MS)) {
         // Send info via CAN
         can_car_send(PRIMARY_HV_CAN_FORWARD_FRAME_ID);
-        can_car_send(PRIMARY_HV_VERSION_FRAME_ID);
+        can_car_send(PRIMARY_MAINBOARD_VERSION_FRAME_ID);
         can_car_send(PRIMARY_HV_FANS_OVERRIDE_STATUS_FRAME_ID);
         
         // Check cellboards connection errors

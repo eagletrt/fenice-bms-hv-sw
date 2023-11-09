@@ -52,10 +52,10 @@
 
 #define FEEDBACK_MUX_VREF 3.3f // V
 #define FEEDBACK_SD_VREF 13.f // V
-#define FEEDBACK_CONVERT_ADC_MUX_TO_VOLTAGE(VALUE) ((VALUE) * (FEEDBACK_MUX_VREF / 4095))
-#define FEEDBACK_CONVERT_ADC_SD_TO_VOLTAGE(VALUE) ((VALUE) * (FEEDBACK_SD_VREF / 4095))
-#define FEEDBACK_CONVERT_VOLTAGE_TO_ADC_MUX(VALUE) ((VALUE) * 4095 / FEEDBACK_MUX_VREF)
-#define FEEDBACK_CONVERT_VOLTAGE_TO_ADC_SD(VALUE) ((VALUE) * 4095 / FEEDBACK_SD_VREF)
+#define FEEDBACK_CONVERT_ADC_MUX_TO_VOLTAGE(VALUE) ((VALUE) * (FEEDBACK_MUX_VREF / 4095.f))
+#define FEEDBACK_CONVERT_ADC_SD_TO_VOLTAGE(VALUE) ((VALUE) * (FEEDBACK_SD_VREF / 4095.f))
+#define FEEDBACK_CONVERT_VOLTAGE_TO_ADC_MUX(VALUE) ((uint16_t)((VALUE) * 4095 / FEEDBACK_MUX_VREF))
+#define FEEDBACK_CONVERT_VOLTAGE_TO_ADC_SD(VALUE) ((uint16_t)((VALUE) * 4095 / FEEDBACK_SD_VREF))
 
 #define FEEDBACK_UPDATE_THRESHOLD_MS (MUX_INTERVAL_MS * (FEEDBACK_MUX_N + 2))
 
@@ -129,6 +129,14 @@ void feedback_init() {
         feedbacks.index[i] = 0;
     }
     feedbacks.has_converted = true;
+}
+
+float feedback_get_voltage(size_t index) {
+    if (index < FEEDBACK_MUX_N)
+        return FEEDBACK_CONVERT_ADC_MUX_TO_VOLTAGE(feedbacks.voltages[index][feedbacks.index[index]]);
+    else if (index < FEEDBACK_N)
+        return FEEDBACK_CONVERT_ADC_SD_TO_VOLTAGE(feedbacks.voltages[index][feedbacks.index[index]]);
+    return 0.f;
 }
 
 // TODO: Check all feedbacks and do not return false immediately
