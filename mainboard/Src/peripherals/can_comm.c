@@ -150,7 +150,7 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         primary_hv_current_converted_t conv_curr = { 0 };
 
         conv_curr.current = current_get_current();
-        conv_curr.power = conv_curr.current * CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_tsp());
+        conv_curr.power = (conv_curr.current * CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_tsp())) / 1000.f;
         conv_curr.energy = 0;
         conv_curr.soc = 0;
 
