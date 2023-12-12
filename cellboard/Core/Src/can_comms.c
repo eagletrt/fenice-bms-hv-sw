@@ -232,7 +232,7 @@ void can_send(uint16_t id) {
 
         conv_version.canlib_build_time = CANLIB_BUILD_TIME;
         conv_version.cellboard_id = cellboard_index;
-        conv_version.component_build_hash = 1;
+        conv_version.component_version = 1;
 
         bms_cellboard_version_conversion_to_raw_struct(&raw_version, &conv_version);
 

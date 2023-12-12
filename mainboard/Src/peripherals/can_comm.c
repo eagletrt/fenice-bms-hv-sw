@@ -135,12 +135,26 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
 
         conv_volts.bus_voltage  = CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_tsp());
         conv_volts.pack_voltage = CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_bat());
-        conv_volts.max_cell_voltage = CONVERT_VALUE_TO_VOLTAGE(cell_voltage_get_max());
-        conv_volts.min_cell_voltage = CONVERT_VALUE_TO_VOLTAGE(cell_voltage_get_min());
 
         primary_hv_voltage_conversion_to_raw_struct(&raw_volts, &conv_volts);
 
         int data_len = primary_hv_voltage_pack(buffer, &raw_volts, PRIMARY_HV_VOLTAGE_BYTE_SIZE);
+        if (data_len < 0)
+            return HAL_ERROR;
+        tx_header.DLC = data_len;
+    }
+    else if (id == PRIMARY_HV_CELL_VOLTAGE_FRAME_ID) {
+        primary_hv_cell_voltage_t raw_volts = { 0 };
+        primary_hv_cell_voltage_converted_t conv_volts = { 0 };
+
+        conv_volts.max_cell_voltage = CONVERT_VALUE_TO_VOLTAGE(cell_voltage_get_max());
+        conv_volts.min_cell_voltage = CONVERT_VALUE_TO_VOLTAGE(cell_voltage_get_min());
+        conv_volts.sum_cell_voltage = CONVERT_VALUE_TO_VOLTAGE(cell_voltage_get_sum());
+        conv_volts.avg_cell_voltage = CONVERT_VALUE_TO_VOLTAGE(cell_voltage_get_avg());
+
+        primary_hv_cell_voltage_conversion_to_raw_struct(&raw_volts, &conv_volts);
+
+        int data_len = primary_hv_cell_voltage_pack(buffer, &raw_volts, PRIMARY_HV_CELL_VOLTAGE_BYTE_SIZE);
         if (data_len < 0)
             return HAL_ERROR;
         tx_header.DLC = data_len;
@@ -908,7 +922,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
 
             conv_fwd_version.canlib_build_time = conv_version.canlib_build_time;
             conv_fwd_version.cellboard_id = conv_version.cellboard_id;
-            conv_fwd_version.component_build_time = conv_version.component_build_hash;
+            conv_fwd_version.component_version = conv_version.component_version;
             
             primary_cellboard_version_conversion_to_raw_struct(&raw_fwd_version, &conv_fwd_version);
 
@@ -983,6 +997,10 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
             }
             primary_set_cell_balancing_status_raw_to_conversion_struct(&conv_bal_status, &raw_bal_status);
             
+            // Set threshold
+            uint16_t thr = conv_bal_status.balancing_threshold; // Received threshold is in mV
+            bal_set_threshold(thr * 10); // Expected threshold is in mV * 10
+
             // Request for balancing start or stop
             switch(conv_bal_status.set_balancing_status) {
                 case PRIMARY_SET_CELL_BALANCING_STATUS_SET_BALANCING_STATUS_ON_CHOICE:

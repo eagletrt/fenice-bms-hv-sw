@@ -28,7 +28,7 @@
 typedef struct {
     voltage_t threshold;
 } bal_params;
-bal_params bal_params_default = { BAL_MAX_VOLTAGE_THRESHOLD };
+bal_params bal_params_default = { BAL_DEFAULT_VOLTAGE_THRESHOLD };
 
 config_t config;
 uint8_t is_balancing;

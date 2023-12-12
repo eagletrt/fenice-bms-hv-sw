@@ -102,6 +102,7 @@ lib/micro-libs/llist/llist.c \
 lib/micro-libs/m95256/m95256.c \
 lib/micro-libs/priority-queue/priority_queue.c \
 lib/micro-libs/priority-queue/priority_queue_fast_insert.c \
+lib/micro-libs/priority-queue/priority_queue_heap.c \
 lib/micro-libs/pwm/pwm.c \
 lib/micro-libs/timer-utils/timer_utils.c
 

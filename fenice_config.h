@@ -161,33 +161,25 @@ static const uint8_t TEMP_SENSOR_ADDRESS_CODING[TEMP_SENSORS_PER_STRIP] = {000, 
  */
 #define PACK_ENERGY_NOMINAL (CELL_ENERGY_NOMINAL * PACK_CELL_COUNT)
 
-// @section Balancing
-
-/**
- *  Maximum voltage delta between cells (mV * 10)
- */
-#define BAL_MAX_VOLTAGE_THRESHOLD 500
-
-/**
- *  How much does a balancing cycle last (ms)
- */
-#define BAL_CYCLE_LENGTH        30000
-#define BAL_TIME_ON             1000
-#define BAL_TIME_OFF            1000
-
-/**
- *  How much to wait for voltages to stabilize after a balancing cycle [ms]
- */
-#define BAL_COOLDOWN_DELAY      5000
-
-#define DISCHARGE_DUTY_CYCLE    (((float)BAL_CYCLE_LENGTH*BAL_TIME_ON/(BAL_TIME_ON+BAL_TIME_OFF))/(BAL_CYCLE_LENGTH+BAL_COOLDOWN_DELAY))
-
-// @section Pre-charge
-
 #define AIRN_CHECK_TIMEOUT 1000
 #define PRECHARGE_TIMEOUT  13000
 #define AIRP_CHECK_TIMEOUT 1000
 #define CELLBOARD_COMM_TIMEOUT 500
+
+// Default voltage delta between cells (mV * 10)
+#define BAL_DEFAULT_VOLTAGE_THRESHOLD 300
+// Maximum voltage delta between cells (mV * 10)
+#define BAL_MAX_VOLTAGE_THRESHOLD 2000
+
+// How much does a balancing cycle last (ms)
+#define BAL_CYCLE_LENGTH 30000
+#define BAL_TIME_ON 1000
+#define BAL_TIME_OFF 1000
+
+// How much to wait for voltages to stabilize after a balancing cycle [ms]
+#define BAL_COOLDOWN_DELAY      5000
+#define DISCHARGE_DUTY_CYCLE    (((float)BAL_CYCLE_LENGTH*BAL_TIME_ON/(BAL_TIME_ON+BAL_TIME_OFF))/(BAL_CYCLE_LENGTH+BAL_COOLDOWN_DELAY))
+
 
 /** @brief Multiplexer feedbacks */
 typedef enum {
