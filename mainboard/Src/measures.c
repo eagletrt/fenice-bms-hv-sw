@@ -58,6 +58,7 @@ void measures_check_flags() {
         // Send info via CAN
         can_car_send(PRIMARY_HV_CURRENT_FRAME_ID);
         can_car_send(PRIMARY_HV_VOLTAGE_FRAME_ID);
+        can_car_send(PRIMARY_HV_CELL_VOLTAGE_FRAME_ID);
         can_car_send(PRIMARY_HV_ERRORS_FRAME_ID);
         can_car_send(PRIMARY_HV_FEEDBACK_STATUS_FRAME_ID);
 
