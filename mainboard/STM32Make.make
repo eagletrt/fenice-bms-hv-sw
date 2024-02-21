@@ -91,10 +91,13 @@ Src/tim.c \
 Src/usart.c \
 Src/watchdog.c \
 lib/can/lib/bms/bms_network.c \
+lib/can/lib/bms/bms_utils_c.c \
 lib/can/lib/bms/bms_watchdog.c \
 lib/can/lib/primary/primary_network.c \
+lib/can/lib/primary/primary_utils_c.c \
 lib/can/lib/primary/primary_watchdog.c \
 lib/can/lib/secondary/secondary_network.c \
+lib/can/lib/secondary/secondary_utils_c.c \
 lib/can/lib/secondary/secondary_watchdog.c \
 lib/micro-libs/blink/blink.c \
 lib/micro-libs/cli/cli.c \
@@ -256,7 +259,6 @@ vpath %.cpp $(sort $(dir $(CPP_SOURCES)))
 OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(C_SOURCES:.c=.o)))
 vpath %.c $(sort $(dir $(C_SOURCES)))
 
-# list of ASM program objects
 # list of ASM program objects
 UPPER_CASE_ASM_SOURCES = $(filter %.S,$(ASM_SOURCES))
 LOWER_CASE_ASM_SOURCES = $(filter %.s,$(ASM_SOURCES))

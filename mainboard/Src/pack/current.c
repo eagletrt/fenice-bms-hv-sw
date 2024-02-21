@@ -39,9 +39,12 @@ current_t _current_convert_high(float volt) {
     return (CURRENT_DIVIDER_RATIO_INVERSE / CURRENT_SENSITIVITY_HIGH) * (volt - V0H);
 }
 
-// TODO: Use defines for shut current conversion
+#define CURRENT_SHUNT_VREF_OFFSET 0.454f // 0.9f
+#define CURRENT_SHUNT_OP_GAIN 75.f
+#define CURRENT_SHUNT_RESISTANCE 1e-4f
+
 current_t _current_convert_shunt(float volt) {
-    return (volt - 0.468205124) / (1e-4f * 75);
+    return (volt - CURRENT_SHUNT_VREF_OFFSET) / (CURRENT_SHUNT_OP_GAIN * CURRENT_SHUNT_RESISTANCE);
 }
 
 void current_start_measure() {
@@ -49,29 +52,29 @@ void current_start_measure() {
     HAL_ADC_Start_DMA(&ADC_HALL300, (uint32_t *)adc_300, MEASURE_SAMPLE_SIZE);
 }
 
+
 uint32_t current_read(float shunt_adc_val) {
     uint32_t time = HAL_GetTick();
-    uint64_t avg_50 = 0;
-    uint64_t avg_300 = 0;
+    float avg_50 = 0;
+    float avg_300 = 0;
     for (size_t i = 0; i < MEASURE_SAMPLE_SIZE; i++) {
         avg_50 += adc_50[i];
         avg_300 += adc_300[i];
     }
 
     // Convert Hall-low (50A)
-    float volt = avg_50 * (3.3f / 4095 / MEASURE_SAMPLE_SIZE);
+    float volt = avg_50 * 3.3f / 4095.f / MEASURE_SAMPLE_SIZE;
     current[CURRENT_SENSOR_50] = _current_convert_low(volt);
 
     // Convert Hall-high (300A)
-    volt_300 = avg_300 * (3.3f / 4095 / MEASURE_SAMPLE_SIZE);
+    volt_300 = avg_300 * 3.3f / 4095.f / MEASURE_SAMPLE_SIZE;
     current[CURRENT_SENSOR_300] = _current_convert_high(volt_300);
 
     // Convert Shunt
     current[CURRENT_SENSOR_SHUNT] = _current_convert_shunt(shunt_adc_val);
 
-    // Check for over-current
+    // Check for over-currents
     error_toggle_check(fabsf(current_get_current()) > PACK_MAX_CURRENT, ERROR_OVER_CURRENT, 0);
-
     return time;
 }
 
@@ -87,13 +90,10 @@ void current_zero() {
 }
 
 current_t current_get_current() {
-    current_t shunt = fabsf(current[CURRENT_SENSOR_SHUNT]);
     current_t hall_50 = fabsf(current[CURRENT_SENSOR_50]);
     current_t hall_300 = fabsf(current[CURRENT_SENSOR_300]);
 
     // Return current read from the correct
-    if (shunt < 4 && hall_50 < 4)
-        return current[CURRENT_SENSOR_SHUNT];
     if (hall_50 < 34 && hall_300 < 34)
         return current[CURRENT_SENSOR_50];
     return current[CURRENT_SENSOR_300];

@@ -28,6 +28,7 @@
 #include "imd.h"
 
 #include <string.h>
+#include <math.h>
 
 #ifdef TEMP_GROUP_ERROR_ENABLE
 uint16_t temp_errors[CELLBOARD_COUNT];
@@ -163,10 +164,18 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         primary_hv_current_t raw_curr = { 0 };
         primary_hv_current_converted_t conv_curr = { 0 };
 
+        // current_t shunt_current = fabsf(current_get_current_from_sensor(CURRENT_SENSOR_SHUNT));
+        // current_t hall50_current = fabsf(current_get_current_from_sensor(CURRENT_SENSOR_50));
+        // current_t hall300_current = fabsf(current_get_current_from_sensor(CURRENT_SENSOR_300));
+
+        // char msg[100] = { 0 };
+        // sprintf(msg, "Shunt: %.3f, Hall 50: %.3f, Hall 300: %.3f", shunt_current, hall50_current, hall300_current);
+        // cli_bms_debug(msg, strlen(msg));
+
         conv_curr.current = current_get_current();
         conv_curr.power = (conv_curr.current * CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltage_get_tsp())) / 1000.f;
-        conv_curr.energy = 0;
-        conv_curr.soc = 0;
+        conv_curr.energy = 0; // Not implemented yet
+        conv_curr.soc = 0;    // Not implemented yet
 
         primary_hv_current_conversion_to_raw_struct(&raw_curr, &conv_curr);
 

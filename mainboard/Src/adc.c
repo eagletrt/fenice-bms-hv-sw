@@ -461,7 +461,9 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* adcHandle)
 
 /* USER CODE BEGIN 1 */
 
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
+#include "current.h"
+
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef * hadc) {
     if (hadc->Instance == ADC_MUX.Instance) {
         _feedback_handle_adc_cnv_cmpl_irq();
     }

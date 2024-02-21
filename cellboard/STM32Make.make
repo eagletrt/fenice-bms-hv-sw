@@ -37,10 +37,13 @@ BUILD_DIR = build
 # C sources
 C_SOURCES =  \
 Core/Lib/can/lib/bms/bms_network.c \
+Core/Lib/can/lib/bms/bms_utils_c.c \
 Core/Lib/can/lib/bms/bms_watchdog.c \
 Core/Lib/can/lib/primary/primary_network.c \
+Core/Lib/can/lib/primary/primary_utils_c.c \
 Core/Lib/can/lib/primary/primary_watchdog.c \
 Core/Lib/can/lib/secondary/secondary_network.c \
+Core/Lib/can/lib/secondary/secondary_utils_c.c \
 Core/Lib/can/lib/secondary/secondary_watchdog.c \
 Core/Lib/micro-libs/blink/blink.c \
 Core/Lib/micro-libs/m95256/m95256.c \
@@ -225,7 +228,6 @@ vpath %.cpp $(sort $(dir $(CPP_SOURCES)))
 OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(C_SOURCES:.c=.o)))
 vpath %.c $(sort $(dir $(C_SOURCES)))
 
-# list of ASM program objects
 # list of ASM program objects
 UPPER_CASE_ASM_SOURCES = $(filter %.S,$(ASM_SOURCES))
 LOWER_CASE_ASM_SOURCES = $(filter %.s,$(ASM_SOURCES))
