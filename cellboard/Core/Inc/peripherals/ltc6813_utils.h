@@ -11,7 +11,7 @@
 #include "can_comms.h"
 #include "cellboard_config.h"
 #include "ltc6813.h"
-#include "bms/bms_network.h"
+#include "bms_network.h"
 
 #include <inttypes.h>
 #include <main.h>

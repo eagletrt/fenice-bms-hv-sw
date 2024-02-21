@@ -12,7 +12,7 @@
 #ifndef BAL_H
 #define BAL_H
 
-#include "bms/bms_network.h"
+#include "bms_network.h"
 #include "cellboard_config.h"
 
 #include <inttypes.h>

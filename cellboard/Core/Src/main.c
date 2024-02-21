@@ -30,7 +30,7 @@
 /* USER CODE BEGIN Includes */
 #include "bal_fsm.h"
 #include "can_comms.h"
-#include "index_blink.h"
+#include "blink.h"
 #include "ltc6813_utils.h"
 #include "measurements.h"
 #include "temp.h"
@@ -130,7 +130,7 @@ int main(void)
 
     measurements_init(&HTIM_MEASURES);
 
-    index_blink_init(LED_GPIO_Port, LED_Pin, true);
+    blink_init();
     // HAL_TIM_Base_Start_IT(&DISCHARGE_TIMER);
 
   /* USER CODE END 2 */
@@ -138,7 +138,7 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
     while (1) {
-        index_blink_run();
+        HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, blink_routine(HAL_GetTick()));
         measurements_flags_check();
 #ifdef UART_LOGGING
         if (HAL_GetTick() - temp_timer >= 500) {

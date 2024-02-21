@@ -17,7 +17,7 @@
 #include "spi.h"
 #include "temp.h"
 #include "volt.h"
-#include "bms/bms_network.h"
+#include "bms_network.h"
 
 #include <math.h>
 #include <string.h>

@@ -71,10 +71,10 @@ excludes:
 includeDirectories: 
   - Inc/**
   - Core/Inc/**
-  - Core/Lib/micro-libs/m95256/**
-  - Core/Lib/micro-libs/blink/**
-  - Core/Lib/micro-libs/timer-utils/**
-  - Core/Lib/can/lib/
+  - Core/Lib/micro-libs/m95256/
+  - Core/Lib/micro-libs/blinky/inc/
+  - Core/Lib/micro-libs/timer-utils/
+  - Core/Lib/can/lib/bms/
 
 
 # Files that should be included in the compilation.
@@ -85,12 +85,10 @@ includeDirectories:
 sourceFiles:  
   - Src/**
   - Core/Src/**
-  - Core/Lib/micro-libs/m95256/**
-  - Core/Lib/micro-libs/blink/**
-  - Core/Lib/micro-libs/timer-utils/**
+  - Core/Lib/micro-libs/m95256/m95256.c
+  - Core/Lib/micro-libs/blinky/src/blinky.c
+  - Core/Lib/micro-libs/timer-utils/timer_utils.c
   - Core/Lib/can/lib/bms/*.c
-  - Core/Lib/can/lib/primary/*.c
-  - Core/Lib/can/lib/secondary/*.c
 
 
 # When no makefile is present it will show a warning pop-up.
