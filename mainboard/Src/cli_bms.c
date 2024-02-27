@@ -422,25 +422,26 @@ void _cli_status(uint16_t argc, char **argv, char *out) {
 }
 
 // TODO: Balancing actions
+uint16_t bal_threshold = BAL_THRESHOLD_DEFAULT;
 void _cli_balance(uint16_t argc, char **argv, char *out) {
     strcpy(out, "Work in progress...\n\0");
     
     if (strcmp(argv[1], "on") == 0) {
         // if (argc > 2)
         //     bal.target = atoi(argv[2]);
-        bal_start();
+        bal_change_status_request(true, bal_threshold);
         sprintf(out, "enabling balancing\r\n");
     } else if (strcmp(argv[1], "off") == 0) {
-        bal_stop();
+        bal_change_status_request(false, bal_threshold);
         sprintf(out, "disabling balancing\r\n");
     } else if (strcmp(argv[1], "thr") == 0) {
         if (argv[2] != NULL) {
-            voltage_t thresh = atoff(argv[2]) * 10;
-            if (thresh <= BAL_MAX_VOLTAGE_THRESHOLD) {
-                bal_set_threshold(thresh);
+            bal_threshold = (voltage_t)atol(argv[2]) * 10;   
+            if (bal_threshold < BAL_THRESHOLD_MIN || bal_threshold > BAL_THRESHOLD_MAX) {
+                bal_threshold = BAL_THRESHOLD_DEFAULT;
             }
         }
-        sprintf(out, "balancing threshold is %.2f mV\r\n", bal_get_threshold() / 10.0);
+        sprintf(out, "balancing threshold is %.2f mV\r\n", bal_threshold / 10.f);
     } else if (strcmp(argv[1], "test") == 0) {
         /*
         CAN_TxHeaderTypeDef tx_header;

@@ -166,11 +166,6 @@ static const uint8_t TEMP_SENSOR_ADDRESS_CODING[TEMP_SENSORS_PER_STRIP] = {000, 
 #define AIRP_CHECK_TIMEOUT 1000
 #define CELLBOARD_COMM_TIMEOUT 500
 
-// Default voltage delta between cells (mV * 10)
-#define BAL_DEFAULT_VOLTAGE_THRESHOLD 300
-// Maximum voltage delta between cells (mV * 10)
-#define BAL_MAX_VOLTAGE_THRESHOLD 2000
-
 // How much does a balancing cycle last (ms)
 #define BAL_CYCLE_LENGTH 30000
 #define BAL_TIME_ON 1000

@@ -573,32 +573,23 @@ HAL_StatusTypeDef can_bms_send(uint16_t id) {
     uint8_t buffer[CAN_MAX_PAYLOAD_LENGTH] = { 0 };
     
     if (id == BMS_SET_BALANCING_STATUS_FRAME_ID) {
+        BalRequest request = bal_get_request();
+
+        bms_set_balancing_status_t raw_bal = { 0 };
+        bms_set_balancing_status_converted_t conv_bal = {
+            .balancing_status = request.status,
+            .target = MAX(CELL_MIN_VOLTAGE, cell_voltage_get_min()),
+            .threshold = request.threshold
+        };
+        bms_set_balancing_status_conversion_to_raw_struct(&raw_bal, &conv_bal);
+        if ((tx_header.DLC = bms_set_balancing_status_pack(buffer, &raw_bal, BMS_SET_BALANCING_STATUS_BYTE_SIZE)) < 0)
+            return HAL_ERROR;
+        
         size_t errors = 0;
-
-        bool bal_status = bal_need_balancing();
-        uint16_t target = MAX(CELL_MIN_VOLTAGE, cell_voltage_get_min());
-        uint16_t threshold = MIN(BAL_MAX_VOLTAGE_THRESHOLD, bal_get_threshold());
-
         for (size_t i = 0; i < CELLBOARD_COUNT; ++i) {
-            bms_set_balancing_status_t raw_bal = { 0 };
-            bms_set_balancing_status_converted_t conv_bal = { 0 };
-            
-            conv_bal.balancing_status = bal_status;
-            conv_bal.target = target;
-            conv_bal.threshold = threshold;
-
-            bms_set_balancing_status_conversion_to_raw_struct(&raw_bal, &conv_bal);
-
-            int data_len = bms_set_balancing_status_pack(buffer, &raw_bal, BMS_SET_BALANCING_STATUS_BYTE_SIZE);
-            if (data_len < 0)
+            if (can_send(&BMS_CAN, buffer, &tx_header) != HAL_OK)
                 ++errors;
-            else {
-                tx_header.DLC = data_len;
-                if (can_send(&BMS_CAN, buffer, &tx_header) != HAL_OK)
-                    ++errors;
-            }
         }
-
         return errors == 0 ? HAL_OK : HAL_ERROR;
     }
     else if (id == BMS_JMP_TO_BLT_FRAME_ID) {
@@ -834,7 +825,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
             // Reset time since last communication
             time_since_last_comm[conv_status.cellboard_id] = HAL_GetTick();
 
-            bal_set_is_balancing(conv_status.cellboard_id, conv_status.balancing_status);
+            bal_update_status(conv_status.cellboard_id, conv_status.balancing_status);
 
             // Check cellboard errors
             uint32_t error_status = conv_status.errors_can_comm |
@@ -1006,19 +997,8 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
             }
             primary_set_cell_balancing_status_raw_to_conversion_struct(&conv_bal_status, &raw_bal_status);
             
-            // Set threshold
-            uint16_t thr = conv_bal_status.balancing_threshold; // Received threshold is in mV
-            bal_set_threshold(thr * 10); // Expected threshold is in mV * 10
-
-            // Request for balancing start or stop
-            switch(conv_bal_status.set_balancing_status) {
-                case PRIMARY_SET_CELL_BALANCING_STATUS_SET_BALANCING_STATUS_ON_CHOICE:
-                    bal_start();
-                    break;
-                case PRIMARY_SET_CELL_BALANCING_STATUS_SET_BALANCING_STATUS_OFF_CHOICE:
-                    bal_stop();
-                    break;
-            }
+            // Send balancing request
+            bal_change_status_request(conv_bal_status.set_balancing_status, conv_bal_status.balancing_threshold * 10);
         }
         else if (rx_header.StdId == PRIMARY_HANDCART_STATUS_FRAME_ID) {
             primary_handcart_status_t raw_handcart_status = { 0 };

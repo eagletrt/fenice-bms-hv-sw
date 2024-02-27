@@ -18,6 +18,10 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
+#define BAL_THRESHOLD_DEFAULT 300 // mV * 10
+#define BAL_THRESHOLD_MIN 50 // mV * 10
+#define BAL_THRESHOLD_MAX 2000 // mV * 10
+
 #define BAL_NULL_INDEX UINT8_MAX
 
 /**

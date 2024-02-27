@@ -164,6 +164,9 @@ bms_state_t do_idle(state_data_t *data) {
   
   /* Your Code Here */
 
+  // Update balancing
+  bal_routine();
+
   // Check for fatal errors
   if (error_get_fatal() > 0)
     next_state = STATE_FATAL_ERROR;

@@ -37,7 +37,7 @@ bal_fsm_params bal_params = {
     .discharge_cells = 0,
     .cycle_length = DCTO_30S,
     .target = CELL_MAX_VOLTAGE,
-    .threshold = BAL_MAX_VOLTAGE_THRESHOLD
+    .threshold = BAL_THRESHOLD_DEFAULT
 };
 bal_fsm_transition_request set_bal_request = {
     .is_new = false,
