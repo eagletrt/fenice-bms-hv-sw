@@ -37,6 +37,8 @@ uint16_t temp_errors[CELLBOARD_COUNT];
 uint32_t time_since_last_comm[CELLBOARD_COUNT];
 bool can_forward;
 
+primary_hv_debug_signals_converted_t conv_debug;
+
 /**
  * @brief Wait until the CAN has at least one free mailbox
  * 
@@ -554,6 +556,17 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         if (data_len < 0)
             return HAL_ERROR;
         tx_header.DLC = data_len;
+    }
+    else if (id == PRIMARY_HV_DEBUG_SIGNALS_FRAME_ID) {
+        primary_hv_debug_signals_t raw_debug;
+    
+        primary_hv_debug_signals_conversion_to_raw_struct(&raw_debug, &conv_debug);
+
+        int data_len = primary_hv_debug_signals_pack(buffer, &raw_debug, PRIMARY_HV_DEBUG_SIGNALS_BYTE_SIZE);
+        if (data_len < 0)
+            return HAL_ERROR;
+        tx_header.DLC = data_len;
+
     }
     else
         return HAL_ERROR;

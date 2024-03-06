@@ -415,6 +415,28 @@ void close_airn(state_data_t *data) {
   cli_bms_debug("[FSM] State transition close_airn", 33);
   /* Your Code Here */
 
+  // Reset debug feedbacks
+  conv_debug.debug_signals_feedback_implausibility_detected = 0;
+  conv_debug.debug_signals_feedback_imd_cockpit = 0;
+  conv_debug.debug_signals_feedback_tsal_green_fault_latched = 0;
+  conv_debug.debug_signals_feedback_bms_cockpit = 0;
+  conv_debug.debug_signals_feedback_ext_latched = 0;
+  conv_debug.debug_signals_feedback_tsal_green = 0;
+  conv_debug.debug_signals_feedback_ts_over_60v_status = 0;
+  conv_debug.debug_signals_feedback_airn_status = 0;
+  conv_debug.debug_signals_feedback_airp_status = 0;
+  conv_debug.debug_signals_feedback_airp_gate = 0;
+  conv_debug.debug_signals_feedback_airn_gate = 0;
+  conv_debug.debug_signals_feedback_precharge_status = 0;
+  conv_debug.debug_signals_feedback_tsp_over_60v_status = 0;
+  conv_debug.debug_signals_feedback_imd_fault = 0;
+  conv_debug.debug_signals_feedback_check_mux = 0;
+  conv_debug.debug_signals_feedback_sd_end = 0;
+  conv_debug.debug_signals_feedback_sd_out = 0;
+  conv_debug.debug_signals_feedback_sd_in = 0;
+  conv_debug.debug_signals_feedback_sd_bms = 0;
+  conv_debug.debug_signals_feedback_sd_imd = 0;
+  
   // Set blinking led pattern
   bms_set_led_blinker();
 

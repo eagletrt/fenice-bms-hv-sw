@@ -27,6 +27,7 @@ typedef enum { CAN_BITRATE_1MBIT, CAN_BITRATE_125KBIT } CAN_Bitrate;
 #define CAN_SLAVE_START_FILTER_BANK 14
 
 extern bool is_handcart_connected;
+extern primary_hv_debug_signals_converted_t conv_debug;
 
 /**
  * @brief Check if the message received via CAN are forwarded

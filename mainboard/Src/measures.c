@@ -87,6 +87,11 @@ void measures_check_flags() {
         // Check if fans are connected
         error_toggle_check(HAL_GPIO_ReadPin(FANS_DETECT_GPIO_Port, FANS_DETECT_Pin) == GPIO_PIN_RESET, ERROR_FANS_DISCONNECTED, 0);
     }
+    // 200 ms interval
+    if (_MEASURE_CHECK_INTERVAL(MEASURE_INTERVAL_200MS)) {
+        // Send info via CANS
+        can_car_send(PRIMARY_HV_DEBUG_SIGNALS_FRAME_ID);
+    }
     // 500 ms interval
     if (_MEASURE_CHECK_INTERVAL(MEASURE_INTERVAL_500MS)) {
         // Send info via CAN

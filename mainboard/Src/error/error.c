@@ -8,12 +8,14 @@
 
 #include "error/error.h"
 
+#include <stdlib.h>
+
 #include "bms_fsm.h"
 #include "error/error_list_ref.h"
 #include "mainboard_config.h"
 #include "tim.h"
+#include "can_comm.h"
 
-#include <stdlib.h>
 
 /**
  * Reaction times by the rules:
@@ -152,10 +154,66 @@ bool error_set(error_id id, uint8_t offset, uint32_t timestamp) {
 error_t *error_get_top() {
     return (error_t *)llist_get_head(er_list);
 }
-bool error_set_fatal(error_t *error) {
+bool error_set_fatal(error_t * error) {
     if (error != NULL && error->state != STATE_FATAL) {
         error->state = STATE_FATAL;
         latest_expired_error = error->id;
+        switch(error->id) {
+            case ERROR_CELL_LOW_VOLTAGE:
+                conv_debug.debug_signals_error_cell_low_voltage = 1;
+                break;
+            case ERROR_CELL_UNDER_VOLTAGE:
+                conv_debug.debug_signals_error_cell_under_voltage = 1;
+                break;
+            case ERROR_CELL_OVER_VOLTAGE:
+                conv_debug.debug_signals_error_cell_over_voltage = 1;
+                break;
+            case ERROR_CELL_UNDER_TEMPERATURE:
+                // conv_debug.debug_signals_error_cell_under_temperature = 1;
+                break;
+            case ERROR_CELL_HIGH_TEMPERATURE:
+                conv_debug.debug_signals_error_cell_high_temperature = 1;
+                break;
+            case ERROR_CELL_OVER_TEMPERATURE:
+                conv_debug.debug_signals_error_cell_over_temperature = 1;
+                break;
+            case ERROR_OVER_CURRENT:
+                conv_debug.debug_signals_error_over_current = 1;
+                break;
+            case ERROR_CAN:
+                conv_debug.debug_signals_error_can = 1;
+                break;
+            case ERROR_INT_VOLTAGE_MISMATCH:
+                conv_debug.debug_signals_error_int_voltage_mismatch = 1;
+                break;
+            case ERROR_CELLBOARD_COMM:
+                conv_debug.debug_signals_error_cellboard_comm = 1;
+                break;
+            case ERROR_CELLBOARD_INTERNAL:
+                conv_debug.debug_signals_error_cellboard_internal = 1;
+                break;
+            case ERROR_CONNECTOR_DISCONNECTED:
+                conv_debug.debug_signals_error_connector_disconnected = 1;
+                break;
+            case ERROR_FANS_DISCONNECTED:
+                conv_debug.debug_signals_error_fans_disconnected = 1;
+                break;
+            case ERROR_FEEDBACK:
+                conv_debug.debug_signals_error_feedback = 1;
+                break;
+            case ERROR_FEEDBACK_CIRCUITRY:
+                conv_debug.debug_signals_error_feedback_circuitry = 1;
+                break;
+            case ERROR_EEPROM_COMM:
+                conv_debug.debug_signals_error_eeprom_comm = 1;
+                break;
+            case ERROR_EEPROM_WRITE:
+                conv_debug.debug_signals_error_eeprom_write = 1;
+                break;
+            
+            default:
+                break;
+        }
         return true;
     }
     return false;
