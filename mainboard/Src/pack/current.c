@@ -74,7 +74,8 @@ uint32_t current_read(float shunt_adc_val) {
     current[CURRENT_SENSOR_SHUNT] = _current_convert_shunt(shunt_adc_val);
 
     // Check for over-currents
-    error_toggle_check(fabsf(current_get_current()) > PACK_MAX_CURRENT, ERROR_OVER_CURRENT, 0);
+    error_toggle_check(current_get_current() < CURRENT_MIN_THRESHOLD, ERROR_OVER_CURRENT, 0);
+    error_toggle_check(current_get_current() > CURRENT_MAX_THRESHOLD, ERROR_OVER_CURRENT, 0);
     return time;
 }
 
@@ -109,8 +110,9 @@ current_t current_get_current_from_sensor(uint8_t sensor) {
 }
 
 void current_check_errors() {
-    current_t hall_300 = fabsf(current[CURRENT_SENSOR_300]);
-    error_toggle_check(hall_300 > PACK_MAX_CURRENT, ERROR_OVER_CURRENT, 0);
+    current_t hall_300 = current[CURRENT_SENSOR_300];
+    error_toggle_check(hall_300 < CURRENT_MIN_THRESHOLD, ERROR_OVER_CURRENT, 0);
+    error_toggle_check(hall_300 > CURRENT_MAX_THRESHOLD, ERROR_OVER_CURRENT, 0);
     
     // Hall effect sensor disconnected
     error_toggle_check(volt_300 < CURRENT_SENSOR_DISCONNECTED_THRESHOLD, ERROR_CONNECTOR_DISCONNECTED, 1);
