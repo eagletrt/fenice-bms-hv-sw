@@ -41,6 +41,7 @@ const uint32_t error_timeouts[ERROR_NUM_ERRORS] = {
 };
 
 llist er_list = NULL;
+error_id latest_expired_error = ERROR_NUM_ERRORS;
 
 /**
  * @returns The time left before the error becomes fatal
@@ -154,6 +155,7 @@ error_t *error_get_top() {
 bool error_set_fatal(error_t *error) {
     if (error != NULL && error->state != STATE_FATAL) {
         error->state = STATE_FATAL;
+        latest_expired_error = error->id;
         return true;
     }
     return false;
@@ -219,7 +221,11 @@ void error_dump(error_t errors[]) {
     llist_export(er_list, (void *)errors, sizeof(error_t));
 }
 
+error_id error_get_latest_expired(void) {
+    return latest_expired_error;
+}
+
 void _error_handle_tim_oc_irq() {
-    error_set_fatal(error_get_top());
     HAL_TIM_OC_Stop_IT(&HTIM_ERR, TIM_CHANNEL_1);
+    error_set_fatal(error_get_top());
 }

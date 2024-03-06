@@ -245,6 +245,9 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         error_dump(errors);
 
         for(size_t i = 0; i < error_count(); ++i) {
+            if (error_get_latest_expired() == errors[i].id)
+                errors[i].state = STATE_FATAL;
+
             switch(errors[i].id) {
                 case ERROR_CELL_LOW_VOLTAGE:
                     if (errors[i].state == STATE_WARNING)

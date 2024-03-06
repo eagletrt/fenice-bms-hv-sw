@@ -87,6 +87,7 @@ bool error_reset(error_id type, uint8_t offset);
 size_t error_get_fatal();
 size_t error_count();
 void error_dump(error_t errors[]);
+error_id error_get_latest_expired(void);
 bool compare_timeouts(error_t *a, error_t *b);
 
 void _error_handle_tim_oc_irq();
