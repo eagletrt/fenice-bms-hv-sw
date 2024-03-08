@@ -19,7 +19,7 @@
 #define CURRENT_SENSOR_DISCONNECTED_THRESHOLD 0.25 // V
 
 /** @brief Current limits in A */
-#define CURRENT_MIN_THRESHOLD -24.f
+#define CURRENT_MIN_THRESHOLD -20.f
 #define CURRENT_MAX_THRESHOLD 180.f
 
 enum CURRENT_SENSORS {
