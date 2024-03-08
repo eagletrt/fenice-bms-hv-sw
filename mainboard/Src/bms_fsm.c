@@ -170,8 +170,12 @@ bms_state_t do_idle(state_data_t *data) {
   // Check for fatal errors
   if (error_get_fatal() > 0)
     next_state = STATE_FATAL_ERROR;
-  else if (_requested_ts_on() && feedback_is_ok(FEEDBACK_IDLE_MASK, FEEDBACK_IDLE_HIGH))
+  else if (_requested_ts_on() && feedback_is_ok(FEEDBACK_IDLE_MASK, FEEDBACK_IDLE_HIGH)) {
+    // Stop balancing
+    if (bal_is_balancing())
+      bal_stop();
     next_state = STATE_WAIT_AIRN_CLOSE;
+  }
 
   switch (next_state) {
     case NO_CHANGE:
@@ -436,7 +440,7 @@ void close_airn(state_data_t *data) {
   conv_debug.debug_signals_feedback_sd_in = 0;
   conv_debug.debug_signals_feedback_sd_bms = 0;
   conv_debug.debug_signals_feedback_sd_imd = 0;
-  
+ 
   // Set blinking led pattern
   bms_set_led_blinker();
 
