@@ -17,7 +17,7 @@ targetMCU: stm32f4x
 cpu: -mcpu=cortex-m4
 fpu: -mfpu=fpv4-sp-d16
 floatAbi: -mfloat-abi=hard
-#ldscript: STM32F446RETx_FLASH.ld # linker script
+# ldscript: STM32F446RETx_FLASH.ld # linker script
 ldscript: STM32F446RETx_FLASH_shifted.ld # linker script
 
 # Compiler definitions. The -D prefix for the compiler will be automatically added.
@@ -76,6 +76,8 @@ includeDirectories:
   - lib/micro-libs/blink/**
   - lib/micro-libs/pwm/**
   - lib/micro-libs/timer-utils/**
+  - lib/micro-libs/min-heap/**
+  - lib/micro-libs/ring-buffer/**
 
 
 # Files that should be included in the compilation.
