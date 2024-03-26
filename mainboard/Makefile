@@ -13,7 +13,7 @@
 ######################################
 # target
 ######################################
-TARGET = mainboard
+TARGET = fenice-bms
 
 
 ######################################
@@ -36,17 +36,7 @@ BUILD_DIR = build
 ######################################
 # C sources
 C_SOURCES =  \
-Src/main.c \
-Src/gpio.c \
-Src/adc.c \
-Src/can.c \
-Src/spi.c \
-Src/tim.c \
-Src/usart.c \
-Src/stm32f4xx_it.c \
-Src/stm32f4xx_hal_msp.c \
-Src/system_stm32f4xx.c \
-Src/dma.c \
+$(shell find Src -type f -name "*.c") \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_adc.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_adc_ex.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_adc.c \
@@ -67,7 +57,19 @@ Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_can.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_spi.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c \
+lib/can/lib/primary/primary_network.c \
+lib/can/lib/bms/bms_network.c \
+lib/can/lib/primary/primary_watchdog.c \
+lib/can/lib/bms/bms_watchdog.c \
+$(shell find lib/micro-libs/blinky/src -type f -name "*.c") \
+$(shell find lib/micro-libs/cli -type f -name "*.c") \
+$(shell find lib/micro-libs/eeprom-config -type f -name "*.c") \
+$(shell find lib/micro-libs/m95256 -type f -name "*.c") \
+$(shell find lib/micro-libs/min-heap/src -type f -name "*.c") \
+$(shell find lib/micro-libs/ring-buffer/src -type f -name "*.c") \
+$(shell find lib/micro-libs/timer-utils -type f -name "*.c") \
+$(shell find lib/micro-libs/pwm -type f -name "*.c")
 
 # ASM sources
 ASM_SOURCES =  \
@@ -125,13 +127,21 @@ AS_INCLUDES =
 
 # C includes
 C_INCLUDES =  \
--IInc \
+$(addprefix -I,$(shell find Inc -type d)) \
 -IDrivers/STM32F4xx_HAL_Driver/Inc \
 -IDrivers/STM32F4xx_HAL_Driver/Inc/Legacy \
 -IDrivers/CMSIS/Device/ST/STM32F4xx/Include \
 -IDrivers/CMSIS/Include \
--Ilib
-
+-Ilib/micro-libs/blinky/inc \
+-Ilib/micro-libs/cli \
+-Ilib/micro-libs/eeprom-config \
+-Ilib/micro-libs/m95256 \
+-Ilib/micro-libs/min-heap/inc \
+-Ilib/micro-libs/ring-buffer/inc \
+-Ilib/micro-libs/timer-utils \
+-Ilib/micro-libs/pwm \
+$(addprefix -I,$(shell find lib/can/lib/primary -type d)) \
+$(addprefix -I,$(shell find lib/can/lib/bms -type d))
 
 # compile gcc flags
 ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
@@ -151,7 +161,7 @@ CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 # LDFLAGS
 #######################################
 # link script
-LDSCRIPT = STM32F446RETx_FLASH.ld
+LDSCRIPT = STM32F446RETx_FLASH_shifted.ld
 LDSCRIPT_SHIFTED = STM32F446RETx_FLASH_shifted.ld
 
 # libraries

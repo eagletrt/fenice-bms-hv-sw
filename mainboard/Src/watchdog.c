@@ -11,13 +11,12 @@
 #include <stddef.h>
 #include <string.h> // Used for memset in primary and bms watchdogs
 
-#include "primary/primary_network.h"
-#include "primary/primary_watchdog.h"
-#include "bms/bms_network.h"
-#include "bms/bms_watchdog.h"
+#include "primary_network.h"
+#include "primary_watchdog.h"
+#include "bms_network.h"
+#include "bms_watchdog.h"
 #include "bms_fsm.h"
 #include "cli_bms.h"
-#include "error.h"
 
 #define PRIMARY_WATCHDOG_IDS_SIZE 1
 #define BMS_WATCHDOG_IDS_SIZE 1

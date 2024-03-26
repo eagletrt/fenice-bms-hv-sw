@@ -15,6 +15,7 @@
 
 #include "stm32f4xx_hal.h"
 #include "mainboard_config.h"
+#include "error/error-handler.h"
 
 #define MEASURE_SAMPLE_SIZE 128
 
@@ -74,8 +75,8 @@ uint32_t current_read(float shunt_adc_val) {
     current[CURRENT_SENSOR_SHUNT] = _current_convert_shunt(shunt_adc_val);
 
     // Check for over-currents
-    error_toggle_check(current_get_current() < CURRENT_MIN_THRESHOLD, ERROR_OVER_CURRENT, 0);
-    error_toggle_check(current_get_current() > CURRENT_MAX_THRESHOLD, ERROR_OVER_CURRENT, 0);
+    ERROR_TOGGLE_IF(current_get_current() < CURRENT_MIN_THRESHOLD, ERROR_OVER_CURRENT, 0, HAL_GetTick());
+    ERROR_TOGGLE_IF(current_get_current() > CURRENT_MAX_THRESHOLD, ERROR_OVER_CURRENT, 0, HAL_GetTick());
     return time;
 }
 
@@ -111,9 +112,9 @@ current_t current_get_current_from_sensor(uint8_t sensor) {
 
 void current_check_errors() {
     current_t hall_300 = current[CURRENT_SENSOR_300];
-    error_toggle_check(hall_300 < CURRENT_MIN_THRESHOLD, ERROR_OVER_CURRENT, 0);
-    error_toggle_check(hall_300 > CURRENT_MAX_THRESHOLD, ERROR_OVER_CURRENT, 0);
+    ERROR_TOGGLE_IF(hall_300 < CURRENT_MIN_THRESHOLD, ERROR_OVER_CURRENT, 0, HAL_GetTick());
+    ERROR_TOGGLE_IF(hall_300 > CURRENT_MAX_THRESHOLD, ERROR_OVER_CURRENT, 0, HAL_GetTick());
     
     // Hall effect sensor disconnected
-    error_toggle_check(volt_300 < CURRENT_SENSOR_DISCONNECTED_THRESHOLD, ERROR_CONNECTOR_DISCONNECTED, 1);
+    ERROR_TOGGLE_IF(volt_300 < CURRENT_SENSOR_DISCONNECTED_THRESHOLD, ERROR_CONNECTOR_DISCONNECTED, 1, HAL_GetTick());
 }

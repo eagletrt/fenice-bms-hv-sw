@@ -16,7 +16,7 @@
 
 #include "stm32f4xx_hal.h"
 #include "../../fenice_config.h"
-#include "max22530.h"
+#include "peripherals/max22530.h"
 
 #define INTERNAL_VOLTAGE_DIVIDER_RATIO 0.0032 // 0.003
 #define CONVERT_VALUE_TO_INTERNAL_ADC_VOLTAGE(x) MAX22530_CONV_VALUE_TO_VOLTAGE(x)

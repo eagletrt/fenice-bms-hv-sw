@@ -9,7 +9,7 @@
 
 #include "config.h"
 
-#include "error.h"
+#include "error/error-handler.h"
 #include "mainboard_config.h"
 #include "spi.h"
 

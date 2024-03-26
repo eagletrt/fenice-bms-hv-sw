@@ -11,6 +11,10 @@
 
 #include "cli_bms.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "measures.h"
 #include "bal.h"
 #include "bms_fsm.h"
@@ -25,13 +29,11 @@
 #include "pack/temperature.h"
 #include "soc.h"
 #include "usart.h"
-#include "bms/bms_network.h"
+#include "bms_network.h"
 #include "internal_voltage.h"
 #include "cell_voltage.h"
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "error/error-handler.h"
+#include "timer_utils.h"
 
 #define CELLBOARD_DISTR_ADDR 0x50
 #define CELLBOARD_DISTR_VER  0x01
@@ -75,12 +77,11 @@ const char * bms_state_names[NUM_STATES] = {
 
 const char *bal_state_names[2] = { "off", "discharging" };
 
-const char *error_names[ERROR_NUM_ERRORS] = {
-    [ERROR_CELL_LOW_VOLTAGE]       = "low-voltage",
+const char * error_names[] = {
     [ERROR_CELL_UNDER_VOLTAGE]     = "under-voltage",
     [ERROR_CELL_OVER_VOLTAGE]      = "over-voltage",
+    [ERROR_CELL_UNDER_TEMPERATURE] = "under-temperature",
     [ERROR_CELL_OVER_TEMPERATURE]  = "over-temperature",
-    [ERROR_CELL_HIGH_TEMPERATURE]  = "high-temperature",
     [ERROR_OVER_CURRENT]           = "over-current",
     [ERROR_CAN]                    = "CAN",
     [ERROR_INT_VOLTAGE_MISMATCH]   = "internal voltage mismatch",
@@ -392,7 +393,7 @@ void _cli_status(uint16_t argc, char **argv, char *out) {
     itoa((float)bal_get_threshold() / 10, thresh, 10);
 
     char er_count[3] = {'\0'};
-    itoa(error_count(), er_count, 10);
+    itoa(error_get_running(), er_count, 10);
 
     char handcart_connected[13] = { '\0' };
     if (is_handcart_connected)
@@ -514,13 +515,14 @@ void _cli_soc(uint16_t argc, char **argv, char *out) {
 }
 
 void _cli_errors(uint16_t argc, char **argv, char *out) {
-    *out           = 0;
-    uint16_t count = error_count();
-    error_t errors[500] = { 0 };
-    error_dump(errors);
+    *out = 0;
+    uint16_t count = error_get_running();
 
-    volatile uint32_t now = HAL_GetTick();
     sprintf(out, "total %u\r\n", count);
+
+    // TODO: Print each error informations
+    /*
+    volatile uint32_t now = HAL_GetTick();
     for (uint16_t i = 0; i < count; i++) {
         sprintf(
             out + strlen(out),
@@ -535,6 +537,7 @@ void _cli_errors(uint16_t argc, char **argv, char *out) {
             errors[i].offset,
             errors[i].state == STATE_WARNING ? "warning" : "fatal");
     }
+    */
 }
 
 void _cli_ts(uint16_t argc, char **argv, char *out) {

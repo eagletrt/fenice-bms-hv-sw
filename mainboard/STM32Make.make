@@ -67,8 +67,8 @@ Src/config.c \
 Src/dma.c \
 Src/energy/energy.c \
 Src/energy/soc.c \
+Src/error/error-handler.c \
 Src/error/error.c \
-Src/error/error_list_ref.c \
 Src/fans_buzzer.c \
 Src/feedback.c \
 Src/gpio.c \
@@ -91,22 +91,17 @@ Src/tim.c \
 Src/usart.c \
 Src/watchdog.c \
 lib/can/lib/bms/bms_network.c \
-lib/can/lib/bms/bms_utils_c.c \
 lib/can/lib/bms/bms_watchdog.c \
 lib/can/lib/primary/primary_network.c \
-lib/can/lib/primary/primary_utils_c.c \
 lib/can/lib/primary/primary_watchdog.c \
-lib/can/lib/secondary/secondary_network.c \
-lib/can/lib/secondary/secondary_utils_c.c \
-lib/can/lib/secondary/secondary_watchdog.c \
-lib/micro-libs/blink/blink.c \
+lib/llist/llist.c \
+lib/micro-libs/blinky/src/blinky.c \
 lib/micro-libs/cli/cli.c \
-lib/micro-libs/llist/llist.c \
+lib/micro-libs/eeprom-config/eeprom-config.c \
 lib/micro-libs/m95256/m95256.c \
-lib/micro-libs/priority-queue/priority_queue.c \
-lib/micro-libs/priority-queue/priority_queue_fast_insert.c \
-lib/micro-libs/priority-queue/priority_queue_heap.c \
+lib/micro-libs/min-heap/src/min-heap.c \
 lib/micro-libs/pwm/pwm.c \
+lib/micro-libs/ring-buffer/src/ring-buffer.c \
 lib/micro-libs/timer-utils/timer_utils.c
 
 
@@ -195,14 +190,16 @@ C_INCLUDES =  \
 -IInc/error \
 -IInc/pack \
 -IInc/peripherals \
--Ilib \
--Ilib/can/lib/ \
--Ilib/micro-libs/blink \
+-Ilib/can/lib/bms \
+-Ilib/can/lib/primary \
+-Ilib/llist \
+-Ilib/micro-libs/blinky/inc \
 -Ilib/micro-libs/cli \
--Ilib/micro-libs/llist \
+-Ilib/micro-libs/eeprom-config \
 -Ilib/micro-libs/m95256 \
--Ilib/micro-libs/priority-queue \
+-Ilib/micro-libs/min-heap/inc \
 -Ilib/micro-libs/pwm \
+-Ilib/micro-libs/ring-buffer/inc \
 -Ilib/micro-libs/timer-utils
 
 

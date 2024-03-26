@@ -9,6 +9,9 @@
 
 #include "can_comm.h"
 
+#include <string.h>
+#include <math.h>
+
 #include "bal.h"
 #include "bms_fsm.h"
 #include "cli_bms.h"
@@ -17,7 +20,7 @@
 #include "mainboard_config.h"
 #include "usart.h"
 #include "bootloader.h"
-#include "primary/primary_network.h"
+#include "primary_network.h"
 #include "internal_voltage.h"
 #include "cell_voltage.h"
 #include "temperature.h"
@@ -26,9 +29,7 @@
 #include "fans_buzzer.h"
 #include "soc.h"
 #include "imd.h"
-
-#include <string.h>
-#include <math.h>
+#include "error/error-handler.h"
 
 #ifdef TEMP_GROUP_ERROR_ENABLE
 uint16_t temp_errors[CELLBOARD_COUNT];
@@ -113,7 +114,7 @@ HAL_StatusTypeDef can_send(CAN_HandleTypeDef * hcan, uint8_t * buffer, CAN_TxHea
 
     // Add message to a free mailbox
     HAL_StatusTypeDef status = HAL_CAN_AddTxMessage(hcan, header, buffer, NULL);
-    error_toggle_check(status != HAL_OK, ERROR_CAN, 0);
+    ERROR_TOGGLE_IF(status != HAL_OK, ERROR_CAN, 0, HAL_GetTick());
 
     return status;
 }
@@ -243,110 +244,113 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         primary_hv_errors_t raw_errors = { 0 };
         primary_hv_errors_converted_t conv_errors  = { 0 };
 
-        error_t errors[100] = { 0 };
-        error_dump(errors);
+        ErrorGroup running[ERROR_COUNT] = { 0 };
+        ErrorGroup expired[ERROR_COUNT] = { 0 };
+        size_t running_count = error_dump_running_groups(running);
+        size_t expired_count = error_dump_expired_groups(expired);
 
-        for(size_t i = 0; i < error_count(); ++i) {
-            if (error_get_latest_expired() == errors[i].id)
-                errors[i].state = STATE_FATAL;
-
-            switch(errors[i].id) {
-                case ERROR_CELL_LOW_VOLTAGE:
-                    if (errors[i].state == STATE_WARNING)
-                        conv_errors.warnings_cell_low_voltage = 1;
-                    else
-                        conv_errors.errors_cell_low_voltage = 1;
-                    break;
+        for (size_t i = 0; i < running_count; ++i) {
+            switch (running[i]) {
                 case ERROR_CELL_UNDER_VOLTAGE:
-                    if (errors[i].state == STATE_WARNING)
-                        conv_errors.warnings_cell_under_voltage = 1;
-                    else
-                        conv_errors.errors_cell_under_voltage = 1;
+                    conv_errors.warnings_cell_under_voltage = 1;
                     break;
                 case ERROR_CELL_OVER_VOLTAGE:
-                    if (errors[i].state == STATE_WARNING)
-                        conv_errors.warnings_cell_over_voltage = 1;
-                    else
-                        conv_errors.errors_cell_over_voltage = 1;
+                    conv_errors.warnings_cell_over_voltage = 1;
+                    break;
+                case ERROR_CELL_UNDER_TEMPERATURE:
+                    // TODO: add under temperature to canlib
+                    // conv_errors.warnings_cell_under_temperature = 1;
                     break;
                 case ERROR_CELL_OVER_TEMPERATURE:
-                    if (errors[i].state == STATE_WARNING)
-                        conv_errors.warnings_cell_over_temperature = 1;
-                    else
-                        conv_errors.errors_cell_over_temperature = 1;
-                    break;
-                case ERROR_CELL_HIGH_TEMPERATURE:
-                    if (errors[i].state == STATE_WARNING)
-                        conv_errors.warnings_cell_high_temperature = 1;
-                    else
-                        conv_errors.errors_cell_high_temperature = 1;
+                    conv_errors.warnings_cell_over_temperature = 1;
                     break;
                 case ERROR_OVER_CURRENT:
-                    if (errors[i].state == STATE_WARNING)
-                        conv_errors.warnings_over_current = 1;
-                    else
-                        conv_errors.errors_over_current = 1;
+                    conv_errors.warnings_over_current = 1;
                     break;
                 case ERROR_CAN:
-                    if (errors[i].state == STATE_WARNING)
-                        conv_errors.warnings_can = 1;
-                    else
-                        conv_errors.errors_can = 1;
+                    conv_errors.warnings_can = 1;
                     break;
                 case ERROR_INT_VOLTAGE_MISMATCH:
-                    if (errors[i].state == STATE_WARNING)
-                        conv_errors.warnings_int_voltage_mismatch = 1;
-                    else
-                        conv_errors.errors_int_voltage_mismatch = 1;
+                    conv_errors.warnings_int_voltage_mismatch = 1;
                     break;
                 case ERROR_CELLBOARD_COMM:
-                    if (errors[i].state == STATE_WARNING)
-                        conv_errors.warnings_cellboard_comm = 1;
-                    else
-                        conv_errors.errors_cellboard_comm = 1;
+                    conv_errors.warnings_cellboard_comm = 1;
                     break;
                 case ERROR_CELLBOARD_INTERNAL:
-                    if (errors[i].state == STATE_WARNING)
-                        conv_errors.warnings_cellboard_internal = 1;
-                    else
-                        conv_errors.errors_cellboard_internal = 1;
+                    conv_errors.warnings_cellboard_internal = 1;
                     break;
                 case ERROR_CONNECTOR_DISCONNECTED:
-                    if (errors[i].state == STATE_WARNING)
-                        conv_errors.warnings_connector_disconnected = 1;
-                    else
-                        conv_errors.errors_connector_disconnected = 1;
+                    conv_errors.warnings_connector_disconnected = 1;
                     break;
                 case ERROR_FANS_DISCONNECTED:
-                    if (errors[i].state == STATE_WARNING)
-                        conv_errors.warnings_fans_disconnected = 1;
-                    else
-                        conv_errors.errors_fans_disconnected = 1;
+                    conv_errors.warnings_fans_disconnected = 1;
                     break;
                 case ERROR_FEEDBACK:
-                    if (errors[i].state == STATE_WARNING)
-                        conv_errors.warnings_feedback = 1;
-                    else
-                        conv_errors.errors_feedback = 1;
+                    conv_errors.warnings_feedback = 1;
                     break;
                 case ERROR_FEEDBACK_CIRCUITRY:
-                    if (errors[i].state == STATE_WARNING)
-                        conv_errors.warnings_feedback_circuitry = 1;
-                    else
-                        conv_errors.errors_feedback_circuitry = 1;
+                    conv_errors.warnings_feedback_circuitry = 1;
                     break;
                 case ERROR_EEPROM_COMM:
-                    if (errors[i].state == STATE_WARNING)
-                        conv_errors.warnings_eeprom_comm = 1;
-                    else
-                        conv_errors.errors_eeprom_comm = 1;
+                    conv_errors.warnings_eeprom_comm = 1;
                     break;
                 case ERROR_EEPROM_WRITE:
-                    if (errors[i].state == STATE_WARNING)
-                        conv_errors.warnings_eeprom_write = 1;
-                    else
-                        conv_errors.errors_eeprom_write = 1;
+                    conv_errors.warnings_eeprom_write = 1;
                     break;
+
+                default:
+                    break;
+            }
+        }
+        for (size_t i = 0; i < expired_count; ++i) {
+            switch (expired[i]) {
+                case ERROR_CELL_UNDER_VOLTAGE:
+                    conv_errors.errors_cell_under_voltage = 1;
+                    break;
+                case ERROR_CELL_OVER_VOLTAGE:
+                    conv_errors.errors_cell_over_voltage = 1;
+                    break;
+                case ERROR_CELL_UNDER_TEMPERATURE:
+                    // TODO: Add under temperature to canlib
+                    // conv_errors.errors_cell_under_temperature = 1;
+                    break;
+                case ERROR_CELL_OVER_TEMPERATURE:
+                    conv_errors.errors_cell_over_temperature = 1;
+                    break;
+                case ERROR_OVER_CURRENT:
+                    conv_errors.errors_over_current = 1;
+                    break;
+                case ERROR_CAN:
+                    conv_errors.errors_can = 1;
+                    break;
+                case ERROR_INT_VOLTAGE_MISMATCH:
+                    conv_errors.errors_int_voltage_mismatch = 1;
+                    break;
+                case ERROR_CELLBOARD_COMM:
+                    conv_errors.errors_cellboard_comm = 1;
+                    break;
+                case ERROR_CELLBOARD_INTERNAL:
+                    conv_errors.errors_cellboard_internal = 1;
+                    break;
+                case ERROR_CONNECTOR_DISCONNECTED:
+                    conv_errors.errors_connector_disconnected = 1;
+                    break;
+                case ERROR_FANS_DISCONNECTED:
+                    conv_errors.errors_fans_disconnected = 1;
+                    break;
+                case ERROR_FEEDBACK:
+                    conv_errors.errors_feedback = 1;
+                    break;
+                case ERROR_FEEDBACK_CIRCUITRY:
+                    conv_errors.errors_feedback_circuitry = 1;
+                    break;
+                case ERROR_EEPROM_COMM:
+                    conv_errors.errors_eeprom_comm = 1;
+                    break;
+                case ERROR_EEPROM_WRITE:
+                    conv_errors.errors_eeprom_write = 1;
+                    break;
+
                 default:
                     break;
             }
@@ -853,7 +857,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
                 conv_status.errors_temp_comm_3 |
                 conv_status.errors_temp_comm_4 |
                 conv_status.errors_temp_comm_5;
-            error_toggle_check(error_status != 0, ERROR_CELLBOARD_INTERNAL, conv_status.cellboard_id);
+            ERROR_TOGGLE_IF(error_status != 0, ERROR_CELLBOARD_INTERNAL, conv_status.cellboard_id, HAL_GetTick());
 
             // Forward data
             CAN_TxHeaderTypeDef tx_header = {
@@ -1107,7 +1111,7 @@ void CAN_change_bitrate(CAN_HandleTypeDef *hcan, CAN_Bitrate bitrate) {
 void can_cellboards_check() {
     for (size_t i = 0; i < CELLBOARD_COUNT; i++) {
         if (time_since_last_comm[i] > 0) {
-            error_toggle_check(HAL_GetTick() - time_since_last_comm[i] >= CELLBOARD_COMM_TIMEOUT, ERROR_CELLBOARD_COMM, i);
+            ERROR_TOGGLE_IF(HAL_GetTick() - time_since_last_comm[i] >= CELLBOARD_COMM_TIMEOUT, ERROR_CELLBOARD_COMM, i, HAL_GetTick());
         }
     }
 }

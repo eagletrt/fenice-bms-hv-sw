@@ -12,7 +12,7 @@
 #include "mainboard_config.h"
 #include "math.h"
 #include "tim.h"
-#include "temperature.h"
+#include "pack/temperature.h"
 #include "bal.h"
 
 #include <string.h>

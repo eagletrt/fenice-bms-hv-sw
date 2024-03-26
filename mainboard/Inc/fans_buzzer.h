@@ -10,6 +10,8 @@
 #ifndef FANS_BUZZER_H
 #define FANS_BUZZER_H
 
+#include <stdbool.h>
+
 #include "main.h"
 #include "pwm.h"
 

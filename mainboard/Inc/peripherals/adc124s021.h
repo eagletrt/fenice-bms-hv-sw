@@ -6,6 +6,8 @@
  * @author	Federico Carb0ne [federico.carbone@studenti.unitn.it]
  */
 
+#include <stdbool.h>
+
 #include "main.h"
 #include "../../fenice_config.h"
 

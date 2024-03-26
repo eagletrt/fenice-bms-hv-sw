@@ -16,8 +16,9 @@
 #include "mainboard_config.h"
 #include "bms_fsm.h"
 #include "can_comm.h"
-#include "error_list_ref.h"
 #include "cli_bms.h"
+#include "timer_utils.h"
+#include "error/error-handler.h"
 
 // Multiplexer feedback thresholds
 #define FEEDBACK_MUX_ANALOG_THRESHOLD_H 1.9f // 2.2f

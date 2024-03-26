@@ -28,7 +28,7 @@
 #include "bms_fsm.h"
 #include "cli_bms.h"
 #include "config.h"
-#include "error/error.h"
+#include "error/error-handler.h"
 #include "fans_buzzer.h"
 #include "feedback.h"
 #include "imd.h"
@@ -36,12 +36,12 @@
 #include "measures.h"
 #include "pack/current.h"
 #include "pack/pack.h"
-#include "soc.h"
-#include "internal_voltage.h"
-#include "cell_voltage.h"
-#include "temperature.h"
-#include "primary/primary_network.h"
-#include "can_comm.h"
+#include "energy/soc.h"
+#include "pack/internal_voltage.h"
+#include "pack/cell_voltage.h"
+#include "pack/temperature.h"
+#include "primary_network.h"
+#include "peripherals/can_comm.h"
 #include "watchdog.h"
 
 #include <m95256.h>
@@ -92,7 +92,6 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -133,6 +132,11 @@ int main(void)
   MX_TIM4_Init();
   MX_TIM7_Init();
   /* USER CODE BEGIN 2 */
+    fans_init();
+
+    error_init(error_cs_enter, error_cs_exit);
+
+    cli_bms_init();
 
     start_time = HAL_GetTick();
     pack_set_fault(BMS_FAULT_ON_VALUE);
@@ -142,11 +146,6 @@ int main(void)
     
     HAL_GPIO_WritePin(EEPROM_HOLD_GPIO_Port, EEPROM_HOLD_Pin, GPIO_PIN_SET);
     current_start_measure();
-
-    cli_bms_init();
-
-    error_init();
-    fans_init();
 
     internal_voltage_init();
     cell_voltage_init();
@@ -161,7 +160,7 @@ int main(void)
     feedback_init();
     watchdog_init();
     
-    start_time = HAL_GetTick();
+    start_time = HAL_GetTick();  
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -176,7 +175,7 @@ int main(void)
         // if (HAL_GetTick() > 1500 && !HAL_GPIO_ReadPin(BMS_FAULT_GPIO_Port, BMS_FAULT_Pin))
         //     HAL_GPIO_WritePin(BMS_FAULT_GPIO_Port, BMS_FAULT_Pin, BMS_FAULT_OFF_VALUE);
         cli_loop(&cli_bms);
-
+        error_routine();
         
         // Start measurement checks after an initial delay
         if (HAL_GetTick() - start_time >= INITIAL_CHECK_DELAY_MS)

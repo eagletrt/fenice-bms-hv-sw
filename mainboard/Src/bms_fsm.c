@@ -25,9 +25,11 @@ The finite state machine has:
 #include "feedback.h"
 #include "can_comm.h"
 #include "cli_bms.h"
-#include "blink.h"
+#include "blinky.h"
 #include "internal_voltage.h"
 #include "bal.h"
+#include "timer_utils.h"
+#include "error/error-handler.h"
 
 #define AIRN_TIMEOUT_CHANNEL TIM_CHANNEL_1
 #define PRECHARGE_TIMEOUT_CHANNEL TIM_CHANNEL_2
@@ -45,7 +47,7 @@ const char * state_names[] = {"init", "idle", "fatal_error", "wait_airn_close", 
 char debug_msg[100] = { 0 };
 
 bms_state_t fsm_state = STATE_INIT;
-blink_t led;
+Blinky led;
 bool airn_timeout = false;
 bool precharge_timeout = false;
 bool airp_timeout = false;
@@ -54,6 +56,8 @@ bms_fsm_transition_request set_ts_request = {
     .is_new = false,
     .next_state = STATE_IDLE
 };
+
+uint16_t blink_pattern[(NUM_STATES) * 2 + 1];
 
 
 // List of state functions
@@ -168,7 +172,7 @@ bms_state_t do_idle(state_data_t *data) {
   bal_routine();
 
   // Check for fatal errors
-  if (error_get_fatal() > 0)
+  if (error_get_expired() > 0)
     next_state = STATE_FATAL_ERROR;
   else if (_requested_ts_on() && feedback_is_ok(FEEDBACK_IDLE_MASK, FEEDBACK_IDLE_HIGH)) {
     // Stop balancing
@@ -201,7 +205,7 @@ bms_state_t do_fatal_error(state_data_t *data) {
   /* Your Code Here */
 
   // Check errors and feedbacks
-  if (error_get_fatal() == 0 && feedback_is_ok(FEEDBACK_FATAL_ERROR_MASK, FEEDBACK_FATAL_ERROR_HIGH))
+  if (error_get_expired() == 0 && feedback_is_ok(FEEDBACK_FATAL_ERROR_MASK, FEEDBACK_FATAL_ERROR_HIGH))
     next_state = STATE_IDLE;
   
   switch (next_state) {
@@ -227,7 +231,7 @@ bms_state_t do_wait_airn_close(state_data_t *data) {
   /* Your Code Here */
 
   // Check fatal errors
-  if (error_get_fatal() > 0)
+  if (error_get_expired() > 0)
     next_state = STATE_FATAL_ERROR;
   else if (_requested_ts_off() || airn_timeout)
     next_state = STATE_IDLE;
@@ -259,7 +263,7 @@ bms_state_t do_wait_ts_precharge(state_data_t *data) {
   /* Your Code Here */
 
   // Check fatal errors
-  if (error_get_fatal() > 0)
+  if (error_get_expired() > 0)
     next_state = STATE_FATAL_ERROR;
   else if (_requested_ts_off() || precharge_timeout) {
     if (precharge_timeout)
@@ -295,7 +299,7 @@ bms_state_t do_wait_airp_close(state_data_t *data) {
   
   // cli_bms_debug("[FSM] In state wait_airp_close", 30);
   /* Your Code Here */
-  if (error_get_fatal() > 0)
+  if (error_get_expired() > 0)
     next_state = STATE_FATAL_ERROR;
   else if (_requested_ts_off() || airp_timeout) {
     if (airp_timeout)
@@ -329,10 +333,7 @@ bms_state_t do_ts_on(state_data_t *data) {
   
   // cli_bms_debug("[FSM] In state ts_on", 20);
   /* Your Code Here */
-  if (error_get_fatal() > 0) {
-    error_t errors[30];
-    error_dump(errors);
-    cli_bms_debug("TS on errors", 12);
+  if (error_get_expired() > 0) {
     next_state = STATE_FATAL_ERROR;
   }
   else if (_requested_ts_off() || !feedback_is_ok(FEEDBACK_TS_ON_CHECK_MASK, FEEDBACK_TS_ON_CHECK_HIGH))
@@ -374,7 +375,8 @@ void init_to_idle(state_data_t *data) {
   /* Your Code Here */
   
   // Set blinking led pattern
-  HAL_GPIO_WritePin(led.port, led.pin, GPIO_PIN_RESET);
+  blinky_init(&led, blink_pattern, 0, true, BLINKY_LOW);
+  HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
   bms_set_led_blinker();
 
   // Send info via CAN
@@ -573,10 +575,11 @@ bms_state_t run_state(bms_state_t cur_state, state_data_t *data) {
 
 void fsm_run() {
     // Blink the led
-    bms_blink_led();
+    BlinkyState led_status = blinky_routine(&led, HAL_GetTick());
+    HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, led_status);
 
     // Set or reset connection error
-    error_toggle_check(HAL_GPIO_ReadPin(CONNS_DETECTION_GPIO_Port, CONNS_DETECTION_Pin) == GPIO_PIN_RESET, ERROR_CONNECTOR_DISCONNECTED, 0);
+    ERROR_TOGGLE_IF(HAL_GPIO_ReadPin(CONNS_DETECTION_GPIO_Port, CONNS_DETECTION_Pin) == GPIO_PIN_RESET, ERROR_CONNECTOR_DISCONNECTED, 0, HAL_GetTick());
 
     // Run the FSM and updates
     fsm_state = run_state(fsm_state, NULL);
@@ -585,30 +588,20 @@ bms_state_t fsm_get_state() {
     return fsm_state;
 }
 void bms_set_led_blinker() {
-    uint8_t pattern_count = 0;
-    uint8_t state_count = 0;
-    uint32_t state = fsm_state;
-    uint16_t pattern[(NUM_STATES) * 2 + 1] = { 0 };
+    blinky_reset(&led, BLINKY_LOW);
+    blinky_enable(&led, false);
+    HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, led.initial_state);
 
-    pattern[pattern_count++] = 200;  // Off
-    while (state_count < state) {
-        pattern[pattern_count++] = 200;  // On
-        pattern[pattern_count++] = 200;  // Off
-        state_count++;
+    size_t cnt = 0;
+    for (size_t i = 0; i < fsm_state; ++i) {
+        blink_pattern[cnt++] = 200; // Off (ms)
+        blink_pattern[cnt++] = 200; // On (ms)
     }
-    pattern[pattern_count++] = 1000;  // Big off
+    blink_pattern[cnt++] = 1000; // Big off before repeat (ms)
 
-    BLINK_SET_PATTERN(led, pattern, pattern_count);
-    BLINK_SET_ENABLE(led, true);
-    BLINK_SET_REPEAT(led, true);
-
-    blink_reset(&led);
-    HAL_GPIO_WritePin(led.port, led.pin, GPIO_PIN_SET);
+    blinky_set_pattern(&led, blink_pattern, cnt);
+    blinky_enable(&led, true);
 }
-void bms_blink_led() {
-    blink_run(&led);
-}
-
 
 #ifdef TEST_MAIN
 #include <unistd.h>

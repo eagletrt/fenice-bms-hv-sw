@@ -68,16 +68,17 @@ excludes:
 # If a CubeMX makefile is present it will automatically include the include directories from that makefile.
 includeDirectories: 
   - Inc/**
-  - lib/can/lib/
-  - lib/micro-libs/llist/**
-  - lib/micro-libs/priority-queue/**
+  - lib/can/lib/bms/**
+  - lib/can/lib/primary/**
+  - lib/micro-libs/blinky/inc/**
   - lib/micro-libs/cli/**
+  - lib/micro-libs/eeprom-config/**
   - lib/micro-libs/m95256/**
-  - lib/micro-libs/blink/**
-  - lib/micro-libs/pwm/**
+  - lib/micro-libs/min-heap/inc/**
+  - lib/micro-libs/ring-buffer/inc/**
   - lib/micro-libs/timer-utils/**
-  - lib/micro-libs/min-heap/**
-  - lib/micro-libs/ring-buffer/**
+  - lib/micro-libs/pwm/**
+  - lib/llist/**
 
 
 # Files that should be included in the compilation.
@@ -87,16 +88,20 @@ includeDirectories:
 # these should be escaped with a: \ or the name should be in double quotes e.g. "HARDWARE_DRIVER*.c"
 sourceFiles:  
   - Src/**
-  - lib/can/lib/bms/*.c
-  - lib/can/lib/primary/*.c
-  - lib/can/lib/secondary/*.c
-  - lib/micro-libs/llist/**
-  - lib/micro-libs/priority-queue/**
+  - lib/can/lib/bms/bms_network.c
+  - lib/can/lib/bms/bms_watchdog.c
+  - lib/can/lib/primary/primary_network.c
+  - lib/can/lib/primary/primary_watchdog.c
+  - lib/micro-libs/blinky/src/**
   - lib/micro-libs/cli/**
+  - lib/micro-libs/eeprom-config/**
   - lib/micro-libs/m95256/**
-  - lib/micro-libs/blink/**
-  - lib/micro-libs/pwm/**
+  - lib/micro-libs/min-heap/src/**
+  - lib/micro-libs/ring-buffer/src/**
   - lib/micro-libs/timer-utils/**
+  - lib/micro-libs/pwm/**
+  - lib/llist/**
+
 
 
 # When no makefile is present it will show a warning pop-up.

@@ -9,9 +9,11 @@
 
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
-#include "m95256.h"
 
-#include <inttypes.h>
+#include <stdint.h>
+#include <stdbool.h>
+
+#include "m95256.h"
 
 #define CONFIG_VERSION_TYPE uint32_t
 #define CONFIG_VERSION_SIZE sizeof(CONFIG_VERSION_TYPE)

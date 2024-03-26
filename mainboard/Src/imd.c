@@ -1,7 +1,9 @@
 #include "imd.h"
 
 #include <math.h>
+
 #include "feedback.h"
+#include "timer_utils.h"
 
 uint32_t periodTicks = 0, dutyCycleTicks = 0;
 uint32_t icValRising = 0, icValFalling = 0;

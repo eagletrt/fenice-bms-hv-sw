@@ -33,11 +33,12 @@ void blink_init(void) {
         &blinker,
         pattern,
         pattern_size,
-        true
+        true,
+        BLINKY_HIGH
     );
 
     if (cellboard_index == 0)
-        blinky_enable(&blink_init, false);
+        blinky_enable(&blinker, false);
 }
 
 BlinkyState blink_routine(uint32_t t) {

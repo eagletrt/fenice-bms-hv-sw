@@ -13,7 +13,7 @@
 ######################################
 # target
 ######################################
-TARGET = cellboard
+TARGET = fenice-bms
 
 
 ######################################
@@ -36,55 +36,41 @@ BUILD_DIR = build
 ######################################
 # C sources
 C_SOURCES =  \
-Core/Lib/can/lib/bms/bms_network.c \
-Core/Lib/can/lib/bms/bms_utils_c.c \
-Core/Lib/can/lib/bms/bms_watchdog.c \
-Core/Lib/micro-libs/blinky/src/blinky.c \
-Core/Lib/micro-libs/m95256/m95256.c \
-Core/Lib/micro-libs/timer-utils/timer_utils.c \
-Core/Src/bal.c \
-Core/Src/bal_fsm.c \
-Core/Src/blink.c \
-Core/Src/can.c \
-Core/Src/can_comms.c \
-Core/Src/error.c \
-Core/Src/gpio.c \
-Core/Src/i2c.c \
-Core/Src/main.c \
-Core/Src/measurements.c \
-Core/Src/peripherals/adctemp.c \
-Core/Src/peripherals/ltc6813.c \
-Core/Src/peripherals/ltc6813_utils.c \
-Core/Src/spi.c \
-Core/Src/stm32l4xx_hal_msp.c \
-Core/Src/stm32l4xx_it.c \
-Core/Src/system_stm32l4xx.c \
-Core/Src/temp.c \
-Core/Src/tim.c \
-Core/Src/usart.c \
-Core/Src/volt.c \
-Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal.c \
-Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_can.c \
-Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_cortex.c \
-Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_dma.c \
-Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_dma_ex.c \
-Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_exti.c \
-Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_flash.c \
-Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_flash_ex.c \
-Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_flash_ramfunc.c \
-Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_gpio.c \
-Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_i2c.c \
-Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_i2c_ex.c \
-Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_pwr.c \
-Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_pwr_ex.c \
-Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_rcc.c \
-Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_rcc_ex.c \
-Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_spi.c \
-Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_spi_ex.c \
-Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_tim.c \
-Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_tim_ex.c \
-Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_uart.c \
-Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_uart_ex.c
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_adc.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_adc_ex.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_can.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma_ex.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ex.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ramfunc.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr_ex.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc_ex.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_spi.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_adc.c \
+$(shell find Src -type f -name "*.c") \
+lib/can/lib/primary/primary_network.c \
+lib/can/lib/bms/bms_network.c \
+lib/can/lib/primary/primary_watchdog.c \
+lib/can/lib/bms/bms_watchdog.c \
+$(shell find lib/micro-libs/blinky/src -type f -name "*.c") \
+$(shell find lib/micro-libs/cli -type f -name "*.c") \
+$(shell find lib/micro-libs/eeprom-config -type f -name "*.c") \
+$(shell find lib/micro-libs/m95256 -type f -name "*.c") \
+$(shell find lib/micro-libs/min-heap/src -type f -name "*.c") \
+$(shell find lib/micro-libs/ring-buffer/src -type f -name "*.c") \
+$(shell find lib/micro-libs/timer-utils -type f -name "*.c") \
+$(shell find lib/micro-libs/pwm -type f -name "*.c") \
+$(shell find lib/llist -type f -name "*.c")
 
 
 CPP_SOURCES = \
@@ -92,7 +78,7 @@ CPP_SOURCES = \
 
 # ASM sources
 ASM_SOURCES =  \
-startup_stm32l432xx.s
+startup_stm32f446xx.s
 
 
 
@@ -141,14 +127,20 @@ AS_DEFS =
 
 # C defines
 C_DEFS =  \
--DSTM32L432xx \
+-DSTM32F446xx \
+-DTEMP_ERROR_ENABLE \
+-DTEMP_GROUP_ERROR_ENABLE \
 -DUSE_HAL_DRIVER \
--Dbms_NETWORK_IMPLEMENTATION
+-DWATCHDOG_IGNORE \
+-Dbms_NETWORK_IMPLEMENTATION \
+-Dbms_WATCHDOG_IMPLEMENTATION \
+-Dprimary_NETWORK_IMPLEMENTATION \
+-Dprimary_WATCHDOG_IMPLEMENTATION
 
 
 # CXX defines
 CXX_DEFS =  \
--DSTM32L432xx \
+-DSTM32F446xx \
 -DUSE_HAL_DRIVER
 
 
@@ -157,24 +149,22 @@ AS_INCLUDES = \
 
 # C includes
 C_INCLUDES =  \
--I$(addprefix \
--I,$(shell \
--I-type \
--ICore/Inc \
--ICore/Inc/peripherals \
--ICore/Lib/can/lib/bms \
--ICore/Lib/can/lib/bms/ \
--ICore/Lib/micro-libs/blinky/inc \
--ICore/Lib/micro-libs/blinky/inc/ \
--ICore/Lib/micro-libs/m95256/ \
--ICore/Lib/micro-libs/timer-utils \
--ICore/Lib/micro-libs/timer-utils/ \
--IDrivers/CMSIS/Device/ST/STM32L4xx/Include \
+-IDrivers/CMSIS/Device/ST/STM32F4xx/Include \
 -IDrivers/CMSIS/Include \
--IDrivers/STM32L4xx_HAL_Driver/Inc \
--IDrivers/STM32L4xx_HAL_Driver/Inc/Legacy \
--Id)) \
--Ifind
+-IDrivers/STM32F4xx_HAL_Driver/Inc \
+-IDrivers/STM32F4xx_HAL_Driver/Inc/Legacy \
+$(addprefix -I,$(shell find Inc -type d)) \
+-Ilib/micro-libs/blinky/inc \
+-Ilib/micro-libs/cli \
+-Ilib/micro-libs/eeprom-config \
+-Ilib/micro-libs/m95256 \
+-Ilib/micro-libs/min-heap/inc \
+-Ilib/micro-libs/ring-buffer/inc \
+-Ilib/micro-libs/timer-utils \
+-Ilib/micro-libs/pwm \
+-Ilib/llist \
+$(addprefix -I,$(shell find lib/can/lib/primary -type d)) \
+$(addprefix -I,$(shell find lib/can/lib/bms -type d))
 
 
 
@@ -203,7 +193,7 @@ CXXFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 # LDFLAGS
 #######################################
 # link script
-LDSCRIPT = STM32L432KBUx_FLASH_shifted.ld
+LDSCRIPT = STM32F446RETx_FLASH.ld
 
 # libraries
 LIBS = -lc -lm -lnosys 
@@ -276,7 +266,7 @@ flash: $(BUILD_DIR)/$(TARGET).elf
 # erase
 #######################################
 erase: $(BUILD_DIR)/$(TARGET).elf
-	"/home/tonidotpy/.config/Code - OSS/User/globalStorage/bmd.stm32-for-vscode/@xpack-dev-tools/openocd/0.12.0-2.1/.content/bin/openocd" -f ./openocd.cfg -c "init; reset halt; stm32l4x mass_erase 0; exit"
+	"/home/tonidotpy/.config/Code - OSS/User/globalStorage/bmd.stm32-for-vscode/@xpack-dev-tools/openocd/0.12.0-2.1/.content/bin/openocd" -f ./openocd.cfg -c "init; reset halt; stm32f4x mass_erase 0; exit"
 
 #######################################
 # clean up

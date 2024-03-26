@@ -26,11 +26,12 @@
 #include "mainboard_config.h"
 //#include "super_fsm.h"
 #include "adc.h"
-#include "can_comm.h"
+#include "peripherals/can_comm.h"
 #include "cli_bms.h"
 #include "feedback.h"
 #include "measures.h"
 #include "pwm.h"
+#include "error/error.h"
 
 /* USER CODE END 0 */
 
@@ -848,7 +849,7 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* tim_baseHandle)
 /* USER CODE BEGIN 1 */
 void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim) {
     if (htim->Instance == HTIM_ERR.Instance) {
-        _error_handle_tim_oc_irq();
+        error_elapsed();
     } else if (htim->Instance == HTIM_BMS.Instance) {
         _bms_handle_tim_oc_irq(htim);
     } else if (htim->Instance == HTIM_MEASURES.Instance) {

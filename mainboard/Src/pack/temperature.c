@@ -10,13 +10,13 @@
 
 #include "pack/temperature.h"
 
-#include "bms_fsm.h"
-#include "error/error.h"
-#include "mainboard_config.h"
-
 #include <inttypes.h>
 #include <math.h>
 #include <string.h>
+
+#include "bms_fsm.h"
+#include "error/error-handler.h"
+#include "mainboard_config.h"
 
 cell_temperature cell_temps;
 
@@ -28,8 +28,7 @@ void temperature_init() {
 void temperature_check_errors() {
     float max_temp = CONVERT_VALUE_TO_TEMPERATURE(temperature_get_max());
 
-    error_toggle_check(max_temp > CELL_MAX_TEMPERATURE - 10, ERROR_CELL_HIGH_TEMPERATURE, 0);
-    error_toggle_check(max_temp > CELL_MAX_TEMPERATURE, ERROR_CELL_OVER_TEMPERATURE, 0);
+    ERROR_TOGGLE_IF(max_temp > CELL_MAX_TEMPERATURE, ERROR_CELL_OVER_TEMPERATURE, 0, HAL_GetTick());
 
     // Temperature sensors disconnected
 #if !defined(TEMP_GROUP_ERROR_ENABLE) && defined(TEMP_ERROR_ENABLE)

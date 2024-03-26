@@ -10,8 +10,8 @@
 #ifndef CAN_COMM_H
 #define CAN_COMM_H
 
-#include "bms/bms_network.h"
-#include "primary/primary_network.h"
+#include "bms_network.h"
+#include "primary_network.h"
 #include "can.h"
 
 #define CAN_1MBIT_PRE 3

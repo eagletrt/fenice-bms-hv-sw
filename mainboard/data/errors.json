@@ -1,0 +1,80 @@
+{
+    "errors": [
+        {
+            "name": "ERROR_CELL_UNDER_VOLTAGE",
+            "timeout": 50,
+            "instances": 1
+        },
+        {
+            "name": "ERROR_CELL_OVER_VOLTAGE",
+            "timeout": 50,
+            "instances": 1
+        },
+        {
+            "name": "ERROR_CELL_UNDER_TEMPERATURE",
+            "timeout": 100,
+            "instances": 1
+        },
+        {
+            "name": "ERROR_CELL_OVER_TEMPERATURE",
+            "timeout": 100,
+            "instances": 1
+        },
+        {
+            "name": "ERROR_OVER_CURRENT",
+            "timeout": 50,
+            "instances": 1
+        },
+        {
+            "name": "ERROR_CAN",
+            "timeout": 250,
+            "instances": 2
+        },
+        {
+            "name": "ERROR_INT_VOLTAGE_MISMATCH",
+            "timeout": 50,
+            "instances": 1
+        },
+        {
+            "name": "ERROR_CELLBOARD_COMM",
+            "timeout": 100,
+            "instances": 6
+        },
+        {
+            "name": "ERROR_CELLBOARD_INTERNAL",
+            "timeout": 100,
+            "instances": 6
+        },
+        {
+            "name": "ERROR_CONNECTOR_DISCONNECTED",
+            "timeout": 50,
+            "instances": 3
+        },
+        {
+            "name": "ERROR_FANS_DISCONNECTED",
+            "timeout": 100,
+            "instances": 1
+        },
+        {
+            "name": "ERROR_FEEDBACK",
+            "timeout": 100,
+            "instances": 20
+        },
+        {
+            "name": "ERROR_FEEDBACK_CIRCUITRY",
+            "timeout": 100,
+            "instances": 20
+        },
+        {
+            "name": "ERROR_EEPROM_COMM",
+            "timeout": 250,
+            "instances": 1
+        },
+        {
+            "name": "ERROR_EEPROM_WRITE",
+            "timeout": 250,
+            "instances": 1
+        }
+    ]
+}
+

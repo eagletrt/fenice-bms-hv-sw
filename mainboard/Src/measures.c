@@ -14,15 +14,17 @@
 
 #include "tim.h"
 #include "mainboard_config.h"
-#include "primary/primary_network.h"
-#include "can_comm.h"
+#include "primary_network.h"
+#include "peripherals/can_comm.h"
 #include "pack/internal_voltage.h"
 #include "pack/cell_voltage.h"
 #include "pack/temperature.h"
 #include "pack/current.h"
-#include "soc.h"
+#include "energy/soc.h"
 #include "watchdog.h"
 #include "fans_buzzer.h"
+#include "timer_utils.h"
+#include "error/error-handler.h"
 
 #define MEASURE_CHECK_DELAY 10000 // ms
 #define _MEASURE_CHECK_INTERVAL(interval) (((counter) % (interval)) == 0) // Check if a given interval is passed
@@ -85,7 +87,7 @@ void measures_check_flags() {
         // Check errors
         temperature_check_errors();
         // Check if fans are connected
-        error_toggle_check(HAL_GPIO_ReadPin(FANS_DETECT_GPIO_Port, FANS_DETECT_Pin) == GPIO_PIN_RESET, ERROR_FANS_DISCONNECTED, 0);
+        ERROR_TOGGLE_IF(HAL_GPIO_ReadPin(FANS_DETECT_GPIO_Port, FANS_DETECT_Pin) == GPIO_PIN_RESET, ERROR_FANS_DISCONNECTED, 0, HAL_GetTick());
     }
     // 200 ms interval
     if (_MEASURE_CHECK_INTERVAL(MEASURE_INTERVAL_200MS)) {
