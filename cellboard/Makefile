@@ -36,7 +36,6 @@ BUILD_DIR = build
 ######################################
 # C sources
 C_SOURCES =  \
-$(shell find Core/Src -type f -name "*.c") \
 Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_tim.c \
 Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_tim_ex.c \
 Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal.c \
@@ -60,9 +59,7 @@ Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_spi_ex.c \
 Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_uart.c \
 Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_uart_ex.c \
 Core/Lib/can/lib/bms/bms_network.c \
-Core/Lib/can/lib/bms/bms_watchdog.c \
-$(shell find Core/Lib/micro-libs/timer-utils -type f -name "*.c") \
-$(shell find Core/Lib/micro-libs/blinky/src -type f -name "*.c")
+Core/Lib/can/lib/bms/bms_watchdog.c
 
 # ASM sources
 ASM_SOURCES =  \
@@ -119,14 +116,12 @@ AS_INCLUDES =
 
 # C includes
 C_INCLUDES =  \
-$(addprefix -I,$(shell find Core/Inc -type d)) \
 -IDrivers/STM32L4xx_HAL_Driver/Inc \
 -IDrivers/STM32L4xx_HAL_Driver/Inc/Legacy \
 -IDrivers/CMSIS/Device/ST/STM32L4xx/Include \
 -IDrivers/CMSIS/Include \
 -ICore/Lib/micro-libs/blinky/inc \
 -ICore/Lib/micro-libs/timer-utils \
-$(addprefix -I,$(shell find Core/Lib/can/lib/bms -type d))
 
 
 # compile gcc flags

@@ -9,6 +9,10 @@
 
 #include "can_comms.h"
 
+#include <math.h>
+#include <string.h>
+#include <time.h>
+
 #include "bal_fsm.h"
 #include "can.h"
 #include "cellboard_config.h"
@@ -19,11 +23,10 @@
 #include "volt.h"
 #include "bms_network.h"
 
-#include <math.h>
-#include <string.h>
-
 #define RETRANSMISSION_MAX_ATTEMPTS 1
 uint8_t retransmission_attempts[3] = { 0 };
+
+// static time_t build_epoch;
 
 /**
  * @brief Wait until the CAN has at least one free mailbox
@@ -55,6 +58,10 @@ HAL_StatusTypeDef _can_send(CAN_HandleTypeDef *hcan, uint8_t *buffer, CAN_TxHead
 }
 
 void can_init_with_filter() {
+    // struct tm tm;
+    // if (strptime(__DATE__" "__TIME__, "%b %d %Y %H:%M:%S", &tm) != NULL)
+    //     build_epoch = mktime(&tm);
+
     /* HAL considers IdLow and IdHigh not as just the ID of the can message but
         as the combination of: 
         STDID + RTR + IDE + 4 most significant bits of EXTID
@@ -232,7 +239,7 @@ void can_send(uint16_t id) {
 
         conv_version.canlib_build_time = CANLIB_BUILD_TIME;
         conv_version.cellboard_id = cellboard_index;
-        conv_version.component_version = 1;
+        conv_version.component_version = 1; // build_epoch
 
         bms_cellboard_version_conversion_to_raw_struct(&raw_version, &conv_version);
 
@@ -287,7 +294,17 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
                     break;
             }
         } else if (rx_header.StdId == BMS_JMP_TO_BLT_FRAME_ID && fsm_get_state() == STATE_OFF) {
-            HAL_NVIC_SystemReset();
+            bms_jmp_to_blt_t raw_jmp;
+            bms_jmp_to_blt_converted_t conv_jmp;
+
+            if (bms_jmp_to_blt_unpack(&raw_jmp, rx_data, BMS_JMP_TO_BLT_BYTE_SIZE) < 0) {
+                ERROR_SET(ERROR_CAN);
+                return;
+            }
+            bms_jmp_to_blt_raw_to_conversion_struct(&conv_jmp, &raw_jmp);
+
+            if (conv_jmp.cellboard_id == cellboard_index)
+                HAL_NVIC_SystemReset();
         }
     }
 }

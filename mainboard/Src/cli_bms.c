@@ -516,9 +516,10 @@ void _cli_soc(uint16_t argc, char **argv, char *out) {
 
 void _cli_errors(uint16_t argc, char **argv, char *out) {
     *out = 0;
-    uint16_t count = error_get_running();
+    size_t running = error_get_running();
+    size_t expired  = error_get_expired();
 
-    sprintf(out, "total %u\r\n", count);
+    sprintf(out, "Running: %u\r\nExpired: %u\r\n", running, expired);
 
     // TODO: Print each error informations
     /*

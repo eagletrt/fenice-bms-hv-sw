@@ -380,7 +380,7 @@ void init_to_idle(state_data_t *data) {
   bms_set_led_blinker();
 
   // Send info via CAN
-  can_car_send(PRIMARY_TS_STATUS_FRAME_ID);
+  can_car_send(PRIMARY_HV_STATUS_FRAME_ID);
 
   // Set default pack status
   pack_set_default_off(0);
@@ -422,26 +422,26 @@ void close_airn(state_data_t *data) {
   /* Your Code Here */
 
   // Reset debug feedbacks
-  conv_debug.debug_signals_feedback_implausibility_detected = 0;
-  conv_debug.debug_signals_feedback_imd_cockpit = 0;
-  conv_debug.debug_signals_feedback_tsal_green_fault_latched = 0;
-  conv_debug.debug_signals_feedback_bms_cockpit = 0;
-  conv_debug.debug_signals_feedback_ext_latched = 0;
-  conv_debug.debug_signals_feedback_tsal_green = 0;
-  conv_debug.debug_signals_feedback_ts_over_60v_status = 0;
-  conv_debug.debug_signals_feedback_airn_status = 0;
-  conv_debug.debug_signals_feedback_airp_status = 0;
-  conv_debug.debug_signals_feedback_airp_gate = 0;
-  conv_debug.debug_signals_feedback_airn_gate = 0;
-  conv_debug.debug_signals_feedback_precharge_status = 0;
-  conv_debug.debug_signals_feedback_tsp_over_60v_status = 0;
-  conv_debug.debug_signals_feedback_imd_fault = 0;
-  conv_debug.debug_signals_feedback_check_mux = 0;
-  conv_debug.debug_signals_feedback_sd_end = 0;
-  conv_debug.debug_signals_feedback_sd_out = 0;
-  conv_debug.debug_signals_feedback_sd_in = 0;
-  conv_debug.debug_signals_feedback_sd_bms = 0;
-  conv_debug.debug_signals_feedback_sd_imd = 0;
+  conv_debug.feedbacks_implausibility_detected = 0;
+  conv_debug.feedbacks_imd_cockpit = 0;
+  conv_debug.feedbacks_tsal_green_fault_latched = 0;
+  conv_debug.feedbacks_bms_cockpit = 0;
+  conv_debug.feedbacks_ext_latched = 0;
+  conv_debug.feedbacks_tsal_green = 0;
+  conv_debug.feedbacks_ts_over_60v_status = 0;
+  conv_debug.feedbacks_airn_status = 0;
+  conv_debug.feedbacks_airp_status = 0;
+  conv_debug.feedbacks_airp_gate = 0;
+  conv_debug.feedbacks_airn_gate = 0;
+  conv_debug.feedbacks_precharge_status = 0;
+  conv_debug.feedbacks_tsp_over_60v_status = 0;
+  conv_debug.feedbacks_imd_fault = 0;
+  conv_debug.feedbacks_check_mux = 0;
+  conv_debug.feedbacks_sd_end = 0;
+  conv_debug.feedbacks_sd_out = 0;
+  conv_debug.feedbacks_sd_in = 0;
+  conv_debug.feedbacks_sd_bms = 0;
+  conv_debug.feedbacks_sd_imd = 0;
  
   // Set blinking led pattern
   bms_set_led_blinker();
@@ -565,7 +565,7 @@ bms_state_t run_state(bms_state_t cur_state, state_data_t *data) {
   if (transition) {
     // Send info via CAN
     can_car_send(PRIMARY_HV_FEEDBACK_STATUS_FRAME_ID);
-    can_car_send(PRIMARY_TS_STATUS_FRAME_ID);
+    can_car_send(PRIMARY_HV_STATUS_FRAME_ID);
 
     transition(data);
   }

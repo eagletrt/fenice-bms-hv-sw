@@ -182,7 +182,7 @@ bool feedback_is_ok(feedback_t mask, feedback_t value) {
                 error_reset(ERROR_FEEDBACK, i);
             else {
                 error_set(ERROR_FEEDBACK, i, HAL_GetTick());
-                conv_debug.debug_signals_feedback_check_mux = 1;
+                conv_debug.feedbacks_check_mux = 1;
                 return false;
             }
             continue;
@@ -205,7 +205,7 @@ bool feedback_is_ok(feedback_t mask, feedback_t value) {
                 error_reset(ERROR_FEEDBACK, i);
             else {
                 error_set(ERROR_FEEDBACK, i, HAL_GetTick());
-                conv_debug.debug_signals_feedback_check_mux = 1;
+                conv_debug.feedbacks_check_mux = 1;
                 return false;
             }
             continue;
@@ -243,64 +243,64 @@ bool feedback_is_ok(feedback_t mask, feedback_t value) {
             if (fsm_get_state() == STATE_TS_ON) {
                 switch (i) {
                     case FEEDBACK_IMPLAUSIBILITY_DETECTED:
-                        conv_debug.debug_signals_feedback_implausibility_detected = 1;
+                        conv_debug.feedbacks_implausibility_detected = 1;
                         break;
                     case FEEDBACK_IMD_COCKPIT:
-                        conv_debug.debug_signals_feedback_imd_cockpit = 1;
+                        conv_debug.feedbacks_imd_cockpit = 1;
                         break;
                     case FEEDBACK_TSAL_GREEN_FAULT_LATCHED:
-                        conv_debug.debug_signals_feedback_tsal_green_fault_latched = 1;
+                        conv_debug.feedbacks_tsal_green_fault_latched = 1;
                         break;
                     case FEEDBACK_BMS_COCKPIT:
-                        conv_debug.debug_signals_feedback_bms_cockpit = 1;
+                        conv_debug.feedbacks_bms_cockpit = 1;
                         break;
                     case FEEDBACK_EXT_LATCHED:
-                        conv_debug.debug_signals_feedback_ext_latched = 1;
+                        conv_debug.feedbacks_ext_latched = 1;
                         break;
                     case FEEDBACK_TSAL_GREEN:
-                        conv_debug.debug_signals_feedback_tsal_green = 1;
+                        conv_debug.feedbacks_tsal_green = 1;
                         break;
                     case FEEDBACK_TS_OVER_60V_STATUS:
-                        conv_debug.debug_signals_feedback_ts_over_60v_status = 1;
+                        conv_debug.feedbacks_ts_over_60v_status = 1;
                         break;
                     case FEEDBACK_AIRN_STATUS:
-                        conv_debug.debug_signals_feedback_airn_status = 1;
+                        conv_debug.feedbacks_airn_status = 1;
                         break;
                     case FEEDBACK_AIRP_STATUS:
-                        conv_debug.debug_signals_feedback_airp_status = 1;
+                        conv_debug.feedbacks_airp_status = 1;
                         break;
                     case FEEDBACK_AIRP_GATE:
-                        conv_debug.debug_signals_feedback_airp_gate = 1;
+                        conv_debug.feedbacks_airp_gate = 1;
                         break;
                     case FEEDBACK_AIRN_GATE:
-                        conv_debug.debug_signals_feedback_airn_gate = 1;
+                        conv_debug.feedbacks_airn_gate = 1;
                         break;
                     case FEEDBACK_PRECHARGE_STATUS:
-                        conv_debug.debug_signals_feedback_precharge_status = 1;
+                        conv_debug.feedbacks_precharge_status = 1;
                         break;
                     case FEEDBACK_TSP_OVER_60V_STATUS:
-                        conv_debug.debug_signals_feedback_tsp_over_60v_status = 1;
+                        conv_debug.feedbacks_tsp_over_60v_status = 1;
                         break;
                     case FEEDBACK_IMD_FAULT:
-                        conv_debug.debug_signals_feedback_imd_fault = 1;
+                        conv_debug.feedbacks_imd_fault = 1;
                         break;
                     case FEEDBACK_CHECK_MUX:
-                        conv_debug.debug_signals_feedback_check_mux = 1;
+                        conv_debug.feedbacks_check_mux = 1;
                         break;
                     case FEEDBACK_SD_END:
-                        conv_debug.debug_signals_feedback_sd_end = 1;
+                        conv_debug.feedbacks_sd_end = 1;
                         break;
                     case FEEDBACK_SD_OUT:
-                        conv_debug.debug_signals_feedback_sd_out = 1;
+                        conv_debug.feedbacks_sd_out = 1;
                         break;
                     case FEEDBACK_SD_IN:
-                        conv_debug.debug_signals_feedback_sd_in = 1;
+                        conv_debug.feedbacks_sd_in = 1;
                         break;
                     case FEEDBACK_SD_BMS:
-                        conv_debug.debug_signals_feedback_sd_bms = 1;
+                        conv_debug.feedbacks_sd_bms = 1;
                         break;
                     case FEEDBACK_SD_IMD:
-                        conv_debug.debug_signals_feedback_sd_imd = 1;
+                        conv_debug.feedbacks_sd_imd = 1;
                         break;
 
                     default:

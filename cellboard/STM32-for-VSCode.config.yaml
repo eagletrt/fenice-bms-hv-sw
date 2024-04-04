@@ -69,12 +69,12 @@ excludes:
 # Include directories (directories containing .h or .hpp files)
 # If a CubeMX makefile is present it will automatically include the include directories from that makefile.
 includeDirectories: 
-  - Inc/**
   - Core/Inc/**
-  - Core/Lib/micro-libs/m95256/
-  - Core/Lib/micro-libs/blinky/inc/
-  - Core/Lib/micro-libs/timer-utils/
-  - Core/Lib/can/lib/bms/
+  - Core/Lib/can/lib/bms/**
+  - Core/Lib/micro-libs/m95256/**
+  - Core/Lib/micro-libs/blinky/inc/**
+  - Core/Lib/micro-libs/timer-utils/**
+  
 
 
 # Files that should be included in the compilation.
@@ -88,7 +88,8 @@ sourceFiles:
   - Core/Lib/micro-libs/m95256/m95256.c
   - Core/Lib/micro-libs/blinky/src/blinky.c
   - Core/Lib/micro-libs/timer-utils/timer_utils.c
-  - Core/Lib/can/lib/bms/*.c
+  - Core/Lib/can/lib/bms/bms_network.c
+  - Core/Lib/can/lib/bms/bms_watchdog.c
 
 
 # When no makefile is present it will show a warning pop-up.

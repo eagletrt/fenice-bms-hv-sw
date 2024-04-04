@@ -29,7 +29,7 @@ bool cell_watchdog_timed_out = false;
 
 /** @brief Primary IDs monitored by the watchdog */
 const uint16_t watchdog_primary_ids[PRIMARY_WATCHDOG_IDS_SIZE] = {
-    PRIMARY_CAR_STATUS_FRAME_ID,
+    PRIMARY_ECU_STATUS_FRAME_ID,
     // TODO: Add handcart watchdog only when using handcart
     // PRIMARY_HANDCART_STATUS_FRAME_ID
 };

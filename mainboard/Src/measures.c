@@ -53,14 +53,15 @@ void measures_check_flags() {
     
     // 10 ms interval
     if (_MEASURE_CHECK_INTERVAL(MEASURE_INTERVAL_10MS)) {
-        can_car_send(PRIMARY_TS_STATUS_FRAME_ID);
+        can_car_send(PRIMARY_HV_STATUS_FRAME_ID);
     }
     // 50 ms interval
     if (_MEASURE_CHECK_INTERVAL(MEASURE_INTERVAL_50MS)) {
         // Send info via CAN
         can_car_send(PRIMARY_HV_CURRENT_FRAME_ID);
-        can_car_send(PRIMARY_HV_VOLTAGE_FRAME_ID);
-        can_car_send(PRIMARY_HV_CELL_VOLTAGE_FRAME_ID);
+        can_car_send(PRIMARY_HV_POWER_FRAME_ID);
+        can_car_send(PRIMARY_HV_CELLS_VOLTAGE_FRAME_ID);
+        can_car_send(PRIMARY_HV_CELLS_VOLTAGE_STATS_FRAME_ID);
         can_car_send(PRIMARY_HV_ERRORS_FRAME_ID);
         can_car_send(PRIMARY_HV_FEEDBACK_STATUS_FRAME_ID);
 
@@ -77,9 +78,10 @@ void measures_check_flags() {
     // 100 ms interval
     if (_MEASURE_CHECK_INTERVAL(MEASURE_INTERVAL_100MS)) {
         // Send info via CANS
-        can_car_send(PRIMARY_HV_TEMP_FRAME_ID);
+        can_car_send(PRIMARY_HV_CELLS_TEMP_FRAME_ID);
+        can_car_send(PRIMARY_HV_CELLS_TEMP_STATS_FRAME_ID);
         can_car_send(PRIMARY_HV_IMD_STATUS_FRAME_ID);
-        can_car_send(PRIMARY_HV_CELL_BALANCING_STATUS_FRAME_ID);
+        can_car_send(PRIMARY_HV_BALANCING_STATUS_FRAME_ID);
         can_car_send(PRIMARY_HV_FEEDBACK_TS_VOLTAGE_FRAME_ID);
         can_car_send(PRIMARY_HV_FEEDBACK_SD_VOLTAGE_FRAME_ID);
         can_car_send(PRIMARY_HV_FEEDBACK_MISC_VOLTAGE_FRAME_ID);
@@ -97,9 +99,9 @@ void measures_check_flags() {
     // 500 ms interval
     if (_MEASURE_CHECK_INTERVAL(MEASURE_INTERVAL_500MS)) {
         // Send info via CAN
-        can_car_send(PRIMARY_HV_CAN_FORWARD_FRAME_ID);
-        can_car_send(PRIMARY_MAINBOARD_VERSION_FRAME_ID);
-        can_car_send(PRIMARY_HV_FANS_OVERRIDE_STATUS_FRAME_ID);
+        // can_car_send(PRIMARY_HV_CAN_FORWARD_FRAME_ID);
+        can_car_send(PRIMARY_HV_MAINBOARD_VERSION_FRAME_ID);
+        can_car_send(PRIMARY_HV_FANS_STATUS_FRAME_ID);
         
         // Check cellboards connection errors
         if (HAL_GetTick() - timestamp >= MEASURE_CHECK_DELAY)

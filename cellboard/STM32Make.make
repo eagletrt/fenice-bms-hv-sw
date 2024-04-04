@@ -37,7 +37,6 @@ BUILD_DIR = build
 # C sources
 C_SOURCES =  \
 Core/Lib/can/lib/bms/bms_network.c \
-Core/Lib/can/lib/bms/bms_utils_c.c \
 Core/Lib/can/lib/bms/bms_watchdog.c \
 Core/Lib/micro-libs/blinky/src/blinky.c \
 Core/Lib/micro-libs/m95256/m95256.c \
@@ -157,24 +156,16 @@ AS_INCLUDES = \
 
 # C includes
 C_INCLUDES =  \
--I$(addprefix \
--I,$(shell \
--I-type \
 -ICore/Inc \
 -ICore/Inc/peripherals \
 -ICore/Lib/can/lib/bms \
--ICore/Lib/can/lib/bms/ \
 -ICore/Lib/micro-libs/blinky/inc \
--ICore/Lib/micro-libs/blinky/inc/ \
--ICore/Lib/micro-libs/m95256/ \
+-ICore/Lib/micro-libs/m95256 \
 -ICore/Lib/micro-libs/timer-utils \
--ICore/Lib/micro-libs/timer-utils/ \
 -IDrivers/CMSIS/Device/ST/STM32L4xx/Include \
 -IDrivers/CMSIS/Include \
 -IDrivers/STM32L4xx_HAL_Driver/Inc \
--IDrivers/STM32L4xx_HAL_Driver/Inc/Legacy \
--Id)) \
--Ifind
+-IDrivers/STM32L4xx_HAL_Driver/Inc/Legacy
 
 
 
