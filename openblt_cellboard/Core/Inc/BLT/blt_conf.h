@@ -188,6 +188,8 @@
 /** \brief Enable/disable the backdoor override hook functions. */
 #define BOOT_BACKDOOR_HOOKS_ENABLE      (0)
 
+/** \brief Backdoor timeout before starting user program */
+#define BOOT_BACKDOOR_ENTRY_TIMEOUT_MS (1000)
 
 /****************************************************************************************
 *   N O N - V O L A T I L E   M E M O R Y   D R I V E R   C O N F I G U R A T I O N

@@ -60,7 +60,8 @@ void measures_check_flags() {
         // Send info via CAN
         can_car_send(PRIMARY_HV_CURRENT_FRAME_ID);
         can_car_send(PRIMARY_HV_POWER_FRAME_ID);
-        can_car_send(PRIMARY_HV_CELLS_VOLTAGE_FRAME_ID);
+        // can_car_send(PRIMARY_HV_SOC_FRAME_ID);
+        can_car_send(PRIMARY_HV_TOTAL_VOLTAGE_FRAME_ID);
         can_car_send(PRIMARY_HV_CELLS_VOLTAGE_STATS_FRAME_ID);
         can_car_send(PRIMARY_HV_ERRORS_FRAME_ID);
         can_car_send(PRIMARY_HV_FEEDBACK_STATUS_FRAME_ID);
@@ -78,13 +79,13 @@ void measures_check_flags() {
     // 100 ms interval
     if (_MEASURE_CHECK_INTERVAL(MEASURE_INTERVAL_100MS)) {
         // Send info via CANS
-        can_car_send(PRIMARY_HV_CELLS_TEMP_FRAME_ID);
         can_car_send(PRIMARY_HV_CELLS_TEMP_STATS_FRAME_ID);
         can_car_send(PRIMARY_HV_IMD_STATUS_FRAME_ID);
         can_car_send(PRIMARY_HV_BALANCING_STATUS_FRAME_ID);
         can_car_send(PRIMARY_HV_FEEDBACK_TS_VOLTAGE_FRAME_ID);
         can_car_send(PRIMARY_HV_FEEDBACK_SD_VOLTAGE_FRAME_ID);
         can_car_send(PRIMARY_HV_FEEDBACK_MISC_VOLTAGE_FRAME_ID);
+        // can_car_send(PRIMARY_HV_ENERGY_FRAME_ID);
 
         // Check errors
         temperature_check_errors();
