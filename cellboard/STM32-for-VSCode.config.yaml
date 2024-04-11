@@ -18,7 +18,7 @@ cpu: -mcpu=cortex-m4
 fpu: -mfpu=fpv4-sp-d16
 floatAbi: -mfloat-abi=hard
 ldscript: STM32L432KBUx_FLASH_shifted.ld # linker script
-#ldscript: STM32L432KBUx_FLASH.ld # linker script
+# ldscript: STM32L432KBUx_FLASH.ld # linker script
 
 # Compiler definitions. The -D prefix for the compiler will be automatically added.
 cDefinitions: 
