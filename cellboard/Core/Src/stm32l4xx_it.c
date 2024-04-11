@@ -91,6 +91,7 @@ void HardFault_Handler(void)
 {
   /* USER CODE BEGIN HardFault_IRQn 0 */
 
+  HAL_UART_Transmit(&huart1, (uint8_t *)"Bug\r\n", 5, 10);
   HAL_NVIC_SystemReset();
   
   /* USER CODE END HardFault_IRQn 0 */

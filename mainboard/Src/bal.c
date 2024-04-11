@@ -52,8 +52,8 @@ void bal_update_status(uint8_t cellboard, bool status) {
     if (cellboard >= CELLBOARD_COUNT)
         return;
     
-    bal_status.status &= ~(1 << cellboard);
-    bal_status.status |= (1 << cellboard) & status;
+    bal_status.status &= ~(1U << cellboard);
+    bal_status.status |= (1U << cellboard) * status;
 }
 void bal_stop(void) {
     bal_change_status_request(false, BAL_THRESHOLD_DEFAULT);

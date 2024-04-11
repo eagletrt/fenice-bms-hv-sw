@@ -115,7 +115,8 @@ void can_send(uint16_t id) {
         conv_state.cellboard_id = cellboard_index;
         conv_state.balancing_status = BMS_BOARD_STATUS_BALANCING_STATUS_OFF_CHOICE;
 
-        if (fsm_get_state() == STATE_DISCHARGE)
+        bal_state_t fsm_state = fsm_get_state();
+        if (fsm_state == STATE_DISCHARGE || fsm_state == STATE_COOLDOWN)
             conv_state.balancing_status = BMS_BOARD_STATUS_BALANCING_STATUS_DISCHARGE_CHOICE;
         else
             conv_state.balancing_status = BMS_BOARD_STATUS_BALANCING_STATUS_OFF_CHOICE;
