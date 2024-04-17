@@ -15,6 +15,7 @@ GPIO_PinState pack_get_airn_off() {
     return HAL_GPIO_ReadPin(AIRN_OFF_GPIO_Port, AIRN_OFF_Pin);
 }
 void pack_set_airn_off(GPIO_PinState value) {
+    
     HAL_GPIO_WritePin(AIRN_OFF_GPIO_Port, AIRN_OFF_Pin, value);
 }
 
