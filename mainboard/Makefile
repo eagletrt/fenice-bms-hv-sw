@@ -36,31 +36,73 @@ BUILD_DIR = build
 ######################################
 # C sources
 C_SOURCES =  \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_adc.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_adc_ex.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_adc.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc_ex.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_can.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma_ex.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ex.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ramfunc.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma_ex.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr_ex.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_can.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc_ex.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_spi.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c \
-lib/can/lib/primary/primary_network.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_adc.c \
+Src/adc.c \
+Src/bal.c \
+Src/bms_fsm.c \
+Src/bootloader.c \
+Src/can.c \
+Src/cli_bms.c \
+Src/config.c \
+Src/dma.c \
+Src/energy/energy.c \
+Src/energy/soc.c \
+Src/error/error-handler.c \
+Src/error/error.c \
+Src/fans_buzzer.c \
+Src/feedback.c \
+Src/gpio.c \
+Src/imd.c \
+Src/main.c \
+Src/measures.c \
+Src/pack/cell_voltage.c \
+Src/pack/current.c \
+Src/pack/internal_voltage.c \
+Src/pack/pack.c \
+Src/pack/temperature.c \
+Src/peripherals/adc124s021.c \
+Src/peripherals/can_comm.c \
+Src/peripherals/max22530.c \
+Src/spi.c \
+Src/stm32f4xx_hal_msp.c \
+Src/stm32f4xx_it.c \
+Src/system_stm32f4xx.c \
+Src/tim.c \
+Src/usart.c \
+Src/watchdog.c \
 lib/can/lib/bms/bms_network.c \
+lib/can/lib/bms/bms_watchdog.c \
+lib/can/lib/primary/primary_network.c \
 lib/can/lib/primary/primary_watchdog.c \
-lib/can/lib/bms/bms_watchdog.c
+lib/llist/llist.c \
+lib/micro-libs/blinky/src/blinky.c \
+lib/micro-libs/cli/cli.c \
+lib/micro-libs/eeprom-config/eeprom-config.c \
+lib/micro-libs/m95256/m95256.c \
+lib/micro-libs/min-heap/src/min-heap.c \
+lib/micro-libs/pwm/pwm.c \
+lib/micro-libs/ring-buffer/src/ring-buffer.c \
+lib/micro-libs/timer-utils/timer_utils.c
 
 # ASM sources
 ASM_SOURCES =  \
@@ -71,14 +113,19 @@ startup_stm32f446xx.s
 # binaries
 #######################################
 PREFIX = arm-none-eabi-
+POSTFIX ="
 # The gcc compiler bin path can be either defined in make command via GCC_PATH variable (> make GCC_PATH=xxx)
 # either it can be added to the PATH environment variable.
+GCC_PATH="/opt/homebrew/bin
+
 ifdef GCC_PATH
-CC = $(GCC_PATH)/$(PREFIX)gcc
-AS = $(GCC_PATH)/$(PREFIX)gcc -x assembler-with-cpp
-CP = $(GCC_PATH)/$(PREFIX)objcopy
-SZ = $(GCC_PATH)/$(PREFIX)size
+CXX = $(GCC_PATH)/$(PREFIX)g++$(POSTFIX)
+CC = $(GCC_PATH)/$(PREFIX)gcc$(POSTFIX)
+AS = $(GCC_PATH)/$(PREFIX)gcc$(POSTFIX) -x assembler-with-cpp
+CP = $(GCC_PATH)/$(PREFIX)objcopy$(POSTFIX)
+SZ = $(GCC_PATH)/$(PREFIX)size$(POSTFIX)
 else
+CXX = $(PREFIX)g++
 CC = $(PREFIX)gcc
 AS = $(PREFIX)gcc -x assembler-with-cpp
 CP = $(PREFIX)objcopy
@@ -86,7 +133,6 @@ SZ = $(PREFIX)size
 endif
 HEX = $(CP) -O ihex
 BIN = $(CP) -O binary -S
-SHIFTED_ADDR = $(shell cat STM32F446RETx_FLASH_shifted.ld| grep "FLASH (rx)      : ORIGIN = " | awk  '{print $6}' | sed 's/.$//')
  
 #######################################
 # CFLAGS
@@ -109,8 +155,15 @@ AS_DEFS =
 
 # C defines
 C_DEFS =  \
+-DSTM32F446xx \
+-DTEMP_ERROR_ENABLE \
+-DTEMP_GROUP_ERROR_ENABLE \
 -DUSE_HAL_DRIVER \
--DSTM32F446xx
+-DWATCHDOG_IGNORE \
+-Dbms_NETWORK_IMPLEMENTATION \
+-Dbms_WATCHDOG_IMPLEMENTATION \
+-Dprimary_NETWORK_IMPLEMENTATION \
+-Dprimary_WATCHDOG_IMPLEMENTATION
 
 
 # AS includes
@@ -118,18 +171,26 @@ AS_INCLUDES =
 
 # C includes
 C_INCLUDES =  \
--IDrivers/STM32F4xx_HAL_Driver/Inc \
--IDrivers/STM32F4xx_HAL_Driver/Inc/Legacy \
 -IDrivers/CMSIS/Device/ST/STM32F4xx/Include \
 -IDrivers/CMSIS/Include \
+-IDrivers/STM32F4xx_HAL_Driver/Inc \
+-IDrivers/STM32F4xx_HAL_Driver/Inc/Legacy \
+-IInc \
+-IInc/energy \
+-IInc/error \
+-IInc/pack \
+-IInc/peripherals \
+-Ilib/can/lib/bms \
+-Ilib/can/lib/primary \
+-Ilib/llist \
 -Ilib/micro-libs/blinky/inc \
 -Ilib/micro-libs/cli \
 -Ilib/micro-libs/eeprom-config \
 -Ilib/micro-libs/m95256 \
 -Ilib/micro-libs/min-heap/inc \
+-Ilib/micro-libs/pwm \
 -Ilib/micro-libs/ring-buffer/inc \
--Ilib/micro-libs/timer-utils \
--Ilib/micro-libs/pwm
+-Ilib/micro-libs/timer-utils
 
 # compile gcc flags
 ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
@@ -165,45 +226,49 @@ all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET
 #######################################
 # build the application
 #######################################
-# list of objects
-OBJECTS = $(addprefix $(BUILD_DIR)/,$(notdir $(C_SOURCES:.c=.o)))
+# list of cpp program objects
+OBJECTS = $(addprefix $(BUILD_DIR)/,$(notdir $(CPP_SOURCES:.cpp=.o)))
+vpath %.cpp $(sort $(dir $(CPP_SOURCES)))
+
+# list of C objects
+OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(C_SOURCES:.c=.o)))
 vpath %.c $(sort $(dir $(C_SOURCES)))
+
 # list of ASM program objects
-OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(ASM_SOURCES:.s=.o)))
+UPPER_CASE_ASM_SOURCES = $(filter %.S,$(ASM_SOURCES))
+LOWER_CASE_ASM_SOURCES = $(filter %.s,$(ASM_SOURCES))
+
+OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(UPPER_CASE_ASM_SOURCES:.S=.o)))
+OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(LOWER_CASE_ASM_SOURCES:.s=.o)))
 vpath %.s $(sort $(dir $(ASM_SOURCES)))
 
-$(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR) 
+$(BUILD_DIR)/%.o: %.cpp STM32Make.make | $(BUILD_DIR) 
+	$(CXX) -c $(CXXFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.cpp=.lst)) $< -o $@
+
+$(BUILD_DIR)/%.o: %.cxx STM32Make.make | $(BUILD_DIR) 
+	$(CXX) -c $(CXXFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.cxx=.lst)) $< -o $@
+
+$(BUILD_DIR)/%.o: %.c STM32Make.make | $(BUILD_DIR) 
 	$(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
 
-$(BUILD_DIR)/%.o: %.s Makefile | $(BUILD_DIR)
+$(BUILD_DIR)/%.o: %.s STM32Make.make | $(BUILD_DIR)
 	$(AS) -c $(CFLAGS) $< -o $@
 
-$(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) Makefile
+$(BUILD_DIR)/%.o: %.S STM32Make.make | $(BUILD_DIR)
+	$(AS) -c $(CFLAGS) $< -o $@
+
+$(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) STM32Make.make
 	$(CC) $(OBJECTS) $(LDFLAGS) -o $@
 	$(SZ) $@
 
 $(BUILD_DIR)/%.hex: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
 	$(HEX) $< $@
-	
+
 $(BUILD_DIR)/%.bin: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
-	$(BIN) $< $@	
+	$(BIN) $< $@
 
-#shifted
-$(BUILD_DIR)/$(TARGET)_shifted.elf: $(OBJECTS) Makefile
-	$(CC) $(OBJECTS) $(LDFLAGS_SHIFTED) -o $@
-	$(SZ) $@
-
-$(BUILD_DIR)/%_shifted.hex: $(BUILD_DIR)/%_shifted.elf | $(BUILD_DIR)
-	$(HEX) $< $@
-	
-$(BUILD_DIR)/%_shifted.bin: $(BUILD_DIR)/%_shifted.elf | $(BUILD_DIR)
-	$(BIN) $< $@	
-
-$(BUILD_DIR)/%.srec: $(BUILD_DIR)/%_shifted.bin | $(BUILD_DIR)
-	bin2srec -a SHIFTED_ADDR -i $(BUILD_DIR)/%_shifted.bin -o $@
-	
 $(BUILD_DIR):
-	mkdir $@		
+	mkdir $@
 
 #######################################
 # clean up

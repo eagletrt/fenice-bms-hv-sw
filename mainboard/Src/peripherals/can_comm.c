@@ -41,6 +41,8 @@ bool can_forward;
 uint8_t flash_cellboard_id;
 float debug_signal;
 
+bool lv_discharged = false;
+
 primary_hv_debug_signals_converted_t conv_debug;
 
 static time_t build_epoch;
@@ -65,6 +67,11 @@ HAL_StatusTypeDef _can_wait(CAN_HandleTypeDef * hcan, uint32_t timeout) {
 bool can_is_forwarding() {
     return can_forward;
 }
+
+bool can_is_lv_discharged() {
+    return lv_discharged;
+}
+
 void can_bms_init() {
     struct tm tm;
     if (strptime(__DATE__" "__TIME__, "%b %d %Y %H:%M:%S", &tm) != NULL)
@@ -1087,6 +1094,25 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
             }
             else if ((state == STATE_INIT || state == STATE_IDLE || state == STATE_FATAL_ERROR) && !bal_is_balancing())
                 HAL_NVIC_SystemReset();
+        }
+        else if (rx_header.StdId == PRIMARY_LV_FEEDBACK_GPIO_EXTENDER_FRAME_ID ) {
+            primary_lv_feedback_gpio_extender_t raw_gpio_ext;
+            primary_lv_feedback_gpio_extender_converted_t conv_gpio_ext;
+
+            if(primary_lv_feedback_gpio_extender_unpack(
+                        &raw_gpio_ext, 
+                        rx_data, 
+                        PRIMARY_LV_FEEDBACK_GPIO_EXTENDER_BYTE_SIZE) < 0) {
+                
+                error_set(ERROR_CAN, 1, HAL_GetTick());
+                return;
+            }
+
+            primary_lv_feedback_gpio_extender_raw_to_conversion_struct(
+                &conv_gpio_ext,
+                &raw_gpio_ext);
+
+            lv_discharged = conv_gpio_ext.feedback_discharge;
         }
     }
 }

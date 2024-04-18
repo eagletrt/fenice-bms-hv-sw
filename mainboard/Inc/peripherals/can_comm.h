@@ -37,6 +37,14 @@ extern primary_hv_debug_signals_converted_t conv_debug;
  */
 bool can_is_forwarding();
 
+/**
+  * @brief Check if the lv bms has done the discharge
+  *
+  * @return true If the lv bms has done the discharge
+  * @return false Otherwise
+  */
+bool can_is_lv_discharged();
+
 /** @brief Initialize external CAN peripheral */
 void can_car_init();
 /** @brief Initialize internal CAN peripheral */
