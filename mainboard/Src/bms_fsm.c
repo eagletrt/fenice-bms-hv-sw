@@ -235,7 +235,7 @@ bms_state_t do_wait_airn_close(state_data_t *data) {
     next_state = STATE_FATAL_ERROR;
   else if (_requested_ts_off() || airn_timeout)
     next_state = STATE_IDLE;
-  else if (feedback_is_ok(FEEDBACK_AIRN_CHECK_MASK, FEEDBACK_AIRN_CHECK_HIGH) && can_is_lv_discharged())
+  else if (feedback_is_ok(FEEDBACK_AIRN_CHECK_MASK, FEEDBACK_AIRN_CHECK_HIGH) && (can_is_lv_discharged() || !is_handcart_connected ))
     next_state = STATE_WAIT_TS_PRECHARGE;
 
   switch (next_state) {
