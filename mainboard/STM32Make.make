@@ -96,7 +96,7 @@ lib/can/lib/primary/primary_network.c \
 lib/can/lib/primary/primary_watchdog.c \
 lib/llist/llist.c \
 lib/micro-libs/blinky/src/blinky.c \
-lib/micro-libs/cli/cli.c \
+lib/micro-libs/cli-legacy/cli.c \
 lib/micro-libs/eeprom-config/eeprom-config.c \
 lib/micro-libs/m95256/m95256.c \
 lib/micro-libs/min-heap/src/min-heap.c \
@@ -195,6 +195,7 @@ C_INCLUDES =  \
 -Ilib/llist \
 -Ilib/micro-libs/blinky/inc \
 -Ilib/micro-libs/cli \
+-Ilib/micro-libs/cli-legacy \
 -Ilib/micro-libs/eeprom-config \
 -Ilib/micro-libs/m95256 \
 -Ilib/micro-libs/min-heap/inc \

@@ -71,7 +71,7 @@ includeDirectories:
   - lib/can/lib/bms/**
   - lib/can/lib/primary/**
   - lib/micro-libs/blinky/inc/**
-  - lib/micro-libs/cli/**
+  - lib/micro-libs/cli-legacy/**
   - lib/micro-libs/eeprom-config/**
   - lib/micro-libs/m95256/**
   - lib/micro-libs/min-heap/inc/**
@@ -93,7 +93,7 @@ sourceFiles:
   - lib/can/lib/primary/primary_network.c
   - lib/can/lib/primary/primary_watchdog.c
   - lib/micro-libs/blinky/src/**
-  - lib/micro-libs/cli/**
+  - lib/micro-libs/cli-legacy/**
   - lib/micro-libs/eeprom-config/**
   - lib/micro-libs/m95256/**
   - lib/micro-libs/min-heap/src/**
