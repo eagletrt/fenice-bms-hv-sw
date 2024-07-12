@@ -848,11 +848,10 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* tim_baseHandle)
 
 /* USER CODE BEGIN 1 */
 void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim) {
-    if (htim->Instance == HTIM_ERR.Instance) {
-        error_elapsed();
-    } else if (htim->Instance == HTIM_BMS.Instance) {
+    if (htim->Instance == HTIM_BMS.Instance) {
         _bms_handle_tim_oc_irq(htim);
-    } else if (htim->Instance == HTIM_MEASURES.Instance) {
+    }
+    else if (htim->Instance == HTIM_MEASURES.Instance) {
         _measures_handle_tim_oc_irq(htim);
     }
 }
@@ -862,9 +861,13 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim) {
     }
 }
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
-    if (htim->Instance == HTIM_MUX.Instance) {
+    if (htim->Instance == HTIM_ERR.Instance) {
+        error_elapsed();
+    }
+    else if (htim->Instance == HTIM_MUX.Instance) {
         _feedback_handle_tim_elapsed_irq();
-    } else if (htim->Instance == HTIM_CLI.Instance) {
+    }
+    else if (htim->Instance == HTIM_CLI.Instance) {
         _cli_timer_handler(htim);
     }
 }
