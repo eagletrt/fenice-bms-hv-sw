@@ -579,7 +579,7 @@ void fsm_run() {
     HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, led_status);
 
     // Set or reset connection error
-    ERROR_TOGGLE_IF(HAL_GPIO_ReadPin(CONNS_DETECTION_GPIO_Port, CONNS_DETECTION_Pin) == GPIO_PIN_RESET, ERROR_CONNECTOR_DISCONNECTED, 0, HAL_GetTick());
+    ERROR_TOGGLE_IF(HAL_GPIO_ReadPin(CONNS_DETECTION_GPIO_Port, CONNS_DETECTION_Pin) == GPIO_PIN_RESET, ERROR_GROUP_ERROR_CONNECTOR_DISCONNECTED, 0, HAL_GetTick());
 
     // Run the FSM and updates
     fsm_state = run_state(fsm_state, NULL);

@@ -9,6 +9,8 @@
 #ifndef ERROR_H
 #define ERROR_H
 
+#include <stdint.h>
+
 /**
  * @brief Enter a critical section where interrupts can cause problems
  * @details For more info refer to the docs

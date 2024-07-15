@@ -129,7 +129,7 @@ HAL_StatusTypeDef can_send(CAN_HandleTypeDef * hcan, uint8_t * buffer, CAN_TxHea
 
     // Add message to a free mailbox
     HAL_StatusTypeDef status = HAL_CAN_AddTxMessage(hcan, header, buffer, &mailbox);
-    ERROR_TOGGLE_IF(status != HAL_OK, ERROR_CAN, 0, HAL_GetTick());
+    ERROR_TOGGLE_IF(status != HAL_OK, ERROR_GROUP_ERROR_CAN, 0, HAL_GetTick());
 
     return status;
 }
@@ -290,55 +290,55 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         primary_hv_errors_t raw_errors = { 0 };
         primary_hv_errors_converted_t conv_errors  = { 0 };
 
-        ErrorGroup expired[ERROR_COUNT] = { 0 };
+        ErrorGroup expired[ERROR_GROUP_COUNT] = { 0 };
         size_t expired_count = error_dump_expired_groups(expired);
 
         for (size_t i = 0; i < expired_count; ++i) {
             switch (expired[i]) {
-                case ERROR_CELL_UNDER_VOLTAGE:
+                case ERROR_GROUP_ERROR_CELL_UNDER_VOLTAGE:
                     conv_errors.errors_cell_under_voltage = 1;
                     break;
-                case ERROR_CELL_OVER_VOLTAGE:
+                case ERROR_GROUP_ERROR_CELL_OVER_VOLTAGE:
                     conv_errors.errors_cell_over_voltage = 1;
                     break;
-                case ERROR_CELL_UNDER_TEMPERATURE:
+                case ERROR_GROUP_ERROR_CELL_UNDER_TEMPERATURE:
                     // TODO: Add under temperature to canlib
                     // conv_errors.errors_cell_under_temperature = 1;
                     break;
-                case ERROR_CELL_OVER_TEMPERATURE:
+                case ERROR_GROUP_ERROR_CELL_OVER_TEMPERATURE:
                     conv_errors.errors_cell_over_temperature = 1;
                     break;
-                case ERROR_OVER_CURRENT:
+                case ERROR_GROUP_ERROR_OVER_CURRENT:
                     conv_errors.errors_over_current = 1;
                     break;
-                case ERROR_CAN:
+                case ERROR_GROUP_ERROR_CAN:
                     conv_errors.errors_can = 1;
                     break;
-                case ERROR_INT_VOLTAGE_MISMATCH:
+                case ERROR_GROUP_ERROR_INT_VOLTAGE_MISMATCH:
                     conv_errors.errors_int_voltage_mismatch = 1;
                     break;
-                case ERROR_CELLBOARD_COMM:
+                case ERROR_GROUP_ERROR_CELLBOARD_COMM:
                     conv_errors.errors_cellboard_comm = 1;
                     break;
-                case ERROR_CELLBOARD_INTERNAL:
+                case ERROR_GROUP_ERROR_CELLBOARD_INTERNAL:
                     conv_errors.errors_cellboard_internal = 1;
                     break;
-                case ERROR_CONNECTOR_DISCONNECTED:
+                case ERROR_GROUP_ERROR_CONNECTOR_DISCONNECTED:
                     conv_errors.errors_connector_disconnected = 1;
                     break;
-                case ERROR_FANS_DISCONNECTED:
+                case ERROR_GROUP_ERROR_FANS_DISCONNECTED:
                     conv_errors.errors_fans_disconnected = 1;
                     break;
-                case ERROR_FEEDBACK:
+                case ERROR_GROUP_ERROR_FEEDBACK:
                     conv_errors.errors_feedback = 1;
                     break;
-                case ERROR_FEEDBACK_CIRCUITRY:
+                case ERROR_GROUP_ERROR_FEEDBACK_CIRCUITRY:
                     conv_errors.errors_feedback_circuitry = 1;
                     break;
-                case ERROR_EEPROM_COMM:
+                case ERROR_GROUP_ERROR_EEPROM_COMM:
                     conv_errors.errors_eeprom_comm = 1;
                     break;
-                case ERROR_EEPROM_WRITE:
+                case ERROR_GROUP_ERROR_EEPROM_WRITE:
                     conv_errors.errors_eeprom_write = 1;
                     break;
 
@@ -564,6 +564,17 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
             return HAL_ERROR;
         tx_header.DLC = data_len;
     }
+    // else if (id == PRIMARY_DEBUG_SIGNAL_2_FRAME_ID) {
+    //     primary_debug_signal_2_t raw_debug;
+    //     primary_debug_signal_2_converted_t conv_debug = {
+    //         .field_1 = setted.group / 10.f,
+    //         .field_2 = setted.instance / 10.f,
+    //         .field_3 = setted.timestamp / 10000.f
+    //     };
+    // 
+    //     primary_debug_signal_2_conversion_to_raw_struct(&raw_debug, &conv_debug);
+    //     tx_header.DLC = primary_debug_signal_2_pack(buffer, &raw_debug, PRIMARY_DEBUG_SIGNAL_2_BYTE_SIZE);
+    // }
     else
         return HAL_ERROR;
     
@@ -633,14 +644,14 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
 
     // Check for communication errors
     if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rx_header, rx_data) != HAL_OK) {
-        error_set(ERROR_CAN, 1, HAL_GetTick());
+        error_set(ERROR_GROUP_ERROR_CAN, 1, HAL_GetTick());
         cli_bms_debug("CAN: Error receiving message", 29);
         return;
     }
 
     if (hcan->Instance == BMS_CAN.Instance) {
         // Reset can errors
-        error_reset(ERROR_CAN, 1);
+        error_reset(ERROR_GROUP_ERROR_CAN, 1);
 
         // Forward data to the cellboards
         if (rx_header.StdId >= BMS_FLASH_CELLBOARD_0_TX_FRAME_ID && rx_header.StdId <= BMS_FLASH_CELLBOARD_5_RX_FRAME_ID) {
@@ -660,7 +671,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
             bms_voltages_converted_t conv_volts = { 0 };
 
             if (bms_voltages_unpack(&raw_volts, rx_data, BMS_VOLTAGES_BYTE_SIZE) < 0) {
-                error_set(ERROR_CAN, 1, HAL_GetTick());
+                error_set(ERROR_GROUP_ERROR_CAN, 1, HAL_GetTick());
                 return;
             }
             bms_voltages_raw_to_conversion_struct(&conv_volts, &raw_volts);
@@ -701,7 +712,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
             bms_voltages_info_converted_t conv_volts = { 0 };
 
             if (bms_voltages_info_unpack(&raw_volts, rx_data, BMS_VOLTAGES_INFO_BYTE_SIZE) < 0) {
-                error_set(ERROR_CAN, 1, HAL_GetTick());
+                error_set(ERROR_GROUP_ERROR_CAN, 1, HAL_GetTick());
                 return;
             }
             bms_voltages_info_raw_to_conversion_struct(&conv_volts, &raw_volts);
@@ -720,7 +731,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
             bms_temperatures_converted_t conv_temps = { 0 };
             
             if (bms_temperatures_unpack(&raw_temps, rx_data, BMS_TEMPERATURES_BYTE_SIZE) < 0) {
-                error_set(ERROR_CAN, 1, HAL_GetTick());
+                error_set(ERROR_GROUP_ERROR_CAN, 1, HAL_GetTick());
                 return;
             }
             bms_temperatures_raw_to_conversion_struct(&conv_temps, &raw_temps);
@@ -761,14 +772,14 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
             for (size_t board_id = 0; board_id < CELLBOARD_COUNT && !is_error_set; board_id++) {
                 for (size_t temp_bit = 0; temp_bit < TEMP_STRIPS_PER_BUS * 2; temp_bit += 2) {
                     if ((temp_errors[board_id] & (1 << temp_bit)) && (temp_errors[board_id] & (1 << (temp_bit + 1)))) {
-                        error_set(ERROR_CONNECTOR_DISCONNECTED, 2, HAL_GetTick());
+                        error_set(ERROR_GROUP_ERROR_CONNECTOR_DISCONNECTED, 2, HAL_GetTick());
                         is_error_set = true;
                         break;
                     }
                 }
             }
             if (!is_error_set)
-                error_reset(ERROR_CONNECTOR_DISCONNECTED, 2);
+                error_reset(ERROR_GROUP_ERROR_CONNECTOR_DISCONNECTED, 2);
 #endif // TEMP_GROUP_ERROR_ENABLE
 
 
@@ -807,7 +818,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
             bms_temperatures_info_converted_t conv_temps = { 0 };
 
             if (bms_temperatures_info_unpack(&raw_temps, rx_data, BMS_TEMPERATURES_INFO_BYTE_SIZE) < 0) {
-                error_set(ERROR_CAN, 1, HAL_GetTick());
+                error_set(ERROR_GROUP_ERROR_CAN, 1, HAL_GetTick());
                 return;
             }
             bms_temperatures_info_raw_to_conversion_struct(&conv_temps, &raw_temps);
@@ -829,7 +840,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
             bms_board_status_converted_t conv_status = { 0 };
 
             if (bms_board_status_unpack(&raw_status, rx_data, BMS_BOARD_STATUS_BYTE_SIZE) < 0) {
-                error_set(ERROR_CAN, 1, HAL_GetTick());
+                error_set(ERROR_GROUP_ERROR_CAN, 1, HAL_GetTick());
                 return;
             }
             bms_board_status_raw_to_conversion_struct(&conv_status, &raw_status);
@@ -849,7 +860,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
                 conv_status.errors_temp_comm_3 |
                 conv_status.errors_temp_comm_4 |
                 conv_status.errors_temp_comm_5;
-            ERROR_TOGGLE_IF(error_status != 0, ERROR_CELLBOARD_INTERNAL, conv_status.cellboard_id, HAL_GetTick());
+            ERROR_TOGGLE_IF(error_status != 0, ERROR_GROUP_ERROR_CELLBOARD_INTERNAL, conv_status.cellboard_id, HAL_GetTick());
 
             // Forward data
             CAN_TxHeaderTypeDef tx_header = {
@@ -910,7 +921,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
             bms_cellboard_version_converted_t conv_version = { 0 };
 
             if (bms_cellboard_version_unpack(&raw_version, rx_data, BMS_CELLBOARD_VERSION_BYTE_SIZE) < 0) {
-                error_set(ERROR_CAN, 1, HAL_GetTick());
+                error_set(ERROR_GROUP_ERROR_CAN, 1, HAL_GetTick());
                 return;
             }
             bms_cellboard_version_raw_to_conversion_struct(&conv_version, &raw_version);
@@ -953,13 +964,13 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 
     // Check for communication errors
     if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO1, &rx_header, rx_data) != HAL_OK) {
-        error_set(ERROR_CAN, 1, HAL_GetTick());
+        error_set(ERROR_GROUP_ERROR_CAN, 1, HAL_GetTick());
         cli_bms_debug("CAN: Error receiving message", 29);
         return;
     }
 
     if (hcan->Instance == CAR_CAN.Instance) {
-        error_reset(ERROR_CAN, 1);
+        error_reset(ERROR_GROUP_ERROR_CAN, 1);
 
         if (rx_header.StdId >= BMS_FLASH_CELLBOARD_0_TX_FRAME_ID && rx_header.StdId <= BMS_FLASH_CELLBOARD_5_RX_FRAME_ID) {
             CAN_TxHeaderTypeDef tx_header = {
@@ -982,7 +993,7 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
             primary_hv_set_status_ecu_converted_t conv_ts_status = { 0 };
 
             if (primary_hv_set_status_ecu_unpack(&raw_ts_status, rx_data, PRIMARY_HV_SET_STATUS_ECU_BYTE_SIZE) < 0) {
-                error_set(ERROR_CAN, 1, HAL_GetTick());
+                error_set(ERROR_GROUP_ERROR_CAN, 1, HAL_GetTick());
                 return;
             }
             primary_hv_set_status_ecu_raw_to_conversion_struct(&conv_ts_status, &raw_ts_status);
@@ -1004,7 +1015,7 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
             primary_hv_set_balancing_status_handcart_converted_t conv_bal_status = { 0 };
 
             if (primary_hv_set_balancing_status_handcart_unpack(&raw_bal_status, rx_data, PRIMARY_HV_SET_BALANCING_STATUS_HANDCART_BYTE_SIZE) < 0) {
-                error_set(ERROR_CAN, 1, HAL_GetTick());
+                error_set(ERROR_GROUP_ERROR_CAN, 1, HAL_GetTick());
                 return;
             }
             primary_hv_set_balancing_status_handcart_raw_to_conversion_struct(&conv_bal_status, &raw_bal_status);
@@ -1017,7 +1028,7 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
             primary_handcart_status_converted_t conv_handcart_status = { 0 };
 
             if (primary_handcart_status_unpack(&raw_handcart_status, rx_data, PRIMARY_HANDCART_STATUS_BYTE_SIZE) < 0) {
-                error_set(ERROR_CAN, 1, HAL_GetTick());
+                error_set(ERROR_GROUP_ERROR_CAN, 1, HAL_GetTick());
                 return;
             }
             primary_handcart_status_raw_to_conversion_struct(&conv_handcart_status, &raw_handcart_status);
@@ -1039,7 +1050,7 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
             primary_hv_can_forward_converted_t conv_can_forward = { 0 };
 
             if (primary_hv_can_forward_unpack(&raw_can_forward, rx_data, PRIMARY_HV_CAN_FORWARD_BYTE_SIZE) < 0) {
-                error_set(ERROR_CAN, 1, HAL_GetTick());
+                error_set(ERROR_GROUP_ERROR_CAN, 1, HAL_GetTick());
                 return;
             }
             primary_hv_can_forward_raw_to_conversion_struct(&conv_can_forward, &raw_can_forward);
@@ -1061,7 +1072,7 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
             primary_hv_set_fans_status_converted_t conv_fans = { 0 };
 
             if (primary_hv_set_fans_status_unpack(&raw_fans, rx_data, PRIMARY_HV_SET_FANS_STATUS_BYTE_SIZE) < 0) {
-                error_set(ERROR_CAN, 1, HAL_GetTick());
+                error_set(ERROR_GROUP_ERROR_CAN, 1, HAL_GetTick());
                 return;
             }
             primary_hv_set_fans_status_raw_to_conversion_struct(&conv_fans, &raw_fans);
@@ -1075,7 +1086,7 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
             primary_hv_jmp_to_blt_converted_t conv_jmp;
 
             if (primary_hv_jmp_to_blt_unpack(&raw_jmp, rx_data, PRIMARY_HV_JMP_TO_BLT_BYTE_SIZE) < 0) {
-                error_set(ERROR_CAN, 1, HAL_GetTick());
+                error_set(ERROR_GROUP_ERROR_CAN, 1, HAL_GetTick());
                 return;
             }
             primary_hv_jmp_to_blt_raw_to_conversion_struct(&conv_jmp, &raw_jmp);
@@ -1118,7 +1129,7 @@ void CAN_change_bitrate(CAN_HandleTypeDef *hcan, CAN_Bitrate bitrate) {
 void can_cellboards_check() {
     for (size_t i = 0; i < CELLBOARD_COUNT; i++) {
         if (time_since_last_comm[i] > 0) {
-            ERROR_TOGGLE_IF(HAL_GetTick() - time_since_last_comm[i] >= CELLBOARD_COMM_TIMEOUT, ERROR_CELLBOARD_COMM, i, HAL_GetTick());
+            ERROR_TOGGLE_IF(HAL_GetTick() - time_since_last_comm[i] >= CELLBOARD_COMM_TIMEOUT, ERROR_GROUP_ERROR_CELLBOARD_COMM, i, HAL_GetTick());
         }
     }
 }

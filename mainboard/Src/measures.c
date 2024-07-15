@@ -26,7 +26,7 @@
 #include "timer_utils.h"
 #include "error/error-handler.h"
 
-#define MEASURE_CHECK_DELAY 10000 // ms
+#define MEASURE_CHECK_DELAY 1000 // ms
 #define _MEASURE_CHECK_INTERVAL(interval) (((counter) % (interval)) == 0) // Check if a given interval is passed
 
 uint32_t counter = 0; // Each timer interrupt it increments by 1
@@ -90,7 +90,7 @@ void measures_check_flags() {
         // Check errors
         temperature_check_errors();
         // Check if fans are connected
-        ERROR_TOGGLE_IF(HAL_GPIO_ReadPin(FANS_DETECT_GPIO_Port, FANS_DETECT_Pin) == GPIO_PIN_RESET, ERROR_FANS_DISCONNECTED, 0, HAL_GetTick());
+        ERROR_TOGGLE_IF(HAL_GPIO_ReadPin(FANS_DETECT_GPIO_Port, FANS_DETECT_Pin) == GPIO_PIN_RESET, ERROR_GROUP_ERROR_FANS_DISCONNECTED, 0, HAL_GetTick());
     }
     // 200 ms interval
     if (_MEASURE_CHECK_INTERVAL(MEASURE_INTERVAL_200MS)) {

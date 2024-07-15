@@ -28,7 +28,7 @@ void temperature_init() {
 void temperature_check_errors() {
     float max_temp = CONVERT_VALUE_TO_TEMPERATURE(temperature_get_max());
 
-    ERROR_TOGGLE_IF(max_temp > CELL_MAX_TEMPERATURE, ERROR_CELL_OVER_TEMPERATURE, 0, HAL_GetTick());
+    ERROR_TOGGLE_IF(max_temp > CELL_MAX_TEMPERATURE, ERROR_GROUP_ERROR_CELL_OVER_TEMPERATURE, 0, HAL_GetTick());
 
     // Temperature sensors disconnected
 #if !defined(TEMP_GROUP_ERROR_ENABLE) && defined(TEMP_ERROR_ENABLE)
