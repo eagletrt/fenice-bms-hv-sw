@@ -31,6 +31,15 @@ static const uint8_t adc_addresses[6] = {
     ADCTEMP_CELL_6_ADR
 };
 
+static const bool excluded_temps[CELLBOARD_COUNT][CELLBOARD_TEMP_SENSOR_COUNT] = {
+    [0] = { 0 },
+    [1] = { [0] = true, [4] = true, [6] = true, [8] = true, [13] = true },
+    [2] = { [29] = true },
+    [3] = { [5] = true, [25] = true, [26] = true },
+    [4] = { [1] = true, [3] = true, [13] = true, [35] = true },
+    [5] = { [7] = true, [9] = true, [14] = true, [29] = true }
+};
+
 /**
  * @brief Check if a certain temperature sensor value has to be included
  * 
@@ -39,24 +48,11 @@ static const uint8_t adc_addresses[6] = {
  * @return false Otherwise
  */
 bool _temp_include_cell(size_t idx) {
-    switch (cellboard_index)
-    {
-        case 0:
-            return true;
-        case 1:
-            return idx != 0 && idx != 4 && idx != 6 && idx != 8 && idx != 13;
-        case 2:
-            return idx != 29;
-        case 3:
-            return idx != 5 && idx != 25 && idx != 26;
-        case 4:
-            return idx != 1 && idx != 3 && idx != 13 && idx != 35;
-        case 5:
-            return idx != 7 && idx != 9 && idx != 14 && idx != 29;
-
-        default:
-            return false;
-    }
+    if (cellboard_index >= CELLBOARD_COUNT)
+        return false;
+    if (idx >= CELLBOARD_TEMP_SENSOR_COUNT)
+        return false;
+    return !excluded_temps[cellboard_index][idx];
 }
 
 void temp_init() {
@@ -95,10 +91,22 @@ void temp_measure(uint8_t adc_index) {
         } else {
             ERROR_UNSET(ERROR_TEMP_COMM_0 + adc_index);
 
+            // Change excluded temperatures
+            if (!_temp_include_cell(temp_index)) {
+                size_t cnt = 0U;
+                temperature_t temp = 0U;
+                for (size_t i = temp_index - 2U; i <= temp_index + 2U; ++i) {
+                    if (_temp_include_cell(i)) {
+                        temp += temperatures[i];
+                        ++cnt;
+                    }
+                }
+                // Average the temperatures
+                temperatures[temp_index] = (cnt > 0) ? (temp / cnt) : average;
+            }
+
             max = MAX(temperatures[temp_index], max);
-            // Skip broken temperature readings
-            if (_temp_include_cell(temp_index))
-                min = MIN(temperatures[temp_index], min);
+            min = MIN(temperatures[temp_index], min);                
         }
     }
 }
@@ -113,11 +121,8 @@ void temp_measure_all() {
     double sum = 0;
     size_t tot = 0;
     for (uint16_t i = 0; i < CELLBOARD_TEMP_SENSOR_COUNT; i++) {
-        // Skip broken temperature readings
-        if (_temp_include_cell(i)) {
-            sum += temperatures[i];
-            tot++;
-        }
+        sum += temperatures[i];
+        tot++;
     }
     average = sum / tot;
 }

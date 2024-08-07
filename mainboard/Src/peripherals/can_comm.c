@@ -565,13 +565,18 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         tx_header.DLC = data_len;
     }
     // else if (id == PRIMARY_DEBUG_SIGNAL_2_FRAME_ID) {
+    //     Error err[ERROR_INSTANCE_COUNT] = { 0 };
+    //     error_dump_running(err);
+
+
     //     primary_debug_signal_2_t raw_debug;
     //     primary_debug_signal_2_converted_t conv_debug = {
-    //         .field_1 = setted.group / 10.f,
-    //         .field_2 = setted.instance / 10.f,
-    //         .field_3 = setted.timestamp / 10000.f
+    //         .device_id = primary_debug_signal_2_device_id_hv_mainboard,
+    //         .field_1 = err[0].group / (float)ERROR_GROUP_COUNT,
+    //         .field_2 = err[0].is_running,
+    //         .field_3 = err[0].is_expired
     //     };
-    // 
+    
     //     primary_debug_signal_2_conversion_to_raw_struct(&raw_debug, &conv_debug);
     //     tx_header.DLC = primary_debug_signal_2_pack(buffer, &raw_debug, PRIMARY_DEBUG_SIGNAL_2_BYTE_SIZE);
     // }

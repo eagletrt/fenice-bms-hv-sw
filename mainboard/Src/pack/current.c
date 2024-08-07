@@ -27,6 +27,7 @@
 uint16_t adc_50[MEASURE_SAMPLE_SIZE]  = { 0 };
 uint16_t adc_300[MEASURE_SAMPLE_SIZE] = { 0 };
 
+current_t prev_current = 0.f, filtered_current = 0.f;
 current_t current[CURRENT_SENSOR_NUM] = { 0.f };
 
 current_t V0L = 0, V0H = 0;  // Voltage offset (Vout(0A))
@@ -74,6 +75,19 @@ uint32_t current_read(float shunt_adc_val) {
     // Convert Shunt
     current[CURRENT_SENSOR_SHUNT] = _current_convert_shunt(shunt_adc_val);
 
+    // Filter current
+    current_t hall_50 = fabsf(current[CURRENT_SENSOR_50]);
+    current_t hall_300 = fabsf(current[CURRENT_SENSOR_300]);
+
+    // Return current read from the correct
+    if (hall_50 < 34 && hall_300 < 34)
+        filtered_current = current[CURRENT_SENSOR_50];
+    else
+        filtered_current = current[CURRENT_SENSOR_300];
+    // Filter current
+    const float alpha = 0.4f;
+    prev_current = filtered_current = alpha * prev_current + (1.f - alpha) * filtered_current;
+
     // Check for over-currents
     ERROR_TOGGLE_IF(current_get_current() < CURRENT_MIN_THRESHOLD, ERROR_GROUP_ERROR_OVER_CURRENT, 0, HAL_GetTick());
     ERROR_TOGGLE_IF(current_get_current() > CURRENT_MAX_THRESHOLD, ERROR_GROUP_ERROR_OVER_CURRENT, 0, HAL_GetTick());
@@ -92,13 +106,7 @@ void current_zero() {
 }
 
 current_t current_get_current() {
-    current_t hall_50 = fabsf(current[CURRENT_SENSOR_50]);
-    current_t hall_300 = fabsf(current[CURRENT_SENSOR_300]);
-
-    // Return current read from the correct
-    if (hall_50 < 34 && hall_300 < 34)
-        return current[CURRENT_SENSOR_50];
-    return current[CURRENT_SENSOR_300];
+    return filtered_current;
 }
 current_t * current_get_current_sensors() {
     return current;
