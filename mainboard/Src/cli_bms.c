@@ -20,7 +20,7 @@
 #include "bms_fsm.h"
 #include "can.h"
 #include "can_comm.h"
-#include "error/error.h"
+#include "error_simple.h"
 #include "fans_buzzer.h"
 #include "feedback.h"
 #include "imd.h"
@@ -32,7 +32,6 @@
 #include "bms_network.h"
 #include "internal_voltage.h"
 #include "cell_voltage.h"
-#include "error/error-handler.h"
 #include "timer_utils.h"
 
 #define CELLBOARD_DISTR_ADDR 0x50
@@ -393,7 +392,7 @@ void _cli_status(uint16_t argc, char **argv, char *out) {
     itoa((float)bal_get_threshold() / 10, thresh, 10);
 
     char er_count[3] = {'\0'};
-    itoa(error_get_running(), er_count, 10);
+    // itoa(error_get_running(), er_count, 10);
 
     char handcart_connected[13] = { '\0' };
     if (is_handcart_connected)
@@ -516,8 +515,8 @@ void _cli_soc(uint16_t argc, char **argv, char *out) {
 
 void _cli_errors(uint16_t argc, char **argv, char *out) {
     *out = 0;
-    size_t running = error_get_running();
-    size_t expired  = error_get_expired();
+    size_t running = 0;// error_get_running();
+    size_t expired  = get_expired_errors();
 
     sprintf(out, "Running: %u\r\nExpired: %u\r\n", running, expired);
 

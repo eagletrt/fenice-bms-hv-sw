@@ -28,7 +28,7 @@
 #include "bms_fsm.h"
 #include "cli_bms.h"
 #include "config.h"
-#include "error/error-handler.h"
+#include "error_simple.h"
 #include "fans_buzzer.h"
 #include "feedback.h"
 #include "imd.h"
@@ -134,7 +134,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
     fans_init();
 
-    error_init(error_cs_enter, error_cs_exit);
+    // error_init(error_cs_enter, error_cs_exit);
 
     cli_bms_init();
 
@@ -176,7 +176,7 @@ int main(void)
         // if (HAL_GetTick() > 1500 && !HAL_GPIO_ReadPin(BMS_FAULT_GPIO_Port, BMS_FAULT_Pin))
         //     HAL_GPIO_WritePin(BMS_FAULT_GPIO_Port, BMS_FAULT_Pin, BMS_FAULT_OFF_VALUE);
         cli_loop(&cli_bms);
-        error_routine();
+        error_simple_routine();
         
         // Start measurement checks after an initial delay
         if (HAL_GetTick() - start_time >= INITIAL_CHECK_DELAY_MS)

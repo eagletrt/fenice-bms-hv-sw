@@ -17,7 +17,7 @@
 #include "mainboard_config.h"
 #include "main.h"
 #include "bms_fsm.h"
-#include "error/error-handler.h"
+#include "error_simple.h"
 
 cell_voltage cell_volts;
 
@@ -63,6 +63,14 @@ float cell_voltage_get_avg() {
 void cell_voltage_check_errors() {
     voltage_t min = cell_voltage_get_min();
     voltage_t max = cell_voltage_get_max();
-    ERROR_TOGGLE_IF(min < CELL_MIN_VOLTAGE, ERROR_GROUP_ERROR_CELL_UNDER_VOLTAGE, 0, HAL_GetTick());
-    ERROR_TOGGLE_IF(max > CELL_MAX_VOLTAGE, ERROR_GROUP_ERROR_CELL_OVER_VOLTAGE, 0, HAL_GetTick());
+    if (min < CELL_MIN_VOLTAGE) {
+        error_simple_set(ERROR_GROUP_ERROR_CELL_UNDER_VOLTAGE, 0);
+    } else {
+        error_simple_reset(ERROR_GROUP_ERROR_CELL_UNDER_VOLTAGE, 0);
+    }
+    if (max > CELL_MAX_VOLTAGE) {
+        error_simple_set(ERROR_GROUP_ERROR_CELL_OVER_VOLTAGE, 0);
+    } else {
+        error_simple_reset(ERROR_GROUP_ERROR_CELL_OVER_VOLTAGE, 0);
+    }
 }

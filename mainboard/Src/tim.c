@@ -31,7 +31,7 @@
 #include "feedback.h"
 #include "measures.h"
 #include "pwm.h"
-#include "error/error.h"
+#include "error_simple.h"
 
 /* USER CODE END 0 */
 
@@ -862,7 +862,7 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim) {
 }
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
     if (htim->Instance == HTIM_ERR.Instance) {
-        error_elapsed();
+        // error_elapsed();
     }
     else if (htim->Instance == HTIM_MUX.Instance) {
         _feedback_handle_tim_elapsed_irq();

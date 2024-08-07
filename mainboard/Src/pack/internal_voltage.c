@@ -15,7 +15,7 @@
 #include "mainboard_config.h"
 #include "main.h"
 #include "cell_voltage.h"
-#include "error/error-handler.h"
+#include "error_simple.h"
 
 /** @brief Internal voltages of the mainboard */
 struct internal_voltage {
@@ -55,7 +55,12 @@ HAL_StatusTypeDef internal_voltage_measure() {
     internal_voltages.bat   = volts[MAX22530_VBATT_CHANNEL - 1];
 
     // Check if difference between readings from the ADC and cellboards is greater than 10V
-    ERROR_TOGGLE_IF(fabsf(CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltages.bat) - CONVERT_VALUE_TO_VOLTAGE(cell_voltage_get_sum())) > INTERNAL_VOLTAGE_MAX_DELTA, ERROR_GROUP_ERROR_INT_VOLTAGE_MISMATCH, 0, HAL_GetTick());
+
+    if (fabsf(CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltages.bat) - CONVERT_VALUE_TO_VOLTAGE(cell_voltage_get_sum())) > INTERNAL_VOLTAGE_MAX_DELTA) {
+        error_simple_set(ERROR_GROUP_ERROR_INT_VOLTAGE_MISMATCH, 0);
+    } else {
+        error_simple_reset(ERROR_GROUP_ERROR_INT_VOLTAGE_MISMATCH, 0);
+    }
     return HAL_OK;
 }
 

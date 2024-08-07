@@ -12,13 +12,12 @@
 
 #include <string.h>
 
-#include "error.h"
+#include "error_simple.h"
 #include "mainboard_config.h"
 #include "bms_fsm.h"
 #include "can_comm.h"
 #include "cli_bms.h"
 #include "timer_utils.h"
-#include "error/error-handler.h"
 
 // Multiplexer feedback thresholds
 #define FEEDBACK_MUX_ANALOG_THRESHOLD_H 1.9f // 2.2f
@@ -180,9 +179,9 @@ bool feedback_is_ok(feedback_t mask, feedback_t value) {
 
             // TODO: Check for low state
             if (state == FEEDBACK_STATE_H)
-                error_reset(ERROR_GROUP_ERROR_FEEDBACK, i);
+                error_simple_reset(ERROR_GROUP_ERROR_FEEDBACK, i);
             else {
-                error_set(ERROR_GROUP_ERROR_FEEDBACK, i, HAL_GetTick());
+                error_simple_set(ERROR_GROUP_ERROR_FEEDBACK, i);
                 conv_debug.feedbacks_check_mux = 1;
                 return false;
             }
@@ -203,9 +202,9 @@ bool feedback_is_ok(feedback_t mask, feedback_t value) {
 
             // TODO: Check for low state
             if (state == FEEDBACK_STATE_H)
-                error_reset(ERROR_GROUP_ERROR_FEEDBACK, i);
+                error_simple_reset(ERROR_GROUP_ERROR_FEEDBACK, i);
             else {
-                error_set(ERROR_GROUP_ERROR_FEEDBACK, i, HAL_GetTick());
+                error_simple_set(ERROR_GROUP_ERROR_FEEDBACK, i);
                 conv_debug.feedbacks_check_mux = 1;
                 return false;
             }
@@ -232,7 +231,7 @@ bool feedback_is_ok(feedback_t mask, feedback_t value) {
             }
         }
         else {
-            error_set(ERROR_GROUP_ERROR_FEEDBACK_CIRCUITRY, i, HAL_GetTick());
+            error_simple_set(ERROR_GROUP_ERROR_FEEDBACK_CIRCUITRY, i);
             return false;
         }
 
@@ -240,7 +239,7 @@ bool feedback_is_ok(feedback_t mask, feedback_t value) {
 
         // Check for errors
         if (state == FEEDBACK_STATE_ERROR || (fb_val && state == FEEDBACK_STATE_L) || (!fb_val && state == FEEDBACK_STATE_H)) {
-            error_set(ERROR_GROUP_ERROR_FEEDBACK, i, HAL_GetTick());
+            // error_simple_set(ERROR_GROUP_ERROR_FEEDBACK, i);
             if (fsm_get_state() == STATE_TS_ON) {
                 switch (i) {
                     case FEEDBACK_IMPLAUSIBILITY_DETECTED:
@@ -310,9 +309,9 @@ bool feedback_is_ok(feedback_t mask, feedback_t value) {
             }
             return false;
         }
-        else
-            error_reset(ERROR_GROUP_ERROR_FEEDBACK, i);
-        error_reset(ERROR_GROUP_ERROR_FEEDBACK_CIRCUITRY, i);
+        // else
+        // error_simple_reset(ERROR_GROUP_ERROR_FEEDBACK, i);
+        error_simple_reset(ERROR_GROUP_ERROR_FEEDBACK_CIRCUITRY, i);
     }
 
     return true;

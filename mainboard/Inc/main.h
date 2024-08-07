@@ -22,7 +22,7 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "error/error.h"
+#include "error_simple.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/

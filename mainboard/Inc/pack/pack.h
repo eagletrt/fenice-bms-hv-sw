@@ -9,7 +9,7 @@
 #ifndef PACK_H
 #define PACK_H
 
-#include "error/error.h"
+#include "error_simple.h"
 #include "main.h"
 
 #include <inttypes.h>

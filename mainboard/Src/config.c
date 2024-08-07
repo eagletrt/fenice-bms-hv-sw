@@ -9,7 +9,7 @@
 
 #include "config.h"
 
-#include "error/error-handler.h"
+#include "error_simple.h"
 #include "mainboard_config.h"
 #include "spi.h"
 
@@ -45,7 +45,7 @@ bool config_read(config_t *config) {
 
     if (m95256_ReadBuffer(eeprom, buffer, config->address, config->size + CONFIG_VERSION_SIZE) ==
         EEPROM_STATUS_COMPLETE) {
-        error_reset(ERROR_GROUP_ERROR_EEPROM_COMM, 0);
+        error_simple_reset(ERROR_GROUP_ERROR_EEPROM_COMM, 0);
 
         // Check if EEPROM's version matches config's
         if (*((CONFIG_VERSION_TYPE *)buffer) == config->version) {
@@ -55,7 +55,7 @@ bool config_read(config_t *config) {
             return true;
         }
     } else {
-        error_set(ERROR_GROUP_ERROR_EEPROM_COMM, 0, HAL_GetTick());
+        error_simple_set(ERROR_GROUP_ERROR_EEPROM_COMM, 0);
     }
     return false;
 }
@@ -68,24 +68,24 @@ bool config_write(config_t *config) {
 
         if (m95256_WriteBuffer(eeprom, buffer, config->address, config->size + CONFIG_VERSION_SIZE) ==
             EEPROM_STATUS_COMPLETE) {
-            error_reset(ERROR_GROUP_ERROR_EEPROM_COMM, 0);
+            error_simple_reset(ERROR_GROUP_ERROR_EEPROM_COMM, 0);
 
             // Read just-written data and compare for errors
             uint8_t testbuf[EEPROM_BUFFER_SIZE] = {0};
             if (m95256_ReadBuffer(eeprom, testbuf, config->address, config->size + CONFIG_VERSION_SIZE) ==
                 EEPROM_STATUS_COMPLETE) {
                 if (memcmp(buffer, testbuf, CONFIG_VERSION_SIZE) == 0) {
-                    error_reset(ERROR_GROUP_ERROR_EEPROM_WRITE, 0);
+                    error_simple_reset(ERROR_GROUP_ERROR_EEPROM_WRITE, 0);
                     config->dirty = false;
                     return true;
                 }
 
-                error_set(ERROR_GROUP_ERROR_EEPROM_WRITE, 0, HAL_GetTick());
+                error_simple_set(ERROR_GROUP_ERROR_EEPROM_WRITE, 0);
                 return false;
             }
 
         } else {
-            error_set(ERROR_GROUP_ERROR_EEPROM_COMM, 0, HAL_GetTick());
+            error_simple_set(ERROR_GROUP_ERROR_EEPROM_COMM, 0);
             return false;
         }
     }

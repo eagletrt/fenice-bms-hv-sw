@@ -15,7 +15,7 @@
 
 #include "stm32f4xx_hal.h"
 #include "mainboard_config.h"
-#include "error/error-handler.h"
+#include "error_simple.h"
 
 #define MEASURE_SAMPLE_SIZE 128
 
@@ -89,8 +89,17 @@ uint32_t current_read(float shunt_adc_val) {
     prev_current = filtered_current = alpha * prev_current + (1.f - alpha) * filtered_current;
 
     // Check for over-currents
-    ERROR_TOGGLE_IF(current_get_current() < CURRENT_MIN_THRESHOLD, ERROR_GROUP_ERROR_OVER_CURRENT, 0, HAL_GetTick());
-    ERROR_TOGGLE_IF(current_get_current() > CURRENT_MAX_THRESHOLD, ERROR_GROUP_ERROR_OVER_CURRENT, 0, HAL_GetTick());
+    if (current_get_current() < CURRENT_MIN_THRESHOLD) {
+        error_simple_set(ERROR_GROUP_ERROR_OVER_CURRENT, 0);
+    } else {
+        error_simple_reset(ERROR_GROUP_ERROR_OVER_CURRENT, 0);
+    }
+
+    if (current_get_current() > CURRENT_MAX_THRESHOLD) {
+        error_simple_set(ERROR_GROUP_ERROR_OVER_CURRENT, 0);
+    } else {
+        error_simple_reset(ERROR_GROUP_ERROR_OVER_CURRENT, 0);
+    }
     return time;
 }
 
@@ -120,9 +129,22 @@ current_t current_get_current_from_sensor(uint8_t sensor) {
 
 void current_check_errors() {
     current_t hall_300 = current[CURRENT_SENSOR_300];
-    ERROR_TOGGLE_IF(hall_300 < CURRENT_MIN_THRESHOLD, ERROR_GROUP_ERROR_OVER_CURRENT, 0, HAL_GetTick());
-    ERROR_TOGGLE_IF(hall_300 > CURRENT_MAX_THRESHOLD, ERROR_GROUP_ERROR_OVER_CURRENT, 0, HAL_GetTick());
+    if (hall_300 < CURRENT_MIN_THRESHOLD) {
+        error_simple_set(ERROR_GROUP_ERROR_OVER_CURRENT, 0);
+    } else {
+        error_simple_reset(ERROR_GROUP_ERROR_OVER_CURRENT, 0);
+    }
+
+    if (hall_300 > CURRENT_MAX_THRESHOLD) {
+        error_simple_set(ERROR_GROUP_ERROR_OVER_CURRENT, 0);
+    } else {
+        error_simple_reset(ERROR_GROUP_ERROR_OVER_CURRENT, 0);
+    }
     
     // Hall effect sensor disconnected
-    ERROR_TOGGLE_IF(volt_300 < CURRENT_SENSOR_DISCONNECTED_THRESHOLD, ERROR_GROUP_ERROR_CONNECTOR_DISCONNECTED, 1, HAL_GetTick());
+    if (volt_300 < CURRENT_SENSOR_DISCONNECTED_THRESHOLD) {
+        error_simple_set(ERROR_GROUP_ERROR_CONNECTOR_DISCONNECTED, 1);
+    } else {
+        error_simple_reset(ERROR_GROUP_ERROR_CONNECTOR_DISCONNECTED, 1);
+    }
 }

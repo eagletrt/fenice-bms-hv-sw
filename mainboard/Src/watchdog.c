@@ -89,7 +89,7 @@ void watchdog_routine() {
             car_watchdog_timed_out = true;
 
             // Set error
-            // error_set(ERROR_CAN, 0, HAL_GetTick());
+            // error_simple_set(ERROR_CAN, 0, HAL_GetTick());
 
             // Send TS off request
             set_ts_request.is_new = true;
@@ -110,7 +110,7 @@ void watchdog_routine() {
 
             cell_watchdog_timed_out = true;
             // Set error
-            // error_set(ERROR_CAN, 1, HAL_GetTick());
+            // error_simple_set(ERROR_CAN, 1, HAL_GetTick());
 
             // Send TS off request
             set_ts_request.is_new = true;
