@@ -1144,7 +1144,7 @@ void can_cellboards_check() {
             if (HAL_GetTick() - time_since_last_comm[i] >= CELLBOARD_COMM_TIMEOUT) {
                 error_simple_set(ERROR_GROUP_ERROR_CELLBOARD_COMM, i);
             } else {
-                error_simple_set(ERROR_GROUP_ERROR_CELLBOARD_COMM, i);
+                error_simple_reset(ERROR_GROUP_ERROR_CELLBOARD_COMM, i);
             }
         }
     }
