@@ -32,12 +32,12 @@ static const uint8_t adc_addresses[6] = {
 };
 
 static const bool excluded_temps[CELLBOARD_COUNT][CELLBOARD_TEMP_SENSOR_COUNT] = {
-    [0] = { 0 },
-    [1] = { [0] = true, [4] = true, [6] = true, [8] = true, [13] = true },
-    [2] = { [29] = true },
-    [3] = { [5] = true, [25] = true, [26] = true },
-    [4] = { [1] = true, [3] = true, [13] = true, [35] = true },
-    [5] = { [7] = true, [9] = true, [14] = true, [29] = true }
+    [0] = { [7] = true, [26] = true },
+    [1] = { [0] = true, [4] = true, [6] = true, [8] = true, [13] = true, [35] = true },
+    [2] = { [15] = true, [21] = true, [26] = true, [29] = true },
+    [3] = { [5] = true, [6] = true, [25] = true, [26] = true },
+    [4] = { [1] = true, [3] = true, [13] = true, [14] = true, [23] = true, [35] = true },
+    [5] = { [3] = true, [7] = true, [9] = true, [14] = true, [18] = true, [29] = true }
 };
 
 /**
@@ -95,7 +95,9 @@ void temp_measure(uint8_t adc_index) {
             if (!_temp_include_cell(temp_index)) {
                 size_t cnt = 0U;
                 temperature_t temp = 0U;
-                for (size_t i = temp_index - 2U; i <= temp_index + 2U; ++i) {
+
+                size_t base = (temp_index / 6U) * 6U;
+                for (size_t i = base; i < base + 6U; ++i) {
                     if (_temp_include_cell(i)) {
                         temp += temperatures[i];
                         ++cnt;
