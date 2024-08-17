@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#define ERROR_SIMPLE_COUNTER_THRESHOLD (10U)
+#define ERROR_SIMPLE_COUNTER_THRESHOLD (2U)
 #define ERROR_SIMPLE_DUMP_SIZE         (50U)
 
 typedef enum {

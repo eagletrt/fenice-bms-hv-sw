@@ -100,6 +100,7 @@ void measures_check_flags() {
     if (_MEASURE_CHECK_INTERVAL(MEASURE_INTERVAL_200MS)) {
         // Send info via CANS
         can_car_send(PRIMARY_HV_DEBUG_SIGNALS_FRAME_ID);
+        can_car_send(PRIMARY_DEBUG_SIGNAL_2_FRAME_ID);
     }
     // 500 ms interval
     if (_MEASURE_CHECK_INTERVAL(MEASURE_INTERVAL_500MS)) {
