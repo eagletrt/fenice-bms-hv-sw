@@ -33,6 +33,8 @@ static uint8_t error_simple_state[ERROR_SIMPLE_STATE_SIZE];
 static size_t error_expired = 0;
 error_simple_dump_element_t error_simple_dump[ERROR_SIMPLE_DUMP_SIZE] = {0};
 
+static size_t can_comm_cnt[ERROR_GROUP_ERROR_CAN_N_INSTANCES] = { 0U };
+
 size_t _error_simple_from_group_and_instance_to_index(error_simple_groups_t group, size_t instance) {
     uint32_t retidx = 0;
     for (size_t i = 0; i < group && i < N_ERROR_GROUPS; i++) {
@@ -69,13 +71,24 @@ int error_simple_set(error_simple_groups_t group, size_t instance) {
     if (group >= N_ERROR_GROUPS || instance >= error_instances[group]) {
         return -1;
     }
-    (error_simple_state[_error_simple_from_group_and_instance_to_index(group, instance)])++;
+    if (group == ERROR_GROUP_ERROR_CAN) {
+        if (++can_comm_cnt[instance] >= ERROR_SIMPLE_COUNTER_THRESHOLD_CAN_COMM) {
+            error_simple_state[_error_simple_from_group_and_instance_to_index(group, instance)] = ERROR_SIMPLE_COUNTER_THRESHOLD + 1U;
+        }
+    }
+    else {
+        ++error_simple_state[_error_simple_from_group_and_instance_to_index(group, instance)];
+    }
     return 0;
 }
 
 int error_simple_reset(error_simple_groups_t group, size_t instance) {
     if (group >= N_ERROR_GROUPS || instance >= error_instances[group]) {
         return -1;
+    }
+
+    if (group == ERROR_GROUP_ERROR_CAN) {
+        can_comm_cnt[instance] = 0U;
     }
     error_simple_state[_error_simple_from_group_and_instance_to_index(group, instance)] = 0;
     return 0;

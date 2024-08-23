@@ -204,8 +204,9 @@ bms_state_t do_fatal_error(state_data_t *data) {
   /* Your Code Here */
 
   // Check errors and feedbacks
-  if (get_expired_errors() == 0 && feedback_is_ok(FEEDBACK_FATAL_ERROR_MASK, FEEDBACK_FATAL_ERROR_HIGH))
+  if (get_expired_errors() == 0 && feedback_is_ok(FEEDBACK_FATAL_ERROR_MASK, FEEDBACK_FATAL_ERROR_HIGH)) {
     next_state = STATE_IDLE;
+  }
   
   switch (next_state) {
     case NO_CHANGE:
@@ -230,12 +231,18 @@ bms_state_t do_wait_airn_close(state_data_t *data) {
   /* Your Code Here */
 
   // Check fatal errors
-  if (get_expired_errors() > 0)
+  if (get_expired_errors() > 0) {
     next_state = STATE_FATAL_ERROR;
-  else if (_requested_ts_off() || airn_timeout)
+  }
+  else if (_requested_ts_off() || airn_timeout) {
     next_state = STATE_IDLE;
-  else if (feedback_is_ok(FEEDBACK_AIRN_CHECK_MASK, FEEDBACK_AIRN_CHECK_HIGH))
+  }
+  else if (!feedback_is_ok(FEEDBACK_SD_END, FEEDBACK_AIRN_CHECK_HIGH)) {
+      next_state = STATE_IDLE;
+  }
+  else if (feedback_is_ok(FEEDBACK_AIRN_CHECK_MASK, FEEDBACK_AIRN_CHECK_HIGH)) {
     next_state = STATE_WAIT_TS_PRECHARGE;
+  }
 
   switch (next_state) {
     case NO_CHANGE:
@@ -262,8 +269,9 @@ bms_state_t do_wait_ts_precharge(state_data_t *data) {
   /* Your Code Here */
 
   // Check fatal errors
-  if (get_expired_errors() > 0)
+  if (get_expired_errors() > 0) {
     next_state = STATE_FATAL_ERROR;
+  }
   else if (_requested_ts_off() || precharge_timeout) {
     if (precharge_timeout)
         cli_bms_debug("Precharge timeout", 17);
@@ -271,8 +279,13 @@ bms_state_t do_wait_ts_precharge(state_data_t *data) {
         cli_bms_debug("Requested TS off", 16);
     next_state = STATE_IDLE;
   }
-  else if (feedback_is_ok(FEEDBACK_PRECHARGE_CHECK_MASK, FEEDBACK_PRECHARGE_CHECK_HIGH) && internal_voltage_is_precharge_complete())
-    next_state = STATE_WAIT_AIRP_CLOSE;
+  else if (!feedback_is_ok(FEEDBACK_SD_END, FEEDBACK_PRECHARGE_CHECK_HIGH)) {
+      next_state = STATE_IDLE;
+  }
+  else if (feedback_is_ok(FEEDBACK_PRECHARGE_CHECK_MASK, FEEDBACK_PRECHARGE_CHECK_HIGH) && internal_voltage_is_precharge_complete()) {
+      next_state = STATE_WAIT_AIRP_CLOSE;
+  }
+
   
   switch (next_state) {
     case NO_CHANGE:
@@ -305,8 +318,12 @@ bms_state_t do_wait_airp_close(state_data_t *data) {
         cli_bms_debug("AIR+ timeout", 12);
     next_state = STATE_IDLE;
   }
-  else if (feedback_is_ok(FEEDBACK_AIRP_CHECK_MASK, FEEDBACK_AIRP_CHECK_HIGH))
+  else if (!feedback_is_ok(FEEDBACK_SD_END, FEEDBACK_AIRN_CHECK_HIGH)) {
+    next_state = STATE_IDLE;
+  }
+  else if (feedback_is_ok(FEEDBACK_AIRP_CHECK_MASK, FEEDBACK_AIRP_CHECK_HIGH)) {
     next_state = STATE_TS_ON;
+  }
   
   switch (next_state) {
     case NO_CHANGE:
