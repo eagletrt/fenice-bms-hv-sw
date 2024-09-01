@@ -44,7 +44,8 @@ void MX_CAN1_Init(void);
 void MX_CAN2_Init(void);
 
 /* USER CODE BEGIN Prototypes */
-
+void MX_CAN1_Init_250K(void);
+void MX_CAN1_Init_1M(void);
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus
