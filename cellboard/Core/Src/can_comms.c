@@ -83,8 +83,8 @@ void can_init_with_filter() {
 
     // Add jump to bootloader message id to the filters
     filter.FilterBank = 1;
-    filter.FilterIdLow = BMS_JMP_TO_BLT_FRAME_ID << 5;
-    filter.FilterIdHigh = BMS_JMP_TO_BLT_FRAME_ID << 5;
+    filter.FilterIdLow = BMS_CELLBOARD_FLASH_FRAME_ID << 5;
+    filter.FilterIdHigh = BMS_CELLBOARD_FLASH_FRAME_ID << 5;
     filter.FilterMaskIdHigh = BMS_TOPIC_MASK_FIXED_IDS << 5;
     filter.FilterMaskIdLow = BMS_TOPIC_MASK_FIXED_IDS << 5;
     HAL_CAN_ConfigFilter(&BMS_CAN, &filter);
@@ -240,7 +240,7 @@ void can_send(uint16_t id) {
 
         conv_version.canlib_build_time = CANLIB_BUILD_TIME;
         conv_version.cellboard_id = cellboard_index;
-        conv_version.component_version = 1; // build_epoch
+        conv_version.component_build_time = 1; // build_epoch
 
         bms_cellboard_version_conversion_to_raw_struct(&raw_version, &conv_version);
 
@@ -294,15 +294,15 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
                     set_bal_request.next_state = STATE_DISCHARGE;
                     break;
             }
-        } else if (rx_header.StdId == BMS_JMP_TO_BLT_FRAME_ID && fsm_get_state() == STATE_OFF) {
-            bms_jmp_to_blt_t raw_jmp;
-            bms_jmp_to_blt_converted_t conv_jmp;
+        } else if (rx_header.StdId == BMS_CELLBOARD_FLASH_FRAME_ID && fsm_get_state() == STATE_OFF) {
+            bms_cellboard_flash_t raw_jmp;
+            bms_cellboard_flash_converted_t conv_jmp;
 
-            if (bms_jmp_to_blt_unpack(&raw_jmp, rx_data, BMS_JMP_TO_BLT_BYTE_SIZE) < 0) {
+            if (bms_cellboard_flash_unpack(&raw_jmp, rx_data, BMS_CELLBOARD_FLASH_BYTE_SIZE) < 0) {
                 ERROR_SET(ERROR_CAN);
                 return;
             }
-            bms_jmp_to_blt_raw_to_conversion_struct(&conv_jmp, &raw_jmp);
+            bms_cellboard_flash_raw_to_conversion_struct(&conv_jmp, &raw_jmp);
 
             if (conv_jmp.cellboard_id == cellboard_index)
                 HAL_NVIC_SystemReset();

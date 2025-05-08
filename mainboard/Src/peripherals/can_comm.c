@@ -32,6 +32,7 @@
 #include "imd.h"
 #include "error_simple.h"
 
+
 #ifdef TEMP_GROUP_ERROR_ENABLE
 uint16_t temp_errors[CELLBOARD_COUNT];
 #endif // TEMP_GROUP_ERROR_ENABLE
@@ -249,19 +250,21 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
                 conv_status.status = primary_hv_status_status_idle;
                 break;
             case STATE_WAIT_AIRN_CLOSE:
-                conv_status.status = primary_hv_status_status_airn_close;
+                // conv_status.status = primary_hv_status_status_airn_close;
+                conv_status.status = primary_hv_status_status_airn_check;
                 break;
             case STATE_WAIT_TS_PRECHARGE:
-                conv_status.status = primary_hv_status_status_precharge;
+                // conv_status.status = primary_hv_status_status_precharge;
+                conv_status.status = primary_hv_status_status_precharge_check;
                 break;
             case STATE_WAIT_AIRP_CLOSE:
-                conv_status.status = primary_hv_status_status_airp_close;
+                conv_status.status = primary_hv_status_status_airp_check;
                 break;
             case STATE_TS_ON:
                 conv_status.status = primary_hv_status_status_ts_on;
                 break;
             case STATE_FATAL_ERROR:
-                conv_status.status = primary_hv_status_status_fatal_error;
+                conv_status.status = primary_hv_status_status_fatal;
                 break;
             default:
                 conv_status.status = primary_hv_status_status_idle;
@@ -400,37 +403,40 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         for (size_t i = 0; i < FEEDBACK_N; i++) {
             switch(i) {
                 case FEEDBACK_IMPLAUSIBILITY_DETECTED_POS:
-                    conv_status.feedback_implausibility_detected = fbs[i].real_state;
+                    conv_status.plausible_state_latched = !fbs[i].real_state;
+                    conv_status.plausible_state_persisted = !fbs[i].real_state;
+                    conv_status.plausible_state = !fbs[i].real_state;
+                    conv_status.plausible_state_rc = !fbs[i].real_state;
                     break;
                 case FEEDBACK_IMD_COCKPIT_POS:
-                    conv_status.feedback_imd_cockpit = fbs[i].real_state;
+                    conv_status.not_imd_fault_cockpit_led = fbs[i].real_state;
                     break;
                 case FEEDBACK_TSAL_GREEN_FAULT_LATCHED_POS:
                     conv_status.feedback_tsal_green_fault_latched = fbs[i].real_state;
                     break;
                 case FEEDBACK_BMS_COCKPIT_POS:
-                    conv_status.feedback_bms_cockpit = fbs[i].real_state;
+                    conv_status.not_bms_fault_cockpit_led = fbs[i].real_state;
                     break;
                 case FEEDBACK_EXT_LATCHED_POS:
                     conv_status.feedback_ext_latched = fbs[i].real_state;
                     break;
                 case FEEDBACK_TSAL_GREEN_POS:
-                    conv_status.feedback_tsal_green = fbs[i].real_state;
+                    conv_status.tsal_green = fbs[i].real_state;
                     break;
                 case FEEDBACK_TS_OVER_60V_STATUS_POS:
-                    conv_status.feedback_ts_over_60v_status = fbs[i].real_state;
+                    conv_status.ts_less_than_60v = !fbs[i].real_state;
                     break;
                 case FEEDBACK_AIRN_STATUS_POS:
-                    conv_status.feedback_airn_status = fbs[i].real_state;
+                    conv_status.airn_open_mec = fbs[i].real_state;
                     break;
                 case FEEDBACK_AIRP_STATUS_POS:
-                    conv_status.feedback_airp_status = fbs[i].real_state;
+                    conv_status.airp_open_mec = fbs[i].real_state;
                     break;
                 case FEEDBACK_AIRP_GATE_POS:
-                    conv_status.feedback_airp_gate = fbs[i].real_state;
+                    conv_status.airp_open_com = fbs[i].real_state;
                     break;
                 case FEEDBACK_AIRN_GATE_POS:
-                    conv_status.feedback_airn_gate = fbs[i].real_state;
+                    conv_status.airn_open_com = fbs[i].real_state;
                     break;
                 case FEEDBACK_PRECHARGE_STATUS_POS:
                     conv_status.feedback_precharge_status = fbs[i].real_state;
@@ -439,25 +445,25 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
                     conv_status.feedback_tsp_over_60v_status = fbs[i].real_state;
                     break;
                 case FEEDBACK_IMD_FAULT_POS:
-                    conv_status.feedback_imd_fault = fbs[i].real_state;
+                    conv_status.imd_ok = !fbs[i].real_state;
                     break;
                 case FEEDBACK_CHECK_MUX_POS:
                     conv_status.feedback_check_mux = fbs[i].real_state;
                     break;
                 case FEEDBACK_SD_END_POS:
-                    conv_status.feedback_sd_end = fbs[i].real_state;
+                    conv_status.sd_end = fbs[i].real_state;
                     break;
                 case FEEDBACK_SD_OUT_POS:
-                    conv_status.feedback_sd_out = fbs[i].real_state;
+                    conv_status.sd_out = fbs[i].real_state;
                     break;
                 case FEEDBACK_SD_IN_POS:
-                    conv_status.feedback_sd_in = fbs[i].real_state;
+                    conv_status.sd_in = fbs[i].real_state;
                     break;
                 case FEEDBACK_SD_BMS_POS:
-                    conv_status.feedback_sd_bms = fbs[i].real_state;
+                    conv_status.sd_bms_fb = fbs[i].real_state;
                     break;
                 case FEEDBACK_SD_IMD_POS:
-                    conv_status.feedback_sd_imd = fbs[i].real_state;
+                    conv_status.sd_imd_fb = fbs[i].real_state;
                     break;
             }
         }
@@ -488,11 +494,11 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         primary_hv_imd_status_converted_t conv_imd = { 0 };
         
         conv_imd.imd_details = imd_get_details();
-        conv_imd.imd_duty_cycle = imd_get_duty_cycle_percentage();
+        conv_imd.duty_cycle = imd_get_duty_cycle_percentage();
         conv_imd.imd_fault = imd_is_fault();
-        conv_imd.imd_freq = imd_get_freq();
+        conv_imd.frequency = imd_get_freq();
         conv_imd.imd_period = imd_get_period();
-        conv_imd.imd_status = imd_get_state();
+        conv_imd.status = imd_get_state();
 
         primary_hv_imd_status_conversion_to_raw_struct(&raw_imd, &conv_imd);
 
@@ -586,7 +592,7 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
 }
 HAL_StatusTypeDef can_bms_send(uint16_t id) {
     // Return if busy
-    if(can_forward && id != BMS_JMP_TO_BLT_FRAME_ID)
+    if(can_forward && id != BMS_CELLBOARD_FLASH_FRAME_ID)
         return HAL_BUSY;
 
     CAN_TxHeaderTypeDef tx_header = {
@@ -619,18 +625,18 @@ HAL_StatusTypeDef can_bms_send(uint16_t id) {
         }        
         return errors == 0 ? HAL_OK : HAL_ERROR;
     }
-    else if (id == BMS_JMP_TO_BLT_FRAME_ID) {
-        bms_jmp_to_blt_t raw_jmp = { 0 };
-        bms_jmp_to_blt_converted_t conv_jmp = { 0 };
+    else if (id == BMS_CELLBOARD_FLASH_FRAME_ID) {
+        bms_cellboard_flash_t raw_jmp = { 0 };
+        bms_cellboard_flash_converted_t conv_jmp = { 0 };
 
         conv_jmp.cellboard_id = flash_cellboard_id;
         // TODO: Board index (not used in cellboard)
         conv_jmp.board_index = 0;
 
         // Convert fw update to raw
-        bms_jmp_to_blt_conversion_to_raw_struct(&raw_jmp, &conv_jmp);
+        bms_cellboard_flash_conversion_to_raw_struct(&raw_jmp, &conv_jmp);
 
-        int data_len = bms_jmp_to_blt_pack(buffer, &raw_jmp, BMS_JMP_TO_BLT_BYTE_SIZE);
+        int data_len = bms_cellboard_flash_pack(buffer, &raw_jmp, BMS_CELLBOARD_FLASH_BYTE_SIZE);
         if (data_len < 0)
             return HAL_ERROR;
         
@@ -659,7 +665,8 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
         error_simple_reset(ERROR_GROUP_ERROR_CAN, hcan->Instance != BMS_CAN.Instance);
 
         // Forward data to the cellboards
-        if (rx_header.StdId >= BMS_FLASH_CELLBOARD_0_TX_FRAME_ID && rx_header.StdId <= BMS_FLASH_CELLBOARD_5_RX_FRAME_ID) {
+        // if (rx_header.StdId >= BMS_FLASH_CELLBOARD_0_TX_FRAME_ID && rx_header.StdId <= BMS_FLASH_CELLBOARD_5_RX_FRAME_ID) {
+        if (rx_header.StdId >= BMS_FLASH_CELLBOARD_0_RX_FRAME_ID && rx_header.StdId <= BMS_FLASH_CELLBOARD_5_RX_FRAME_ID) {
             CAN_TxHeaderTypeDef tx_header = {
                 .DLC = rx_header.DLC,
                 .ExtId = 0,
@@ -698,7 +705,8 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
             primary_hv_cells_voltage_converted_t conv_fwd_volts = { 0 };
 
             // Set start_index of the received cells between all cells of the pack
-            conv_fwd_volts.start_index = conv_volts.cellboard_id * CELLBOARD_CELL_COUNT + conv_volts.start_index;
+            // conv_fwd_volts.start_index = conv_volts.cellboard_id * CELLBOARD_CELL_COUNT + conv_volts.start_index;
+            conv_fwd_volts.offset = conv_volts.cellboard_id * CELLBOARD_CELL_COUNT + conv_volts.start_index; 
             conv_fwd_volts.voltage_0 = conv_volts.voltage0;
             conv_fwd_volts.voltage_1 = conv_volts.voltage1;
             conv_fwd_volts.voltage_2 = conv_volts.voltage2;
@@ -954,7 +962,9 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
 
             conv_fwd_version.cellboard_id = conv_version.cellboard_id;
             conv_fwd_version.canlib_build_time = conv_version.canlib_build_time;
-            conv_fwd_version.component_version = conv_version.component_version;
+            // This member is not part of `primary_hv_cellboard_verision_t` structure structure
+            // conv_fwd_version.component_version = conv_version.component_version;
+            conv_fwd_version.component_build_time = conv_version.component_build_time;
             
             primary_hv_cellboard_version_conversion_to_raw_struct(&raw_fwd_version, &conv_fwd_version);
 
@@ -981,7 +991,8 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
     if (hcan->Instance == CAR_CAN.Instance) {
         error_simple_reset(ERROR_GROUP_ERROR_CAN, hcan->Instance != BMS_CAN.Instance);
 
-        if (rx_header.StdId >= BMS_FLASH_CELLBOARD_0_TX_FRAME_ID && rx_header.StdId <= BMS_FLASH_CELLBOARD_5_RX_FRAME_ID) {
+        // if (rx_header.StdId >= BMS_FLASH_CELLBOARD_0_TX_FRAME_ID && rx_header.StdId <= BMS_FLASH_CELLBOARD_5_RX_FRAME_ID) {
+        if (rx_header.StdId >= BMS_FLASH_CELLBOARD_0_RX_FRAME_ID && rx_header.StdId <= BMS_FLASH_CELLBOARD_5_RX_FRAME_ID) {
             CAN_TxHeaderTypeDef tx_header = {
                 .DLC = rx_header.DLC,
                 .ExtId = 0,
@@ -1090,20 +1101,20 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
             fans_set_override(conv_fans.fans_override);
             fans_set_speed(conv_fans.fans_speed);
         }
-        else if (rx_header.StdId == PRIMARY_HV_JMP_TO_BLT_FRAME_ID) {
-            primary_hv_jmp_to_blt_t raw_jmp;
-            primary_hv_jmp_to_blt_converted_t conv_jmp;
+        else if (rx_header.StdId == PRIMARY_HV_FLASH_FRAME_ID) {
+            primary_hv_flash_t raw_jmp;
+            primary_hv_flash_converted_t conv_jmp;
 
-            if (primary_hv_jmp_to_blt_unpack(&raw_jmp, rx_data, PRIMARY_HV_JMP_TO_BLT_BYTE_SIZE) < 0) {
+            if (primary_hv_flash_unpack(&raw_jmp, rx_data, PRIMARY_HV_FLASH_BYTE_SIZE) < 0) {
                 error_simple_set(ERROR_GROUP_ERROR_CAN, hcan->Instance != BMS_CAN.Instance);
                 return;
             }
-            primary_hv_jmp_to_blt_raw_to_conversion_struct(&conv_jmp, &raw_jmp);
+            primary_hv_flash_raw_to_conversion_struct(&conv_jmp, &raw_jmp);
 
             bms_state_t state = fsm_get_state();
             if (conv_jmp.forward) {
                 flash_cellboard_id = conv_jmp.cellboard_id;
-                can_bms_send(BMS_JMP_TO_BLT_FRAME_ID);
+                can_bms_send(BMS_CELLBOARD_FLASH_FRAME_ID);
             }
             else if ((state == STATE_INIT || state == STATE_IDLE || state == STATE_FATAL_ERROR) && !bal_is_balancing())
                 HAL_NVIC_SystemReset();
