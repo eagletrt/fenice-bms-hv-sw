@@ -14,4 +14,4 @@
 
 compile_commands.json
 **/.cache
-
+.stm32env

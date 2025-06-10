@@ -666,7 +666,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
 
         // Forward data to the cellboards
         // if (rx_header.StdId >= BMS_FLASH_CELLBOARD_0_TX_FRAME_ID && rx_header.StdId <= BMS_FLASH_CELLBOARD_5_RX_FRAME_ID) {
-        if (rx_header.StdId >= BMS_FLASH_CELLBOARD_0_RX_FRAME_ID && rx_header.StdId <= BMS_FLASH_CELLBOARD_5_RX_FRAME_ID) {
+        if (rx_header.StdId >= BMS_CELLBOARD_FLASH_RESPONSE_FRAME_ID && rx_header.StdId <= BMS_FLASH_CELLBOARD_5_RX_FRAME_ID) {
             CAN_TxHeaderTypeDef tx_header = {
                 .DLC = rx_header.DLC,
                 .ExtId = 0,

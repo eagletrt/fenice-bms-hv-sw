@@ -10,15 +10,15 @@ target: cellboard
 # Can be C or C++
 language: C
 
-optimization: Og
+optimization: Os
 
 # MCU settings
 targetMCU: stm32l4x
 cpu: -mcpu=cortex-m4
 fpu: -mfpu=fpv4-sp-d16
 floatAbi: -mfloat-abi=hard
-ldscript: STM32L432KBUx_FLASH_shifted.ld # linker script
-# ldscript: STM32L432KBUx_FLASH.ld # linker script
+ldscript: STM32L432KBUx_FLASH.ld # linker script
+# ldscript: STM32L432KBUx_FLASH_shifted.ld # linker script
 
 # Compiler definitions. The -D prefix for the compiler will be automatically added.
 cDefinitions: 
@@ -95,4 +95,3 @@ sourceFiles:
 # When no makefile is present it will show a warning pop-up.
 # However when compilation without the CubeMX Makefile is desired, this can be turned of.
 suppressMakefileWarning: false
-    
