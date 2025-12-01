@@ -596,7 +596,7 @@ void fsm_run() {
 
     // Set or reset connection error
     if (HAL_GPIO_ReadPin(CONNS_DETECTION_GPIO_Port, CONNS_DETECTION_Pin) == GPIO_PIN_RESET) {
-      error_simple_set(ERROR_GROUP_ERROR_CONNECTOR_DISCONNECTED, 0);
+      // error_simple_set(ERROR_GROUP_ERROR_CONNECTOR_DISCONNECTED, 0);
     } else {
       error_simple_reset(ERROR_GROUP_ERROR_CONNECTOR_DISCONNECTED, 0);
     }

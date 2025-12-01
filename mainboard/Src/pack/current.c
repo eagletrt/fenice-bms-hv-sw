@@ -143,7 +143,7 @@ void current_check_errors() {
     
     // Hall effect sensor disconnected
     if (volt_300 < CURRENT_SENSOR_DISCONNECTED_THRESHOLD) {
-        error_simple_set(ERROR_GROUP_ERROR_CONNECTOR_DISCONNECTED, 1);
+        // error_simple_set(ERROR_GROUP_ERROR_CONNECTOR_DISCONNECTED, 1);
     } else {
         error_simple_reset(ERROR_GROUP_ERROR_CONNECTOR_DISCONNECTED, 1);
     }

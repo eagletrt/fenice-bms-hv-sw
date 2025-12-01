@@ -498,7 +498,7 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         conv_imd.imd_fault = imd_is_fault();
         conv_imd.frequency = imd_get_freq();
         conv_imd.imd_period = imd_get_period();
-        conv_imd.status = imd_get_state();
+        conv_imd.status = imd_get_state() + 1;
 
         primary_hv_imd_status_conversion_to_raw_struct(&raw_imd, &conv_imd);
 
@@ -782,6 +782,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
             }
             // Toggle temperatures connectors error
             bool is_error_set = false;
+            /*
             for (size_t board_id = 0; board_id < CELLBOARD_COUNT && !is_error_set; board_id++) {
                 for (size_t temp_bit = 0; temp_bit < TEMP_STRIPS_PER_BUS * 2; temp_bit += 2) {
                     if ((temp_errors[board_id] & (1 << temp_bit)) && (temp_errors[board_id] & (1 << (temp_bit + 1)))) {
@@ -791,6 +792,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef * hcan) {
                     }
                 }
             }
+            */
             if (!is_error_set)
                 error_simple_reset(ERROR_GROUP_ERROR_CONNECTOR_DISCONNECTED, 2);
 #endif // TEMP_GROUP_ERROR_ENABLE
