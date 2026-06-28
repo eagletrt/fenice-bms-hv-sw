@@ -1,0 +1,12 @@
+[submodule "cellboard/Core/Lib/can"]
+	path = cellboard/Core/Lib/can
+	url = git@github.com:eagletrt/libcan-sw.git
+[submodule "cellboard/Core/Lib/micro-libs"]
+	path = cellboard/Core/Lib/micro-libs
+	url = git@github.com:eagletrt/micro-libs.git
+[submodule "mainboard/lib/micro-libs"]
+	path = mainboard/lib/micro-libs
+	url = git@github.com:eagletrt/micro-libs.git
+[submodule "mainboard/lib/can"]
+	path = mainboard/lib/can
+	url = git@github.com:eagletrt/libcan-sw.git
