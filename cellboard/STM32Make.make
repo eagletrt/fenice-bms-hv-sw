@@ -241,7 +241,7 @@ CFLAGS = $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPTIMIZATION_FLAGS)
 CXXFLAGS = $(MCU) $(CXX_DEFS) $(C_INCLUDES) $(OPTIMIZATION_FLAGS)
 
 # Add additional flags
-CFLAGS += 
+CFLAGS += -std=gnu23 
 ASFLAGS += -specs=nosys.specs 
 CXXFLAGS += 
 
@@ -259,7 +259,7 @@ CXXFLAGS += $(ASSEMBLER_LIST_OUTPUT_FLAG)
 # LDFLAGS
 #######################################
 # link script
-LDSCRIPT = STM32L432KBUx_FLASH.ld
+LDSCRIPT = STM32L432KBUx_FLASH_shifted.ld
 
 # libraries
 LIBS = -lc -lm -lnosys 
