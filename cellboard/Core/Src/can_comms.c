@@ -21,7 +21,7 @@
 #include "spi.h"
 #include "temp.h"
 #include "volt.h"
-#include "bms_network.h"
+#include "can-bms-api.h"
 
 #define RETRANSMISSION_MAX_ATTEMPTS 1
 uint8_t retransmission_attempts[3] = { 0 };

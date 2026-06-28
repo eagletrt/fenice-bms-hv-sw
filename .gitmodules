@@ -10,3 +10,9 @@
 [submodule "mainboard/lib/can"]
 	path = mainboard/lib/can
 	url = git@github.com:eagletrt/libcan-sw.git
+[submodule "cellboard/Core/Lib/eagletrt"]
+	path = cellboard/Core/Lib/eagletrt
+	url = git@github.com:eagletrt/libeagletrt-sw.git
+[submodule "mainboard/lib/eagletrt"]
+	path = mainboard/lib/eagletrt
+	url = git@github.com:eagletrt/libeagletrt-sw.git
