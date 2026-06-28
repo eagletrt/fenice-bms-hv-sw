@@ -403,10 +403,18 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
         for (size_t i = 0; i < FEEDBACK_N; i++) {
             switch(i) {
                 case FEEDBACK_IMPLAUSIBILITY_DETECTED_POS:
-                    conv_status.plausible_state_latched = !fbs[i].real_state;
-                    conv_status.plausible_state_persisted = !fbs[i].real_state;
-                    conv_status.plausible_state = !fbs[i].real_state;
-                    conv_status.plausible_state_rc = !fbs[i].real_state;
+                    conv_status.plausible_state_latched = fbs[i].real_state == FEEDBACK_STATE_H ? FEEDBACK_STATE_L :
+                        fbs[i].real_state == FEEDBACK_STATE_L ? FEEDBACK_STATE_H :
+                        FEEDBACK_STATE_ERROR;
+                    conv_status.plausible_state_persisted = fbs[i].real_state == FEEDBACK_STATE_H ? FEEDBACK_STATE_L :
+                        fbs[i].real_state == FEEDBACK_STATE_L ? FEEDBACK_STATE_H :
+                        FEEDBACK_STATE_ERROR;
+                    conv_status.plausible_state = fbs[i].real_state == FEEDBACK_STATE_H ? FEEDBACK_STATE_L :
+                        fbs[i].real_state == FEEDBACK_STATE_L ? FEEDBACK_STATE_H :
+                        FEEDBACK_STATE_ERROR;
+                    conv_status.plausible_state_rc = fbs[i].real_state == FEEDBACK_STATE_H ? FEEDBACK_STATE_L :
+                        fbs[i].real_state == FEEDBACK_STATE_L ? FEEDBACK_STATE_H :
+                        FEEDBACK_STATE_ERROR;
                     break;
                 case FEEDBACK_IMD_COCKPIT_POS:
                     conv_status.not_imd_fault_cockpit_led = fbs[i].real_state;
@@ -424,7 +432,9 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
                     conv_status.tsal_green = fbs[i].real_state;
                     break;
                 case FEEDBACK_TS_OVER_60V_STATUS_POS:
-                    conv_status.ts_less_than_60v = !fbs[i].real_state;
+                    conv_status.ts_less_than_60v = fbs[i].real_state == FEEDBACK_STATE_H ? FEEDBACK_STATE_L :
+                        fbs[i].real_state == FEEDBACK_STATE_L ? FEEDBACK_STATE_H :
+                        FEEDBACK_STATE_ERROR;
                     break;
                 case FEEDBACK_AIRN_STATUS_POS:
                     conv_status.airn_open_mec = fbs[i].real_state;
@@ -445,7 +455,9 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
                     conv_status.feedback_tsp_over_60v_status = fbs[i].real_state;
                     break;
                 case FEEDBACK_IMD_FAULT_POS:
-                    conv_status.imd_ok = !fbs[i].real_state;
+                    conv_status.imd_ok = fbs[i].real_state == FEEDBACK_STATE_H ? FEEDBACK_STATE_L :
+                        fbs[i].real_state == FEEDBACK_STATE_L ? FEEDBACK_STATE_H :
+                        FEEDBACK_STATE_ERROR;
                     break;
                 case FEEDBACK_CHECK_MUX_POS:
                     conv_status.feedback_check_mux = fbs[i].real_state;

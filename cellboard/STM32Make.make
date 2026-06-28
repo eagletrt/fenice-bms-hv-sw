@@ -75,8 +75,6 @@ endif
 ######################################
 # C sources
 C_SOURCES =  \
-Core/Lib/can/lib/bms/bms_network.c \
-Core/Lib/can/lib/bms/bms_watchdog.c \
 Core/Lib/micro-libs/blinky/src/blinky.c \
 Core/Lib/micro-libs/m95256/m95256.c \
 Core/Lib/micro-libs/timer-utils/timer_utils.c \
@@ -218,7 +216,6 @@ AS_INCLUDES = \
 C_INCLUDES =  \
 -ICore/Inc \
 -ICore/Inc/peripherals \
--ICore/Lib/can/lib/bms \
 -ICore/Lib/micro-libs/blinky/inc \
 -ICore/Lib/micro-libs/m95256 \
 -ICore/Lib/micro-libs/timer-utils \

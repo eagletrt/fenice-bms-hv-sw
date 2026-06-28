@@ -37,7 +37,6 @@ The finite state machine has:
 #define AIRN_TIMEOUT_INTERRUPT TIM_IT_CC1
 #define PRECHARGE_TIMEOUT_INTERRUPT TIM_IT_CC2
 #define AIRP_TIMEOUT_INTERRUPT TIM_IT_CC3
-
 // SEARCH FOR Your Code Here FOR CODE INSERTION POINTS!
 
 // GLOBALS
@@ -171,8 +170,9 @@ bms_state_t do_idle(state_data_t *data) {
   bal_routine();
 
   // Check for fatal errors
-  if (get_expired_errors() > 0)
+  if (get_expired_errors() > 0) {
     next_state = STATE_FATAL_ERROR;
+  }
   else if (_requested_ts_on() && feedback_is_ok(FEEDBACK_IDLE_MASK, FEEDBACK_IDLE_HIGH)) {
     // Stop balancing
     if (bal_is_balancing())
@@ -311,8 +311,9 @@ bms_state_t do_wait_airp_close(state_data_t *data) {
   
   // cli_bms_debug("[FSM] In state wait_airp_close", 30);
   /* Your Code Here */
-  if (get_expired_errors() > 0)
+  if (get_expired_errors() > 0) {
     next_state = STATE_FATAL_ERROR;
+  }
   else if (_requested_ts_off() || airp_timeout) {
     if (airp_timeout)
         cli_bms_debug("AIR+ timeout", 12);
