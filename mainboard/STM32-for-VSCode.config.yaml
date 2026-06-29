@@ -21,24 +21,23 @@ floatAbi: -mfloat-abi=hard
 ldscript: STM32F446RETx_FLASH_shifted.ld # linker script
 
 # Compiler definitions. The -D prefix for the compiler will be automatically added.
-cDefinitions: 
+cDefinitions:
   - USE_HAL_DRIVER
   - STM32F446xx
-  - primary_NETWORK_IMPLEMENTATION
-  - bms_NETWORK_IMPLEMENTATION
-  - primary_WATCHDOG_IMPLEMENTATION 
-  - bms_WATCHDOG_IMPLEMENTATION 
   - WATCHDOG_IGNORE
-  - TEMP_ERROR_ENABLE
-  - TEMP_GROUP_ERROR_ENABLE
+  - __USE_XOPEN
+  - _GNU_SOURCE
+  # - TEMP_ERROR_ENABLE
+  # - TEMP_GROUP_ERROR_ENABLE
 
 cxxDefinitions: []
 asDefinitions: []
 
 # Compiler flags
-cFlags: []
+cFlags:
+ - -std=gnu23
 cxxFlags: []
-assemblyFlags: 
+assemblyFlags:
   - -specs=nosys.specs
 linkerFlags:
   - -u_printf_float
@@ -46,7 +45,7 @@ linkerFlags:
 
 # libraries to be included. The -l prefix to the library will be automatically added.
 # Mind that non standard libraries should have a path to their respective directory.
-libraries: 
+libraries:
   - c
   - m
   - nosys
@@ -57,7 +56,7 @@ libraryDirectories: []
 # Glob patterns (https://www.wikiwand.com/en/Glob_(programming)) can be used.
 # Do mind that double stars are reserved in yaml
 # these should be escaped with a: \ or the name should be in double quotes e.g. "**.test.**"
-excludes: 
+excludes:
   - "**/[Ee]xamples/**"
   - "**/[Ee]xample/**"
   - "**/*[Tt]est*/**"
@@ -66,10 +65,10 @@ excludes:
 
 # Include directories (directories containing .h or .hpp files)
 # If a CubeMX makefile is present it will automatically include the include directories from that makefile.
-includeDirectories: 
+includeDirectories:
   - Inc/**
-  - lib/can/lib/bms/**
-  - lib/can/lib/primary/**
+  - lib/eagletrt/**
+  - lib/can/include/**
   - lib/micro-libs/blinky/inc/**
   - lib/micro-libs/cli-legacy/**
   - lib/micro-libs/eeprom-config/**
@@ -86,12 +85,11 @@ includeDirectories:
 # Glob patterns (https://www.wikiwand.com/en/Glob_(programming)) can be used.
 # Do mind that double stars are reserved in yaml
 # these should be escaped with a: \ or the name should be in double quotes e.g. "HARDWARE_DRIVER*.c"
-sourceFiles:  
+sourceFiles:
   - Src/**
-  - lib/can/lib/bms/bms_network.c
-  - lib/can/lib/bms/bms_watchdog.c
-  - lib/can/lib/primary/primary_network.c
-  - lib/can/lib/primary/primary_watchdog.c
+  - lib/eagletrt/src/*.h
+  - lib/can/src/bms/*.c
+  - lib/can/src/primary/*.c
   - lib/micro-libs/blinky/src/**
   - lib/micro-libs/cli-legacy/**
   - lib/micro-libs/eeprom-config/**
@@ -107,4 +105,4 @@ sourceFiles:
 # When no makefile is present it will show a warning pop-up.
 # However when compilation without the CubeMX Makefile is desired, this can be turned of.
 suppressMakefileWarning: false
-    
+

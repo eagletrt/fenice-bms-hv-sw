@@ -128,10 +128,8 @@ Src/system_stm32f4xx.c \
 Src/tim.c \
 Src/usart.c \
 Src/watchdog.c \
-lib/can/lib/bms/bms_network.c \
-lib/can/lib/bms/bms_watchdog.c \
-lib/can/lib/primary/primary_network.c \
-lib/can/lib/primary/primary_watchdog.c \
+lib/can/src/bms/can-bms-api.c \
+lib/can/src/primary/can-primary-api.c \
 lib/llist/llist.c \
 lib/micro-libs/blinky/src/blinky.c \
 lib/micro-libs/cli-legacy/cli.c \
@@ -219,14 +217,10 @@ AS_DEFS =
 # C defines
 C_DEFS =  \
 -DSTM32F446xx \
--DTEMP_ERROR_ENABLE \
--DTEMP_GROUP_ERROR_ENABLE \
 -DUSE_HAL_DRIVER \
 -DWATCHDOG_IGNORE \
--Dbms_NETWORK_IMPLEMENTATION \
--Dbms_WATCHDOG_IMPLEMENTATION \
--Dprimary_NETWORK_IMPLEMENTATION \
--Dprimary_WATCHDOG_IMPLEMENTATION
+-D_GNU_SOURCE \
+-D__USE_XOPEN
 
 
 # CXX defines
@@ -249,8 +243,11 @@ C_INCLUDES =  \
 -IInc/error \
 -IInc/pack \
 -IInc/peripherals \
--Ilib/can/lib/bms \
--Ilib/can/lib/primary \
+-Ilib/can/include \
+-Ilib/can/include/bms \
+-Ilib/can/include/inverters \
+-Ilib/can/include/primary \
+-Ilib/eagletrt/include \
 -Ilib/llist \
 -Ilib/micro-libs/blinky/inc \
 -Ilib/micro-libs/cli \
@@ -272,7 +269,7 @@ CFLAGS = $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPTIMIZATION_FLAGS)
 CXXFLAGS = $(MCU) $(CXX_DEFS) $(C_INCLUDES) $(OPTIMIZATION_FLAGS)
 
 # Add additional flags
-CFLAGS += 
+CFLAGS += -std=gnu23 
 ASFLAGS += -specs=nosys.specs 
 CXXFLAGS += 
 

@@ -14,76 +14,74 @@ The finite state machine has:
 
 #include "bms_fsm.h"
 
-#include <string.h>
-
-#include "stm32f4xx_hal.h"
-#include "tim.h"
-#include "mainboard_config.h"
-#include "current.h"
-#include "config.h"
-#include "pack/pack.h"
-#include "feedback.h"
+#include "bal.h"
+#include "blinky.h"
 #include "can_comm.h"
 #include "cli_bms.h"
-#include "blinky.h"
+#include "config.h"
+#include "current.h"
+#include "feedback.h"
 #include "internal_voltage.h"
-#include "bal.h"
+#include "mainboard_config.h"
+#include "pack/pack.h"
+#include "stm32f4xx_hal.h"
+#include "tim.h"
 #include "timer_utils.h"
 
-#define AIRN_TIMEOUT_CHANNEL TIM_CHANNEL_1
-#define PRECHARGE_TIMEOUT_CHANNEL TIM_CHANNEL_2
-#define AIRP_TIMEOUT_CHANNEL TIM_CHANNEL_3
+#include <stdio.h>
+#include <string.h>
 
-#define AIRN_TIMEOUT_INTERRUPT TIM_IT_CC1
+#define AIRN_TIMEOUT_CHANNEL      TIM_CHANNEL_1
+#define PRECHARGE_TIMEOUT_CHANNEL TIM_CHANNEL_2
+#define AIRP_TIMEOUT_CHANNEL      TIM_CHANNEL_3
+
+#define AIRN_TIMEOUT_INTERRUPT      TIM_IT_CC1
 #define PRECHARGE_TIMEOUT_INTERRUPT TIM_IT_CC2
-#define AIRP_TIMEOUT_INTERRUPT TIM_IT_CC3
+#define AIRP_TIMEOUT_INTERRUPT      TIM_IT_CC3
 // SEARCH FOR Your Code Here FOR CODE INSERTION POINTS!
 
 // GLOBALS
 // State human-readable names
-const char * state_names[] = {"init", "idle", "fatal_error", "wait_airn_close", "wait_ts_precharge", "wait_airp_close", "ts_on"};
-char debug_msg[100] = { 0 };
+const char *state_names[] =
+    {"init", "idle", "fatal_error", "wait_airn_close", "wait_ts_precharge", "wait_airp_close", "ts_on"};
+char debug_msg[100] = {0};
 
 bms_state_t fsm_state = STATE_INIT;
 Blinky led;
-bool airn_timeout = false;
+bool airn_timeout      = false;
 bool precharge_timeout = false;
-bool airp_timeout = false;
+bool airp_timeout      = false;
 
-bms_fsm_transition_request set_ts_request = {
-    .is_new = false,
-    .next_state = STATE_IDLE
-};
+bms_fsm_transition_request set_ts_request = {.is_new = false, .next_state = STATE_IDLE};
 
 uint16_t blink_pattern[(NUM_STATES) * 2 + 1];
 
-
 // List of state functions
 state_func_t *const state_table[NUM_STATES] = {
-  do_init,              // in state init
-  do_idle,              // in state idle
-  do_fatal_error,       // in state fatal_error
-  do_wait_airn_close,   // in state wait_airn_close
-  do_wait_ts_precharge, // in state wait_ts_precharge
-  do_wait_airp_close,   // in state wait_airp_close
-  do_ts_on,             // in state ts_on
+    do_init,               // in state init
+    do_idle,               // in state idle
+    do_fatal_error,        // in state fatal_error
+    do_wait_airn_close,    // in state wait_airn_close
+    do_wait_ts_precharge,  // in state wait_ts_precharge
+    do_wait_airp_close,    // in state wait_airp_close
+    do_ts_on,              // in state ts_on
 };
 
 // Table of transition functions
 transition_func_t *const transition_table[NUM_STATES][NUM_STATES] = {
-  /* states:               init               , idle               , fatal_error        , wait_airn_close    , wait_ts_precharge  , wait_airp_close    , ts_on               */
-  /* init              */ {NULL               , init_to_idle       , NULL               , NULL               , NULL               , NULL               , NULL               }, 
-  /* idle              */ {NULL               , NULL               , set_fatal_error    , close_airn         , NULL               , NULL               , NULL               }, 
-  /* fatal_error       */ {NULL               , fatal_error_to_idle, NULL               , NULL               , NULL               , NULL               , NULL               }, 
-  /* wait_airn_close   */ {NULL               , set_ts_off         , set_fatal_error    , NULL               , start_precharge    , NULL               , NULL               }, 
-  /* wait_ts_precharge */ {NULL               , set_ts_off         , set_fatal_error    , NULL               , NULL               , close_airp         , NULL               }, 
-  /* wait_airp_close   */ {NULL               , set_ts_off         , set_fatal_error    , NULL               , NULL               , NULL               , set_ts_on          }, 
-  /* ts_on             */ {NULL               , set_ts_off         , set_fatal_error    , NULL               , NULL               , NULL               , NULL               }, 
+    /* states:               init               , idle               , fatal_error        , wait_airn_close    , wait_ts_precharge  , wait_airp_close    , ts_on               */
+    /* init              */ {NULL, init_to_idle, NULL, NULL, NULL, NULL, NULL},
+    /* idle              */ {NULL, NULL, set_fatal_error, close_airn, NULL, NULL, NULL},
+    /* fatal_error       */ {NULL, fatal_error_to_idle, NULL, NULL, NULL, NULL, NULL},
+    /* wait_airn_close   */ {NULL, set_ts_off, set_fatal_error, NULL, start_precharge, NULL, NULL},
+    /* wait_ts_precharge */ {NULL, set_ts_off, set_fatal_error, NULL, NULL, close_airp, NULL},
+    /* wait_airp_close   */ {NULL, set_ts_off, set_fatal_error, NULL, NULL, NULL, set_ts_on},
+    /* ts_on             */ {NULL, set_ts_off, set_fatal_error, NULL, NULL, NULL, NULL},
 };
 
 /**
  * @brief Stop the timeout timer
- * 
+ *
  * @param channel The channel of the timer to stop
  * @param interrupt The interrupt pending bit to clear
  */
@@ -96,13 +94,13 @@ void _reset_timeouts() {
     _stop_timeout(AIRN_TIMEOUT_CHANNEL, AIRN_TIMEOUT_INTERRUPT);
     _stop_timeout(PRECHARGE_TIMEOUT_CHANNEL, PRECHARGE_TIMEOUT_INTERRUPT);
     _stop_timeout(AIRP_TIMEOUT_CHANNEL, AIRP_TIMEOUT_INTERRUPT);
-    airn_timeout = false;
+    airn_timeout      = false;
     precharge_timeout = false;
-    airp_timeout = false;
+    airp_timeout      = false;
 }
 /**
  * @brief Start the timeout timer
- * 
+ *
  * @param channel The channel of the timer to start
  * @param interrupt The interrupt pending bit to clear
  * @param timeout The timeout duration in ms
@@ -125,284 +123,278 @@ bool _requested_ts_off() {
     return set_ts_request.is_new && set_ts_request.next_state == STATE_IDLE;
 }
 
-
-/*  ____  _        _       
- * / ___|| |_ __ _| |_ ___ 
+/*  ____  _        _
+ * / ___|| |_ __ _| |_ ___
  * \___ \| __/ _` | __/ _ \
  *  ___) | || (_| | ||  __/
  * |____/ \__\__,_|\__\___|
- *                         
- *   __                  _   _                 
- *  / _|_   _ _ __   ___| |_(_) ___  _ __  ___ 
+ *
+ *   __                  _   _
+ *  / _|_   _ _ __   ___| |_(_) ___  _ __  ___
  * | |_| | | | '_ \ / __| __| |/ _ \| '_ \/ __|
  * |  _| |_| | | | | (__| |_| | (_) | | | \__ \
  * |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
- */                                             
+ */
 
 // Function to be executed in state init
 // valid return states: STATE_IDLE
 bms_state_t do_init(state_data_t *data) {
-  bms_state_t next_state = STATE_IDLE;
-  
-  /* Your Code Here */
-  
-  switch (next_state) {
-    case STATE_IDLE:
-      break;
-    default:
-      sprintf(debug_msg, "[FSM] Cannot pass from init to %s, remaining in this state", state_names[next_state]);
-      cli_bms_debug(debug_msg, strlen(debug_msg));
-      next_state = NO_CHANGE;
-  }
-  
-  return next_state;
-}
+    bms_state_t next_state = STATE_IDLE;
 
+    /* Your Code Here */
+
+    switch (next_state) {
+        case STATE_IDLE:
+            break;
+        default:
+            sprintf(debug_msg, "[FSM] Cannot pass from init to %s, remaining in this state", state_names[next_state]);
+            cli_bms_debug(debug_msg, strlen(debug_msg));
+            next_state = NO_CHANGE;
+    }
+
+    return next_state;
+}
 
 // Function to be executed in state idle
 // valid return states: NO_CHANGE, STATE_IDLE, STATE_FATAL_ERROR, STATE_WAIT_AIRN_CLOSE
 bms_state_t do_idle(state_data_t *data) {
-  bms_state_t next_state = NO_CHANGE;
-  
-  /* Your Code Here */
+    bms_state_t next_state = NO_CHANGE;
 
-  // Update balancing
-  bal_routine();
+    /* Your Code Here */
 
-  // Check for fatal errors
-  if (get_expired_errors() > 0) {
-    next_state = STATE_FATAL_ERROR;
-  }
-  else if (_requested_ts_on() && feedback_is_ok(FEEDBACK_IDLE_MASK, FEEDBACK_IDLE_HIGH)) {
-    // Stop balancing
-    if (bal_is_balancing())
-      bal_stop();
-    next_state = STATE_WAIT_AIRN_CLOSE;
-  }
+    // Update balancing
+    bal_routine();
 
-  switch (next_state) {
-    case NO_CHANGE:
-    case STATE_IDLE:
-    case STATE_FATAL_ERROR:
-    case STATE_WAIT_AIRN_CLOSE:
-      break;
-    default:
-      sprintf(debug_msg, "[FSM] Cannot pass from idle to %s, remaining in this state", state_names[next_state]);
-      cli_bms_debug(debug_msg, strlen(debug_msg));
-      next_state = NO_CHANGE;
-  }
-  
-  return next_state;
+    // Check for fatal errors
+    if (get_expired_errors() > 0) {
+        next_state = STATE_FATAL_ERROR;
+    } else if (_requested_ts_on() && feedback_is_ok(FEEDBACK_IDLE_MASK, FEEDBACK_IDLE_HIGH)) {
+        // Stop balancing
+        if (bal_is_balancing())
+            bal_stop();
+        next_state = STATE_WAIT_AIRN_CLOSE;
+    }
+
+    switch (next_state) {
+        case NO_CHANGE:
+        case STATE_IDLE:
+        case STATE_FATAL_ERROR:
+        case STATE_WAIT_AIRN_CLOSE:
+            break;
+        default:
+            sprintf(debug_msg, "[FSM] Cannot pass from idle to %s, remaining in this state", state_names[next_state]);
+            cli_bms_debug(debug_msg, strlen(debug_msg));
+            next_state = NO_CHANGE;
+    }
+
+    return next_state;
 }
-
 
 // Function to be executed in state fatal_error
 // valid return states: NO_CHANGE, STATE_IDLE, STATE_FATAL_ERROR
 bms_state_t do_fatal_error(state_data_t *data) {
-  bms_state_t next_state = NO_CHANGE;
-  
-  /* Your Code Here */
+    bms_state_t next_state = NO_CHANGE;
 
-  // Check errors and feedbacks
-  if (get_expired_errors() == 0 && feedback_is_ok(FEEDBACK_FATAL_ERROR_MASK, FEEDBACK_FATAL_ERROR_HIGH)) {
-    next_state = STATE_IDLE;
-  }
-  
-  switch (next_state) {
-    case NO_CHANGE:
-    case STATE_IDLE:
-    case STATE_FATAL_ERROR:
-      break;
-    default:
-      sprintf(debug_msg, "[FSM] Cannot pass from fatal_error to %s, remaining in this state", state_names[next_state]);
-      cli_bms_debug(debug_msg, strlen(debug_msg));
-      next_state = NO_CHANGE;
-  }
-  
-  return next_state;
+    /* Your Code Here */
+
+    // Check errors and feedbacks
+    if (get_expired_errors() == 0 && feedback_is_ok(FEEDBACK_FATAL_ERROR_MASK, FEEDBACK_FATAL_ERROR_HIGH)) {
+        next_state = STATE_IDLE;
+    }
+
+    switch (next_state) {
+        case NO_CHANGE:
+        case STATE_IDLE:
+        case STATE_FATAL_ERROR:
+            break;
+        default:
+            sprintf(
+                debug_msg,
+                "[FSM] Cannot pass from fatal_error to %s, remaining in this state",
+                state_names[next_state]);
+            cli_bms_debug(debug_msg, strlen(debug_msg));
+            next_state = NO_CHANGE;
+    }
+
+    return next_state;
 }
-
 
 // Function to be executed in state wait_airn_close
 // valid return states: NO_CHANGE, STATE_IDLE, STATE_FATAL_ERROR, STATE_WAIT_AIRN_CLOSE, STATE_WAIT_TS_PRECHARGE
 bms_state_t do_wait_airn_close(state_data_t *data) {
-  bms_state_t next_state = NO_CHANGE;
-  
-  /* Your Code Here */
+    bms_state_t next_state = NO_CHANGE;
 
-  // Check fatal errors
-  if (get_expired_errors() > 0) {
-    next_state = STATE_FATAL_ERROR;
-  }
-  else if (_requested_ts_off() || airn_timeout) {
-    next_state = STATE_IDLE;
-  }
-  else if (!feedback_is_ok(FEEDBACK_SD_END, FEEDBACK_AIRN_CHECK_HIGH)) {
-      next_state = STATE_IDLE;
-  }
-  else if (feedback_is_ok(FEEDBACK_AIRN_CHECK_MASK, FEEDBACK_AIRN_CHECK_HIGH)) {
-    next_state = STATE_WAIT_TS_PRECHARGE;
-  }
+    /* Your Code Here */
 
-  switch (next_state) {
-    case NO_CHANGE:
-    case STATE_IDLE:
-    case STATE_FATAL_ERROR:
-    case STATE_WAIT_AIRN_CLOSE:
-    case STATE_WAIT_TS_PRECHARGE:
-      break;
-    default:
-      sprintf(debug_msg, "[FSM] Cannot pass from wait_airn_close to %s, remaining in this state", state_names[next_state]);
-      cli_bms_debug(debug_msg, strlen(debug_msg));
-      next_state = NO_CHANGE;
-  }
-  
-  return next_state;
+    // Check fatal errors
+    if (get_expired_errors() > 0) {
+        next_state = STATE_FATAL_ERROR;
+    } else if (_requested_ts_off() || airn_timeout) {
+        next_state = STATE_IDLE;
+    } else if (!feedback_is_ok(FEEDBACK_SD_END, FEEDBACK_AIRN_CHECK_HIGH)) {
+        next_state = STATE_IDLE;
+    } else if (feedback_is_ok(FEEDBACK_AIRN_CHECK_MASK, FEEDBACK_AIRN_CHECK_HIGH)) {
+        next_state = STATE_WAIT_TS_PRECHARGE;
+    }
+
+    switch (next_state) {
+        case NO_CHANGE:
+        case STATE_IDLE:
+        case STATE_FATAL_ERROR:
+        case STATE_WAIT_AIRN_CLOSE:
+        case STATE_WAIT_TS_PRECHARGE:
+            break;
+        default:
+            sprintf(
+                debug_msg,
+                "[FSM] Cannot pass from wait_airn_close to %s, remaining in this state",
+                state_names[next_state]);
+            cli_bms_debug(debug_msg, strlen(debug_msg));
+            next_state = NO_CHANGE;
+    }
+
+    return next_state;
 }
-
 
 // Function to be executed in state wait_ts_precharge
 // valid return states: NO_CHANGE, STATE_IDLE, STATE_FATAL_ERROR, STATE_WAIT_TS_PRECHARGE, STATE_WAIT_AIRP_CLOSE
 bms_state_t do_wait_ts_precharge(state_data_t *data) {
-  bms_state_t next_state = NO_CHANGE;
-  
-  /* Your Code Here */
+    bms_state_t next_state = NO_CHANGE;
 
-  // Check fatal errors
-  if (get_expired_errors() > 0) {
-    next_state = STATE_FATAL_ERROR;
-  }
-  else if (_requested_ts_off() || precharge_timeout) {
-    if (precharge_timeout)
-        cli_bms_debug("Precharge timeout", 17);
-    if (_requested_ts_off())
-        cli_bms_debug("Requested TS off", 16);
-    next_state = STATE_IDLE;
-  }
-  else if (!feedback_is_ok(FEEDBACK_SD_END, FEEDBACK_PRECHARGE_CHECK_HIGH)) {
-      next_state = STATE_IDLE;
-  }
-  else if (feedback_is_ok(FEEDBACK_PRECHARGE_CHECK_MASK, FEEDBACK_PRECHARGE_CHECK_HIGH) && internal_voltage_is_precharge_complete()) {
-      next_state = STATE_WAIT_AIRP_CLOSE;
-  }
+    /* Your Code Here */
 
-  
-  switch (next_state) {
-    case NO_CHANGE:
-    case STATE_IDLE:
-    case STATE_FATAL_ERROR:
-    case STATE_WAIT_TS_PRECHARGE:
-    case STATE_WAIT_AIRP_CLOSE:
-      break;
-    default:
-      sprintf(debug_msg, "[FSM] Cannot pass from wait_ts_precharge to %s, remaining in this state", state_names[next_state]);
-      cli_bms_debug(debug_msg, strlen(debug_msg));
-      next_state = NO_CHANGE;
-  }
-  
-  return next_state;
+    // Check fatal errors
+    if (get_expired_errors() > 0) {
+        next_state = STATE_FATAL_ERROR;
+    } else if (_requested_ts_off() || precharge_timeout) {
+        if (precharge_timeout)
+            cli_bms_debug("Precharge timeout", 17);
+        if (_requested_ts_off())
+            cli_bms_debug("Requested TS off", 16);
+        next_state = STATE_IDLE;
+    } else if (!feedback_is_ok(FEEDBACK_SD_END, FEEDBACK_PRECHARGE_CHECK_HIGH)) {
+        next_state = STATE_IDLE;
+    } else if (
+        feedback_is_ok(FEEDBACK_PRECHARGE_CHECK_MASK, FEEDBACK_PRECHARGE_CHECK_HIGH) &&
+        internal_voltage_is_precharge_complete()) {
+        next_state = STATE_WAIT_AIRP_CLOSE;
+    }
+
+    switch (next_state) {
+        case NO_CHANGE:
+        case STATE_IDLE:
+        case STATE_FATAL_ERROR:
+        case STATE_WAIT_TS_PRECHARGE:
+        case STATE_WAIT_AIRP_CLOSE:
+            break;
+        default:
+            sprintf(
+                debug_msg,
+                "[FSM] Cannot pass from wait_ts_precharge to %s, remaining in this state",
+                state_names[next_state]);
+            cli_bms_debug(debug_msg, strlen(debug_msg));
+            next_state = NO_CHANGE;
+    }
+
+    return next_state;
 }
-
 
 // Function to be executed in state wait_airp_close
 // valid return states: NO_CHANGE, STATE_IDLE, STATE_FATAL_ERROR, STATE_WAIT_AIRP_CLOSE, STATE_TS_ON
 bms_state_t do_wait_airp_close(state_data_t *data) {
-  bms_state_t next_state = NO_CHANGE;
-  
-  // cli_bms_debug("[FSM] In state wait_airp_close", 30);
-  /* Your Code Here */
-  if (get_expired_errors() > 0) {
-    next_state = STATE_FATAL_ERROR;
-  }
-  else if (_requested_ts_off() || airp_timeout) {
-    if (airp_timeout)
-        cli_bms_debug("AIR+ timeout", 12);
-    next_state = STATE_IDLE;
-  }
-  else if (!feedback_is_ok(FEEDBACK_SD_END, FEEDBACK_AIRN_CHECK_HIGH)) {
-    next_state = STATE_IDLE;
-  }
-  else if (feedback_is_ok(FEEDBACK_AIRP_CHECK_MASK, FEEDBACK_AIRP_CHECK_HIGH)) {
-    next_state = STATE_TS_ON;
-  }
-  
-  switch (next_state) {
-    case NO_CHANGE:
-    case STATE_IDLE:
-    case STATE_FATAL_ERROR:
-    case STATE_WAIT_AIRP_CLOSE:
-    case STATE_TS_ON:
-      break;
-    default:
-      sprintf(debug_msg, "[FSM] Cannot pass from wait_airp_close to %s, remaining in this state", state_names[next_state]);
-      cli_bms_debug(debug_msg, strlen(debug_msg));
-      next_state = NO_CHANGE;
-  }
-  
-  return next_state;
-}
+    bms_state_t next_state = NO_CHANGE;
 
+    // cli_bms_debug("[FSM] In state wait_airp_close", 30);
+    /* Your Code Here */
+    if (get_expired_errors() > 0) {
+        next_state = STATE_FATAL_ERROR;
+    } else if (_requested_ts_off() || airp_timeout) {
+        if (airp_timeout)
+            cli_bms_debug("AIR+ timeout", 12);
+        next_state = STATE_IDLE;
+    } else if (!feedback_is_ok(FEEDBACK_SD_END, FEEDBACK_AIRN_CHECK_HIGH)) {
+        next_state = STATE_IDLE;
+    } else if (feedback_is_ok(FEEDBACK_AIRP_CHECK_MASK, FEEDBACK_AIRP_CHECK_HIGH)) {
+        next_state = STATE_TS_ON;
+    }
+
+    switch (next_state) {
+        case NO_CHANGE:
+        case STATE_IDLE:
+        case STATE_FATAL_ERROR:
+        case STATE_WAIT_AIRP_CLOSE:
+        case STATE_TS_ON:
+            break;
+        default:
+            sprintf(
+                debug_msg,
+                "[FSM] Cannot pass from wait_airp_close to %s, remaining in this state",
+                state_names[next_state]);
+            cli_bms_debug(debug_msg, strlen(debug_msg));
+            next_state = NO_CHANGE;
+    }
+
+    return next_state;
+}
 
 // Function to be executed in state ts_on
 // valid return states: NO_CHANGE, STATE_IDLE, STATE_FATAL_ERROR, STATE_TS_ON
 bms_state_t do_ts_on(state_data_t *data) {
-  bms_state_t next_state = NO_CHANGE;
-  
-  // cli_bms_debug("[FSM] In state ts_on", 20);
-  /* Your Code Here */
-  if (get_expired_errors() > 0) {
-    next_state = STATE_FATAL_ERROR;
-  }
-  else if (_requested_ts_off() || !feedback_is_ok(FEEDBACK_TS_ON_CHECK_MASK, FEEDBACK_TS_ON_CHECK_HIGH))
-    next_state = STATE_IDLE;
+    bms_state_t next_state = NO_CHANGE;
 
-  switch (next_state) {
-    case NO_CHANGE:
-    case STATE_IDLE:
-    case STATE_FATAL_ERROR:
-    case STATE_TS_ON:
-      break;
-    default:
-      sprintf(debug_msg, "[FSM] Cannot pass from ts_on to %s, remaining in this state", state_names[next_state]);
-      cli_bms_debug(debug_msg, strlen(debug_msg));
-      next_state = NO_CHANGE;
-  }
-  
-  return next_state;
+    // cli_bms_debug("[FSM] In state ts_on", 20);
+    /* Your Code Here */
+    if (get_expired_errors() > 0) {
+        next_state = STATE_FATAL_ERROR;
+    } else if (_requested_ts_off() || !feedback_is_ok(FEEDBACK_TS_ON_CHECK_MASK, FEEDBACK_TS_ON_CHECK_HIGH))
+        next_state = STATE_IDLE;
+
+    switch (next_state) {
+        case NO_CHANGE:
+        case STATE_IDLE:
+        case STATE_FATAL_ERROR:
+        case STATE_TS_ON:
+            break;
+        default:
+            sprintf(debug_msg, "[FSM] Cannot pass from ts_on to %s, remaining in this state", state_names[next_state]);
+            cli_bms_debug(debug_msg, strlen(debug_msg));
+            next_state = NO_CHANGE;
+    }
+
+    return next_state;
 }
 
-
-/*  _____                    _ _   _              
- * |_   _| __ __ _ _ __  ___(_) |_(_) ___  _ __   
+/*  _____                    _ _   _
+ * |_   _| __ __ _ _ __  ___(_) |_(_) ___  _ __
  *   | || '__/ _` | '_ \/ __| | __| |/ _ \| '_ \
- *   | || | | (_| | | | \__ \ | |_| | (_) | | | | 
- *   |_||_|  \__,_|_| |_|___/_|\__|_|\___/|_| |_| 
- *                                                
- *   __                  _   _                 
- *  / _|_   _ _ __   ___| |_(_) ___  _ __  ___ 
+ *   | || | | (_| | | | \__ \ | |_| | (_) | | | |
+ *   |_||_|  \__,_|_| |_|___/_|\__|_|\___/|_| |_|
+ *
+ *   __                  _   _
+ *  / _|_   _ _ __   ___| |_(_) ___  _ __  ___
  * | |_| | | | '_ \ / __| __| |/ _ \| '_ \/ __|
  * |  _| |_| | | | | (__| |_| | (_) | | | \__ \
  * |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
- */    
-                                         
+ */
+
 // This function is called in 1 transition:
 // 1. from init to idle
 void init_to_idle(state_data_t *data) {
-  cli_bms_debug("[FSM] State transition init_to_idle", 35);
-  /* Your Code Here */
-  
-  // Set blinking led pattern
-  blinky_init(&led, blink_pattern, 0, true, BLINKY_LOW);
-  HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
-  bms_set_led_blinker();
+    cli_bms_debug("[FSM] State transition init_to_idle", 35);
+    /* Your Code Here */
 
-  // Send info via CAN
-  can_car_send(PRIMARY_HV_STATUS_FRAME_ID);
+    // Set blinking led pattern
+    blinky_init(&led, blink_pattern, 0, true, BLINKY_LOW);
+    HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
+    bms_set_led_blinker();
 
-  // Set default pack status
-  pack_set_default_off(0);
-  pack_set_fault(BMS_FAULT_OFF_VALUE);
-  current_zero();
+    // Send info via CAN
+    can_car_send(CAN_PRIMARY_MESSAGE_FRAME_ID_HV_BMS_STATUS);
+
+    // Set default pack status
+    pack_set_default_off(0);
+    pack_set_fault(BMS_FAULT_OFF_VALUE);
+    current_zero();
 }
 
 // This function is called in 4 transitions:
@@ -411,77 +403,79 @@ void init_to_idle(state_data_t *data) {
 // 3. from wait_ts_precharge to fatal_error
 // 4. from wait_airp_close to fatal_error
 void set_fatal_error(state_data_t *data) {
-  cli_bms_debug("[FSM] State transition set_fatal_error", 38);
-  /* Your Code Here */
+    cli_bms_debug("[FSM] State transition set_fatal_error", 38);
+    /* Your Code Here */
 
-  // Send info via CAN
-  can_car_send(PRIMARY_HV_ERRORS_FRAME_ID);
+    // Send info via CAN
+    can_car_send(CAN_PRIMARY_MESSAGE_FRAME_ID_HV_BMS_ERRORS);
 
-  // Set fault status
-  pack_set_fault(BMS_FAULT_ON_VALUE);
-  pack_set_default_off(0);
+    // Set fault status
+    pack_set_fault(BMS_FAULT_ON_VALUE);
+    pack_set_default_off(0);
 
-  // Stop balancing if running
-  if (bal_is_balancing())
-    bal_stop();
+    // Stop balancing if running
+    if (bal_is_balancing())
+        bal_stop();
 
-  // Reset timeouts
-  _reset_timeouts();
+    // Reset timeouts
+    _reset_timeouts();
 
-  // Set blinking led pattern
-  bms_set_led_blinker();
+    // Set blinking led pattern
+    bms_set_led_blinker();
 }
 
 // This function is called in 1 transition:
 // 1. from idle to wait_airn_close
 void close_airn(state_data_t *data) {
-  cli_bms_debug("[FSM] State transition close_airn", 33);
-  /* Your Code Here */
+    cli_bms_debug("[FSM] State transition close_airn", 33);
+    /* Your Code Here */
 
-  // Reset debug feedbacks
-  conv_debug.feedbacks_implausibility_detected = 0;
-  conv_debug.feedbacks_imd_cockpit = 0;
-  conv_debug.feedbacks_tsal_green_fault_latched = 0;
-  conv_debug.feedbacks_bms_cockpit = 0;
-  conv_debug.feedbacks_ext_latched = 0;
-  conv_debug.feedbacks_tsal_green = 0;
-  conv_debug.feedbacks_ts_over_60v_status = 0;
-  conv_debug.feedbacks_airn_status = 0;
-  conv_debug.feedbacks_airp_status = 0;
-  conv_debug.feedbacks_airp_gate = 0;
-  conv_debug.feedbacks_airn_gate = 0;
-  conv_debug.feedbacks_precharge_status = 0;
-  conv_debug.feedbacks_tsp_over_60v_status = 0;
-  conv_debug.feedbacks_imd_fault = 0;
-  conv_debug.feedbacks_check_mux = 0;
-  conv_debug.feedbacks_sd_end = 0;
-  conv_debug.feedbacks_sd_out = 0;
-  conv_debug.feedbacks_sd_in = 0;
-  conv_debug.feedbacks_sd_bms = 0;
-  conv_debug.feedbacks_sd_imd = 0;
- 
-  // Set blinking led pattern
-  bms_set_led_blinker();
+    // Reset debug feedbacks
+    /*
+    conv_debug.feedbacks_implausibility_detected  = 0;
+    conv_debug.feedbacks_imd_cockpit              = 0;
+    conv_debug.feedbacks_tsal_green_fault_latched = 0;
+    conv_debug.feedbacks_bms_cockpit              = 0;
+    conv_debug.feedbacks_ext_latched              = 0;
+    conv_debug.feedbacks_tsal_green               = 0;
+    conv_debug.feedbacks_ts_over_60v_status       = 0;
+    conv_debug.feedbacks_airn_status              = 0;
+    conv_debug.feedbacks_airp_status              = 0;
+    conv_debug.feedbacks_airp_gate                = 0;
+    conv_debug.feedbacks_airn_gate                = 0;
+    conv_debug.feedbacks_precharge_status         = 0;
+    conv_debug.feedbacks_tsp_over_60v_status      = 0;
+    conv_debug.feedbacks_imd_fault                = 0;
+    conv_debug.feedbacks_check_mux                = 0;
+    conv_debug.feedbacks_sd_end                   = 0;
+    conv_debug.feedbacks_sd_out                   = 0;
+    conv_debug.feedbacks_sd_in                    = 0;
+    conv_debug.feedbacks_sd_bms                   = 0;
+    conv_debug.feedbacks_sd_imd                   = 0;
+    */
 
-  // Close AIR-
-  pack_set_airn_off(AIRN_ON_VALUE);
+    // Set blinking led pattern
+    bms_set_led_blinker();
 
-  // Start AIR- timeout timer
-  _start_timeout(AIRN_TIMEOUT_CHANNEL, AIRN_TIMEOUT_INTERRUPT, AIRN_CHECK_TIMEOUT);
+    // Close AIR-
+    pack_set_airn_off(AIRN_ON_VALUE);
+
+    // Start AIR- timeout timer
+    _start_timeout(AIRN_TIMEOUT_CHANNEL, AIRN_TIMEOUT_INTERRUPT, AIRN_CHECK_TIMEOUT);
 }
 
 // This function is called in 1 transition:
 // 1. from fatal_error to idle
 void fatal_error_to_idle(state_data_t *data) {
-  cli_bms_debug("[FSM] State transition fatal_error_to_idle", 42);
-  /* Your Code Here */
-  
-  // Set blinking led pattern
-  bms_set_led_blinker();
+    cli_bms_debug("[FSM] State transition fatal_error_to_idle", 42);
+    /* Your Code Here */
 
-  // Reset fault status
-  pack_set_fault(BMS_FAULT_OFF_VALUE);
-  current_zero();
+    // Set blinking led pattern
+    bms_set_led_blinker();
+
+    // Reset fault status
+    pack_set_fault(BMS_FAULT_OFF_VALUE);
+    current_zero();
 }
 
 // This function is called in 3 transitions:
@@ -489,105 +483,105 @@ void fatal_error_to_idle(state_data_t *data) {
 // 2. from wait_ts_precharge to idle
 // 3. from wait_airp_close to idle
 void set_ts_off(state_data_t *data) {
-  cli_bms_debug("[FSM] State transition set_ts_off", 33);
-  /* Your Code Here */
+    cli_bms_debug("[FSM] State transition set_ts_off", 33);
+    /* Your Code Here */
 
-  // Set default pack status
-  pack_set_default_off(0);
+    // Set default pack status
+    pack_set_default_off(0);
 
-  // Reset timeouts
-  _reset_timeouts();
+    // Reset timeouts
+    _reset_timeouts();
 
-  // Set blinking led pattern
-  bms_set_led_blinker();
+    // Set blinking led pattern
+    bms_set_led_blinker();
 }
 
 // This function is called in 1 transition:
 // 1. from wait_airn_close to wait_ts_precharge
 void start_precharge(state_data_t *data) {
-  cli_bms_debug("[FSM] State transition start_precharge", 38);
-  /* Your Code Here */
- 
-  // Stop AIR- timeout timer
-  _stop_timeout(AIRN_TIMEOUT_CHANNEL, AIRN_TIMEOUT_INTERRUPT);
+    cli_bms_debug("[FSM] State transition start_precharge", 38);
+    /* Your Code Here */
 
-  // Set blinking led pattern
-  bms_set_led_blinker();
-  
-  // Start precharge
-  pack_set_precharge(PRECHARGE_ON_VALUE);
-  
-  // Start precharge timeout timer
-  _start_timeout(PRECHARGE_TIMEOUT_CHANNEL, PRECHARGE_TIMEOUT_INTERRUPT, PRECHARGE_TIMEOUT);
+    // Stop AIR- timeout timer
+    _stop_timeout(AIRN_TIMEOUT_CHANNEL, AIRN_TIMEOUT_INTERRUPT);
+
+    // Set blinking led pattern
+    bms_set_led_blinker();
+
+    // Start precharge
+    pack_set_precharge(PRECHARGE_ON_VALUE);
+
+    // Start precharge timeout timer
+    _start_timeout(PRECHARGE_TIMEOUT_CHANNEL, PRECHARGE_TIMEOUT_INTERRUPT, PRECHARGE_TIMEOUT);
 }
 
 // This function is called in 1 transition:
 // 1. from wait_ts_precharge to wait_airp_close
 void close_airp(state_data_t *data) {
-  cli_bms_debug("[FSM] State transition close_airp", 33);
-  /* Your Code Here */
+    cli_bms_debug("[FSM] State transition close_airp", 33);
+    /* Your Code Here */
 
-  // Stop precharge timeout timer
-  _stop_timeout(PRECHARGE_TIMEOUT_CHANNEL, PRECHARGE_TIMEOUT_INTERRUPT);
+    // Stop precharge timeout timer
+    _stop_timeout(PRECHARGE_TIMEOUT_CHANNEL, PRECHARGE_TIMEOUT_INTERRUPT);
 
-  // Set blinking led pattern
-  bms_set_led_blinker();
+    // Set blinking led pattern
+    bms_set_led_blinker();
 
-  // Close AIR+
-  pack_set_airp_off(AIRP_ON_VALUE);
+    // Close AIR+
+    pack_set_airp_off(AIRP_ON_VALUE);
 
-  // Start AIR+ timeout timer
-  _start_timeout(AIRP_TIMEOUT_CHANNEL, AIRP_TIMEOUT_INTERRUPT, AIRP_CHECK_TIMEOUT);
+    // Start AIR+ timeout timer
+    _start_timeout(AIRP_TIMEOUT_CHANNEL, AIRP_TIMEOUT_INTERRUPT, AIRP_CHECK_TIMEOUT);
 }
 
 // This function is called in 1 transition:
 // 1. from wait_airp_close to ts_on
 void set_ts_on(state_data_t *data) {
-  cli_bms_debug("[FSM] State transition set_ts_on", 32);
-  /* Your Code Here */
+    cli_bms_debug("[FSM] State transition set_ts_on", 32);
+    /* Your Code Here */
 
-  // Stop AIR+ timeout timer
-  _stop_timeout(AIRP_TIMEOUT_CHANNEL, AIRP_TIMEOUT_INTERRUPT);
+    // Stop AIR+ timeout timer
+    _stop_timeout(AIRP_TIMEOUT_CHANNEL, AIRP_TIMEOUT_INTERRUPT);
 
-  // Set blinking led pattern
-  bms_set_led_blinker();
+    // Set blinking led pattern
+    bms_set_led_blinker();
 
-  // Reset current offset
-  current_zero();
+    // Reset current offset
+    current_zero();
 }
 
-
-/*  ____  _        _        
- * / ___|| |_ __ _| |_ ___  
+/*  ____  _        _
+ * / ___|| |_ __ _| |_ ___
  * \___ \| __/ _` | __/ _ \
- *  ___) | || (_| | ||  __/ 
- * |____/ \__\__,_|\__\___| 
- *                          
- *                                              
- *  _ __ ___   __ _ _ __   __ _  __ _  ___ _ __ 
+ *  ___) | || (_| | ||  __/
+ * |____/ \__\__,_|\__\___|
+ *
+ *
+ *  _ __ ___   __ _ _ __   __ _  __ _  ___ _ __
  * | '_ ` _ \ / _` | '_ \ / _` |/ _` |/ _ \ '__|
- * | | | | | | (_| | | | | (_| | (_| |  __/ |   
- * |_| |_| |_|\__,_|_| |_|\__,_|\__, |\___|_|   
- *                              |___/           
+ * | | | | | | (_| | | | | (_| | (_| |  __/ |
+ * |_| |_| |_|\__,_|_| |_|\__,_|\__, |\___|_|
+ *                              |___/
  */
 
 bms_state_t run_state(bms_state_t cur_state, state_data_t *data) {
-  bool received_request = set_ts_request.is_new;
-  bms_state_t new_state = state_table[cur_state](data);
-  if (received_request)
-    set_ts_request.is_new = false;
-  if (new_state == NO_CHANGE) new_state = cur_state;
-  transition_func_t *transition = transition_table[cur_state][new_state];
-  
-  if (transition) {
-    // Send info via CAN
-    can_car_send(PRIMARY_HV_FEEDBACK_STATUS_FRAME_ID);
-    can_car_send(PRIMARY_HV_STATUS_FRAME_ID);
+    bool received_request = set_ts_request.is_new;
+    bms_state_t new_state = state_table[cur_state](data);
+    if (received_request)
+        set_ts_request.is_new = false;
+    if (new_state == NO_CHANGE)
+        new_state = cur_state;
+    transition_func_t *transition = transition_table[cur_state][new_state];
 
-    transition(data);
-  }
+    if (transition) {
+        // Send info via CAN
+        can_car_send(CAN_PRIMARY_MESSAGE_FRAME_ID_HV_BMS_FEEDBACK_STATUS);
+        can_car_send(CAN_PRIMARY_MESSAGE_FRAME_ID_HV_BMS_STATUS);
 
-  return new_state;
+        transition(data);
+    }
+
+    return new_state;
 };
 
 void fsm_run() {
@@ -597,9 +591,9 @@ void fsm_run() {
 
     // Set or reset connection error
     if (HAL_GPIO_ReadPin(CONNS_DETECTION_GPIO_Port, CONNS_DETECTION_Pin) == GPIO_PIN_RESET) {
-      // error_simple_set(ERROR_GROUP_ERROR_CONNECTOR_DISCONNECTED, 0);
+        // error_simple_set(ERROR_GROUP_ERROR_CONNECTOR_DISCONNECTED, 0);
     } else {
-      error_simple_reset(ERROR_GROUP_ERROR_CONNECTOR_DISCONNECTED, 0);
+        error_simple_reset(ERROR_GROUP_ERROR_CONNECTOR_DISCONNECTED, 0);
     }
 
     // Run the FSM and updates
@@ -615,10 +609,10 @@ void bms_set_led_blinker() {
 
     size_t cnt = 0;
     for (size_t i = 0; i < fsm_state; ++i) {
-        blink_pattern[cnt++] = 200; // Off (ms)
-        blink_pattern[cnt++] = 200; // On (ms)
+        blink_pattern[cnt++] = 200;  // Off (ms)
+        blink_pattern[cnt++] = 200;  // On (ms)
     }
-    blink_pattern[cnt++] = 1000; // Big off before repeat (ms)
+    blink_pattern[cnt++] = 1000;  // Big off before repeat (ms)
 
     blinky_set_pattern(&led, blink_pattern, cnt);
     blinky_enable(&led, true);
@@ -627,24 +621,23 @@ void bms_set_led_blinker() {
 #ifdef TEST_MAIN
 #include <unistd.h>
 int main() {
-  bms_state_t cur_state = STATE_INIT;
-  openlog("SM", LOG_PID | LOG_PERROR, LOG_USER);
-  syslog(LOG_INFO, "Starting SM");
-  do {
-    cur_state = run_state(cur_state, NULL);
-    sleep(1);
-  } while (1);
-  return 0;
+    bms_state_t cur_state = STATE_INIT;
+    openlog("SM", LOG_PID | LOG_PERROR, LOG_USER);
+    syslog(LOG_INFO, "Starting SM");
+    do {
+        cur_state = run_state(cur_state, NULL);
+        sleep(1);
+    } while (1);
+    return 0;
 }
 #endif
 
 void _bms_handle_tim_oc_irq(TIM_HandleTypeDef *htim) {
-    switch (htim->Channel)
-    {
+    switch (htim->Channel) {
         case HAL_TIM_ACTIVE_CHANNEL_1:  // AIR- timeout
             airn_timeout = true;
             break;
-        case HAL_TIM_ACTIVE_CHANNEL_2:  // Precharge timeout 
+        case HAL_TIM_ACTIVE_CHANNEL_2:  // Precharge timeout
             precharge_timeout = true;
             break;
         case HAL_TIM_ACTIVE_CHANNEL_3:  // AIR+ timeout

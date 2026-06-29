@@ -11,28 +11,28 @@
 
 #include "cli_bms.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "measures.h"
 #include "bal.h"
 #include "bms_fsm.h"
+#include "can-bms.h"
 #include "can.h"
 #include "can_comm.h"
+#include "cell_voltage.h"
 #include "error_simple.h"
 #include "fans_buzzer.h"
 #include "feedback.h"
 #include "imd.h"
+#include "internal_voltage.h"
 #include "mainboard_config.h"
+#include "measures.h"
 #include "pack/pack.h"
 #include "pack/temperature.h"
 #include "soc.h"
-#include "usart.h"
-#include "bms_network.h"
-#include "internal_voltage.h"
-#include "cell_voltage.h"
 #include "timer_utils.h"
+#include "usart.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define CELLBOARD_DISTR_ADDR 0x50
 #define CELLBOARD_DISTR_VER  0x01
@@ -64,19 +64,18 @@ cli_command_func_t _cli_sigterm;
 cli_command_func_t _cli_taba;
 cli_command_func_t _cli_sborat;
 
-const char * bms_state_names[NUM_STATES] = {
-    [STATE_INIT] = "init",
-    [STATE_IDLE] = "idle",
-    [STATE_WAIT_AIRN_CLOSE] = "airn_close",
+const char *bms_state_names[NUM_STATES] = {
+    [STATE_INIT]              = "init",
+    [STATE_IDLE]              = "idle",
+    [STATE_WAIT_AIRN_CLOSE]   = "airn_close",
     [STATE_WAIT_TS_PRECHARGE] = "precharge",
-    [STATE_WAIT_AIRP_CLOSE] = "airn_close",
-    [STATE_TS_ON] = "ts_on",
-    [STATE_FATAL_ERROR] = "fault"
-};
+    [STATE_WAIT_AIRP_CLOSE]   = "airn_close",
+    [STATE_TS_ON]             = "ts_on",
+    [STATE_FATAL_ERROR]       = "fault"};
 
-const char *bal_state_names[2] = { "off", "discharging" };
+const char *bal_state_names[2] = {"off", "discharging"};
 
-const char * error_names[] = {
+const char *error_names[] = {
     [ERROR_GROUP_ERROR_CELL_UNDER_VOLTAGE]     = "under-voltage",
     [ERROR_GROUP_ERROR_CELL_OVER_VOLTAGE]      = "over-voltage",
     [ERROR_GROUP_ERROR_CELL_UNDER_TEMPERATURE] = "under-temperature",
@@ -138,10 +137,9 @@ bool dmesg_ena = true;
 
 config_t cellboard_distribution;
 
-
 void cli_bms_init() {
     // Update cellboard distrbution in the EEPROM
-    uint8_t cell_distr_default[CELLBOARD_COUNT] = { 0, 1, 2, 3, 4, 5 };
+    uint8_t cell_distr_default[CELLBOARD_COUNT] = {0, 1, 2, 3, 4, 5};
     config_init(&cellboard_distribution, CELLBOARD_DISTR_ADDR, CELLBOARD_DISTR_VER, cell_distr_default, 6);
 
     cli_bms.uart           = &CLI_UART;
@@ -206,8 +204,7 @@ void _cli_volts(uint16_t argc, char **argv, char *out) {
             avg,
             max,
             min,
-            max - min
-        );
+            max - min);
     } else if (strcmp(argv[1], "all") == 0) {
         _cli_volts_all(argc, &argv[1], out);
     } else {
@@ -223,7 +220,9 @@ void _cli_volts(uint16_t argc, char **argv, char *out) {
 void _cli_volts_all(uint16_t argc, char **argv, char *out) {
     sprintf(out, "     MIN      MAX      AVG\r\n");
     for (size_t i = 0; i < CELLBOARD_COUNT; i++) {
-        sprintf(out + strlen(out), "%d    %.2fV    %.2fV    %.2fV\r\n",
+        sprintf(
+            out + strlen(out),
+            "%d    %.2fV    %.2fV    %.2fV\r\n",
             i + 1,
             CONVERT_VALUE_TO_VOLTAGE(cell_volts.min[i]),
             CONVERT_VALUE_TO_VOLTAGE(cell_volts.max[i]),
@@ -361,13 +360,15 @@ void _cli_temps_all(uint16_t argc, char **argv, char *out) {
 void _cli_temps_all(uint16_t argc, char **argv, char *out) {
     sprintf(out, "     MIN         MAX         AVG\r\n");
     for (size_t i = 0; i < CELLBOARD_COUNT; i++) {
-        sprintf(out + strlen(out), "%d   %6.2f°C    %6.2f°C    %6.2f°C\r\n",
+        sprintf(
+            out + strlen(out),
+            "%d   %6.2f°C    %6.2f°C    %6.2f°C\r\n",
             i,
             CONVERT_VALUE_TO_TEMPERATURE(cell_temps.min[i]),
             CONVERT_VALUE_TO_TEMPERATURE(cell_temps.max[i]),
             CONVERT_VALUE_TO_TEMPERATURE(cell_temps.avg[i]));
     }
-    sprintf(out + strlen(out), "\r\n");/*
+    sprintf(out + strlen(out), "\r\n"); /*
     out[0]                  = '\0';
     temperature_t *temp_all = temperature_get_all();
 
@@ -394,7 +395,7 @@ void _cli_status(uint16_t argc, char **argv, char *out) {
     char er_count[3] = {'\0'};
     // itoa(error_get_running(), er_count, 10);
 
-    char handcart_connected[13] = { '\0' };
+    char handcart_connected[13] = {'\0'};
     if (is_handcart_connected)
         strncpy(handcart_connected, "connected", strlen("connected") + 1);
     else
@@ -405,8 +406,7 @@ void _cli_status(uint16_t argc, char **argv, char *out) {
         {"Error count", er_count},
         {"CAN forwarding", can_is_forwarding() ? "true" : "false"},
         {"Balancing state", bal_state_names[bal_is_balancing()]},
-        {"Handcart status", handcart_connected}
-    };
+        {"Handcart status", handcart_connected}};
     //{"BMS state", (char *)fsm_bms.state_names[fsm_bms.current_state]}, {"error
     // count", er_count}, {"balancing", bal}, {"balancing threshold", thresh}};
 
@@ -425,7 +425,7 @@ void _cli_status(uint16_t argc, char **argv, char *out) {
 uint16_t bal_threshold = BAL_THRESHOLD_DEFAULT;
 void _cli_balance(uint16_t argc, char **argv, char *out) {
     strcpy(out, "Work in progress...\n\0");
-    
+
     if (strcmp(argv[1], "on") == 0) {
         // if (argc > 2)
         //     bal.target = atoi(argv[2]);
@@ -436,7 +436,7 @@ void _cli_balance(uint16_t argc, char **argv, char *out) {
         sprintf(out, "disabling balancing\r\n");
     } else if (strcmp(argv[1], "thr") == 0) {
         if (argv[2] != NULL) {
-            bal_threshold = (voltage_t)atol(argv[2]) * 10;   
+            bal_threshold = (voltage_t)atol(argv[2]) * 10;
             if (bal_threshold < BAL_THRESHOLD_MIN || bal_threshold > BAL_THRESHOLD_MAX) {
                 bal_threshold = BAL_THRESHOLD_DEFAULT;
             }
@@ -514,9 +514,9 @@ void _cli_soc(uint16_t argc, char **argv, char *out) {
 }
 
 void _cli_errors(uint16_t argc, char **argv, char *out) {
-    *out = 0;
-    size_t running = 0;// error_get_running();
-    size_t expired  = get_expired_errors();
+    *out           = 0;
+    size_t running = 0;  // error_get_running();
+    size_t expired = get_expired_errors();
 
     sprintf(out, "Running: %u\r\nExpired: %u\r\n", running, expired);
 
@@ -542,11 +542,11 @@ void _cli_errors(uint16_t argc, char **argv, char *out) {
 
 void _cli_ts(uint16_t argc, char **argv, char *out) {
     if (strcmp(argv[1], "on") == 0) {
-        set_ts_request.is_new = true;
+        set_ts_request.is_new     = true;
         set_ts_request.next_state = STATE_WAIT_AIRN_CLOSE;
         sprintf(out, "triggered TS ON event\r\n");
     } else if (strcmp(argv[1], "off") == 0) {
-        set_ts_request.is_new = true;
+        set_ts_request.is_new     = true;
         set_ts_request.next_state = STATE_IDLE;
         sprintf(out, "triggered TS OFF event\r\n");
     } else if (argc < 2) {
@@ -698,11 +698,11 @@ void _cli_feedbacks(uint16_t argc, char **argv, char *out) {
             feedback_names[i],
             f[i].real_state == FEEDBACK_STATE_H   ? "1"
             : f[i].real_state == FEEDBACK_STATE_L ? "0"
-                                             : "E",
+                                                  : "E",
             f[i].voltage,
             f[i].cur_state == FEEDBACK_STATE_H   ? "1"
             : f[i].cur_state == FEEDBACK_STATE_L ? "0"
-                                             : "E");
+                                                 : "E");
     }
 }
 
@@ -817,7 +817,7 @@ void cli_watch_flush_handler() {
     }
 }
 
-uint8_t * bms_get_cellboard_distribution() {
+uint8_t *bms_get_cellboard_distribution() {
     return (uint8_t *)config_get(&cellboard_distribution);
 }
 void bms_set_cellboard_distribution(uint8_t distribution[static 6]) {
@@ -868,8 +868,7 @@ void _cli_fans(uint16_t argc, char **argv, char *out) {
         if (strcmp(argv[1], "auto") == 0) {
             fans_set_override(false);
             sprintf(out, "Fans speed set to auto\r\n");
-        }
-        else if (strcmp(argv[1], "off") == 0) {
+        } else if (strcmp(argv[1], "off") == 0) {
             fans_set_override(true);
             fans_set_speed(0);
             sprintf(out, "Fans turned off\r\n");
@@ -890,7 +889,8 @@ void _cli_fans(uint16_t argc, char **argv, char *out) {
 
 void _cli_pack(uint16_t argc, char **argv, char *out) {
     if (argc == 1) {
-        sprintf(out,
+        sprintf(
+            out,
             "AIR- status:      %s\r\n"
             "AIR+ status:      %s\r\n"
             "Precharge status: %s\r\n"
@@ -899,8 +899,7 @@ void _cli_pack(uint16_t argc, char **argv, char *out) {
             (pack_get_airp_off() == AIRP_ON_VALUE ? "closed" : "open"),
             (pack_get_precharge() == PRECHARGE_ON_VALUE ? "on" : "off"),
             (pack_get_fault() == BMS_FAULT_ON_VALUE ? "on" : "off"));
-    }
-    else if (argc == 3) {
+    } else if (argc == 3) {
         uint8_t value;
         if (!strcmp(argv[1], "airn")) {
             if (!strcmp(argv[2], "on")) {
@@ -923,8 +922,7 @@ void _cli_pack(uint16_t argc, char **argv, char *out) {
                 value = PRECHARGE_OFF_VALUE;
             }
             pack_set_precharge(value);
-        }
-        else if (strcmp(argv[1], "fault") == 0) {
+        } else if (strcmp(argv[1], "fault") == 0) {
             if (strcmp(argv[2], "on") == 0)
                 value = BMS_FAULT_ON_VALUE;
             else
@@ -936,4 +934,3 @@ void _cli_pack(uint16_t argc, char **argv, char *out) {
     } else if (argc == 2) {
     }
 }
-

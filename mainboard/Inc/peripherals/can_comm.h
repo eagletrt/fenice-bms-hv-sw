@@ -10,8 +10,8 @@
 #ifndef CAN_COMM_H
 #define CAN_COMM_H
 
-#include "bms_network.h"
-#include "primary_network.h"
+#include "can-bms.h"
+#include "can-primary.h"
 #include "can.h"
 
 #define CAN_1MBIT_PRE 3
@@ -27,11 +27,10 @@ typedef enum { CAN_BITRATE_1MBIT, CAN_BITRATE_125KBIT } CAN_Bitrate;
 #define CAN_SLAVE_START_FILTER_BANK 14
 
 extern bool is_handcart_connected;
-extern primary_hv_debug_signals_converted_t conv_debug;
 
 /**
  * @brief Check if the message received via CAN are forwarded
- * 
+ *
  * @return true If the messages are forwarded
  * @return false Otherwise
  */
@@ -44,23 +43,23 @@ void can_bms_init();
 
 /**
  * @brief Send data via a CAN peripheral
- * 
+ *
  * @param hcan The CAN handler structure
  * @param buffer The data to be sent
  * @param header The CAN header structure
  * @return HAL_StatusTypeDef The result of the operation
  */
-HAL_StatusTypeDef can_send(CAN_HandleTypeDef * hcan, uint8_t * buffer, CAN_TxHeaderTypeDef * header);
+HAL_StatusTypeDef can_send(CAN_HandleTypeDef *hcan, uint8_t *buffer, CAN_TxHeaderTypeDef *header);
 /**
  * @brief Send data via the external CAN peripheral
- * 
+ *
  * @param id The ID of the message to send
  * @return HAL_StatusTypeDef The result of the operation
  */
 HAL_StatusTypeDef can_car_send(uint16_t id);
 /**
  * @brief Send data via the internal CAN peripheral
- * 
+ *
  * @param id The ID of the message to send
  * @return HAL_StatusTypeDef The result of the operation
  */
@@ -71,10 +70,10 @@ void can_cellboards_check();
 
 /**
  * @brief Change the CAN bitrate
- * 
+ *
  * @param hcan The CAN handler structure
  * @param bitrate The new bitrate
  */
-void CAN_change_bitrate(CAN_HandleTypeDef * hcan, CAN_Bitrate bitrate);
+void CAN_change_bitrate(CAN_HandleTypeDef *hcan, CAN_Bitrate bitrate);
 
-#endif // CAN_COMM_H
+#endif  // CAN_COMM_H
