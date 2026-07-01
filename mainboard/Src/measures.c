@@ -9,6 +9,7 @@
  */
 #include "measures.h"
 
+#include "usart.h"
 #include "can-primary.h"
 #include "energy/soc.h"
 #include "error_simple.h"
@@ -29,9 +30,9 @@
 #define MEASURE_CHECK_DELAY               1000                             // ms
 #define _MEASURE_CHECK_INTERVAL(interval) (((counter) % (interval)) == 0)  // Check if a given interval is passed
 
-uint32_t counter   = 0;  // Each timer interrupt it increments by 1
-uint32_t timestamp = 0;
-bool flags_checked = false;
+volatile uint32_t counter   = 0;  // Each timer interrupt it increments by 1
+volatile uint32_t timestamp = 0;
+volatile bool flags_checked = false;
 
 void measures_init() {
     counter       = 0;
@@ -53,23 +54,24 @@ void measures_check_flags() {
 
     // 10 ms interval
     if (_MEASURE_CHECK_INTERVAL(MEASURE_INTERVAL_10MS)) {
-        can_car_send(CAN_PRIMARY_MESSAGE_FRAME_ID_HV_BMS_STATUS);
     }
     // 50 ms interval
     if (_MEASURE_CHECK_INTERVAL(MEASURE_INTERVAL_50MS)) {
         // Send info via CAN
+        can_car_send(CAN_PRIMARY_MESSAGE_FRAME_ID_HV_BMS_STATUS);
         can_car_send(CAN_PRIMARY_MESSAGE_FRAME_ID_HV_BMS_CURRENT);
         can_car_send(CAN_PRIMARY_MESSAGE_FRAME_ID_HV_BMS_POWER);
         // can_car_send(PRIMARY_HV_SOC_FRAME_ID);
         can_car_send(CAN_PRIMARY_MESSAGE_FRAME_ID_HV_BMS_TS_VOLTAGE);
         can_car_send(CAN_PRIMARY_MESSAGE_FRAME_ID_HV_BMS_CELLBOARD_VOLTAGES);
+        can_car_send(CAN_PRIMARY_MESSAGE_FRAME_ID_HV_BMS_CELLBOARD_VOLTAGES_INFO);
         can_car_send(CAN_PRIMARY_MESSAGE_FRAME_ID_HV_BMS_ERRORS);
         can_car_send(CAN_PRIMARY_MESSAGE_FRAME_ID_HV_BMS_FEEDBACK_STATUS);
 
         // Measure SOC
         if (internal_voltage_measure() == HAL_OK)
             current_read(CONVERT_VALUE_TO_INTERNAL_ADC_VOLTAGE(internal_voltage_get_shunt()));
-        soc_sample_energy(HAL_GetTick());
+        // soc_sample_energy(HAL_GetTick());
 
         // Check errors
         if (HAL_GetTick() - timestamp >= MEASURE_CHECK_DELAY)
@@ -80,6 +82,7 @@ void measures_check_flags() {
     if (_MEASURE_CHECK_INTERVAL(MEASURE_INTERVAL_100MS)) {
         // Send info via CANS
         can_car_send(CAN_PRIMARY_MESSAGE_FRAME_ID_HV_BMS_CELLBOARD_TEMPERATURES);
+        can_car_send(CAN_PRIMARY_MESSAGE_FRAME_ID_HV_BMS_CELLBOARD_TEMPERATURES_INFO);
         can_car_send(CAN_PRIMARY_MESSAGE_FRAME_ID_HV_BMS_IMD);
         can_car_send(CAN_PRIMARY_MESSAGE_FRAME_ID_HV_BMS_BALANCING_STATUS);
         can_car_send(CAN_PRIMARY_MESSAGE_FRAME_ID_HV_BMS_FEEDBACK_TS_VOLTAGE);
@@ -107,6 +110,7 @@ void measures_check_flags() {
         // Send info via CAN
         // can_car_send(PRIMARY_HV_CAN_FORWARD_FRAME_ID);
         can_car_send(CAN_PRIMARY_MESSAGE_FRAME_ID_HV_BMS_VERSION);
+        can_car_send(CAN_PRIMARY_MESSAGE_FRAME_ID_HV_BMS_CELLBOARD_VERSION);
         // can_car_send(PRIMARY_HV_FANS_STATUS_FRAME_ID);
 
         // Check cellboards connection errors

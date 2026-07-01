@@ -267,11 +267,14 @@ bms_state_t do_wait_ts_precharge(state_data_t *data) {
     if (get_expired_errors() > 0) {
         next_state = STATE_FATAL_ERROR;
     } else if (_requested_ts_off() || precharge_timeout) {
-        if (precharge_timeout)
+        if (precharge_timeout) {
             cli_bms_debug("Precharge timeout", 17);
-        if (_requested_ts_off())
+            next_state = STATE_WAIT_AIRP_CLOSE;
+        }
+        if (_requested_ts_off()) {
             cli_bms_debug("Requested TS off", 16);
-        next_state = STATE_IDLE;
+            next_state = STATE_IDLE;
+        }
     } else if (!feedback_is_ok(FEEDBACK_SD_END, FEEDBACK_PRECHARGE_CHECK_HIGH)) {
         next_state = STATE_IDLE;
     } else if (

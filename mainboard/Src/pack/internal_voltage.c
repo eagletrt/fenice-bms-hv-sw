@@ -11,7 +11,11 @@
 #include "pack/internal_voltage.h"
 
 #include <math.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdint.h>
 
+#include "usart.h"
 #include "mainboard_config.h"
 #include "main.h"
 #include "cell_voltage.h"
@@ -53,6 +57,11 @@ HAL_StatusTypeDef internal_voltage_measure() {
     internal_voltages.tsn   = volts[MAX22530_TSN_CHANNEL - 1];
     internal_voltages.shunt = volts[MAX22530_SHUNT_CHANNEL - 1];
     internal_voltages.bat   = volts[MAX22530_VBATT_CHANNEL - 1];
+
+    // DEBUG:
+    // uint8_t msg[512] = { 0 };
+    // sprintf(msg, "%u %u\r\n", internal_voltages.bat, internal_voltages.tsp);
+    // HAL_UART_Transmit(&huart1, msg, strlen(msg), 30);
 
     // Check if difference between readings from the ADC and cellboards is greater than 10V
     // if (fabsf(CONVERT_VALUE_TO_INTERNAL_VOLTAGE(internal_voltages.bat) - CONVERT_VALUE_TO_VOLTAGE(cell_voltage_get_sum())) > INTERNAL_VOLTAGE_MAX_DELTA) {

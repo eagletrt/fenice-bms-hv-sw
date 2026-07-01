@@ -10,7 +10,7 @@ target: fenice-bms
 # Can be C or C++
 language: C
 
-optimization: Og
+optimization: Os
 
 # MCU settings
 targetMCU: stm32f4x
@@ -88,8 +88,8 @@ includeDirectories:
 sourceFiles:
   - Src/**
   - lib/eagletrt/src/*.h
-  - lib/can/src/bms/*.c
-  - lib/can/src/primary/*.c
+  - lib/can/src/bms/can-bms-api.c
+  - lib/can/src/primary/can-primary-api.c
   - lib/micro-libs/blinky/src/**
   - lib/micro-libs/cli-legacy/**
   - lib/micro-libs/eeprom-config/**

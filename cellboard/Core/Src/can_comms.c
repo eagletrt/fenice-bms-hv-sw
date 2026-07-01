@@ -112,8 +112,8 @@ void can_send(uint16_t id) {
         message.cellboard_board_status.id = cellboard_index;
         message.cellboard_board_status.balancing =
             (fsm_state == STATE_DISCHARGE || fsm_state == STATE_COOLDOWN)
-                ? CAN_BMS_CELLBOARD_SET_BALANCING_STATUS_BALANCINGSTATUS_OFF
-                : CAN_BMS_CELLBOARD_SET_BALANCING_STATUS_BALANCINGSTATUS_DISCHARGE;
+                ? CAN_BMS_CELLBOARD_SET_BALANCING_STATUS_BALANCINGSTATUS_DISCHARGE
+                : CAN_BMS_CELLBOARD_SET_BALANCING_STATUS_BALANCINGSTATUS_OFF;
 
         message.cellboard_board_status.errorcancomm   = ERROR_GET(ERROR_CAN);
         message.cellboard_board_status.errorltccomm   = ERROR_GET(ERROR_LTC_COMM);

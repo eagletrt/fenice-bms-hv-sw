@@ -88,6 +88,7 @@ int main(void)
   MX_GPIO_Init();
   MX_CAN1_Init();
   /* USER CODE BEGIN 2 */
+
   BootInit();
   /* USER CODE END 2 */
 

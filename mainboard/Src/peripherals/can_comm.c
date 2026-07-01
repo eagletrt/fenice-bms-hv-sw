@@ -47,6 +47,9 @@ float debug_signal;
 
 static time_t build_epoch;
 
+static struct CanPrimaryHvBmsCellboardVersion cellboard_version[CELLBOARD_COUNT];
+static struct CanPrimaryHvBmsBalancingStatus balancing_status[CELLBOARD_COUNT];
+
 /**
  * @brief Wait until the CAN has at least one free mailbox
  *
@@ -306,7 +309,24 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
     else if (id == CAN_PRIMARY_MESSAGE_FRAME_ID_HV_BMS_VERSION) {
         message.hv_bms_version.canlibbuildtime_s = can_generation_time;
         message.hv_bms_version.buildtime_s       = build_epoch;
-    } else if (id == CAN_PRIMARY_MESSAGE_FRAME_ID_HV_BMS_FEEDBACK_STATUS) {
+    }
+    else if (id == CAN_PRIMARY_MESSAGE_FRAME_ID_HV_BMS_CELLBOARD_VERSION) {
+        for (uint8_t cellboard_id = 0; cellboard_id < CELLBOARD_COUNT; ++cellboard_id) {
+            message.hv_bms_cellboard_version.id = cellboard_id;
+            message.hv_bms_cellboard_version.buildtime_s = cellboard_version[cellboard_id].buildtime_s;
+            message.hv_bms_cellboard_version.canlibbuildtime_s = cellboard_version[cellboard_id].canlibbuildtime_s;
+
+            int serialize_byte_count = can_primary_api_serialize_from_id(tx_header.StdId, &message, buffer);
+            if (serialize_byte_count < 0) {
+                return HAL_ERROR;
+            }
+            tx_header.DLC = serialize_byte_count;
+            can_send(&CAR_CAN, buffer, &tx_header);
+            HAL_Delay(1);
+        }
+        return HAL_OK;
+    }
+    else if (id == CAN_PRIMARY_MESSAGE_FRAME_ID_HV_BMS_FEEDBACK_STATUS) {
         // Get feedbacks status
         feedback_feed_t fbs[FEEDBACK_N] = {0};
         feedback_get_all_states(fbs);
@@ -391,6 +411,50 @@ HAL_StatusTypeDef can_car_send(uint16_t id) {
                     break;
             }
         }
+    }
+    else if (id == CAN_PRIMARY_MESSAGE_FRAME_ID_HV_BMS_BALANCING_STATUS) {
+        for (uint8_t cellboard_id = 0; cellboard_id < CELLBOARD_COUNT; ++cellboard_id) {
+            message.hv_bms_balancing_status.cellboardid    = cellboard_id;
+            message.hv_bms_balancing_status.balancing_bool = balancing_status[cellboard_id].balancing_bool;
+
+            message.hv_bms_balancing_status.errorcancomm   = balancing_status[cellboard_id].errorcancomm;
+            message.hv_bms_balancing_status.errorltccomm   = balancing_status[cellboard_id].errorltccomm;
+            message.hv_bms_balancing_status.erroropenwire  = balancing_status[cellboard_id].erroropenwire;
+            message.hv_bms_balancing_status.errortempcomm0 = balancing_status[cellboard_id].errortempcomm0;
+            message.hv_bms_balancing_status.errortempcomm1 = balancing_status[cellboard_id].errortempcomm1;
+            message.hv_bms_balancing_status.errortempcomm2 = balancing_status[cellboard_id].errortempcomm2;
+            message.hv_bms_balancing_status.errortempcomm3 = balancing_status[cellboard_id].errortempcomm3;
+            message.hv_bms_balancing_status.errortempcomm4 = balancing_status[cellboard_id].errortempcomm4;
+            message.hv_bms_balancing_status.errortempcomm5 = balancing_status[cellboard_id].errortempcomm5;
+
+            message.hv_bms_balancing_status.balancingcell0  = balancing_status[cellboard_id].balancingcell0;
+            message.hv_bms_balancing_status.balancingcell1  = balancing_status[cellboard_id].balancingcell1;
+            message.hv_bms_balancing_status.balancingcell2  = balancing_status[cellboard_id].balancingcell2;
+            message.hv_bms_balancing_status.balancingcell3  = balancing_status[cellboard_id].balancingcell3;
+            message.hv_bms_balancing_status.balancingcell4  = balancing_status[cellboard_id].balancingcell4;
+            message.hv_bms_balancing_status.balancingcell5  = balancing_status[cellboard_id].balancingcell5;
+            message.hv_bms_balancing_status.balancingcell6  = balancing_status[cellboard_id].balancingcell6;
+            message.hv_bms_balancing_status.balancingcell7  = balancing_status[cellboard_id].balancingcell7;
+            message.hv_bms_balancing_status.balancingcell8  = balancing_status[cellboard_id].balancingcell8;
+            message.hv_bms_balancing_status.balancingcell9  = balancing_status[cellboard_id].balancingcell9;
+            message.hv_bms_balancing_status.balancingcell10 = balancing_status[cellboard_id].balancingcell10;
+            message.hv_bms_balancing_status.balancingcell11 = balancing_status[cellboard_id].balancingcell11;
+            message.hv_bms_balancing_status.balancingcell12 = balancing_status[cellboard_id].balancingcell12;
+            message.hv_bms_balancing_status.balancingcell13 = balancing_status[cellboard_id].balancingcell13;
+            message.hv_bms_balancing_status.balancingcell14 = balancing_status[cellboard_id].balancingcell14;
+            message.hv_bms_balancing_status.balancingcell15 = balancing_status[cellboard_id].balancingcell15;
+            message.hv_bms_balancing_status.balancingcell16 = balancing_status[cellboard_id].balancingcell16;
+            message.hv_bms_balancing_status.balancingcell17 = balancing_status[cellboard_id].balancingcell17;
+
+            int serialize_byte_count = can_primary_api_serialize_from_id(tx_header.StdId, &message, buffer);
+            if (serialize_byte_count < 0) {
+                return HAL_ERROR;
+            }
+            tx_header.DLC = serialize_byte_count;
+            can_send(&CAR_CAN, buffer, &tx_header);
+            HAL_Delay(1);
+        }
+        return HAL_OK;
     }
     /*
     else if (id == PRIMARY_HV_FANS_STATUS_FRAME_ID) {
@@ -659,12 +723,12 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
             error_status |= message.cellboard_board_status.errorcancomm;
             error_status |= message.cellboard_board_status.errorltccomm;
             error_status |= message.cellboard_board_status.erroropenwire;
-            error_status |= message.cellboard_board_status.errortempcomm0;
-            error_status |= message.cellboard_board_status.errortempcomm1;
-            error_status |= message.cellboard_board_status.errortempcomm2;
-            error_status |= message.cellboard_board_status.errortempcomm3;
-            error_status |= message.cellboard_board_status.errortempcomm4;
-            error_status |= message.cellboard_board_status.errortempcomm5;
+            // error_status |= message.cellboard_board_status.errortempcomm0;
+            // error_status |= message.cellboard_board_status.errortempcomm1;
+            // error_status |= message.cellboard_board_status.errortempcomm2;
+            // error_status |= message.cellboard_board_status.errortempcomm3;
+            // error_status |= message.cellboard_board_status.errortempcomm4;
+            // error_status |= message.cellboard_board_status.errortempcomm5;
 
             if (error_status != 0) {
                 error_simple_set(ERROR_GROUP_ERROR_CELLBOARD_INTERNAL, cellboard_id);
@@ -672,84 +736,45 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
                 error_simple_reset(ERROR_GROUP_ERROR_CELLBOARD_INTERNAL, cellboard_id);
             }
 
-            // Forward data
-            CAN_TxHeaderTypeDef tx_header = {
-                .DLC                = 0,
-                .ExtId              = 0,
-                .IDE                = CAN_ID_STD,
-                .RTR                = CAN_RTR_DATA,
-                .StdId              = CAN_PRIMARY_MESSAGE_FRAME_ID_HV_BMS_BALANCING_STATUS,
-                .TransmitGlobalTime = DISABLE};
+            balancing_status[cellboard_id].cellboardid    = message.cellboard_board_status.id;
+            balancing_status[cellboard_id].balancing_bool = message.cellboard_board_status.balancing;
 
-            uint8_t buffer[8]                        = {0};
-            union CanPrimaryMessages forward_message = {0};
+            balancing_status[cellboard_id].errorcancomm   = message.cellboard_board_status.errorcancomm;
+            balancing_status[cellboard_id].errorltccomm   = message.cellboard_board_status.errorltccomm;
+            balancing_status[cellboard_id].erroropenwire  = message.cellboard_board_status.erroropenwire;
+            balancing_status[cellboard_id].errortempcomm0 = message.cellboard_board_status.errortempcomm0;
+            balancing_status[cellboard_id].errortempcomm1 = message.cellboard_board_status.errortempcomm1;
+            balancing_status[cellboard_id].errortempcomm2 = message.cellboard_board_status.errortempcomm2;
+            balancing_status[cellboard_id].errortempcomm3 = message.cellboard_board_status.errortempcomm3;
+            balancing_status[cellboard_id].errortempcomm4 = message.cellboard_board_status.errortempcomm4;
+            balancing_status[cellboard_id].errortempcomm5 = message.cellboard_board_status.errortempcomm5;
 
-            forward_message.hv_bms_balancing_status.cellboardid    = message.cellboard_board_status.id;
-            forward_message.hv_bms_balancing_status.balancing_bool = message.cellboard_board_status.balancing;
-
-            forward_message.hv_bms_balancing_status.errorcancomm   = message.cellboard_board_status.errorcancomm;
-            forward_message.hv_bms_balancing_status.errorltccomm   = message.cellboard_board_status.errorltccomm;
-            forward_message.hv_bms_balancing_status.erroropenwire  = message.cellboard_board_status.erroropenwire;
-            forward_message.hv_bms_balancing_status.errortempcomm0 = message.cellboard_board_status.errortempcomm0;
-            forward_message.hv_bms_balancing_status.errortempcomm1 = message.cellboard_board_status.errortempcomm1;
-            forward_message.hv_bms_balancing_status.errortempcomm2 = message.cellboard_board_status.errortempcomm2;
-            forward_message.hv_bms_balancing_status.errortempcomm3 = message.cellboard_board_status.errortempcomm3;
-            forward_message.hv_bms_balancing_status.errortempcomm4 = message.cellboard_board_status.errortempcomm4;
-            forward_message.hv_bms_balancing_status.errortempcomm5 = message.cellboard_board_status.errortempcomm5;
-
-            forward_message.hv_bms_balancing_status.balancingcell0  = message.cellboard_board_status.balancingcell0;
-            forward_message.hv_bms_balancing_status.balancingcell1  = message.cellboard_board_status.balancingcell1;
-            forward_message.hv_bms_balancing_status.balancingcell2  = message.cellboard_board_status.balancingcell2;
-            forward_message.hv_bms_balancing_status.balancingcell3  = message.cellboard_board_status.balancingcell3;
-            forward_message.hv_bms_balancing_status.balancingcell4  = message.cellboard_board_status.balancingcell4;
-            forward_message.hv_bms_balancing_status.balancingcell5  = message.cellboard_board_status.balancingcell5;
-            forward_message.hv_bms_balancing_status.balancingcell6  = message.cellboard_board_status.balancingcell6;
-            forward_message.hv_bms_balancing_status.balancingcell7  = message.cellboard_board_status.balancingcell7;
-            forward_message.hv_bms_balancing_status.balancingcell8  = message.cellboard_board_status.balancingcell8;
-            forward_message.hv_bms_balancing_status.balancingcell9  = message.cellboard_board_status.balancingcell9;
-            forward_message.hv_bms_balancing_status.balancingcell10 = message.cellboard_board_status.balancingcell10;
-            forward_message.hv_bms_balancing_status.balancingcell11 = message.cellboard_board_status.balancingcell11;
-            forward_message.hv_bms_balancing_status.balancingcell12 = message.cellboard_board_status.balancingcell12;
-            forward_message.hv_bms_balancing_status.balancingcell13 = message.cellboard_board_status.balancingcell13;
-            forward_message.hv_bms_balancing_status.balancingcell14 = message.cellboard_board_status.balancingcell14;
-            forward_message.hv_bms_balancing_status.balancingcell15 = message.cellboard_board_status.balancingcell15;
-            forward_message.hv_bms_balancing_status.balancingcell16 = message.cellboard_board_status.balancingcell16;
-            forward_message.hv_bms_balancing_status.balancingcell17 = message.cellboard_board_status.balancingcell17;
-
-            int serialize_byte_count = can_primary_api_serialize_from_id(tx_header.StdId, &forward_message, buffer);
-            if (serialize_byte_count < 0) {
-                return;
-            }
-            tx_header.DLC = serialize_byte_count;
-            can_send(&CAR_CAN, buffer, &tx_header);
+            balancing_status[cellboard_id].balancingcell0  = message.cellboard_board_status.balancingcell0;
+            balancing_status[cellboard_id].balancingcell1  = message.cellboard_board_status.balancingcell1;
+            balancing_status[cellboard_id].balancingcell2  = message.cellboard_board_status.balancingcell2;
+            balancing_status[cellboard_id].balancingcell3  = message.cellboard_board_status.balancingcell3;
+            balancing_status[cellboard_id].balancingcell4  = message.cellboard_board_status.balancingcell4;
+            balancing_status[cellboard_id].balancingcell5  = message.cellboard_board_status.balancingcell5;
+            balancing_status[cellboard_id].balancingcell6  = message.cellboard_board_status.balancingcell6;
+            balancing_status[cellboard_id].balancingcell7  = message.cellboard_board_status.balancingcell7;
+            balancing_status[cellboard_id].balancingcell8  = message.cellboard_board_status.balancingcell8;
+            balancing_status[cellboard_id].balancingcell9  = message.cellboard_board_status.balancingcell9;
+            balancing_status[cellboard_id].balancingcell10 = message.cellboard_board_status.balancingcell10;
+            balancing_status[cellboard_id].balancingcell11 = message.cellboard_board_status.balancingcell11;
+            balancing_status[cellboard_id].balancingcell12 = message.cellboard_board_status.balancingcell12;
+            balancing_status[cellboard_id].balancingcell13 = message.cellboard_board_status.balancingcell13;
+            balancing_status[cellboard_id].balancingcell14 = message.cellboard_board_status.balancingcell14;
+            balancing_status[cellboard_id].balancingcell15 = message.cellboard_board_status.balancingcell15;
+            balancing_status[cellboard_id].balancingcell16 = message.cellboard_board_status.balancingcell16;
+            balancing_status[cellboard_id].balancingcell17 = message.cellboard_board_status.balancingcell17;
         } else if (rx_header.StdId == CAN_BMS_MESSAGE_FRAME_ID_CELLBOARD_VERSION) {
             // Reset time since last communication
             time_since_last_comm[message.cellboard_version.id] = HAL_GetTick();
 
-            // Forward data
-            CAN_TxHeaderTypeDef tx_header = {
-                .DLC                = 0,
-                .ExtId              = 0,
-                .IDE                = CAN_ID_STD,
-                .RTR                = CAN_RTR_DATA,
-                .StdId              = CAN_PRIMARY_MESSAGE_FRAME_ID_HV_BMS_CELLBOARD_VERSION,
-                .TransmitGlobalTime = DISABLE};
-
-            uint8_t buffer[8]                        = {0};
-            union CanPrimaryMessages forward_message = {0};
-
-            forward_message.hv_bms_cellboard_version.id                = message.cellboard_version.id;
-            forward_message.hv_bms_cellboard_version.canlibbuildtime_s = message.cellboard_version.canlibbuildtime_s;
-            // This member is not part of `primary_hv_cellboard_verision_t` structure structure
-            // forward_message.hv_bms_cellboard_version.component_version = message.cellboard_version.component_version;
-            forward_message.hv_bms_cellboard_version.buildtime_s = message.cellboard_version.buildtime_s;
-
-            int serialize_byte_count = can_primary_api_serialize_from_id(tx_header.StdId, &forward_message, buffer);
-            if (serialize_byte_count < 0) {
-                return;
-            }
-            tx_header.DLC = serialize_byte_count;
-            can_send(&CAR_CAN, buffer, &tx_header);
+            uint8_t cellboard_id = message.cellboard_version.id;
+            cellboard_version[cellboard_id].id = cellboard_id;
+            cellboard_version[cellboard_id].buildtime_s = message.cellboard_version.buildtime_s;
+            cellboard_version[cellboard_id].canlibbuildtime_s = message.cellboard_version.canlibbuildtime_s;
         }
     }
 }

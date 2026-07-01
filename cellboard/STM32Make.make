@@ -53,7 +53,7 @@ BUILD_DIRECTORY ?= build
 # make -f STM32Make.make -j 16  OPTIMIZATION=Os
 
 # variable which determines if it is a debug build
-DEBUG ?= 1
+DEBUG ?= 0
 
 # debug flags when debug is defined
 OPTIMIZATION ?= -Os

@@ -29,7 +29,7 @@
  */
 HAL_StatusTypeDef _max22530_cmd_send(MAX22530_HandleTypeDef * handler, uint8_t cmd[], size_t len) {
     _MAX22530_CS_ENABLE(handler);
-    HAL_StatusTypeDef status = HAL_SPI_TransmitReceive(handler->spi, cmd, cmd, len, 10);
+    HAL_StatusTypeDef status = HAL_SPI_TransmitReceive(handler->spi, cmd, cmd, len, 30);
     _MAX22530_CS_DISABLE(handler);
     return status;
 }
@@ -145,6 +145,8 @@ HAL_StatusTypeDef max22530_init(MAX22530_HandleTypeDef * handler,
     uint16_t data = 0;
     // cmd[1] = (1 << 15); // Enable spi CRC (ENCRC)
 
+    HAL_Delay(100);
+
     return _max22530_cmd_write(handler, MAX22530_CONTROL_REG, data);
 }
 uint16_t max22530_read_channel(MAX22530_HandleTypeDef * handler, MAX22530_CH channel) {
@@ -162,7 +164,7 @@ HAL_StatusTypeDef max22530_read_all_channels(MAX22530_HandleTypeDef * handler, u
     if (handler == NULL)
         return HAL_ERROR;
 
-    uint16_t data[MAX22530_CHANNEL_COUNT] = { 0 };
+    volatile uint16_t data[MAX22530_CHANNEL_COUNT] = { 0 };
 
     // Read values
     HAL_StatusTypeDef status;

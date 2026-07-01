@@ -153,8 +153,8 @@ static const tFlashSector flashLayout[] =
   /* { 0x08002800, 0x00800 },           flash sector  5 - 2kb                       */
   /* { 0x08003000, 0x00800 },           flash sector  6 - 2kb                       */
   /* { 0x08003800, 0x00800 },           flash sector  7 - 2kb                       */
-  { 0x08004000, 0x00800 },              /* flash sector  8 - 2kb                       */
-  { 0x08004800, 0x00800 },              /* flash sector  9 - 2kb                       */
+  /* { 0x08004000, 0x00800 },           flash sector  8 - 2kb                       */
+  /* { 0x08004800, 0x00800 },           flash sector  9 - 2kb                       */
   { 0x08005000, 0x00800 },              /* flash sector 10 - 2kb                       */
   { 0x08005800, 0x00800 },              /* flash sector 11 - 2kb                       */
   { 0x08006000, 0x00800 },              /* flash sector 12 - 2kb                       */
@@ -178,7 +178,9 @@ static const tFlashSector flashLayout[] =
   { 0x0800F000, 0x00800 },              /* flash sector 30 - 2kb                       */
   { 0x0800F800, 0x00800 },              /* flash sector 31 - 2kb                       */
   { 0x08010000, 0x10000 },              /* flash sectors 32 to 63 - 64kb               */
+#if (BOOT_NVM_SIZE_KB > 128)
   { 0x08020000, 0x20000 },              /* flash sectors 64 to 127 - 128kb             */
+#endif
 #if (BOOT_NVM_SIZE_KB > 256)
   { 0x08040000, 0x40000 },              /* flash sectors 128 to 255 - 256kb            */
 #endif
