@@ -90,6 +90,9 @@ void measures_check_flags() {
         can_car_send(CAN_PRIMARY_MESSAGE_FRAME_ID_HV_BMS_FEEDBACK_MISC_VOLTAGE);
         // can_car_send(PRIMARY_HV_ENERGY_FRAME_ID);
 
+        can_car_send(CAN_PRIMARY_MESSAGE_FRAME_ID_HV_BMS_VERSION);
+        can_car_send(CAN_PRIMARY_MESSAGE_FRAME_ID_HV_BMS_CELLBOARD_VERSION);
+
         // Check errors
         temperature_check_errors();
         // Check if fans are connected
@@ -109,8 +112,6 @@ void measures_check_flags() {
     if (_MEASURE_CHECK_INTERVAL(MEASURE_INTERVAL_500MS)) {
         // Send info via CAN
         // can_car_send(PRIMARY_HV_CAN_FORWARD_FRAME_ID);
-        can_car_send(CAN_PRIMARY_MESSAGE_FRAME_ID_HV_BMS_VERSION);
-        can_car_send(CAN_PRIMARY_MESSAGE_FRAME_ID_HV_BMS_CELLBOARD_VERSION);
         // can_car_send(PRIMARY_HV_FANS_STATUS_FRAME_ID);
 
         // Check cellboards connection errors
@@ -119,6 +120,7 @@ void measures_check_flags() {
     }
     // 1 s interval
     if (_MEASURE_CHECK_INTERVAL(MEASURE_INTERVAL_1S)) {
+
         // Run fans based on temperature
         if (!fans_is_overrided()) {
             float max_temp = CONVERT_VALUE_TO_TEMPERATURE(temperature_get_max());
